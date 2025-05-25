@@ -1,4 +1,4 @@
-Problem: Xây dựng một Mạng máy tính
+Bài toán: Xây dựng một Mạng máy tính
 ------------------------------------
 
 Giả sử bạn muốn xây dựng một mạng máy tính, một mạng có tiềm năng phát triển đến quy mô toàn cầu và hỗ trợ các ứng dụng đa dạng như hội nghị truyền hình, video theo yêu cầu, thương mại điện tử, điện toán phân tán và thư viện số. Những công nghệ nào hiện có sẽ đóng vai trò là các khối xây dựng cơ bản, và bạn sẽ thiết kế kiến trúc phần mềm như thế nào để tích hợp các khối xây dựng này thành một dịch vụ truyền thông hiệu quả? Trả lời câu hỏi này là mục tiêu chính của cuốn sách này—mô tả các vật liệu xây dựng sẵn có và sau đó chỉ ra cách chúng có thể được sử dụng để xây dựng một mạng từ đầu.
