@@ -1,190 +1,67 @@
-2.1 Technology Landscape
-========================
+2.1 Bức tranh Công nghệ
+=======================
 
-Before diving into the challenges outlined in the problem statement at
-the beginning of this chapter, it is helpful to first get a lay of the
-land, which includes a wide array of link technologies. This is due, in
-part, to the diverse circumstances under which users are trying to
-connect their devices.
+Trước khi đi sâu vào các thách thức được nêu ra trong phần bài toán ở đầu chương này, sẽ hữu ích nếu chúng ta có một cái nhìn tổng quan về bối cảnh, bao gồm một loạt các công nghệ liên kết khác nhau. Điều này một phần là do hoàn cảnh đa dạng mà người dùng đang cố gắng kết nối thiết bị của họ.
 
-At one end of the spectrum, network operators that build global networks
-must deal with links that span hundreds or thousands of kilometers
-connecting refrigerator-sized routers. At the other end of the spectrum,
-a typical user encounters links mostly as a way to connect a computer to
-the existing Internet. Sometimes this link will be a wireless (Wi-Fi)
-link in a coffee shop; sometimes it’s an Ethernet link in an office
-building or university; sometimes it is a smartphone connected to a
-cellular network; for an increasingly large slice of the population it
-is a fiber optic link provided by an ISP; and many others use some sort
-of copper wire or cable to connect. Fortunately, there are many common
-strategies used on these seemingly disparate types of links so that they
-can all be made reliable and useful to higher layers in the protocol
-stack. This chapter examines those strategies.
+Ở một đầu của phổ, các nhà vận hành mạng xây dựng các mạng toàn cầu phải xử lý các liên kết kéo dài hàng trăm hoặc hàng nghìn kilômét, kết nối các router có kích thước bằng tủ lạnh. Ở đầu kia, một người dùng điển hình chủ yếu tiếp xúc với các liên kết như một cách để kết nối máy tính vào Internet hiện hữu. Đôi khi liên kết này sẽ là một liên kết không dây (Wi-Fi) trong quán cà phê; đôi khi là liên kết Ethernet trong tòa nhà văn phòng hoặc trường đại học; đôi khi là một chiếc điện thoại thông minh kết nối vào mạng di động; với một bộ phận dân số ngày càng lớn, đó là liên kết cáp quang do ISP cung cấp; và nhiều người khác sử dụng một dạng dây đồng hoặc cáp nào đó để kết nối. May mắn thay, có nhiều chiến lược chung được sử dụng trên các loại liên kết tưởng chừng khác biệt này để tất cả chúng đều có thể trở nên tin cậy và hữu ích cho các tầng cao hơn trong ngăn xếp giao thức. Chương này sẽ xem xét các chiến lược đó.
 
 .. _fig-isp-access:
 .. figure:: figures/f02-01-9780123850591.png
    :width: 650px
    :align: center
 
-   An end-user's view of the Internet.
+   Góc nhìn của người dùng cuối về Internet.
 
-:numref:`Figure %s <fig-isp-access>` illustrates various types of
-links that might be found in today’s Internet. On the left, we see a
-variety of end-user devices ranging from smartphones to tablets to
-full-fledged computers connected by various means to an ISP. While
-those links might use different technologies, they all look the same
-in this picture—a straight line connecting a device to a router. There
-are links that connect routers together inside the ISP, as well as
-links that connect the ISP to the “rest of the Internet,” which
-consists of lots of other ISPs and the hosts to which they connect.
+:numref:`Hình %s <fig-isp-access>` minh họa các loại liên kết khác nhau có thể được tìm thấy trong Internet ngày nay. Ở bên trái, chúng ta thấy nhiều thiết bị người dùng cuối khác nhau từ điện thoại thông minh, máy tính bảng đến máy tính đầy đủ chức năng được kết nối bằng nhiều phương thức khác nhau tới một ISP. Dù các liên kết đó có thể sử dụng công nghệ khác nhau, chúng đều trông giống nhau trong hình này—một đường thẳng nối thiết bị với một router. Có các liên kết kết nối các router với nhau bên trong ISP, cũng như các liên kết kết nối ISP với “phần còn lại của Internet”, bao gồm rất nhiều ISP khác và các host mà họ kết nối tới.
 
-These links all look alike not just because we’re not very good artists
-but because part of the role of a network architecture is to provide a
-common abstraction of something as complex and diverse as a link. The
-idea is that your laptop or smartphone doesn’t have to care what sort of
-link it is connected to—the only thing that matters is that it has a
-link to the Internet. Similarly, a router doesn’t have to care what sort
-of link connects it to other routers—it can send a packet on the link
-with a pretty good expectation that the packet will reach the other end
-of the link.
+Tất cả các liên kết này trông giống nhau không chỉ vì chúng ta không phải là họa sĩ giỏi mà còn vì một phần vai trò của kiến trúc mạng là cung cấp một trừu tượng chung cho thứ gì đó phức tạp và đa dạng như một liên kết. Ý tưởng là laptop hoặc điện thoại thông minh của bạn không cần quan tâm nó được kết nối với loại liên kết nào—điều duy nhất quan trọng là nó có một liên kết tới Internet. Tương tự, một router không cần quan tâm liên kết nào kết nối nó với các router khác—nó có thể gửi một gói tin lên liên kết với kỳ vọng khá chắc chắn rằng gói tin sẽ đến được đầu bên kia của liên kết.
 
-How do we make all these different types of links look sufficiently
-alike to end users and routers? Essentially, we have to deal with all
-the physical limitations and shortcomings of links that exist in the
-real world. We sketched out some of these issues in the opening problem
-statement for this chapter, but before we can discuss these, we need to
-first introduce some simple physics. All of these links are made of some
-physical material that can propagate signals, such as radio waves or
-other sorts of electromagnetic radiation, but what we really want to do
-is send *bits*. In the later sections of this chapter, we’ll look at how
-to encode bits for transmission on a physical medium, followed by the
-other issues mentioned above. By the end of this chapter, we’ll
-understand how to send complete packets over just about any sort of
-link, no matter what physical medium is involved.
+Làm thế nào để chúng ta khiến tất cả các loại liên kết khác nhau này trông đủ giống nhau đối với người dùng cuối và router? Về cơ bản, chúng ta phải xử lý tất cả các giới hạn vật lý và thiếu sót của các liên kết tồn tại trong thế giới thực. Chúng ta đã phác thảo một số vấn đề này trong phần bài toán mở đầu chương, nhưng trước khi có thể thảo luận về chúng, chúng ta cần giới thiệu một chút vật lý cơ bản. Tất cả các liên kết này đều được tạo thành từ một số vật liệu vật lý có thể truyền tín hiệu, như sóng vô tuyến hoặc các dạng bức xạ điện từ khác, nhưng điều chúng ta thực sự muốn làm là gửi *bit*. Ở các phần sau của chương này, chúng ta sẽ xem xét cách mã hóa bit để truyền trên môi trường vật lý, tiếp theo là các vấn đề khác đã đề cập ở trên. Đến cuối chương này, chúng ta sẽ hiểu cách gửi các gói tin hoàn chỉnh qua hầu như bất kỳ loại liên kết nào, bất kể môi trường vật lý là gì.
 
-One way to characterize links, then, is by the medium they
-use—typically, copper wire in some form, such as twisted pair (some
-Ethernets and landline phones) and coaxial (cable); optical fiber,
-which is used for both fiber-to-the-home and many long-distance links
-in the Internet’s backbone; or air/free space for wireless links.
+Một cách để phân loại các liên kết là dựa trên môi trường mà chúng sử dụng—thường là dây đồng dưới một số dạng, như cặp xoắn (một số loại Ethernet và điện thoại cố định) và cáp đồng trục (cable); sợi quang, được dùng cho cả cáp quang đến tận nhà và nhiều liên kết đường dài trong xương sống Internet; hoặc không khí/không gian tự do cho các liên kết không dây.
 
-Another important link characteristic is the *frequency*, measured in
-hertz, with which the electromagnetic waves oscillate. The distance
-between a pair of adjacent maxima or minima of a wave, typically
-measured in meters, is called the wave’s *wavelength*. Since all
-electromagnetic waves travel at the speed of light (which in turn
-depends on the medium), that speed divided by the wave’s frequency is
-equal to its wavelength. We have already seen the example of a
-voice-grade telephone line, which carries continuous electromagnetic
-signals ranging between 300 Hz and 3300 Hz; a 300-Hz wave traveling
-through copper would have a wavelength of
+Một đặc điểm quan trọng khác của liên kết là *tần số*, đo bằng hertz, với tần số dao động của sóng điện từ. Khoảng cách giữa hai điểm cực đại hoặc cực tiểu liền kề của một sóng, thường đo bằng mét, được gọi là *bước sóng* của sóng đó. Vì tất cả sóng điện từ đều truyền với tốc độ ánh sáng (tốc độ này lại phụ thuộc vào môi trường), tốc độ đó chia cho tần số của sóng sẽ bằng bước sóng của nó. Chúng ta đã thấy ví dụ về đường dây điện thoại truyền giọng nói, mang tín hiệu điện từ liên tục trong dải từ 300 Hz đến 3300 Hz; một sóng 300 Hz truyền qua dây đồng sẽ có bước sóng là
 
 .. centered:: SpeedOfLightInCopper / Frequency
 
 .. centered:: = 2/3 × 3 × 10\ :sup:`8` / 300
 
-.. centered:: = 667 × 10\ :sup:`3` *meters*
+.. centered:: = 667 × 10\ :sup:`3` *mét*
 
-Generally, electromagnetic waves span a much wider range of
-frequencies, ranging from radio waves, to infrared light, to visible
-light, to x-rays and gamma rays. :numref:`Figure %s <fig-spectrum>`
-depicts the electromagnetic spectrum and shows which media are
-commonly used to carry which frequency bands.
+Nói chung, sóng điện từ trải dài trên một dải tần số rộng hơn nhiều, từ sóng vô tuyến, đến ánh sáng hồng ngoại, đến ánh sáng nhìn thấy, đến tia X và tia gamma. :numref:`Hình %s <fig-spectrum>` mô tả phổ điện từ và cho thấy các môi trường thường được sử dụng để truyền các dải tần số nào.
 
 .. _fig-spectrum:
 .. figure:: figures/f02-02-9780123850591.png
    :width: 600px
    :align: center
 
-   Electromagnetic spectrum.
+   Phổ điện từ.
 
-What :numref:`Figure %s <fig-spectrum>` doesn't show is where the
-cellular network fits in. This is a bit complicated because the
-specific frequency bands that are licensed for cellular networks vary
-around the world, and even further complicated by the fact that
-network operators often simultaneously support both old/legacy
-technologies and new/next-generation technologies, each of which
-occupies a different frequency band. The high-level summary is that
-traditional cellular technologies range from 700-MHz to 2400-MHz, with
-new mid-spectrum allocations now happening at 6-GHz, and
-millimeter-wave (mmWave) allocations opening above 24-GHz. This mmWave
-band is likely to become an important part of the 5G mobile network.
+Điều mà :numref:`Hình %s <fig-spectrum>` không thể hiện là mạng di động nằm ở đâu. Điều này hơi phức tạp vì các dải tần số được cấp phép cho mạng di động khác nhau trên toàn thế giới, và còn phức tạp hơn nữa bởi thực tế là các nhà vận hành mạng thường đồng thời hỗ trợ cả công nghệ cũ/lỗi thời và công nghệ mới/thế hệ tiếp theo, mỗi loại lại chiếm một dải tần số khác nhau. Tóm tắt ở mức cao là các công nghệ di động truyền thống nằm trong khoảng từ 700 MHz đến 2400 MHz, với các dải tần trung mới hiện nay ở 6 GHz, và các dải sóng milimet (mmWave) mở ra trên 24 GHz. Dải mmWave này có khả năng sẽ trở thành một phần quan trọng của mạng di động 5G.
 
-So far we understand a link to be a physical medium carrying signals in
-the form of electromagnetic waves. Such links provide the foundation for
-transmitting all sorts of information, including the kind of data we are
-interested in transmitting—binary data (1s and 0s). We say that the
-binary data is *encoded* in the signal. The problem of encoding binary
-data onto electromagnetic signals is a complex topic. To help make the
-topic more manageable, we can think of it as being divided into two
-layers. The lower layer is concerned with *modulation*—varying the
-frequency, amplitude, or phase of the signal to effect the transmission
-of information. A simple example of modulation is to vary the power
-(amplitude) of a single wavelength. Intuitively, this is equivalent to
-turning a light on and off. Because the issue of modulation is secondary
-to our discussion of links as a building block for computer networks, we
-simply assume that it is possible to transmit a pair of distinguishable
-signals—think of them as a “high” signal and a “low” signal—and we
-consider only the upper layer, which is concerned with the much simpler
-problem of encoding binary data onto these two signals. The next section
-discusses such encodings.
+Cho đến giờ, chúng ta hiểu một liên kết là một môi trường vật lý mang tín hiệu dưới dạng sóng điện từ. Các liên kết như vậy cung cấp nền tảng để truyền tải mọi loại thông tin, bao gồm loại dữ liệu mà chúng ta quan tâm—dữ liệu nhị phân (1 và 0). Chúng ta nói rằng dữ liệu nhị phân được *mã hóa* vào tín hiệu. Bài toán mã hóa dữ liệu nhị phân lên tín hiệu điện từ là một chủ đề phức tạp. Để giúp chủ đề này dễ tiếp cận hơn, chúng ta có thể coi nó được chia thành hai lớp. Lớp thấp hơn liên quan đến *điều chế*—thay đổi tần số, biên độ hoặc pha của tín hiệu để truyền thông tin. Một ví dụ đơn giản về điều chế là thay đổi công suất (biên độ) của một bước sóng đơn. Trực quan, điều này tương đương với việc bật tắt một bóng đèn. Vì vấn đề điều chế là thứ yếu trong thảo luận của chúng ta về liên kết như một khối xây dựng cho mạng máy tính, chúng ta chỉ đơn giản giả định rằng có thể truyền hai tín hiệu phân biệt—hãy coi chúng như tín hiệu “cao” và “thấp”—và chúng ta chỉ xét lớp trên, liên quan đến bài toán đơn giản hơn nhiều là mã hóa dữ liệu nhị phân lên hai tín hiệu này. Phần tiếp theo sẽ thảo luận về các kiểu mã hóa như vậy.
 
-Another way to classify links is in terms of how they are
-used. Various economic and deployment issues tend to influence where
-different link types are found. Most consumers interact with the
-Internet either through wireless networks (which they encounter in
-coffee shops, airports, universities, etc.) or through so-called
-*last-mile* links (or alternatively, *access networks*) provided by an
-ISP, as illustrated in :numref:`Figure %s <fig-isp-access>`. These
-link types are summarized in :numref:`Table %s <tab-home>`. They
-typically are chosen because they are cost-effective ways of reaching
-millions of consumers. DSL (Digital Subscriber Line), for example, is
-an older technology that was deployed over the existing twisted pair
-copper wires that already existed for plain old telephone services;
-G.Fast is a copper-based technology typically used within
-multi-dwelling apartment buildings, and PON (Passive Optical Network)
-is a newer technology that is commonly used to connect homes and
-businesses over recently deployed fiber.
+Một cách khác để phân loại liên kết là theo cách chúng được sử dụng. Các vấn đề kinh tế và triển khai khác nhau thường ảnh hưởng đến việc các loại liên kết khác nhau xuất hiện ở đâu. Hầu hết người dùng tương tác với Internet hoặc qua các mạng không dây (mà họ gặp ở quán cà phê, sân bay, trường đại học, v.v.) hoặc qua các liên kết “last-mile” (hoặc còn gọi là *mạng truy nhập*) do ISP cung cấp, như minh họa trong :numref:`Hình %s <fig-isp-access>`. Các loại liên kết này được tóm tắt trong :numref:`Bảng %s <tab-home>`. Chúng thường được chọn vì là cách hiệu quả về chi phí để tiếp cận hàng triệu người dùng. Ví dụ, DSL (Digital Subscriber Line) là một công nghệ cũ được triển khai trên các dây đồng cặp xoắn vốn đã có sẵn cho dịch vụ điện thoại truyền thống; G.Fast là một công nghệ dựa trên dây đồng thường dùng trong các tòa nhà căn hộ nhiều hộ, và PON (Passive Optical Network) là một công nghệ mới hơn thường dùng để kết nối nhà và doanh nghiệp qua cáp quang mới triển khai.
 
 .. _tab-home:
-.. table::  Common services available for the last-mile connection to your home.
+.. table::  Các dịch vụ phổ biến cho kết nối last-mile tới nhà bạn.
    :widths: auto
    :align: center
 
    +-----------------+----------------+
-   | Service         | Bandwidth      |
+   | Dịch vụ         | Băng thông     |
    +=================+================+
-   | DSL (copper)    | up to 100 Mbps |
+   | DSL (dây đồng)  | lên tới 100 Mbps|
    +-----------------+----------------+
-   | G.Fast (copper) | up to 1 Gbps   |
+   | G.Fast (dây đồng)| lên tới 1 Gbps |
    +-----------------+----------------+
-   | PON (optical)   | up to 10 Gbps  |
+   | PON (quang)     | lên tới 10 Gbps |
    +-----------------+----------------+
 
-And of course there is also the *mobile* or *cellular* network (also
-referred to as 4G, but which is rapidly evolving into 5G) that connects
-our mobile devices to the Internet. This technology can also serve as
-the sole Internet connection into our homes or offices, but comes with
-the added benefit of allowing us to maintain Internet connectivity while
-moving from place to place.
+Và tất nhiên còn có mạng *di động* hoặc *cellular* (còn gọi là 4G, nhưng đang nhanh chóng chuyển mình thành 5G) kết nối các thiết bị di động của chúng ta với Internet. Công nghệ này cũng có thể đóng vai trò là kết nối Internet duy nhất vào nhà hoặc văn phòng của chúng ta, nhưng còn có lợi ích bổ sung là cho phép chúng ta duy trì kết nối Internet khi di chuyển từ nơi này sang nơi khác.
 
-These example technologies are common options for the last-mile
-connection to your home or business, but they are not sufficient for
-building a complete network from scratch. To do that, you’ll also need
-some long-distance *backbone* links to interconnect cities. Modern
-backbone links are almost exclusively fiber today, and they typically
-use a technology called SONET (Synchronous Optical Network), which was
-originally developed to meet the demanding management requirements of
-telephone carriers.
+Các công nghệ ví dụ này là những lựa chọn phổ biến cho kết nối last-mile tới nhà hoặc doanh nghiệp của bạn, nhưng chúng không đủ để xây dựng một mạng hoàn chỉnh từ đầu. Để làm được điều đó, bạn cũng cần một số liên kết xương sống đường dài để kết nối các thành phố với nhau. Các liên kết xương sống hiện đại ngày nay gần như hoàn toàn là cáp quang, và thường sử dụng công nghệ gọi là SONET (Synchronous Optical Network), vốn được phát triển ban đầu để đáp ứng các yêu cầu quản lý khắt khe của các nhà cung cấp dịch vụ điện thoại.
 
-Finally, in addition to last-mile, backbone, and mobile links, there are
-the links that you find inside a building or a campus—generally referred
-to as *local area networks* (LANs). Ethernet, and its wireless cousin
-Wi-Fi, are the dominant technologies in this space.
+Cuối cùng, ngoài các liên kết last-mile, xương sống và di động, còn có các liên kết bạn tìm thấy bên trong một tòa nhà hoặc khuôn viên—thường được gọi là *mạng cục bộ* (LAN). Ethernet và người anh em không dây của nó là Wi-Fi là các công nghệ thống trị trong lĩnh vực này.
 
-This survey of link types is by no means exhaustive, but it should have
-given you a taste of the diversity of link types that exist and some of
-the reasons for that diversity. In the coming sections, we will see how
-networking protocols can take advantage of that diversity and present a
-consistent view of the network to higher layers in spite of all the
-low-level complexity and economic factors.
+Bản khảo sát các loại liên kết này chắc chắn chưa đầy đủ, nhưng nó sẽ giúp bạn cảm nhận được sự đa dạng của các loại liên kết đang tồn tại và một số lý do dẫn đến sự đa dạng đó. Trong các phần tiếp theo, chúng ta sẽ thấy các giao thức mạng có thể tận dụng sự đa dạng đó như thế nào và trình bày một cái nhìn nhất quán về mạng cho các tầng cao hơn bất chấp mọi phức tạp ở tầng thấp và các yếu tố kinh tế.
