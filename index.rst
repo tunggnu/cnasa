@@ -5,18 +5,18 @@
 
 |
 
-Computer Networks: A Systems Approach
-======================================
+Mạng Máy Tính: Một Cách Tiếp Cận Hệ Thống
+==========================================
 
-Larry Peterson and Bruce Davie
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Larry Peterson và Bruce Davie
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 |
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Table of Contents
+   :caption: Mục lục
 
    foreword.rst
    foreword_1e.rst
