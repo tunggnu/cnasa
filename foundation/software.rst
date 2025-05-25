@@ -1,235 +1,70 @@
-1.4 Software
+1.4 Phần mềm
 ============
+Kiến trúc mạng và các đặc tả giao thức là những yếu tố thiết yếu, nhưng một bản thiết kế tốt thôi là chưa đủ để giải thích cho sự thành công vượt bậc của Internet: Số lượng máy tính kết nối Internet đã tăng theo cấp số nhân trong hơn ba thập kỷ (mặc dù con số chính xác rất khó xác định). Số lượng người dùng Internet ước tính vào khoảng 4,1 tỷ vào cuối năm 2018—tương đương khoảng một nửa dân số thế giới.
 
-Network architectures and protocol specifications are essential
-things, but a good blueprint is not enough to explain the phenomenal
-success of the Internet: The number of computers connected to the
-Internet has grown exponentially for over three decades (although
-precise numbers are hard to come by). The number of users of the
-Internet was estimated to be around 4.1 billion by the end of
-2018—roughly half of the world’s population.
+Điều gì giải thích cho sự thành công của Internet? Chắc chắn có nhiều yếu tố góp phần (bao gồm cả một kiến trúc tốt), nhưng một điều khiến Internet trở nên thành công vượt trội là rất nhiều chức năng của nó được cung cấp bởi phần mềm chạy trên các máy tính đa dụng. Ý nghĩa của điều này là chức năng mới có thể được bổ sung dễ dàng chỉ với “một chút lập trình nhỏ.” Kết quả là, các ứng dụng và dịch vụ mới liên tục xuất hiện với tốc độ đáng kinh ngạc.
 
-What explains the success of the Internet? There are certainly many
-contributing factors (including a good architecture), but one thing that
-has made the Internet such a runaway success is the fact that so much of
-its functionality is provided by software running on general-purpose
-computers. The significance of this is that new functionality can be
-added readily with “just a small matter of programming.” As a result,
-new applications and services have been showing up at an incredible
-pace.
+Một yếu tố liên quan là sự gia tăng mạnh mẽ về sức mạnh tính toán có sẵn trong các máy tính phổ thông. Mặc dù về nguyên tắc, các mạng máy tính luôn có khả năng truyền tải bất kỳ loại thông tin nào, như mẫu giọng nói số hóa, hình ảnh số hóa, v.v., nhưng tiềm năng này không thực sự hấp dẫn nếu các máy tính gửi và nhận dữ liệu đó quá chậm để làm được điều gì hữu ích với thông tin đó. Hầu như tất cả các máy tính ngày nay đều có khả năng phát lại âm thanh và video số hóa với tốc độ và độ phân giải khá sử dụng được.
 
-A related factor is the massive increase in computing power available
-in commodity machines. Although computer networks have always been
-capable in principle of transporting any kind of information, such as
-digital voice samples, digitized images, and so on, this potential was
-not particularly interesting if the computers sending and receiving
-that data were too slow to do anything useful with the
-information. Virtually all of today’s computers are capable of playing
-back digitized audio and video at a speed and resolution that are
-quite usable.
+Trong những năm kể từ khi ấn bản đầu tiên của cuốn sách này xuất hiện, việc viết các ứng dụng mạng đã trở thành một hoạt động phổ biến chứ không còn là công việc chỉ dành cho một số chuyên gia. Nhiều yếu tố đã góp phần vào điều này, bao gồm các công cụ tốt hơn giúp công việc dễ dàng hơn và sự mở rộng của các thị trường mới như ứng dụng cho điện thoại thông minh.
 
-In the years since the first edition of this book appeared, the
-writing of networked applications has become a mainstream activity and
-not a job just for a few specialists. Many factors have played into
-this, including better tools to make the job easier and the opening up
-of new markets such as applications for smartphones.
-
-The point to note is that knowing how to implement network software is
-an essential part of understanding computer networks, and while the odds
-are you will not be tasked to implement a low-level protocol like IP,
-there is a good chance you will find reason to implement an
-application-level protocol—the elusive “killer app” that will lead to
-unimaginable fame and fortune. To get you started, this section
-introduces some of the issues involved in implementing a network
-application on top of the Internet. Typically, such programs are
-simultaneously an application (i.e., designed to interact with users)
-and a protocol (i.e., communicates with peers across the network).
+Điều cần lưu ý là biết cách triển khai phần mềm mạng là một phần thiết yếu để hiểu về mạng máy tính, và mặc dù khả năng bạn sẽ không được giao nhiệm vụ triển khai một giao thức cấp thấp như IP, nhưng rất có thể bạn sẽ có lý do để triển khai một giao thức cấp ứng dụng—“killer app” khó nắm bắt có thể mang lại danh tiếng và tài sản không tưởng. Để giúp bạn bắt đầu, phần này giới thiệu một số vấn đề liên quan đến việc triển khai một ứng dụng mạng trên nền Internet. Thông thường, các chương trình như vậy vừa là một ứng dụng (tức là, thiết kế để tương tác với người dùng) vừa là một giao thức (tức là, giao tiếp với các đối tác qua mạng).
 
 1.4.1 Socket API
 -----------------
+Điểm khởi đầu khi triển khai một ứng dụng mạng là giao diện mà mạng cung cấp. Vì hầu hết các giao thức mạng đều được triển khai bằng phần mềm (đặc biệt là các giao thức ở tầng cao trong ngăn xếp giao thức), và gần như tất cả các hệ điều hành đều triển khai các giao thức mạng như một phần của hệ điều hành, khi chúng ta nói đến giao diện “do mạng cung cấp”, chúng ta thường nói đến giao diện mà hệ điều hành cung cấp cho hệ thống mạng của nó. Giao diện này thường được gọi là *giao diện lập trình ứng dụng* (API) mạng.
 
-The place to start when implementing a network application is the
-interface exported by the network. Since most network protocols are in
-software (especially those high in the protocol stack), and nearly all
-computer systems implement their network protocols as part of the
-operating system, when we refer to the interface “exported by the
-network,” we are generally referring to the interface that the OS
-provides to its networking subsystem. This interface is often called the
-network *application programming interface* (API).
+Mặc dù mỗi hệ điều hành đều có thể tự do định nghĩa API mạng của riêng mình (và hầu hết đều có), theo thời gian, một số API này đã trở nên được hỗ trợ rộng rãi; tức là, chúng đã được chuyển sang các hệ điều hành khác ngoài hệ điều hành gốc. Điều này đã xảy ra với *giao diện socket* ban đầu được cung cấp bởi bản phân phối Unix của Berkeley, hiện nay được hỗ trợ trên hầu như tất cả các hệ điều hành phổ biến, và là nền tảng của các giao diện đặc thù ngôn ngữ, như thư viện socket của Java hoặc Python. Chúng tôi sử dụng Linux và C cho tất cả các ví dụ mã trong cuốn sách này, Linux vì nó là mã nguồn mở và C vì nó vẫn là ngôn ngữ được lựa chọn cho các thành phần mạng bên trong. (Cũng có lợi thế là phơi bày tất cả các chi tiết cấp thấp, điều này hữu ích để hiểu các ý tưởng nền tảng.)
 
-Although each operating system is free to define its own network API
-(and most have), over time certain of these APIs have become widely
-supported; that is, they have been ported to operating systems other
-than their native system. This is what has happened with the *socket
-interface* originally provided by the Berkeley distribution of Unix,
-which is now supported in virtually all popular operating systems, and
-is the foundation of language-specific interfaces, such as the Java or
-Python socket library. We use Linux and C for all code examples in
-this book, Linux because it is open source and C because it remains
-the language of choice for network internals. (C also has the
-advantage of exposing all the low-level details, which is helpful in
-understanding the underlying ideas.)
+.. sidebar:: Sự bùng nổ ứng dụng nhờ Sockets
+   Thật khó để đánh giá hết tầm quan trọng của Socket API. Nó xác định ranh giới giữa các ứng dụng chạy trên Internet và các chi tiết về cách Internet được triển khai. Nhờ Sockets cung cấp một giao diện rõ ràng và ổn định, việc viết ứng dụng Internet đã bùng nổ thành một ngành công nghiệp hàng tỷ đô la. Bắt đầu từ mô hình client/server đơn giản và một vài chương trình ứng dụng như email, truyền tệp và đăng nhập từ xa, giờ đây ai cũng có thể truy cập vô số ứng dụng đám mây từ điện thoại thông minh của mình. Phần này đặt nền tảng bằng cách nhắc lại sự đơn giản của một chương trình client mở socket để trao đổi thông điệp với chương trình server, nhưng ngày nay một hệ sinh thái phần mềm phong phú đã được xây dựng trên Socket API. Lớp này bao gồm vô số công cụ dựa trên đám mây giúp giảm rào cản cho việc triển khai các ứng dụng có khả năng mở rộng. Chúng tôi sẽ quay lại mối liên hệ giữa đám mây và mạng trong mọi chương, bắt đầu từ phần *Perspective* ở cuối Chương 1.
 
-.. sidebar:: Sockets Enabled Application Explosion
+Trước khi mô tả giao diện socket, điều quan trọng là bạn phải tách biệt hai mối quan tâm trong đầu. Mỗi giao thức cung cấp một tập hợp *dịch vụ* nhất định, và API cung cấp một *cú pháp* để các dịch vụ đó có thể được gọi trên một hệ thống máy tính cụ thể. Việc triển khai sau đó chịu trách nhiệm ánh xạ tập hợp các thao tác và đối tượng cụ thể do API định nghĩa lên tập hợp dịch vụ trừu tượng do giao thức định nghĩa. Nếu bạn làm tốt việc định nghĩa giao diện, thì sẽ có thể sử dụng cú pháp của giao diện để gọi các dịch vụ của nhiều giao thức khác nhau. Tính tổng quát như vậy chắc chắn là mục tiêu của giao diện socket, mặc dù nó còn lâu mới hoàn hảo.
 
-          It is hard to overstate the importance of the Socket
-          API. It defines the demarcation point between the
-          applications running on top of the Internet, and the
-          details of how the Internet is implemented. As a
-          consequence of Sockets providing a well-defined and
-          stable interface, writing Internet applications exploded
-          into a multi-billion dollar industry. Starting from the
-          humble beginnings of the client/server paradigm and a
-          handful of simple application programs like email, file
-          transfer, and remote login, everyone now has access to an
-          never-ending supply of cloud applications from their
-          smartphones.
+Trừu tượng chính của giao diện socket, không ngạc nhiên, là *socket*. Một cách hay để hình dung socket là điểm mà một tiến trình ứng dụng cục bộ gắn vào mạng. Giao diện định nghĩa các thao tác để tạo socket, gắn socket vào mạng, gửi/nhận thông điệp qua socket và đóng socket. Để đơn giản hóa thảo luận, chúng tôi chỉ giới hạn việc minh họa cách sử dụng socket với TCP.
 
-          This section lays the foundation by revisiting the
-          simplicity of a client program opening a socket so it can
-          exchange messages with a server program, but today a rich
-          software ecosystem is layered on top of the Socket
-          API. This layer includes a plethora of cloud-based tools
-          that lower the barrier for implementing scalable
-          applications. We return to the interplay between the
-          cloud and the network in every chapter, starting with the
-          *Perspective* section at the end of Chapter 1.
-
-Before describing the socket interface, it is important to keep two
-concerns separate in your mind. Each protocol provides a certain set of
-*services*, and the API provides a *syntax* by which those services can
-be invoked on a particular computer system. The implementation is then
-responsible for mapping the tangible set of operations and objects
-defined by the API onto the abstract set of services defined by the
-protocol. If you have done a good job of defining the interface, then it
-will be possible to use the syntax of the interface to invoke the
-services of many different protocols. Such generality was certainly a
-goal of the socket interface, although it’s far from perfect.
-
-The main abstraction of the socket interface, not surprisingly, is the
-*socket*. A good way to think of a socket is as the point where a local
-application process attaches to the network. The interface defines
-operations for creating a socket, attaching the socket to the network,
-sending/receiving messages through the socket, and closing the socket.
-To simplify the discussion, we will limit ourselves to showing how
-sockets are used with TCP.
-
-The first step is to create a socket, which is done with the following
-operation:
+Bước đầu tiên là tạo một socket, được thực hiện với thao tác sau:
 
 .. code-block:: c
-
    int socket(int domain, int type, int protocol);
 
-The reason that this operation takes three arguments is that the socket
-interface was designed to be general enough to support any underlying
-protocol suite. Specifically, the ``domain`` argument specifies the
-protocol *family* that is going to be used: ``PF_INET`` denotes the
-Internet family, ``PF_UNIX`` denotes the Unix pipe facility, and
-``PF_PACKET`` denotes direct access to the network interface (i.e., it
-bypasses the TCP/IP protocol stack). The ``type`` argument indicates the
-semantics of the communication. ``SOCK_STREAM`` is used to denote a byte
-stream. ``SOCK_DGRAM`` is an alternative that denotes a message-oriented
-service, such as that provided by UDP. The ``protocol`` argument
-identifies the specific protocol that is going to be used. In our case,
-this argument is ``UNSPEC`` because the combination of ``PF_INET`` and
-``SOCK_STREAM`` implies TCP. Finally, the return value from ``socket``
-is a *handle* for the newly created socket—that is, an identifier by
-which we can refer to the socket in the future. It is given as an
-argument to subsequent operations on this socket.
+Lý do thao tác này nhận ba tham số là vì giao diện socket được thiết kế đủ tổng quát để hỗ trợ bất kỳ bộ giao thức nền tảng nào. Cụ thể, tham số ``domain`` xác định *họ giao thức* sẽ được sử dụng: ``PF_INET`` biểu thị họ Internet, ``PF_UNIX`` biểu thị cơ sở ống Unix, và ``PF_PACKET`` biểu thị truy cập trực tiếp vào giao diện mạng (tức là, bỏ qua ngăn xếp giao thức TCP/IP). Tham số ``type`` chỉ ra ngữ nghĩa của giao tiếp. ``SOCK_STREAM`` dùng để biểu thị luồng byte. ``SOCK_DGRAM`` là lựa chọn thay thế biểu thị dịch vụ hướng thông điệp, như UDP cung cấp. Tham số ``protocol`` xác định giao thức cụ thể sẽ được sử dụng. Trong trường hợp của chúng ta, tham số này là ``UNSPEC`` vì kết hợp ``PF_INET`` và ``SOCK_STREAM`` đã ngầm định là TCP. Cuối cùng, giá trị trả về từ ``socket`` là một *handle* cho socket vừa tạo—tức là, một định danh để chúng ta có thể tham chiếu socket này về sau. Nó được truyền làm tham số cho các thao tác tiếp theo trên socket này.
 
-The next step depends on whether you are a client or a server. On a
-server machine, the application process performs a *passive* open—the
-server says that it is prepared to accept connections, but it does not
-actually establish a connection. The server does this by invoking the
-following three operations:
+Bước tiếp theo phụ thuộc vào việc bạn là client hay server. Trên máy chủ, tiến trình ứng dụng thực hiện *mở thụ động*—server thông báo rằng nó sẵn sàng chấp nhận kết nối, nhưng chưa thực sự thiết lập kết nối. Server làm điều này bằng cách gọi ba thao tác sau:
 
 .. code-block:: c
-
    int bind(int socket, struct sockaddr *address, int addr_len);
    int listen(int socket, int backlog);
    int accept(int socket, struct sockaddr *address, int *addr_len);
 
-The ``bind`` operation, as its name suggests, binds the newly created
-``socket`` to the specified ``address``. This is the network address of
-the *local* participant—the server. Note that, when used with the
-Internet protocols, ``address`` is a data structure that includes both
-the IP address of the server and a TCP port number. Ports are used to
-indirectly identify processes. They are a form of *demux keys*. The port
-number is usually some well-known number specific to the service being
-offered; for example, web servers commonly accept connections on port
-80.
+Thao tác ``bind``, như tên gọi, gắn socket vừa tạo với ``address`` chỉ định. Đây là địa chỉ mạng của thành phần *cục bộ*—server. Lưu ý rằng, khi dùng với giao thức Internet, ``address`` là một cấu trúc dữ liệu bao gồm cả địa chỉ IP của server và số cổng TCP. Cổng được dùng để gián tiếp xác định tiến trình. Chúng là một dạng *khóa tách kênh* (demux keys). Số cổng thường là một số nổi tiếng cụ thể cho dịch vụ được cung cấp; ví dụ, web server thường chấp nhận kết nối ở cổng 80.
 
-The ``listen`` operation then defines how many connections can be
-pending on the specified ``socket``. Finally, the ``accept`` operation
-carries out the passive open. It is a blocking operation that does not
-return until a remote participant has established a connection, and when
-it does complete it returns a *new* socket that corresponds to this
-just-established connection, and the ``address`` argument contains the
-*remote* participant’s address. Note that when ``accept`` returns, the
-original socket that was given as an argument still exists and still
-corresponds to the passive open; it is used in future invocations of
-``accept``.
+Thao tác ``listen`` sau đó xác định số lượng kết nối có thể chờ trên socket chỉ định. Cuối cùng, thao tác ``accept`` thực hiện mở thụ động. Đây là thao tác chặn, không trả về cho đến khi một thành phần từ xa thiết lập kết nối, và khi hoàn thành sẽ trả về một socket *mới* tương ứng với kết nối vừa thiết lập, và tham số ``address`` chứa địa chỉ của thành phần *từ xa*. Lưu ý rằng khi ``accept`` trả về, socket gốc truyền vào vẫn tồn tại và vẫn tương ứng với mở thụ động; nó được dùng cho các lần gọi ``accept`` tiếp theo.
 
-On the client machine, the application process performs an *active*
-open; that is, it says who it wants to communicate with by invoking the
-following single operation:
+Trên máy client, tiến trình ứng dụng thực hiện *mở chủ động*; tức là, nó chỉ định muốn giao tiếp với ai bằng cách gọi thao tác sau:
 
 .. code-block:: c
-
    int connect(int socket, struct sockaddr *address, int addr_len);
 
-This operation does not return until TCP has successfully established a
-connection, at which time the application is free to begin sending data.
-In this case, ``address`` contains the remote participant’s address. In
-practice, the client usually specifies only the remote participant’s
-address and lets the system fill in the local information. Whereas a
-server usually listens for messages on a well-known port, a client
-typically does not care which port it uses for itself; the OS simply
-selects an unused one.
+Thao tác này không trả về cho đến khi TCP thiết lập kết nối thành công, lúc đó ứng dụng có thể bắt đầu gửi dữ liệu. Trong trường hợp này, ``address`` chứa địa chỉ của thành phần từ xa. Thực tế, client thường chỉ chỉ định địa chỉ của thành phần từ xa và để hệ thống tự điền thông tin cục bộ. Trong khi server thường lắng nghe ở một cổng nổi tiếng, client thường không quan tâm mình dùng cổng nào; hệ điều hành chỉ đơn giản chọn một cổng chưa dùng.
 
-Once a connection is established, the application processes invoke the
-following two operations to send and receive data:
+Khi kết nối đã được thiết lập, các tiến trình ứng dụng gọi hai thao tác sau để gửi và nhận dữ liệu:
 
 .. code-block:: c
-
    int send(int socket, char *message, int msg_len, int flags);
    int recv(int socket, char *buffer, int buf_len, int flags);
 
-The first operation sends the given ``message`` over the specified
-``socket``, while the second operation receives a message from the
-specified ``socket`` into the given ``buffer``. Both operations take a
-set of ``flags`` that control certain details of the operation.
+Thao tác đầu tiên gửi ``message`` qua ``socket`` chỉ định, còn thao tác thứ hai nhận một thông điệp từ ``socket`` chỉ định vào ``buffer``. Cả hai thao tác đều nhận một tập hợp ``flags`` để kiểm soát một số chi tiết của thao tác.
 
-1.4.2 Example Client/Server
----------------------------
-
-We now show the implementation of a simple client/server program that
-uses the socket interface to send messages over a TCP connection. The
-program also uses other Linux networking utilities, which we introduce as
-we go. Our application allows a user on one machine to type in and send
-text to a user on another machine. It is a simplified version of the
-Linux ``talk`` program, which is similar to the program at the core of
-instant messaging applications.
+1.4.2 Ví dụ Client/Server
+-------------------------
+Chúng ta sẽ trình bày việc triển khai một chương trình client/server đơn giản sử dụng giao diện socket để gửi thông điệp qua kết nối TCP. Chương trình cũng sử dụng các tiện ích mạng khác của Linux, sẽ được giới thiệu dần. Ứng dụng của chúng ta cho phép người dùng trên một máy nhập và gửi văn bản cho người dùng trên máy khác. Đây là phiên bản đơn giản hóa của chương trình ``talk`` trên Linux, tương tự như chương trình lõi của các ứng dụng nhắn tin tức thời.
 
 Client
 ~~~~~~
-
-We start with the client side, which takes the name of the remote
-machine as an argument. It calls the Linux utility to translate this name
-into the remote host’s IP address. The next step is to construct the
-address data structure (``sin``) expected by the socket interface.
-Notice that this data structure specifies that we’ll be using the socket
-to connect to the Internet (``AF_INET``). In our example, we use TCP
-port 5432 as the well-known server port; this happens to be a port that
-has not been assigned to any other Internet service. The final step in
-setting up the connection is to call ``socket`` and ``connect``. Once
-the operation returns, the connection is established and the client
-program enters its main loop, which reads text from standard input and
-sends it over the socket.
+Chúng ta bắt đầu với phía client, nhận tên máy từ xa làm tham số. Nó gọi tiện ích Linux để chuyển tên này thành địa chỉ IP của host từ xa. Bước tiếp theo là xây dựng cấu trúc dữ liệu địa chỉ (``sin``) mà giao diện socket mong đợi. Lưu ý rằng cấu trúc này chỉ rõ chúng ta sẽ dùng socket để kết nối Internet (``AF_INET``). Trong ví dụ, chúng ta dùng cổng TCP 5432 làm cổng server nổi tiếng; đây là cổng chưa được gán cho dịch vụ Internet nào khác. Bước cuối cùng để thiết lập kết nối là gọi ``socket`` và ``connect``. Khi thao tác trả về, kết nối đã được thiết lập và chương trình client đi vào vòng lặp chính, đọc văn bản từ đầu vào chuẩn và gửi qua socket.
 
 .. code-block:: c
-
    #include <stdio.h>
    #include <sys/types.h>
    #include <sys/socket.h>
@@ -295,19 +130,9 @@ sends it over the socket.
 
 Server
 ~~~~~~
-
-The server is equally simple. It first constructs the address data
-structure by filling in its own port number (``SERVER_PORT``). By not
-specifying an IP address, the application program is willing to accept
-connections on any of the local host’s IP addresses. Next, the server
-performs the preliminary steps involved in a passive open; it creates
-the socket, binds it to the local address, and sets the maximum number
-of pending connections to be allowed. Finally, the main loop waits for a
-remote host to try to connect, and when one does, it receives and prints
-out the characters that arrive on the connection.
+Server cũng đơn giản không kém. Đầu tiên nó xây dựng cấu trúc dữ liệu địa chỉ bằng cách điền số cổng của chính nó (``SERVER_PORT``). Bằng cách không chỉ định địa chỉ IP, chương trình ứng dụng sẵn sàng chấp nhận kết nối trên bất kỳ địa chỉ IP nào của host cục bộ. Tiếp theo, server thực hiện các bước chuẩn bị cho mở thụ động; nó tạo socket, gắn socket vào địa chỉ cục bộ, và đặt số lượng kết nối chờ tối đa được phép. Cuối cùng, vòng lặp chính chờ một host từ xa cố gắng kết nối, và khi có, nó nhận và in ra các ký tự nhận được trên kết nối.
 
 .. code-block:: c
-
    #include <stdio.h>
    #include <sys/types.h>
    #include <sys/socket.h>
