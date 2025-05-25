@@ -1,64 +1,14 @@
-Problem: Building a Network
----------------------------
+Problem: Xây dựng một Mạng máy tính
+------------------------------------
 
-Suppose you want to build a computer network, one that has the potential
-to grow to global proportions and to support applications as diverse as
-teleconferencing, video on demand, electronic commerce, distributed
-computing, and digital libraries. What available technologies would
-serve as the underlying building blocks, and what kind of software
-architecture would you design to integrate these building blocks into an
-effective communication service? Answering this question is the
-overriding goal of this book—to describe the available building
-materials and then to show how they can be used to construct a network
-from the ground up.
+Giả sử bạn muốn xây dựng một mạng máy tính, một mạng có tiềm năng phát triển đến quy mô toàn cầu và hỗ trợ các ứng dụng đa dạng như hội nghị truyền hình, video theo yêu cầu, thương mại điện tử, điện toán phân tán và thư viện số. Những công nghệ nào hiện có sẽ đóng vai trò là các khối xây dựng cơ bản, và bạn sẽ thiết kế kiến trúc phần mềm như thế nào để tích hợp các khối xây dựng này thành một dịch vụ truyền thông hiệu quả? Trả lời câu hỏi này là mục tiêu chính của cuốn sách này—mô tả các vật liệu xây dựng sẵn có và sau đó chỉ ra cách chúng có thể được sử dụng để xây dựng một mạng từ đầu.
 
-Before we can understand how to design a computer network, we should
-first agree on exactly what a computer network is. At one time, the term
-*network* meant the set of serial lines used to attach dumb terminals to
-mainframe computers. Other important networks include the voice
-telephone network and the cable TV network used to disseminate video
-signals. The main things these networks have in common are that they are
-specialized to handle one particular kind of data (keystrokes, voice, or
-video) and they typically connect to special-purpose devices (terminals,
-hand receivers, and television sets).
+Trước khi chúng ta có thể hiểu cách thiết kế một mạng máy tính, trước tiên chúng ta nên thống nhất về chính xác mạng máy tính là gì. Đã từng, thuật ngữ *mạng* có nghĩa là tập hợp các đường truyền nối tiếp dùng để kết nối các thiết bị đầu cuối ngu ngốc với máy tính lớn. Các mạng quan trọng khác bao gồm mạng điện thoại thoại và mạng truyền hình cáp dùng để truyền tín hiệu video. Điểm chung chính của các mạng này là chúng được chuyên biệt để xử lý một loại dữ liệu cụ thể (nhấn phím, thoại hoặc video) và chúng thường kết nối với các thiết bị chuyên dụng (thiết bị đầu cuối, ống nghe và tivi).
 
-What distinguishes a computer network from these other types of
-networks? Probably the most important characteristic of a computer
-network is its generality. Computer networks are built primarily from
-general-purpose programmable hardware, and they are not optimized for a
-particular application like making phone calls or delivering television
-signals. Instead, they are able to carry many different types of data,
-and they support a wide, and ever growing, range of applications.
-Today’s computer networks have pretty much taken over the functions
-previously performed by single-use networks. This chapter looks at some
-typical applications of computer networks and discusses the requirements
-that a network designer who wishes to support such applications must be
-aware of.
+Điều gì làm cho mạng máy tính khác biệt với các loại mạng khác? Có lẽ đặc điểm quan trọng nhất của mạng máy tính là tính tổng quát của nó. Mạng máy tính chủ yếu được xây dựng từ phần cứng lập trình đa năng, và chúng không được tối ưu hóa cho một ứng dụng cụ thể như gọi điện thoại hoặc truyền tín hiệu truyền hình. Thay vào đó, chúng có thể truyền nhiều loại dữ liệu khác nhau, và chúng hỗ trợ một phạm vi rộng lớn, ngày càng mở rộng, các ứng dụng. Ngày nay, mạng máy tính về cơ bản đã đảm nhận các chức năng trước đây do các mạng đơn mục đích thực hiện. Chương này xem xét một số ứng dụng điển hình của mạng máy tính và thảo luận về các yêu cầu mà một nhà thiết kế mạng muốn hỗ trợ các ứng dụng như vậy cần phải lưu ý.
 
-Once we understand the requirements, how do we proceed? Fortunately, we
-will not be building the first network. Others, most notably the
-community of researchers responsible for the Internet, have gone before
-us. We will use the wealth of experience generated from the Internet to
-guide our design. This experience is embodied in a *network
-architecture* that identifies the available hardware and software
-components and shows how they can be arranged to form a complete network
-system.
+Sau khi chúng ta hiểu các yêu cầu, làm thế nào để tiến hành? May mắn thay, chúng ta sẽ không phải xây dựng mạng đầu tiên. Những người khác, nổi bật nhất là cộng đồng các nhà nghiên cứu chịu trách nhiệm về Internet, đã đi trước chúng ta. Chúng ta sẽ sử dụng kho kinh nghiệm phong phú được tạo ra từ Internet để định hướng cho thiết kế của mình. Kinh nghiệm này được thể hiện trong một *kiến trúc mạng* xác định các thành phần phần cứng và phần mềm sẵn có và chỉ ra cách chúng có thể được sắp xếp để tạo thành một hệ thống mạng hoàn chỉnh.
 
-In addition to understanding how networks are built, it is increasingly
-important to understand how they are operated or managed and how network
-applications are developed. Almost all of us now have computer networks
-in our homes, offices, and in some cases in our cars, so operating
-networks is no longer a matter only for a few specialists. And with the
-proliferation of smartphones, many more of this generation are
-developing networked applications than in the past. So we need to
-consider networks from these multiple perspectives: builders, operators,
-application developers.
+Bên cạnh việc hiểu cách xây dựng mạng, ngày càng quan trọng hơn là phải hiểu cách vận hành hoặc quản lý chúng và cách phát triển các ứng dụng mạng. Hầu như tất cả chúng ta hiện nay đều có mạng máy tính trong nhà, văn phòng, và trong một số trường hợp là trên xe hơi, vì vậy việc vận hành mạng không còn chỉ là vấn đề của một vài chuyên gia nữa. Và với sự bùng nổ của điện thoại thông minh, nhiều người trong thế hệ này đang phát triển các ứng dụng mạng hơn so với trước đây. Vì vậy, chúng ta cần xem xét mạng từ nhiều góc độ: người xây dựng, người vận hành, nhà phát triển ứng dụng.
 
-To start us on the road toward understanding how to build, operate, and
-program a network, this chapter does four things. First, it explores the
-requirements that different applications and different communities of
-people place on the network. Second, it introduces the idea of a network
-architecture, which lays the foundation for the rest of the book. Third,
-it introduces some of the key elements in the implementation of computer
-networks. Finally, it identifies the key metrics that are used to
-evaluate the performance of computer networks.
+Để bắt đầu con đường tìm hiểu cách xây dựng, vận hành và lập trình một mạng, chương này thực hiện bốn điều. Thứ nhất, nó khám phá các yêu cầu mà các ứng dụng khác nhau và các cộng đồng người dùng khác nhau đặt ra cho mạng. Thứ hai, nó giới thiệu ý tưởng về kiến trúc mạng, đặt nền tảng cho phần còn lại của cuốn sách. Thứ ba, nó giới thiệu một số yếu tố then chốt trong việc triển khai mạng máy tính. Cuối cùng, nó xác định các chỉ số chính được sử dụng để đánh giá hiệu năng của mạng máy tính.
