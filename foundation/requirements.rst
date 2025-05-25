@@ -1,665 +1,181 @@
 ==================
- 1.2 Requirements
+ 1.2 Yêu cầu
 ==================
 
-We have established an ambitious goal for ourselves: to understand how
-to build a computer network from the ground up. Our approach to
-accomplishing this goal will be to start from first principles and then
-ask the kinds of questions we would naturally ask if building an actual
-network. At each step, we will use today’s protocols to illustrate
-various design choices available to us, but we will not accept these
-existing artifacts as gospel. Instead, we will be asking (and answering)
-the question of *why* networks are designed the way they are. While it
-is tempting to settle for just understanding the way it’s done today, it
-is important to recognize the underlying concepts because networks are
-constantly changing as technology evolves and new applications are
-invented. It is our experience that once you understand the fundamental
-ideas, any new protocol that you are confronted with will be relatively
-easy to digest.
+Chúng ta đã đặt ra cho mình một mục tiêu đầy tham vọng: hiểu cách xây dựng một mạng máy tính từ đầu. Cách tiếp cận của chúng ta để đạt được mục tiêu này sẽ là bắt đầu từ những nguyên lý cơ bản và sau đó đặt ra những câu hỏi mà chúng ta tự nhiên sẽ hỏi nếu xây dựng một mạng thực tế. Ở mỗi bước, chúng ta sẽ sử dụng các giao thức hiện nay để minh họa các lựa chọn thiết kế khác nhau có sẵn, nhưng chúng ta sẽ không coi những hiện vật hiện có này là chân lý tuyệt đối. Thay vào đó, chúng ta sẽ đặt (và trả lời) câu hỏi *tại sao* các mạng lại được thiết kế như hiện nay. Mặc dù thật hấp dẫn khi chỉ dừng lại ở việc hiểu cách làm hiện tại, nhưng điều quan trọng là phải nhận ra các khái niệm nền tảng vì các mạng luôn thay đổi khi công nghệ phát triển và các ứng dụng mới được phát minh. Theo kinh nghiệm của chúng tôi, một khi bạn hiểu được các ý tưởng cơ bản, bất kỳ giao thức mới nào mà bạn gặp phải cũng sẽ tương đối dễ tiếp thu.
 
-1.2.1 Stakeholders
+1.2.1 Các bên liên quan
 -----------------------
 
-As we noted above, a student of networks can take several perspectives.
-When we wrote the first edition of this book, the majority of the
-population had no Internet access at all, and those who did obtained it
-while at work, at a university, or by a dial-up modem at home. The set
-of popular applications could be counted on one’s fingers. Thus, like
-most books at the time, ours focused on the perspective of someone who
-would design networking equipment and protocols. We continue to focus on
-this perspective, and our hope is that after reading this book you will
-know how to design the networking equipment and protocols of the future.
+Như đã đề cập ở trên, một người học về mạng có thể tiếp cận từ nhiều góc độ khác nhau. Khi chúng tôi viết ấn bản đầu tiên của cuốn sách này, phần lớn dân số hoàn toàn không có truy cập Internet, và những người có thì chủ yếu truy cập tại nơi làm việc, trường đại học hoặc qua modem quay số tại nhà. Số lượng ứng dụng phổ biến có thể đếm trên đầu ngón tay. Do đó, giống như hầu hết các cuốn sách cùng thời, sách của chúng tôi tập trung vào góc nhìn của người thiết kế thiết bị và giao thức mạng. Chúng tôi tiếp tục tập trung vào góc nhìn này, và hy vọng rằng sau khi đọc cuốn sách này, bạn sẽ biết cách thiết kế thiết bị và giao thức mạng của tương lai.
 
-However, we also want to cover the perspectives of two additional
-stakeholders: those who develop networked applications and those who
-manage or operate networks. Let’s consider how these three stakeholders
-might list their requirements for a network:
+Tuy nhiên, chúng tôi cũng muốn đề cập đến góc nhìn của hai nhóm liên quan bổ sung: những người phát triển ứng dụng mạng và những người quản lý hoặc vận hành mạng. Hãy xem ba nhóm này có thể liệt kê các yêu cầu đối với một mạng như thế nào:
 
--  An *application programmer* would list the services that his or her
-   application needs: for example, a guarantee that each message the
-   application sends will be delivered without error within a certain
-   amount of time or the ability to switch gracefully among different
-   connections to the network as the user moves around.
+-  Một *lập trình viên ứng dụng* sẽ liệt kê các dịch vụ mà ứng dụng của họ cần: ví dụ, đảm bảo rằng mỗi thông điệp ứng dụng gửi sẽ được chuyển giao không lỗi trong một khoảng thời gian nhất định hoặc khả năng chuyển đổi linh hoạt giữa các kết nối mạng khác nhau khi người dùng di chuyển.
+-  Một *nhà vận hành mạng* sẽ liệt kê các đặc điểm của một hệ thống dễ quản trị và vận hành: ví dụ, các lỗi có thể dễ dàng cô lập, thiết bị mới có thể được thêm vào mạng và cấu hình đúng, và dễ dàng kiểm soát việc sử dụng.
+-  Một *nhà thiết kế mạng* sẽ liệt kê các thuộc tính của một thiết kế hiệu quả về chi phí: ví dụ, tài nguyên mạng được sử dụng hiệu quả và phân bổ công bằng cho các người dùng khác nhau. Các vấn đề về hiệu năng cũng có thể rất quan trọng.
 
--  A *network operator* would list the characteristics of a system that
-   is easy to administer and manage: for example, in which faults can be
-   easily isolated, new devices can be added to the network and
-   configured correctly, and it is easy to account for usage.
+Phần này cố gắng chắt lọc các yêu cầu của các bên liên quan khác nhau thành phần giới thiệu cấp cao về các yếu tố chính thúc đẩy thiết kế mạng và qua đó xác định các thách thức được đề cập trong phần còn lại của cuốn sách này.
 
--  A *network designer* would list the properties of a cost-effective
-   design: for example, that network resources are efficiently utilized
-   and fairly allocated to different users. Issues of performance are
-   also likely to be important.
+1.2.2 Kết nối mở rộng quy mô
+----------------------------
 
-This section attempts to distill the requirements of different
-stakeholders into a high-level introduction to the major considerations
-that drive network design and, in doing so, identify the challenges
-addressed throughout the rest of this book.
+Bắt đầu từ điều hiển nhiên, một mạng phải cung cấp kết nối giữa một tập hợp các máy tính. Đôi khi chỉ cần xây dựng một mạng giới hạn kết nối một vài máy được chọn. Thực tế, vì lý do riêng tư và bảo mật, nhiều mạng riêng (doanh nghiệp) có mục tiêu rõ ràng là giới hạn tập hợp các máy được kết nối. Ngược lại, các mạng khác (Internet là ví dụ điển hình) được thiết kế để phát triển theo cách cho phép chúng có khả năng kết nối tất cả các máy tính trên thế giới. Một hệ thống được thiết kế để hỗ trợ phát triển đến quy mô bất kỳ được gọi là *có khả năng mở rộng* (scale). Sử dụng Internet làm mô hình, cuốn sách này đề cập đến thách thức về khả năng mở rộng.
 
-1.2.2 Scalable Connectivity
-----------------------------------
-
-Starting with the obvious, a network must provide connectivity among a
-set of computers. Sometimes it is enough to build a limited network that
-connects only a few select machines. In fact, for reasons of privacy and
-security, many private (corporate) networks have the explicit goal of
-limiting the set of machines that are connected. In contrast, other
-networks (of which the Internet is the prime example) are designed to
-grow in a way that allows them the potential to connect all the
-computers in the world. A system that is designed to support growth to
-an arbitrarily large size is said to *scale*. Using the Internet as a
-model, this book addresses the challenge of scalability.
-
-To understand the requirements of connectivity more fully, we need to
-take a closer look at how computers are connected in a network.
-Connectivity occurs at many different levels. At the lowest level, a
-network can consist of two or more computers directly connected by some
-physical medium, such as a coaxial cable or an optical fiber. We call
-such a physical medium a *link*, and we often refer to the computers it
-connects as *nodes*. (Sometimes a node is a more specialized piece of
-hardware rather than a computer, but we overlook that distinction for
-the purposes of this discussion.) As illustrated in :numref:`Figure %s
-<fig-direct>`, physical links are sometimes limited to a pair of nodes
-(such a link is said to be *point-to-point*), while in other cases more
-than two nodes may share a single physical link (such a link is said to
-be *multiple-access*). Wireless links, such as those provided by
-cellular networks and Wi-Fi networks, are an important class of
-multiple-access links. It is always the case that multiple-access links
-are limited in size, in terms of both the geographical distance they can
-cover and the number of nodes they can connect. For this reason, they
-often implement the so-called *last mile*, connecting end users to the
-rest of the network.
+Để hiểu đầy đủ hơn các yêu cầu về kết nối, chúng ta cần xem xét kỹ hơn cách các máy tính được kết nối trong một mạng. Kết nối xảy ra ở nhiều cấp độ khác nhau. Ở cấp thấp nhất, một mạng có thể bao gồm hai hoặc nhiều máy tính được kết nối trực tiếp bằng một số phương tiện vật lý, như cáp đồng trục hoặc cáp quang. Chúng ta gọi phương tiện vật lý như vậy là một *liên kết* (link), và thường gọi các máy tính mà nó kết nối là *nút* (node). (Đôi khi một nút là một phần cứng chuyên dụng hơn là một máy tính, nhưng chúng ta sẽ bỏ qua sự khác biệt này trong phạm vi thảo luận này.) Như minh họa trong :numref:`Hình %s <fig-direct>`, các liên kết vật lý đôi khi chỉ giới hạn cho một cặp nút (liên kết như vậy gọi là *point-to-point*), trong khi ở các trường hợp khác, nhiều hơn hai nút có thể chia sẻ một liên kết vật lý duy nhất (liên kết như vậy gọi là *multiple-access*). Các liên kết không dây, như mạng di động và Wi-Fi, là một lớp quan trọng của liên kết multiple-access. Luôn luôn đúng là các liên kết multiple-access bị giới hạn về kích thước, cả về khoảng cách địa lý mà chúng có thể bao phủ và số lượng nút mà chúng có thể kết nối. Vì lý do này, chúng thường được sử dụng để triển khai cái gọi là *last mile*, kết nối người dùng cuối với phần còn lại của mạng.
 
 .. _fig-direct:
 .. figure:: figures/f01-02-9780123850591.png
    :width: 500px
    :align: center
 
-   Direct links: (a) point-to-point; (b) multiple-access.
+   Liên kết trực tiếp: (a) point-to-point; (b) multiple-access.
 
-If computer networks were limited to situations in which all nodes are
-directly connected to each other over a common physical medium, then
-either networks would be very limited in the number of computers they
-could connect, or the number of wires coming out of the back of each
-node would quickly become both unmanageable and very expensive.
-Fortunately, connectivity between two nodes does not necessarily imply a
-direct physical connection between them—indirect connectivity may be
-achieved among a set of cooperating nodes. Consider the following two
-examples of how a collection of computers can be indirectly connected.
+Nếu các mạng máy tính chỉ giới hạn trong các trường hợp mà tất cả các nút đều được kết nối trực tiếp với nhau qua một phương tiện vật lý chung, thì hoặc là mạng sẽ rất hạn chế về số lượng máy tính có thể kết nối, hoặc số lượng dây cáp đi ra từ mỗi nút sẽ nhanh chóng trở nên không thể quản lý và rất tốn kém. May mắn thay, kết nối giữa hai nút không nhất thiết phải là kết nối vật lý trực tiếp—kết nối gián tiếp có thể đạt được giữa một tập hợp các nút hợp tác. Hãy xem hai ví dụ sau về cách một tập hợp máy tính có thể được kết nối gián tiếp.
 
-:numref:`Figure %s <fig-psn>` shows a set of nodes,
-each of which is attached to one or more point-to-point links. Those
-nodes that are attached to at least two links run software that
-forwards data received on one link out on another. If organized in a
-systematic way, these forwarding nodes form a *switched
-network*. There are numerous types of switched networks, of which the
-two most common are *circuit switched* and *packet switched*. The
-former is most notably employed by the telephone system, while the
-latter is used for the overwhelming majority of computer networks and
-will be the focus of this book. (Circuit switching is, however, making
-a bit of a comeback in the optical networking realm, which turns out
-to be important as demand for network capacity constantly grows.) The
-important feature of packet-switched networks is that the nodes in
-such a network send discrete blocks of data to each other. Think of
-these blocks of data as corresponding to some piece of application
-data such as a file, a piece of email, or an image. We call each block
-of data either a *packet* or a *message*, and for now we use these
-terms interchangeably.
+:numref:`Hình %s <fig-psn>` cho thấy một tập hợp các nút, mỗi nút được kết nối với một hoặc nhiều liên kết point-to-point. Những nút được kết nối với ít nhất hai liên kết sẽ chạy phần mềm chuyển tiếp dữ liệu nhận được trên một liên kết sang liên kết khác. Nếu được tổ chức một cách hệ thống, các nút chuyển tiếp này tạo thành một *mạng chuyển mạch* (switched network). Có nhiều loại mạng chuyển mạch, trong đó hai loại phổ biến nhất là *chuyển mạch kênh* (circuit switched) và *chuyển mạch gói* (packet switched). Loại đầu tiên được sử dụng chủ yếu trong hệ thống điện thoại, trong khi loại thứ hai được sử dụng cho phần lớn các mạng máy tính và sẽ là trọng tâm của cuốn sách này. (Chuyển mạch kênh, tuy nhiên, đang có sự trở lại trong lĩnh vực mạng quang học, điều này trở nên quan trọng khi nhu cầu về dung lượng mạng không ngừng tăng.) Đặc điểm quan trọng của mạng chuyển mạch gói là các nút trong mạng này gửi các khối dữ liệu rời rạc cho nhau. Hãy coi các khối dữ liệu này tương ứng với một phần dữ liệu ứng dụng như một tệp, một email hoặc một hình ảnh. Chúng ta gọi mỗi khối dữ liệu là một *gói* (packet) hoặc *thông điệp* (message), và hiện tại hai thuật ngữ này được dùng thay thế cho nhau.
 
 .. _fig-psn:
 .. figure:: figures/f01-03-9780123850591.png
    :width: 500px
    :align: center
 
-   Switched network.
+   Mạng chuyển mạch.
 
-Packet-switched networks typically use a strategy called
-*store-and-forward*. As the name suggests, each node in a
-store-and-forward network first receives a complete packet over some
-link, stores the packet in its internal memory, and then forwards the
-complete packet to the next node. In contrast, a circuit-switched
-network first establishes a dedicated circuit across a sequence of links
-and then allows the source node to send a stream of bits across this
-circuit to a destination node. The major reason for using packet
-switching rather than circuit switching in a computer network is
-efficiency, discussed in the next subsection.
+Các mạng chuyển mạch gói thường sử dụng chiến lược gọi là *lưu trữ và chuyển tiếp* (store-and-forward). Đúng như tên gọi, mỗi nút trong mạng lưu trữ và chuyển tiếp trước tiên nhận toàn bộ gói qua một liên kết, lưu gói vào bộ nhớ trong, sau đó chuyển tiếp toàn bộ gói sang nút tiếp theo. Ngược lại, mạng chuyển mạch kênh trước tiên thiết lập một kênh chuyên dụng qua một chuỗi các liên kết rồi cho phép nút nguồn gửi một luồng bit qua kênh này đến nút đích. Lý do chính để sử dụng chuyển mạch gói thay vì chuyển mạch kênh trong mạng máy tính là hiệu quả, sẽ được bàn ở phần tiếp theo.
 
-The cloud in :numref:`Figure %s <fig-psn>` distinguishes between the
-nodes on the inside that *implement* the network (they are commonly
-called *switches*, and their primary function is to store and forward
-packets) and the nodes on the outside of the cloud that *use* the
-network (they are traditionally called *hosts*, and they support users
-and run application programs). Also note that the cloud is one of the
-most important icons of computer networking. In general, we use a
-cloud to denote any type of network, whether it is a single
-point-to-point link, a multiple-access link, or a switched
-network. Thus, whenever you see a cloud used in a figure, you can
-think of it as a placeholder for any of the networking technologies
-covered in this book.\ [#]_
+Đám mây trong :numref:`Hình %s <fig-psn>` phân biệt giữa các nút bên trong *triển khai* mạng (thường gọi là *switch*, chức năng chính là lưu trữ và chuyển tiếp gói) và các nút bên ngoài đám mây *sử dụng* mạng (truyền thống gọi là *host*, hỗ trợ người dùng và chạy chương trình ứng dụng). Cũng lưu ý rằng đám mây là một trong những biểu tượng quan trọng nhất của mạng máy tính. Nói chung, chúng ta dùng đám mây để biểu diễn bất kỳ loại mạng nào, dù là một liên kết point-to-point, một liên kết multiple-access hay một mạng chuyển mạch. Do đó, bất cứ khi nào bạn thấy một đám mây trong hình, bạn có thể coi nó là đại diện cho bất kỳ công nghệ mạng nào được đề cập trong cuốn sách này.\ [#]_
 
-.. [#] The use of clouds to represent networks predates the term
-       *cloud computing* by at least a couple of decades, but there is
-       an increasingly rich connection between these two usages, which
-       we explore in the *Perspective* discussion at the end of each
-       chapter.
+.. [#] Việc sử dụng đám mây để biểu diễn mạng có trước thuật ngữ *cloud computing* ít nhất vài thập kỷ, nhưng ngày càng có nhiều mối liên hệ phong phú giữa hai cách dùng này, sẽ được chúng tôi bàn trong phần *Perspective* ở cuối mỗi chương.
 
 .. _fig-internet-cloud:
 .. figure:: figures/f01-04-9780123850591.png
    :width: 500px
    :align: center
 
-   Interconnection of networks.
+   Kết nối các mạng.
 
-A second way in which a set of computers can be indirectly connected
-is shown in :numref:`Figure %s <fig-internet-cloud>`. In this
-situation, a set of independent networks (clouds) are interconnected
-to form an *internetwork*, or internet for short. We adopt the
-Internet’s convention of referring to a generic internetwork of
-networks as a lowercase *i* internet, and the TCP/IP Internet we all
-use every day as the capital *I* Internet. A node that is connected
-to two or more networks is commonly called a *router* or *gateway*,
-and it plays much the same role as a switch—it forwards messages from
-one network to another. Note that an internet can itself be viewed as
-another kind of network, which means that an internet can be built
-from a set of internets.  Thus, we can recursively build arbitrarily
-large networks by interconnecting clouds to form larger clouds. It can
-reasonably be argued that this idea of interconnecting widely
-differing networks was the fundamental innovation of the Internet and
-that the successful growth of the Internet to global size and billions
-of nodes was the result of some very good design decisions by the
-early Internet architects, which we will discuss later.
+Một cách thứ hai để một tập hợp máy tính có thể được kết nối gián tiếp được minh họa trong :numref:`Hình %s <fig-internet-cloud>`. Trong trường hợp này, một tập hợp các mạng độc lập (đám mây) được kết nối với nhau để tạo thành một *internetwork*, hay gọi tắt là internet. Chúng tôi tuân theo quy ước của Internet khi gọi một mạng liên kết các mạng là internet viết thường, còn Internet TCP/IP mà chúng ta sử dụng hàng ngày là Internet viết hoa. Một nút được kết nối với hai hoặc nhiều mạng thường được gọi là *router* hoặc *gateway*, và nó đóng vai trò tương tự như switch—chuyển tiếp thông điệp từ mạng này sang mạng khác. Lưu ý rằng một internet cũng có thể được coi là một loại mạng khác, nghĩa là một internet có thể được xây dựng từ một tập hợp các internet. Do đó, chúng ta có thể xây dựng các mạng có quy mô bất kỳ bằng cách kết nối các đám mây để tạo thành các đám mây lớn hơn. Có thể nói rằng ý tưởng kết nối các mạng rất khác nhau là đổi mới nền tảng của Internet và sự phát triển thành công của Internet đến quy mô toàn cầu và hàng tỷ nút là kết quả của những quyết định thiết kế rất tốt của các kiến trúc sư Internet ban đầu, sẽ được bàn sau.
 
-Just because a set of hosts are directly or indirectly connected to each
-other does not mean that we have succeeded in providing host-to-host
-connectivity. The final requirement is that each node must be able to
-say which of the other nodes on the network it wants to communicate
-with. This is done by assigning an *address* to each node. An address is
-a byte string that identifies a node; that is, the network can use a
-node’s address to distinguish it from the other nodes connected to the
-network. When a source node wants the network to deliver a message to a
-certain destination node, it specifies the address of the destination
-node. If the sending and receiving nodes are not directly connected,
-then the switches and routers of the network use this address to decide
-how to forward the message toward the destination. The process of
-determining systematically how to forward messages toward the
-destination node based on its address is called *routing*.
+Chỉ vì một tập hợp host được kết nối trực tiếp hoặc gián tiếp với nhau không có nghĩa là chúng ta đã cung cấp thành công kết nối host-to-host. Yêu cầu cuối cùng là mỗi nút phải có thể xác định nút nào khác trên mạng mà nó muốn giao tiếp. Điều này được thực hiện bằng cách gán một *địa chỉ* cho mỗi nút. Địa chỉ là một chuỗi byte xác định một nút; tức là, mạng có thể sử dụng địa chỉ của một nút để phân biệt nó với các nút khác được kết nối với mạng. Khi một nút nguồn muốn mạng chuyển một thông điệp đến một nút đích nhất định, nó chỉ định địa chỉ của nút đích. Nếu các nút gửi và nhận không được kết nối trực tiếp, các switch và router của mạng sẽ sử dụng địa chỉ này để quyết định cách chuyển tiếp thông điệp đến đích. Quá trình xác định một cách hệ thống cách chuyển tiếp thông điệp dựa trên địa chỉ đích gọi là *định tuyến* (routing).
 
-This brief introduction to addressing and routing has presumed that the
-source node wants to send a message to a single destination node
-(*unicast*). While this is the most common scenario, it is also possible
-that the source node might want to *broadcast* a message to all the
-nodes on the network. Or, a source node might want to send a message to
-some subset of the other nodes but not all of them, a situation called
-*multicast*. Thus, in addition to node-specific addresses, another
-requirement of a network is that it supports multicast and broadcast
-addresses.
+Giới thiệu ngắn gọn về địa chỉ và định tuyến này giả định rằng nút nguồn muốn gửi thông điệp đến một nút đích duy nhất (*unicast*). Mặc dù đây là trường hợp phổ biến nhất, cũng có thể nút nguồn muốn *broadcast* một thông điệp đến tất cả các nút trên mạng. Hoặc, nút nguồn muốn gửi thông điệp đến một số nút con trong mạng nhưng không phải tất cả, gọi là *multicast*. Do đó, ngoài địa chỉ riêng cho từng nút, một yêu cầu khác của mạng là hỗ trợ địa chỉ multicast và broadcast.
 
 .. _key-nested:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-  The main idea to take away from this discussion is that we can
-  define a *network* recursively as consisting of two or more nodes
-  connected by a physical link, or as two or more networks connected
-  by a node. In other words, a network can be constructed from a
-  nesting of networks, where at the bottom level, the network is
-  implemented by some physical medium. Among the key challenges in
-  providing network connectivity are the definition of an address for
-  each node that is reachable on the network (be it logical or
-  physical), and the use of such addresses to forward messages toward
-  the appropriate destination node(s). :ref:`[Next] <key-stat-mux>`
+  Ý chính cần rút ra từ phần này là chúng ta có thể định nghĩa một *mạng* một cách đệ quy là gồm hai hoặc nhiều nút được kết nối bằng một liên kết vật lý, hoặc hai hoặc nhiều mạng được kết nối bằng một nút. Nói cách khác, một mạng có thể được xây dựng từ sự lồng ghép các mạng, trong đó ở cấp thấp nhất, mạng được triển khai bằng một phương tiện vật lý nào đó. Một trong những thách thức then chốt khi cung cấp kết nối mạng là xác định địa chỉ cho mỗi nút có thể truy cập trên mạng (dù là logic hay vật lý), và sử dụng các địa chỉ đó để chuyển tiếp thông điệp đến nút đích phù hợp. :ref:`[Tiếp theo] <key-stat-mux>`
 
-1.2.3 Cost-Effective Resource Sharing
-----------------------------------------------
+1.2.3 Chia sẻ tài nguyên hiệu quả về chi phí
+--------------------------------------------
 
-As stated above, this book focuses on packet-switched networks. This
-section explains the key requirement of computer
-networks—efficiency—that leads us to packet switching as the strategy of
-choice.
+Như đã nêu ở trên, cuốn sách này tập trung vào các mạng chuyển mạch gói. Phần này giải thích yêu cầu then chốt của mạng máy tính—hiệu quả—dẫn chúng ta đến chuyển mạch gói như là chiến lược lựa chọn.
 
-Given a collection of nodes indirectly connected by a nesting of
-networks, it is possible for any pair of hosts to send messages to each
-other across a sequence of links and nodes. Of course, we want to do
-more than support just one pair of communicating hosts—we want to
-provide all pairs of hosts with the ability to exchange messages. The
-question, then, is how do all the hosts that want to communicate share
-the network, especially if they want to use it at the same time? And, as
-if that problem isn’t hard enough, how do several hosts share the same
-*link* when they all want to use it at the same time?
+Với một tập hợp các nút được kết nối gián tiếp qua các mạng lồng ghép, bất kỳ cặp host nào cũng có thể gửi thông điệp cho nhau qua một chuỗi các liên kết và nút. Tất nhiên, chúng ta muốn làm nhiều hơn là chỉ hỗ trợ một cặp host giao tiếp—chúng ta muốn cung cấp cho tất cả các cặp host khả năng trao đổi thông điệp. Vậy câu hỏi đặt ra là làm thế nào để tất cả các host muốn giao tiếp có thể chia sẻ mạng, đặc biệt là khi họ muốn sử dụng cùng lúc? Và, như thể vấn đề đó chưa đủ khó, làm thế nào để nhiều host chia sẻ cùng một *liên kết* khi tất cả đều muốn sử dụng cùng lúc?
 
-To understand how hosts share a network, we need to introduce a
-fundamental concept, *multiplexing*, which means that a system resource
-is shared among multiple users. At an intuitive level, multiplexing can
-be explained by analogy to a timesharing computer system, where a single
-physical processor is shared (multiplexed) among multiple jobs, each of
-which believes it has its own private processor. Similarly, data being
-sent by multiple users can be multiplexed over the physical links that
-make up a network.
+Để hiểu cách các host chia sẻ một mạng, chúng ta cần giới thiệu một khái niệm cơ bản, *ghép kênh* (multiplexing), nghĩa là một tài nguyên hệ thống được chia sẻ cho nhiều người dùng. Ở mức trực quan, ghép kênh có thể được giải thích bằng phép so sánh với hệ thống máy tính chia sẻ thời gian, nơi một bộ xử lý vật lý duy nhất được chia sẻ (ghép kênh) cho nhiều công việc, mỗi công việc đều nghĩ rằng mình có bộ xử lý riêng. Tương tự, dữ liệu được gửi bởi nhiều người dùng có thể được ghép kênh qua các liên kết vật lý tạo nên một mạng.
 
-To see how this might work, consider the simple network illustrated in
-:numref:`Figure %s <fig-mux>`, where the three hosts on the left side
-of the network (senders S1-S3) are sending data to the three hosts on
-the right (receivers R1-R3) by sharing a switched network that
-contains only one physical link. (For simplicity, assume that host S1
-is sending data to host R1, and so on.) In this situation, three flows
-of data—corresponding to the three pairs of hosts—are multiplexed onto
-a single physical link by switch 1 and then *demultiplexed* back into
-separate flows by switch 2. Note that we are being intentionally vague
-about exactly what a “flow of data” corresponds to. For the purposes
-of this discussion, assume that each host on the left has a large
-supply of data that it wants to send to its counterpart on the right.
+Để thấy điều này hoạt động như thế nào, hãy xem mạng đơn giản minh họa trong :numref:`Hình %s <fig-mux>`, nơi ba host ở phía bên trái mạng (gửi S1-S3) đang gửi dữ liệu đến ba host ở phía bên phải (nhận R1-R3) bằng cách chia sẻ một mạng chuyển mạch chỉ có một liên kết vật lý. (Để đơn giản, giả sử host S1 gửi dữ liệu cho R1, v.v.) Trong trường hợp này, ba luồng dữ liệu—tương ứng với ba cặp host—được ghép kênh lên một liên kết vật lý duy nhất bởi switch 1 và sau đó được *tách kênh* (demultiplexed) trở lại thành các luồng riêng biệt bởi switch 2. Lưu ý rằng chúng ta cố tình không xác định chính xác “luồng dữ liệu” là gì. Trong phạm vi thảo luận này, giả sử mỗi host bên trái có một lượng lớn dữ liệu muốn gửi cho đối tác bên phải.
 
 .. _fig-mux:
 .. figure:: figures/f01-05-9780123850591.png
    :width: 500px
    :align: center
 
-   Multiplexing multiple logical flows over a single
-   physical link.
+   Ghép kênh nhiều luồng logic lên một liên kết vật lý.
 
-There are several different methods for multiplexing multiple flows onto
-one physical link. One common method is *synchronous time-division
-multiplexing* (STDM). The idea of STDM is to divide time into
-equal-sized quanta and, in a round-robin fashion, give each flow a
-chance to send its data over the physical link. In other words, during
-time quantum 1, data from S1 to R1 is transmitted; during time quantum
-2, data from S2 to R2 is transmitted; in quantum 3, S3 sends data to R3.
-At this point, the first flow (S1 to R1) gets to go again, and the
-process repeats. Another method is *frequency-division multiplexing*
-(FDM). The idea of FDM is to transmit each flow over the physical link
-at a different frequency, much the same way that the signals for
-different TV stations are transmitted at a different frequency over the
-airwaves or on a coaxial cable TV link.
+Có một số phương pháp khác nhau để ghép kênh nhiều luồng lên một liên kết vật lý. Một phương pháp phổ biến là *ghép kênh phân chia theo thời gian đồng bộ* (STDM). Ý tưởng của STDM là chia thời gian thành các khoảng bằng nhau và, theo vòng tròn, cho mỗi luồng một cơ hội gửi dữ liệu qua liên kết vật lý. Nói cách khác, trong khoảng thời gian 1, dữ liệu từ S1 đến R1 được truyền; trong khoảng thời gian 2, dữ liệu từ S2 đến R2 được truyền; ở khoảng 3, S3 gửi dữ liệu đến R3. Sau đó, luồng đầu tiên (S1 đến R1) lại được truyền, và quá trình lặp lại. Một phương pháp khác là *ghép kênh phân chia theo tần số* (FDM). Ý tưởng của FDM là truyền mỗi luồng qua liên kết vật lý ở một tần số khác nhau, giống như tín hiệu của các kênh truyền hình khác nhau được truyền ở các tần số khác nhau qua sóng vô tuyến hoặc cáp đồng trục.
 
-Although simple to understand, both STDM and FDM are limited in two
-ways. First, if one of the flows (host pairs) does not have any data to
-send, its share of the physical link—that is, its time quantum or its
-frequency—remains idle, even if one of the other flows has data to
-transmit. For example, S3 had to wait its turn behind S1 and S2 in the
-previous paragraph, even if S1 and S2 had nothing to send. For computer
-communication, the amount of time that a link is idle can be very
-large—for example, consider the amount of time you spend reading a web
-page (leaving the link idle) compared to the time you spend fetching the
-page. Second, both STDM and FDM are limited to situations in which the
-maximum number of flows is fixed and known ahead of time. It is not
-practical to resize the quantum or to add additional quanta in the case
-of STDM or to add new frequencies in the case of FDM.
+Mặc dù dễ hiểu, cả STDM và FDM đều bị giới hạn ở hai điểm. Thứ nhất, nếu một trong các luồng (cặp host) không có dữ liệu để gửi, phần chia sẻ liên kết vật lý của nó—tức là, khoảng thời gian hoặc tần số của nó—vẫn bị bỏ trống, ngay cả khi một trong các luồng khác có dữ liệu cần truyền. Ví dụ, S3 phải chờ đến lượt sau S1 và S2 ở đoạn trước, ngay cả khi S1 và S2 không có gì để gửi. Đối với truyền thông máy tính, thời gian liên kết bị bỏ trống có thể rất lớn—ví dụ, hãy so sánh thời gian bạn đọc một trang web (liên kết bị bỏ trống) với thời gian bạn tải trang đó. Thứ hai, cả STDM và FDM đều bị giới hạn trong các trường hợp số lượng luồng tối đa là cố định và biết trước. Không thực tế để thay đổi kích thước khoảng thời gian hoặc thêm khoảng mới trong STDM, hoặc thêm tần số mới trong FDM.
 
-The form of multiplexing that addresses these shortcomings, and of which
-we make most use in this book, is called *statistical multiplexing*.
-Although the name is not all that helpful for understanding the concept,
-statistical multiplexing is really quite simple, with two key ideas.
-First, it is like STDM in that the physical link is shared over
-time—first data from one flow is transmitted over the physical link,
-then data from another flow is transmitted, and so on. Unlike STDM,
-however, data is transmitted from each flow on demand rather than during
-a predetermined time slot. Thus, if only one flow has data to send, it
-gets to transmit that data without waiting for its quantum to come
-around and thus without having to watch the quanta assigned to the other
-flows go by unused. It is this avoidance of idle time that gives packet
-switching its efficiency.
+Dạng ghép kênh giải quyết các hạn chế này, và được sử dụng nhiều nhất trong cuốn sách này, gọi là *ghép kênh thống kê* (statistical multiplexing). Dù tên gọi không giúp hiểu rõ khái niệm, ghép kênh thống kê thực ra khá đơn giản, với hai ý chính. Thứ nhất, nó giống STDM ở chỗ liên kết vật lý được chia sẻ theo thời gian—trước tiên dữ liệu từ một luồng được truyền qua liên kết vật lý, sau đó dữ liệu từ luồng khác, v.v. Tuy nhiên, không giống STDM, dữ liệu được truyền từ mỗi luồng theo nhu cầu thay vì theo một khoảng thời gian định trước. Do đó, nếu chỉ một luồng có dữ liệu để gửi, nó có thể truyền ngay mà không phải chờ đến lượt và không phải nhìn các khoảng thời gian của luồng khác trôi qua mà không dùng đến. Chính việc tránh thời gian nhàn rỗi này tạo nên hiệu quả của chuyển mạch gói.
 
-As defined so far, however, statistical multiplexing has no mechanism to
-ensure that all the flows eventually get their turn to transmit over the
-physical link. That is, once a flow begins sending data, we need some
-way to limit the transmission, so that the other flows can have a turn.
-To account for this need, statistical multiplexing defines an upper
-bound on the size of the block of data that each flow is permitted to
-transmit at a given time. This limited-size block of data is typically
-referred to as a *packet*, to distinguish it from the arbitrarily large
-*message* that an application program might want to transmit. Because a
-packet-switched network limits the maximum size of packets, a host may
-not be able to send a complete message in one packet. The source may
-need to fragment the message into several packets, with the receiver
-reassembling the packets back into the original message.
+Tuy nhiên, như đã định nghĩa đến đây, ghép kênh thống kê không có cơ chế đảm bảo tất cả các luồng cuối cùng đều có lượt truyền qua liên kết vật lý. Tức là, khi một luồng bắt đầu gửi dữ liệu, chúng ta cần một cách để giới hạn truyền, để các luồng khác cũng có lượt. Để giải quyết nhu cầu này, ghép kênh thống kê xác định một giới hạn trên về kích thước khối dữ liệu mà mỗi luồng được phép truyền tại một thời điểm. Khối dữ liệu giới hạn kích thước này thường được gọi là *gói* (packet), để phân biệt với *thông điệp* (message) có thể rất lớn mà chương trình ứng dụng muốn truyền. Vì mạng chuyển mạch gói giới hạn kích thước tối đa của gói, một host có thể không gửi được toàn bộ thông điệp trong một gói. Nguồn có thể cần chia nhỏ thông điệp thành nhiều gói, và phía nhận sẽ ghép lại thành thông điệp gốc.
 
 .. _fig-statmux:
 .. figure:: figures/f01-06-9780123850591.png
    :width: 500px
    :align: center
 
-   A switch multiplexing packets from multiple sources
-   onto one shared link.
+   Một switch ghép kênh các gói từ nhiều nguồn lên một liên kết chia sẻ.
 
-In other words, each flow sends a sequence of packets over the
-physical link, with a decision made on a packet-by-packet basis as to
-which flow’s packet to send next. Notice that, if only one flow has
-data to send, then it can send a sequence of packets back-to-back;
-however, should more than one of the flows have data to send, then
-their packets are interleaved on the link. :numref:`Figure %s
-<fig-statmux>` depicts a switch multiplexing packets from multiple
-sources onto a single shared link.
+Nói cách khác, mỗi luồng gửi một chuỗi các gói qua liên kết vật lý, với quyết định được đưa ra cho từng gói về việc gửi gói của luồng nào tiếp theo. Lưu ý rằng, nếu chỉ một luồng có dữ liệu để gửi, nó có thể gửi liên tiếp nhiều gói; tuy nhiên, nếu nhiều luồng có dữ liệu, các gói của chúng sẽ được xen kẽ trên liên kết. :numref:`Hình %s <fig-statmux>` minh họa một switch ghép kênh các gói từ nhiều nguồn lên một liên kết chia sẻ duy nhất.
 
-The decision as to which packet to send next on a shared link can be
-made in a number of different ways. For example, in a network consisting
-of switches interconnected by links such as the one in :numref:`Figure
-%s <fig-mux>`, the decision would be made by the switch that transmits
-packets onto the shared link. (As we will see later, not all
-packet-switched networks actually involve switches, and they may use
-other mechanisms to determine whose packet goes onto the link next.)
-Each switch in a packet-switched network makes this decision
-independently, on a packet-by-packet basis. One of the issues that faces
-a network designer is how to make this decision in a fair manner. For
-example, a switch could be designed to service packets on a first-in,
-first-out (FIFO) basis. Another approach would be to transmit the
-packets from each of the different flows that are currently sending data
-through the switch in a round-robin manner. This might be done to ensure
-that certain flows receive a particular share of the link’s bandwidth or
-that they never have their packets delayed in the switch for more than a
-certain length of time. A network that attempts to allocate bandwidth to
-particular flows is sometimes said to support *quality of service*
-(QoS).
+Quyết định gửi gói nào tiếp theo trên một liên kết chia sẻ có thể được thực hiện theo nhiều cách khác nhau. Ví dụ, trong một mạng gồm các switch kết nối với nhau bằng các liên kết như trong :numref:`Hình %s <fig-mux>`, quyết định sẽ do switch truyền gói lên liên kết chia sẻ thực hiện. (Như sẽ thấy sau, không phải tất cả mạng chuyển mạch gói đều có switch, và có thể dùng các cơ chế khác để xác định gói nào được truyền tiếp theo.) Mỗi switch trong mạng chuyển mạch gói đưa ra quyết định này một cách độc lập, cho từng gói. Một trong những vấn đề mà nhà thiết kế mạng phải đối mặt là làm sao đưa ra quyết định này một cách công bằng. Ví dụ, một switch có thể được thiết kế để phục vụ các gói theo thứ tự đến trước, phục vụ trước (FIFO). Một cách khác là truyền các gói từ mỗi luồng khác nhau đang gửi dữ liệu qua switch theo vòng tròn. Điều này có thể được thực hiện để đảm bảo một số luồng nhận được một phần băng thông nhất định của liên kết hoặc không bao giờ bị trì hoãn quá lâu trong switch. Một mạng cố gắng phân bổ băng thông cho các luồng cụ thể đôi khi được gọi là hỗ trợ *chất lượng dịch vụ* (QoS).
 
-Also, notice in :numref:`Figure %s <fig-statmux>` that since the
-switch has to multiplex three incoming packet streams onto one
-outgoing link, it is possible that the switch will receive packets
-faster than the shared link can accommodate. In this case, the switch
-is forced to buffer these packets in its memory. Should a switch
-receive packets faster than it can send them for an extended period of
-time, then the switch will eventually run out of buffer space, and
-some packets will have to be dropped. When a switch is operating in
-this state, it is said to be *congested*.
+Cũng lưu ý trong :numref:`Hình %s <fig-statmux>` rằng vì switch phải ghép kênh ba luồng gói vào một liên kết ra, có thể switch sẽ nhận gói nhanh hơn tốc độ liên kết chia sẻ có thể xử lý. Trong trường hợp này, switch buộc phải lưu các gói này vào bộ nhớ. Nếu switch nhận gói nhanh hơn tốc độ gửi trong một thời gian dài, cuối cùng switch sẽ hết bộ nhớ đệm và một số gói sẽ bị loại bỏ. Khi switch hoạt động trong trạng thái này, nó được gọi là *bị nghẽn* (congested).
 
 .. _key-stat-mux:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-  The bottom line is that statistical multiplexing defines a
-  cost-effective way for multiple users (e.g., host-to-host flows of
-  data) to share network resources (links and nodes) in a fine-grained
-  manner. It defines the packet as the granularity with which the
-  links of the network are allocated to different flows, with each
-  switch able to schedule the use of the physical links it is
-  connected to on a per-packet basis. Fairly allocating link capacity
-  to different flows and dealing with congestion when it occurs are
-  the key challenges of statistical multiplexing. :ref:`[Next]
-  <key-semantic-gap>`
+  Kết luận là ghép kênh thống kê xác định một cách hiệu quả về chi phí để nhiều người dùng (ví dụ, các luồng dữ liệu host-to-host) chia sẻ tài nguyên mạng (liên kết và nút) ở mức độ chi tiết. Nó xác định gói là đơn vị mà các liên kết mạng được phân bổ cho các luồng khác nhau, với mỗi switch có thể lập lịch sử dụng các liên kết vật lý mà nó kết nối trên cơ sở từng gói. Phân bổ công bằng dung lượng liên kết cho các luồng khác nhau và xử lý nghẽn khi xảy ra là những thách thức then chốt của ghép kênh thống kê. :ref:`[Tiếp theo] <key-semantic-gap>`
 
-1.2.4 Support for Common Services
-------------------------------------------
+1.2.4 Hỗ trợ các dịch vụ chung
+------------------------------
 
-The previous discussion focused on the challenges involved in providing
-cost-effective connectivity among a group of hosts, but it is overly
-simplistic to view a computer network as simply delivering packets among
-a collection of computers. It is more accurate to think of a network as
-providing the means for a set of application processes that are
-distributed over those computers to communicate. In other words, the
-next requirement of a computer network is that the application programs
-running on the hosts connected to the network must be able to
-communicate in a meaningful way. From the application developer’s
-perspective, the network needs to make his or her life easier.
+Phần trước tập trung vào các thách thức trong việc cung cấp kết nối hiệu quả về chi phí giữa một nhóm host, nhưng thật quá đơn giản nếu chỉ coi mạng máy tính là chuyển các gói giữa một tập hợp máy tính. Chính xác hơn, nên coi mạng là phương tiện để một tập hợp các tiến trình ứng dụng phân tán trên các máy tính đó giao tiếp với nhau. Nói cách khác, yêu cầu tiếp theo của mạng máy tính là các chương trình ứng dụng chạy trên các host kết nối mạng phải có khả năng giao tiếp một cách có ý nghĩa. Từ góc nhìn của nhà phát triển ứng dụng, mạng cần làm cho công việc của họ dễ dàng hơn.
 
-When two application programs need to communicate with each other, a lot
-of complicated things must happen beyond simply sending a message from
-one host to another. One option would be for application designers to
-build all that complicated functionality into each application program.
-However, since many applications need common services, it is much more
-logical to implement those common services once and then to let the
-application designer build the application using those services. The
-challenge for a network designer is to identify the right set of common
-services. The goal is to hide the complexity of the network from the
-application without overly constraining the application designer.
+Khi hai chương trình ứng dụng cần giao tiếp với nhau, rất nhiều điều phức tạp phải xảy ra ngoài việc chỉ gửi một thông điệp từ host này sang host khác. Một lựa chọn là các nhà thiết kế ứng dụng xây dựng tất cả chức năng phức tạp đó vào từng chương trình ứng dụng. Tuy nhiên, vì nhiều ứng dụng cần các dịch vụ chung, hợp lý hơn nhiều khi triển khai các dịch vụ chung đó một lần và cho phép nhà thiết kế ứng dụng xây dựng ứng dụng dựa trên các dịch vụ đó. Thách thức cho nhà thiết kế mạng là xác định tập hợp dịch vụ chung phù hợp. Mục tiêu là che giấu sự phức tạp của mạng khỏi ứng dụng mà không ràng buộc quá mức nhà thiết kế ứng dụng.
 
 .. _fig-channel:
 .. figure:: figures/f01-07-9780123850591.png
    :width: 500px
    :align: center
 
-   Processes communicating over an abstract channel.
+   Các tiến trình giao tiếp qua một kênh trừu tượng.
 
-Intuitively, we view the network as providing logical *channels* over
-which application-level processes can communicate with each other; each
-channel provides the set of services required by that application. In
-other words, just as we use a cloud to abstractly represent connectivity
-among a set of computers, we now think of a channel as connecting one
-process to another. :numref:`Figure %s <fig-channel>` shows a pair of
-application-level processes communicating over a logical channel that
-is, in turn, implemented on top of a cloud that connects a set of hosts.
-We can think of the channel as being like a pipe connecting two
-applications, so that a sending application can put data in one end and
-expect that data to be delivered by the network to the application at
-the other end of the pipe.
+Trực quan, chúng ta coi mạng cung cấp các *kênh logic* (logical channels) mà qua đó các tiến trình cấp ứng dụng có thể giao tiếp với nhau; mỗi kênh cung cấp tập hợp dịch vụ mà ứng dụng đó yêu cầu. Nói cách khác, cũng như chúng ta dùng đám mây để trừu tượng hóa kết nối giữa một tập hợp máy tính, giờ đây chúng ta coi kênh là kết nối giữa hai tiến trình. :numref:`Hình %s <fig-channel>` cho thấy một cặp tiến trình cấp ứng dụng giao tiếp qua một kênh logic, kênh này được triển khai trên một đám mây kết nối một tập hợp host. Ta có thể coi kênh như một ống nối hai ứng dụng, để ứng dụng gửi có thể đưa dữ liệu vào một đầu và mong đợi dữ liệu đó được mạng chuyển đến ứng dụng ở đầu kia của ống.
 
-Like any abstraction, logical process-to-process channels are
-implemented on top of a collection of physical host-to-host
-channels. This is the essence of layering, the cornerstone of network
-architectures discussed in the next section.
+Như mọi trừu tượng, các kênh logic tiến trình-đến-tiến trình được triển khai trên tập hợp các kênh vật lý host-đến-host. Đây là bản chất của phân lớp (layering), nền tảng của kiến trúc mạng sẽ được bàn ở phần tiếp theo.
 
-The challenge is to recognize what functionality the channels should
-provide to application programs. For example, does the application
-require a guarantee that messages sent over the channel are delivered,
-or is it acceptable if some messages fail to arrive? Is it necessary
-that messages arrive at the recipient process in the same order in which
-they are sent, or does the recipient not care about the order in which
-messages arrive? Does the network need to ensure that no third parties
-are able to eavesdrop on the channel, or is privacy not a concern? In
-general, a network provides a variety of different types of channels,
-with each application selecting the type that best meets its needs. The
-rest of this section illustrates the thinking involved in defining
-useful channels.
+Thách thức là nhận ra chức năng nào các kênh nên cung cấp cho chương trình ứng dụng. Ví dụ, ứng dụng có yêu cầu đảm bảo rằng các thông điệp gửi qua kênh sẽ được chuyển giao, hay chấp nhận nếu một số thông điệp không đến? Có cần thiết các thông điệp đến tiến trình nhận theo đúng thứ tự gửi, hay tiến trình nhận không quan tâm đến thứ tự? Mạng có cần đảm bảo không bên thứ ba nào có thể nghe lén kênh, hay bảo mật không phải là vấn đề? Nói chung, một mạng cung cấp nhiều loại kênh khác nhau, mỗi ứng dụng chọn loại phù hợp nhất với nhu cầu của mình. Phần còn lại của mục này minh họa cách suy nghĩ khi xác định các kênh hữu ích.
 
-Identify Common Communication Patterns
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Xác định các mẫu giao tiếp chung
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Designing abstract channels involves first understanding the
-communication needs of a representative collection of applications, then
-extracting their common communication requirements, and finally
-incorporating the functionality that meets these requirements in the
-network.
+Thiết kế các kênh trừu tượng bắt đầu bằng việc hiểu nhu cầu giao tiếp của một tập hợp ứng dụng đại diện, sau đó rút ra các yêu cầu giao tiếp chung, và cuối cùng tích hợp chức năng đáp ứng các yêu cầu này vào mạng.
 
-One of the earliest applications supported on any network is a file
-access program like the File Transfer Protocol (FTP) or Network File
-System (NFS). Although many details vary—for example, whether whole
-files are transferred across the network or only single blocks of the
-file are read/written at a given time—the communication component of
-remote file access is characterized by a pair of processes, one that
-requests that a file be read or written and a second process that honors
-this request. The process that requests access to the file is called the
-*client*, and the process that supports access to the file is called the
-*server*.
+Một trong những ứng dụng đầu tiên được hỗ trợ trên bất kỳ mạng nào là chương trình truy cập tệp như Giao thức Truyền tệp (FTP) hoặc Hệ thống Tệp Mạng (NFS). Mặc dù nhiều chi tiết khác nhau—ví dụ, toàn bộ tệp được truyền qua mạng hay chỉ từng khối tệp được đọc/ghi tại một thời điểm—thành phần giao tiếp của truy cập tệp từ xa được đặc trưng bởi một cặp tiến trình, một tiến trình yêu cầu đọc hoặc ghi tệp và một tiến trình đáp ứng yêu cầu đó. Tiến trình yêu cầu truy cập tệp gọi là *client*, và tiến trình hỗ trợ truy cập tệp gọi là *server*.
 
-Reading a file involves the client sending a small request message to a
-server and the server responding with a large message that contains the
-data in the file. Writing works in the opposite way—the client sends a
-large message containing the data to be written to the server, and the
-server responds with a small message confirming that the write to disk
-has taken place.
+Đọc tệp bao gồm client gửi một thông điệp yêu cầu nhỏ đến server và server phản hồi bằng một thông điệp lớn chứa dữ liệu trong tệp. Ghi tệp thì ngược lại—client gửi một thông điệp lớn chứa dữ liệu cần ghi cho server, và server phản hồi bằng một thông điệp nhỏ xác nhận đã ghi lên đĩa.
 
-A digital library is a more sophisticated application than file
-transfer, but it requires similar communication services. For example,
-the *Association for Computing Machinery* (ACM) operates a large digital
-library of computer science literature at
+Một thư viện số là một ứng dụng phức tạp hơn truyền tệp, nhưng cũng cần các dịch vụ giao tiếp tương tự. Ví dụ, *Hiệp hội Máy tính Hoa Kỳ* (ACM) vận hành một thư viện số lớn về tài liệu khoa học máy tính tại
 
 .. code-block:: html
 
    http://portal.acm.org/dl.cfm
 
-This library has a wide range of searching and browsing features to help
-users find the articles they want, but ultimately much of what it does
-is respond to user requests for files, such as electronic copies of
-journal articles.
+Thư viện này có nhiều tính năng tìm kiếm và duyệt giúp người dùng tìm bài báo mong muốn, nhưng cuối cùng phần lớn những gì nó làm là đáp ứng yêu cầu của người dùng về các tệp, như bản điện tử của các bài báo khoa học.
 
-Using file access, a digital library, and the two video applications
-described in the introduction (videoconferencing and video on demand) as
-a representative sample, we might decide to provide the following two
-types of channels: *request/reply* channels and *message stream*
-channels. The request/reply channel would be used by the file transfer
-and digital library applications. It would guarantee that every message
-sent by one side is received by the other side and that only one copy of
-each message is delivered. The request/reply channel might also protect
-the privacy and integrity of the data that flows over it, so that
-unauthorized parties cannot read or modify the data being exchanged
-between the client and server processes.
+Sử dụng truy cập tệp, thư viện số và hai ứng dụng video được mô tả ở phần mở đầu (hội nghị truyền hình và video theo yêu cầu) làm mẫu đại diện, chúng ta có thể quyết định cung cấp hai loại kênh sau: kênh *yêu cầu/đáp ứng* (request/reply) và kênh *luồng thông điệp* (message stream). Kênh yêu cầu/đáp ứng sẽ được dùng bởi các ứng dụng truyền tệp và thư viện số. Nó đảm bảo rằng mỗi thông điệp gửi từ một phía sẽ được phía kia nhận và chỉ một bản sao của mỗi thông điệp được chuyển giao. Kênh yêu cầu/đáp ứng cũng có thể bảo vệ tính riêng tư và toàn vẹn của dữ liệu truyền qua nó, để các bên không được phép không thể đọc hoặc sửa đổi dữ liệu trao đổi giữa client và server.
 
-The message stream channel could be used by both the video on demand and
-videoconferencing applications, provided it is parameterized to support
-both one-way and two-way traffic and to support different delay
-properties. The message stream channel might not need to guarantee that
-all messages are delivered, since a video application can operate
-adequately even if some video frames are not received. It would,
-however, need to ensure that those messages that are delivered arrive in
-the same order in which they were sent, to avoid displaying frames out
-of sequence. Like the request/reply channel, the message stream channel
-might want to ensure the privacy and integrity of the video data.
-Finally, the message stream channel might need to support multicast, so
-that multiple parties can participate in the teleconference or view the
-video.
+Kênh luồng thông điệp có thể được dùng cho cả ứng dụng video theo yêu cầu và hội nghị truyền hình, với điều kiện nó được tham số hóa để hỗ trợ cả lưu lượng một chiều và hai chiều cũng như các đặc tính trễ khác nhau. Kênh luồng thông điệp có thể không cần đảm bảo tất cả thông điệp đều được chuyển giao, vì ứng dụng video vẫn hoạt động tốt ngay cả khi một số khung hình không đến. Tuy nhiên, nó cần đảm bảo các thông điệp được chuyển giao đến theo đúng thứ tự gửi, để tránh hiển thị khung hình sai thứ tự. Giống như kênh yêu cầu/đáp ứng, kênh luồng thông điệp cũng có thể cần đảm bảo tính riêng tư và toàn vẹn của dữ liệu video. Cuối cùng, kênh luồng thông điệp có thể cần hỗ trợ multicast, để nhiều bên có thể tham gia hội nghị hoặc xem video.
 
-While it is common for a network designer to strive for the smallest
-number of abstract channel types that can serve the largest number of
-applications, there is a danger in trying to get away with too few
-channel abstractions. Simply stated, if you have a hammer, then
-everything looks like a nail. For example, if all you have are message
-stream and request/reply channels, then it is tempting to use them for
-the next application that comes along, even if neither type provides
-exactly the semantics needed by the application. Thus, network designers
-will probably be inventing new types of channels—and adding options to
-existing channels—for as long as application programmers are inventing
-new applications.
+Mặc dù các nhà thiết kế mạng thường cố gắng tối giản số lượng loại kênh trừu tượng để phục vụ được nhiều ứng dụng nhất, nhưng có nguy cơ nếu quá ít loại kênh. Nói đơn giản, nếu bạn chỉ có một cái búa, mọi thứ đều giống như cái đinh. Ví dụ, nếu bạn chỉ có kênh luồng thông điệp và yêu cầu/đáp ứng, bạn sẽ dễ bị cám dỗ dùng chúng cho mọi ứng dụng mới, ngay cả khi không loại nào cung cấp đúng ngữ nghĩa mà ứng dụng cần. Do đó, các nhà thiết kế mạng có lẽ sẽ còn phát minh ra các loại kênh mới—và bổ sung tùy chọn cho các kênh hiện có—chừng nào các lập trình viên ứng dụng còn phát minh ra ứng dụng mới.
 
-Also note that independent of exactly *what* functionality a given
-channel provides, there is the question of *where* that functionality is
-implemented. In many cases, it is easiest to view the host-to-host
-connectivity of the underlying network as simply providing a *bit pipe*,
-with any high-level communication semantics provided at the end hosts.
-The advantage of this approach is that it keeps the switches in the
-middle of the network as simple as possible—they simply forward
-packets—but it requires the end hosts to take on much of the burden of
-supporting semantically rich process-to-process channels. The
-alternative is to push additional functionality onto the switches,
-thereby allowing the end hosts to be “dumb” devices (e.g., telephone
-handsets). We will see this question of how various network services are
-partitioned between the packet switches and the end hosts (devices) as a
-recurring issue in network design.
+Cũng lưu ý rằng, độc lập với việc một kênh cung cấp chức năng gì, còn có câu hỏi chức năng đó được triển khai ở đâu. Trong nhiều trường hợp, dễ nhất là coi kết nối host-to-host của mạng cơ sở chỉ như một *đường truyền bit* (bit pipe), với mọi ngữ nghĩa giao tiếp cấp cao được cung cấp ở các host đầu cuối. Lợi thế của cách này là giữ cho các switch ở giữa mạng càng đơn giản càng tốt—chúng chỉ chuyển tiếp gói—nhưng yêu cầu các host đầu cuối phải gánh phần lớn gánh nặng hỗ trợ các kênh tiến trình-đến-tiến trình giàu ngữ nghĩa. Cách khác là đẩy thêm chức năng vào các switch, cho phép host đầu cuối là thiết bị “ngu” (ví dụ, điện thoại bàn). Chúng ta sẽ thấy câu hỏi về cách phân chia các dịch vụ mạng giữa switch và host đầu cuối là một vấn đề lặp lại trong thiết kế mạng.
 
-Reliable Message Delivery
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Chuyển giao thông điệp tin cậy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As suggested by the examples just considered, reliable message delivery
-is one of the most important functions that a network can provide. It is
-difficult to determine how to provide this reliability, however, without
-first understanding how networks can fail. The first thing to recognize
-is that computer networks do not exist in a perfect world. Machines
-crash and later are rebooted, fibers are cut, electrical interference
-corrupts bits in the data being transmitted, switches run out of buffer
-space, and, as if these sorts of physical problems aren’t enough to
-worry about, the software that manages the hardware may contain bugs and
-sometimes forwards packets into oblivion. Thus, a major requirement of a
-network is to recover from certain kinds of failures, so that
-application programs don’t have to deal with them or even be aware of
-them.
+Như các ví dụ vừa xem xét cho thấy, chuyển giao thông điệp tin cậy là một trong những chức năng quan trọng nhất mà mạng có thể cung cấp. Tuy nhiên, rất khó xác định cách cung cấp độ tin cậy này nếu chưa hiểu mạng có thể gặp lỗi như thế nào. Điều đầu tiên cần nhận ra là mạng máy tính không tồn tại trong một thế giới hoàn hảo. Máy móc bị treo rồi khởi động lại, cáp quang bị đứt, nhiễu điện làm sai bit dữ liệu truyền, switch hết bộ nhớ đệm, và, như thể các vấn đề vật lý này chưa đủ lo lắng, phần mềm quản lý phần cứng có thể có lỗi và đôi khi chuyển tiếp gói vào “hư vô”. Do đó, một yêu cầu lớn của mạng là phục hồi khỏi một số loại lỗi nhất định, để chương trình ứng dụng không phải xử lý hoặc thậm chí không biết về chúng.
 
-There are three general classes of failure that network designers have
-to worry about. First, as a packet is transmitted over a physical link,
-*bit errors* may be introduced into the data; that is, a 1 is turned
-into a 0 or *vice versa*. Sometimes single bits are corrupted, but more
-often than not a *burst error* occurs—several consecutive bits are
-corrupted. Bit errors typically occur because outside forces, such as
-lightning strikes, power surges, and microwave ovens, interfere with the
-transmission of data. The good news is that such bit errors are fairly
-rare, affecting on average only one out of every 10\ :sup:`6` to
-10\ :sup:`7` bits on a typical copper-based cable and one out of every
-10\ :sup:`12` to 10\ :sup:`14` bits on a typical optical fiber.
-As we will see, there are techniques that detect these bit errors with
-high probability. Once detected, it is sometimes possible to correct for
-such errors—if we know which bit or bits are corrupted, we can simply
-flip them—while in other cases the damage is so bad that it is necessary
-to discard the entire packet. In such a case, the sender may be expected
-to retransmit the packet.
+Có ba loại lỗi tổng quát mà nhà thiết kế mạng phải quan tâm. Thứ nhất, khi một gói được truyền qua liên kết vật lý, có thể xuất hiện *lỗi bit* (bit errors); tức là, một bit 1 bị chuyển thành 0 hoặc ngược lại. Đôi khi chỉ một bit bị lỗi, nhưng thường là *lỗi chuỗi* (burst error)—nhiều bit liên tiếp bị lỗi. Lỗi bit thường xảy ra do các tác động bên ngoài, như sét đánh, tăng áp, lò vi sóng, gây nhiễu truyền dữ liệu. Tin tốt là lỗi bit khá hiếm, trung bình chỉ ảnh hưởng đến một trên mỗi 10\ :sup:`6` đến 10\ :sup:`7` bit trên cáp đồng điển hình và một trên mỗi 10\ :sup:`12` đến 10\ :sup:`14` bit trên cáp quang điển hình. Như sẽ thấy, có các kỹ thuật phát hiện lỗi bit với xác suất cao. Khi phát hiện, đôi khi có thể sửa lỗi—nếu biết bit nào bị lỗi, chỉ cần lật lại—trong các trường hợp khác, hỏng nặng đến mức phải loại bỏ toàn bộ gói. Khi đó, phía gửi có thể phải gửi lại gói.
 
-The second class of failure is at the packet, rather than the bit,
-level; that is, a complete packet is lost by the network. One reason
-this can happen is that the packet contains an uncorrectable bit error
-and therefore has to be discarded. A more likely reason, however, is
-that one of the nodes that has to handle the packet—for example, a
-switch that is forwarding it from one link to another—is so overloaded
-that it has no place to store the packet and therefore is forced to drop
-it. This is the problem of congestion just discussed. Less commonly, the
-software running on one of the nodes that handles the packet makes a
-mistake. For example, it might incorrectly forward a packet out on the
-wrong link, so that the packet never finds its way to the ultimate
-destination. As we will see, one of the main difficulties in dealing
-with lost packets is distinguishing between a packet that is indeed lost
-and one that is merely late in arriving at the destination.
+Loại lỗi thứ hai là ở cấp gói, không phải bit; tức là, một gói hoàn chỉnh bị mạng làm mất. Một lý do là gói chứa lỗi bit không thể sửa nên phải loại bỏ. Lý do phổ biến hơn là một trong các nút phải xử lý gói—ví dụ, switch chuyển tiếp từ liên kết này sang liên kết khác—bị quá tải đến mức không còn chỗ lưu gói và buộc phải loại bỏ. Đây là vấn đề nghẽn vừa bàn ở trên. Ít phổ biến hơn, phần mềm chạy trên một nút xử lý gói mắc lỗi. Ví dụ, nó có thể chuyển tiếp gói sai liên kết, khiến gói không bao giờ đến đích. Như sẽ thấy, một trong những khó khăn chính khi xử lý gói mất là phân biệt giữa gói thực sự bị mất và gói chỉ đến muộn.
 
-The third class of failure is at the node and link level; that is, a
-physical link is cut, or the computer it is connected to crashes. This
-can be caused by software that crashes, a power failure, or a reckless
-backhoe operator. Failures due to misconfiguration of a network device
-are also common. While any of these failures can eventually be
-corrected, they can have a dramatic effect on the network for an
-extended period of time. However, they need not totally disable the
-network. In a packet-switched network, for example, it is sometimes
-possible to route around a failed node or link. One of the difficulties
-in dealing with this third class of failure is distinguishing between a
-failed computer and one that is merely slow or, in the case of a link,
-between one that has been cut and one that is very flaky and therefore
-introducing a high number of bit errors.
+Loại lỗi thứ ba là ở cấp nút và liên kết; tức là, một liên kết vật lý bị đứt, hoặc máy tính kết nối với nó bị treo. Điều này có thể do phần mềm bị treo, mất điện, hoặc do máy xúc đào bất cẩn. Lỗi do cấu hình sai thiết bị mạng cũng phổ biến. Mặc dù bất kỳ lỗi nào trong số này cuối cùng cũng có thể được khắc phục, chúng có thể ảnh hưởng nghiêm trọng đến mạng trong thời gian dài. Tuy nhiên, chúng không nhất thiết làm tê liệt hoàn toàn mạng. Trong mạng chuyển mạch gói, đôi khi có thể định tuyến vòng qua nút hoặc liên kết bị lỗi. Một trong những khó khăn khi xử lý loại lỗi thứ ba là phân biệt giữa máy tính bị hỏng và máy chỉ chậm, hoặc trong trường hợp liên kết, giữa liên kết bị đứt và liên kết rất kém gây nhiều lỗi bit.
 
 .. _key-semantic-gap:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   The key idea to take away from this discussion is that defining
-   useful channels involves both understanding the applications’
-   requirements and recognizing the limitations of the underlying
-   technology. The challenge is to fill in the gap between what the
-   application expects and what the underlying technology can provide.
-   This is sometimes called the *semantic gap.*  :ref:`[Next]
-   <key-hourglass>`
+   Ý chính cần rút ra là việc xác định các kênh hữu ích vừa phải hiểu yêu cầu của ứng dụng vừa phải nhận ra giới hạn của công nghệ nền tảng. Thách thức là lấp đầy khoảng cách giữa những gì ứng dụng mong đợi và những gì công nghệ nền tảng có thể cung cấp. Điều này đôi khi được gọi là *khoảng cách ngữ nghĩa* (semantic gap). :ref:`[Tiếp theo] <key-hourglass>`
 
-1.2.5 Manageability
-------------------------
+1.2.5 Khả năng quản lý
+----------------------
 
-A final requirement, which seems to be neglected or left till last all
-too often (as we do here), is that networks need to be managed. Managing
-a network includes upgrading equipment as the network grows to carry
-more traffic or reach more users, troubleshooting the network when
-things go wrong or performance isn’t as desired, and adding new features
-in support of new applications. Network management has historically
-been a human-intensive aspect of networking, and while it is unlikely
-we'll get people entirely out of the loop, it is increasingly being
-addressed by automation and self-healing designs.
+Một yêu cầu cuối cùng, thường bị bỏ qua hoặc để đến cuối (như chúng tôi làm ở đây), là mạng cần được quản lý. Quản lý mạng bao gồm nâng cấp thiết bị khi mạng phát triển để phục vụ nhiều lưu lượng hoặc người dùng hơn, khắc phục sự cố khi mạng gặp vấn đề hoặc hiệu năng không như mong muốn, và bổ sung tính năng mới hỗ trợ ứng dụng mới. Quản lý mạng trong lịch sử là một khía cạnh đòi hỏi nhiều nhân lực, và mặc dù khó có thể loại bỏ hoàn toàn con người khỏi quy trình, ngày càng nhiều vấn đề được giải quyết bằng tự động hóa và thiết kế tự phục hồi.
 
-This requirement is partly related to the issue of scalability discussed
-above—as the Internet has scaled up to support billions of users and at
-least hundreds of millions of hosts, the challenges of keeping the whole
-thing running correctly and correctly configuring new devices as they
-are added have become increasingly problematic. Configuring a single
-router in a network is often a task for a trained expert; configuring
-thousands of routers and figuring out why a network of such a size is
-not behaving as expected can become a task beyond any single human.
-This is why automation is becoming so important.
+Yêu cầu này phần nào liên quan đến vấn đề khả năng mở rộng đã bàn ở trên—khi Internet mở rộng để hỗ trợ hàng tỷ người dùng và ít nhất hàng trăm triệu host, thách thức giữ cho toàn bộ hệ thống hoạt động đúng và cấu hình đúng thiết bị mới khi thêm vào ngày càng trở nên nan giải. Cấu hình một router trong mạng thường là công việc của chuyên gia; cấu hình hàng nghìn router và tìm ra lý do mạng lớn như vậy không hoạt động như mong đợi có thể vượt quá khả năng của bất kỳ cá nhân nào. Đó là lý do tại sao tự động hóa ngày càng quan trọng.
 
-One way to make a network easier to manage is to avoid change. Once the
-network is working, simply *do not touch it!* This mindset exposes the
-fundamental tension between *stability* and *feature velocity*: the rate
-at which new capabilities are introduced into the network. Favoring
-stability is the approach the telecommunications industry (not to
-mention University system administrators and corporate IT departments)
-adopted for many years, making it one of the most slow moving and risk
-averse industries you will find anywhere. But the recent explosion of
-the cloud has changed that dynamic, making it necessary to bring
-stability and feature velocity more into balance. The impact of the
-cloud on the network is a topic that comes up over and over throughout
-the book, and one we pay particular attention to in the *Perspectives*
-section at the end of each chapter. For now, suffice it to say that
-managing a rapidly evolving network is arguably *the* central challenge
-in networking today.
+Một cách để làm cho mạng dễ quản lý hơn là tránh thay đổi. Khi mạng đã hoạt động, chỉ cần *không động vào nó!* Tư duy này bộc lộ mâu thuẫn cơ bản giữa *ổn định* (stability) và *tốc độ bổ sung tính năng* (feature velocity): tốc độ các khả năng mới được đưa vào mạng. Ưu tiên ổn định là cách ngành viễn thông (chưa kể quản trị viên hệ thống đại học và phòng CNTT doanh nghiệp) áp dụng trong nhiều năm, khiến nó trở thành một trong những ngành chậm thay đổi và ngại rủi ro nhất. Nhưng sự bùng nổ của điện toán đám mây gần đây đã thay đổi động lực đó, khiến cần cân bằng hơn giữa ổn định và tốc độ bổ sung tính năng. Tác động của đám mây lên mạng là chủ đề lặp lại trong suốt cuốn sách, và chúng tôi đặc biệt chú ý trong phần *Perspectives* ở cuối mỗi chương. Hiện tại, chỉ cần nói rằng quản lý một mạng phát triển nhanh có lẽ là thách thức trung tâm của mạng ngày nay.
