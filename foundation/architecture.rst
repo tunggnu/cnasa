@@ -1,489 +1,146 @@
-1.3 Architecture
-================
+1.3 Kiến trúc
+=============
 
-The previous section established a pretty substantial set of
-requirements for network design—a computer network must provide
-general, cost-effective, fair, and robust connectivity among a large
-number of computers. As if this weren’t enough, networks do not remain
-fixed at any single point in time but must evolve to accommodate
-changes in both the underlying technologies upon which they are based
-as well as changes in the demands placed on them by application
-programs. Furthermore, networks must be manageable by humans of
-varying levels of skill. Designing a network to meet these
-requirements is no small task.
+Phần trước đã xác lập một tập hợp khá lớn các yêu cầu cho thiết kế mạng—một mạng máy tính phải cung cấp khả năng kết nối tổng quát, hiệu quả về chi phí, công bằng và mạnh mẽ giữa một số lượng lớn máy tính. Như thể điều này vẫn chưa đủ, các mạng không giữ nguyên ở một thời điểm cố định mà phải phát triển để thích nghi với cả những thay đổi trong các công nghệ nền tảng mà chúng dựa vào cũng như những thay đổi trong các yêu cầu do các chương trình ứng dụng đặt ra. Hơn nữa, các mạng phải có khả năng được quản lý bởi con người với các trình độ kỹ năng khác nhau. Thiết kế một mạng đáp ứng các yêu cầu này không phải là một nhiệm vụ nhỏ.
 
-To help deal with this complexity, network designers have developed
-general blueprints—usually called *network architectures*—that guide the
-design and implementation of networks. This section defines more
-carefully what we mean by a network architecture by introducing the
-central ideas that are common to all network architectures. It also
-introduces two of the most widely referenced architectures—the OSI (or
-7-layer) architecture and the Internet architecture.
+Để giúp xử lý sự phức tạp này, các nhà thiết kế mạng đã phát triển các bản thiết kế tổng quát—thường được gọi là *kiến trúc mạng*—để định hướng cho việc thiết kế và triển khai các mạng. Phần này sẽ định nghĩa cẩn thận hơn ý nghĩa của kiến trúc mạng bằng cách giới thiệu các ý tưởng trung tâm chung cho tất cả các kiến trúc mạng. Nó cũng giới thiệu hai kiến trúc được tham chiếu rộng rãi nhất—kiến trúc OSI (hoặc mô hình 7 tầng) và kiến trúc Internet.
 
-1.3.1 Layering and Protocols
+1.3.1 Phân tầng và Giao thức
 ----------------------------
 
-Abstraction—the hiding of implementation details behind a well-defined
-interface—is the fundamental tool used by system designers to manage
-complexity. The idea of an abstraction is to define a model that can
-capture some important aspect of the system, encapsulate this model in
-an object that provides an interface that can be manipulated by other
-components of the system, and hide the details of how the object is
-implemented from the users of the object. The challenge is to identify
-abstractions that simultaneously provide a service that proves useful
-in a large number of situations and that can be efficiently
-implemented in the underlying system. This is exactly what we were
-doing when we introduced the idea of a channel in the previous
-section: we were providing an abstraction for applications that hides
-the complexity of the network from application writers.
+Trừu tượng hóa—việc ẩn các chi tiết triển khai đằng sau một giao diện được định nghĩa rõ ràng—là công cụ cơ bản mà các nhà thiết kế hệ thống sử dụng để quản lý sự phức tạp. Ý tưởng của một trừu tượng hóa là định nghĩa một mô hình có thể nắm bắt một khía cạnh quan trọng nào đó của hệ thống, đóng gói mô hình này trong một đối tượng cung cấp một giao diện có thể được thao tác bởi các thành phần khác của hệ thống, và ẩn đi các chi tiết về cách đối tượng đó được triển khai khỏi người dùng của đối tượng. Thách thức là xác định các trừu tượng vừa cung cấp một dịch vụ hữu ích trong nhiều tình huống khác nhau, vừa có thể được triển khai hiệu quả trên hệ thống nền tảng. Đây chính xác là điều chúng ta đã làm khi giới thiệu ý tưởng về một kênh trong phần trước: chúng ta đã cung cấp một trừu tượng cho các ứng dụng, giúp ẩn đi sự phức tạp của mạng khỏi người lập trình ứng dụng.
 
 .. _fig-layers1:
 .. figure:: figures/f01-08-9780123850591.png
    :width: 300px
    :align: center
 
-   Example of a layered network system.
+   Ví dụ về một hệ thống mạng phân tầng.
 
-Abstractions naturally lead to layering, especially in network
-systems.  The general idea is that you start with the services offered
-by the underlying hardware and then add a sequence of layers, each
-providing a higher (more abstract) level of service. The services
-provided at the high layers are implemented in terms of the services
-provided by the low layers. Drawing on the discussion of requirements
-given in the previous section, for example, we might imagine a simple
-network as having two layers of abstraction sandwiched between the
-application program and the underlying hardware, as illustrated in
-:numref:`Figure %s <fig-layers1>`. The layer immediately above the
-hardware in this case might provide host-to-host connectivity,
-abstracting away the fact that there may be an arbitrarily complex
-network topology between any two hosts. The next layer up builds on
-the available host-to-host communication service and provides support
-for process-to-process channels, abstracting away the fact that the
-network occasionally loses messages, for example.
+Các trừu tượng tự nhiên dẫn đến việc phân tầng, đặc biệt là trong các hệ thống mạng. Ý tưởng chung là bạn bắt đầu với các dịch vụ do phần cứng nền tảng cung cấp rồi thêm vào một chuỗi các tầng, mỗi tầng cung cấp một mức dịch vụ cao hơn (trừu tượng hơn). Các dịch vụ được cung cấp ở các tầng cao được triển khai dựa trên các dịch vụ do các tầng thấp cung cấp. Dựa trên cuộc thảo luận về các yêu cầu ở phần trước, ví dụ, chúng ta có thể hình dung một mạng đơn giản có hai tầng trừu tượng nằm giữa chương trình ứng dụng và phần cứng nền tảng, như minh họa trong :numref:`Hình %s <fig-layers1>`. Tầng ngay phía trên phần cứng trong trường hợp này có thể cung cấp kết nối host-to-host, trừu tượng hóa đi thực tế rằng có thể tồn tại một cấu trúc liên kết mạng phức tạp bất kỳ giữa hai host. Tầng tiếp theo xây dựng dựa trên dịch vụ giao tiếp host-to-host có sẵn và cung cấp hỗ trợ cho các kênh process-to-process, trừu tượng hóa đi thực tế rằng mạng đôi khi có thể làm mất thông điệp, chẳng hạn.
 
-Layering provides two useful features. First, it decomposes the
-problem of building a network into more manageable components. Rather
-than implementing a monolithic piece of software that does everything
-you will ever want, you can implement several layers, each of which
-solves one part of the problem. Second, it provides a more modular
-design. If you decide that you want to add some new service, you may
-only need to modify the functionality at one layer, reusing the
-functions provided at all the other layers.
+Phân tầng cung cấp hai đặc điểm hữu ích. Thứ nhất, nó phân rã vấn đề xây dựng một mạng thành các thành phần dễ quản lý hơn. Thay vì triển khai một phần mềm nguyên khối làm mọi thứ bạn từng muốn, bạn có thể triển khai nhiều tầng, mỗi tầng giải quyết một phần của vấn đề. Thứ hai, nó cung cấp một thiết kế mô-đun hơn. Nếu bạn quyết định muốn thêm một dịch vụ mới, bạn có thể chỉ cần sửa đổi chức năng ở một tầng, tái sử dụng các chức năng do tất cả các tầng khác cung cấp.
 
-Thinking of a system as a linear sequence of layers is an
-oversimplification, however. Many times there are multiple abstractions
-provided at any given level of the system, each providing a different
-service to the higher layers but building on the same low-level
-abstractions. To see this, consider the two types of channels discussed
-in the previous section. One provides a request/reply service and one
-supports a message stream service. These two channels might be
-alternative offerings at some level of a multilevel networking system,
-as illustrated in :numref:`Figure %s <fig-layers2>`.
+Tuy nhiên, nghĩ về một hệ thống như một chuỗi tuyến tính các tầng là một sự đơn giản hóa quá mức. Nhiều khi có nhiều trừu tượng khác nhau được cung cấp ở một mức nhất định của hệ thống, mỗi trừu tượng cung cấp một dịch vụ khác nhau cho các tầng cao hơn nhưng đều xây dựng dựa trên cùng các trừu tượng tầng thấp. Để thấy điều này, hãy xem xét hai loại kênh đã thảo luận ở phần trước. Một loại cung cấp dịch vụ request/reply và một loại hỗ trợ dịch vụ message stream. Hai kênh này có thể là các lựa chọn thay thế ở một mức nào đó của hệ thống mạng nhiều tầng, như minh họa trong :numref:`Hình %s <fig-layers2>`.
 
 .. _fig-layers2:
 .. figure:: figures/f01-09-9780123850591.png
    :width: 300px
    :align: center
 
-   Layered system with alternative abstractions available
-   at a given layer.
+   Hệ thống phân tầng với các trừu tượng thay thế có sẵn ở một tầng nhất định.
 
-Using this discussion of layering as a foundation, we are now ready to
-discuss the architecture of a network more precisely. For starters, the
-abstract objects that make up the layers of a network system are called
-*protocols*. That is, a protocol provides a communication service that
-higher-level objects (such as application processes, or perhaps
-higher-level protocols) use to exchange messages. For example, we could
-imagine a network that supports a request/reply protocol and a message
-stream protocol, corresponding to the request/reply and message stream
-channels discussed above.
+Dựa trên cuộc thảo luận về phân tầng này, chúng ta đã sẵn sàng để thảo luận về kiến trúc của một mạng một cách chính xác hơn. Trước hết, các đối tượng trừu tượng tạo nên các tầng của một hệ thống mạng được gọi là *giao thức* (protocol). Tức là, một giao thức cung cấp một dịch vụ giao tiếp mà các đối tượng tầng cao hơn (chẳng hạn như tiến trình ứng dụng, hoặc có thể là các giao thức tầng cao hơn) sử dụng để trao đổi thông điệp. Ví dụ, chúng ta có thể hình dung một mạng hỗ trợ một giao thức request/reply và một giao thức message stream, tương ứng với các kênh request/reply và message stream đã thảo luận ở trên.
 
-Each protocol defines two different interfaces. First, it defines a
-*service interface* to the other objects on the same computer that want
-to use its communication services. This service interface defines the
-operations that local objects can perform on the protocol. For example,
-a request/reply protocol would support operations by which an
-application can send and receive messages. An implementation of the HTTP
-protocol could support an operation to fetch a page of hypertext from a
-remote server. An application such as a web browser would invoke such an
-operation whenever the browser needs to obtain a new page (e.g., when
-the user clicks on a link in the currently displayed page).
+Mỗi giao thức định nghĩa hai giao diện khác nhau. Thứ nhất, nó định nghĩa một *giao diện dịch vụ* (service interface) cho các đối tượng khác trên cùng máy tính muốn sử dụng dịch vụ giao tiếp của nó. Giao diện dịch vụ này định nghĩa các thao tác mà các đối tượng cục bộ có thể thực hiện trên giao thức. Ví dụ, một giao thức request/reply sẽ hỗ trợ các thao tác cho phép một ứng dụng gửi và nhận thông điệp. Một triển khai của giao thức HTTP có thể hỗ trợ một thao tác để lấy một trang hypertext từ một máy chủ từ xa. Một ứng dụng như trình duyệt web sẽ gọi thao tác này bất cứ khi nào trình duyệt cần lấy một trang mới (ví dụ, khi người dùng nhấn vào một liên kết trên trang đang hiển thị).
 
-Second, a protocol defines a *peer interface* to its counterpart (peer)
-on another machine. This second interface defines the form and meaning
-of messages exchanged between protocol peers to implement the
-communication service. This would determine the way in which a
-request/reply protocol on one machine communicates with its peer on
-another machine. In the case of HTTP, for example, the protocol
-specification defines in detail how a *GET* command is formatted, what
-arguments can be used with the command, and how a web server should
-respond when it receives such a command.
+Thứ hai, một giao thức định nghĩa một *giao diện peer* (peer interface) cho đối tác (peer) của nó trên một máy khác. Giao diện thứ hai này định nghĩa hình thức và ý nghĩa của các thông điệp được trao đổi giữa các peer giao thức để triển khai dịch vụ giao tiếp. Điều này sẽ xác định cách mà một giao thức request/reply trên một máy giao tiếp với peer của nó trên máy khác. Trong trường hợp HTTP, ví dụ, đặc tả giao thức định nghĩa chi tiết cách một lệnh *GET* được định dạng, các tham số nào có thể dùng với lệnh này, và máy chủ web nên phản hồi thế nào khi nhận được lệnh như vậy.
 
-To summarize, a protocol defines a communication service that it exports
-locally (the service interface), along with a set of rules governing the
-messages that the protocol exchanges with its peer(s) to implement this
-service (the peer interface). This situation is illustrated in :numref:`Figure
-%s <fig-interfaces>`.
+Tóm lại, một giao thức định nghĩa một dịch vụ giao tiếp mà nó xuất ra cục bộ (giao diện dịch vụ), cùng với một tập hợp các quy tắc điều chỉnh các thông điệp mà giao thức trao đổi với peer của nó để triển khai dịch vụ này (giao diện peer). Tình huống này được minh họa trong :numref:`Hình %s <fig-interfaces>`.
 
 .. _fig-interfaces:
 .. figure:: figures/f01-10-9780123850591.png
    :width: 500px
    :align: center
 
-   Service interfaces and peer interfaces.
+   Giao diện dịch vụ và giao diện peer.
 
-Except at the hardware level, where peers directly communicate with each
-other over a physical medium, peer-to-peer communication is
-indirect—each protocol communicates with its peer by passing messages to
-some lower-level protocol, which in turn delivers the message to *its*
-peer. In addition, there are potentially more than one protocol at any
-given level, each providing a different communication service. We
-therefore represent the suite of protocols that make up a network system
-with a *protocol graph*. The nodes of the graph correspond to protocols,
-and the edges represent a *depends on* relation. For example, :numref:`Figure
-%s <fig-protgraph>` illustrates a protocol graph for the hypothetical
-layered system we have been discussing—protocols RRP (Request/Reply
-Protocol) and MSP (Message Stream Protocol) implement two different
-types of process-to-process channels, and both depend on the
-Host-to-Host Protocol (HHP) which provides a host-to-host connectivity
-service.
+Trừ tầng phần cứng, nơi các peer giao tiếp trực tiếp với nhau qua môi trường vật lý, giao tiếp peer-to-peer là gián tiếp—mỗi giao thức giao tiếp với peer của nó bằng cách gửi thông điệp cho một giao thức tầng thấp hơn, giao thức này lại chuyển thông điệp cho peer của *nó*. Ngoài ra, có thể có nhiều hơn một giao thức ở bất kỳ tầng nào, mỗi giao thức cung cấp một dịch vụ giao tiếp khác nhau. Do đó, chúng ta biểu diễn bộ giao thức tạo nên một hệ thống mạng bằng một *đồ thị giao thức* (protocol graph). Các nút của đồ thị tương ứng với các giao thức, và các cạnh biểu diễn quan hệ *phụ thuộc vào* (depends on). Ví dụ, :numref:`Hình %s <fig-protgraph>` minh họa một đồ thị giao thức cho hệ thống phân tầng giả định mà chúng ta đã thảo luận—các giao thức RRP (Request/Reply Protocol) và MSP (Message Stream Protocol) triển khai hai loại kênh process-to-process khác nhau, và cả hai đều phụ thuộc vào Host-to-Host Protocol (HHP) cung cấp dịch vụ kết nối host-to-host.
 
 .. _fig-protgraph:
 .. figure:: figures/f01-11-9780123850591.png
    :width: 500px
    :align: center
 
-   Example of a protocol graph.
+   Ví dụ về một đồ thị giao thức.
 
-In this example, suppose that the file access program on host 1 wants to
-send a message to its peer on host 2 using the communication service
-offered by RRP. In this case, the file application asks RRP to send the
-message on its behalf. To communicate with its peer, RRP invokes the
-services of HHP, which in turn transmits the message to its peer on the
-other machine. Once the message has arrived at the instance of HHP on
-host 2, HHP passes the message up to RRP, which in turn delivers the
-message to the file application. In this particular case, the
-application is said to employ the services of the *protocol stack*
-RRP/HHP.
+Trong ví dụ này, giả sử chương trình truy cập tệp trên host 1 muốn gửi một thông điệp tới peer của nó trên host 2 bằng dịch vụ giao tiếp do RRP cung cấp. Trong trường hợp này, ứng dụng tệp yêu cầu RRP gửi thông điệp thay cho nó. Để giao tiếp với peer của mình, RRP gọi các dịch vụ của HHP, HHP lại truyền thông điệp tới peer của nó trên máy khác. Khi thông điệp đã đến HHP trên host 2, HHP chuyển thông điệp lên RRP, RRP lại chuyển thông điệp cho ứng dụng tệp. Trong trường hợp cụ thể này, ứng dụng được cho là sử dụng *ngăn xếp giao thức* RRP/HHP.
 
-Note that the term *protocol* is used in two different ways. Sometimes
-it refers to the abstract interfaces—that is, the operations defined by
-the service interface and the form and meaning of messages exchanged
-between peers, and sometimes it refers to the module that actually
-implements these two interfaces. To distinguish between the interfaces
-and the module that implements these interfaces, we generally refer to
-the former as a *protocol specification*. Specifications are generally
-expressed using a combination of prose, pseudocode, state transition
-diagrams, pictures of packet formats, and other abstract notations. It
-should be the case that a given protocol can be implemented in different
-ways by different programmers, as long as each adheres to the
-specification. The challenge is ensuring that two different
-implementations of the same specification can successfully exchange
-messages. Two or more protocol modules that do accurately implement a
-protocol specification are said to *interoperate* with each other.
+Lưu ý rằng thuật ngữ *giao thức* được dùng theo hai nghĩa khác nhau. Đôi khi nó chỉ các giao diện trừu tượng—tức là, các thao tác được định nghĩa bởi giao diện dịch vụ và hình thức, ý nghĩa của các thông điệp trao đổi giữa các peer, và đôi khi nó chỉ module thực sự triển khai hai giao diện này. Để phân biệt giữa các giao diện và module triển khai các giao diện này, chúng ta thường gọi cái trước là *đặc tả giao thức* (protocol specification). Đặc tả thường được thể hiện bằng sự kết hợp giữa văn bản, mã giả, sơ đồ chuyển trạng thái, hình ảnh định dạng gói tin, và các ký hiệu trừu tượng khác. Nên đảm bảo rằng một giao thức có thể được triển khai theo nhiều cách khác nhau bởi các lập trình viên khác nhau, miễn là mỗi người tuân thủ đặc tả. Thách thức là đảm bảo rằng hai triển khai khác nhau của cùng một đặc tả có thể trao đổi thông điệp thành công. Hai hoặc nhiều module giao thức thực sự triển khai đúng đặc tả giao thức được gọi là *tương tác được* (interoperate) với nhau.
 
-We can imagine many different protocols and protocol graphs that satisfy
-the communication requirements of a collection of applications.
-Fortunately, there exist standardization bodies, such as the Internet
-Engineering Task Force (IETF) and the International Standards
-Organization (ISO), that establish policies for a particular protocol
-graph. We call the set of rules governing the form and content of a
-protocol graph a *network architecture*. Although beyond the scope of
-this book, standardization bodies have established well-defined
-procedures for introducing, validating, and finally approving protocols
-in their respective architectures. We briefly describe the architectures
-defined by the IETF and ISO shortly, but first there are two additional
-things we need to explain about the mechanics of protocol layering.
+Chúng ta có thể hình dung nhiều giao thức và đồ thị giao thức khác nhau đáp ứng các yêu cầu giao tiếp của một tập hợp ứng dụng. May mắn thay, tồn tại các tổ chức tiêu chuẩn hóa, như Internet Engineering Task Force (IETF) và International Standards Organization (ISO), thiết lập các chính sách cho một đồ thị giao thức cụ thể. Chúng ta gọi tập hợp các quy tắc điều chỉnh hình thức và nội dung của một đồ thị giao thức là *kiến trúc mạng* (network architecture). Mặc dù vượt ra ngoài phạm vi cuốn sách này, các tổ chức tiêu chuẩn hóa đã thiết lập các quy trình rõ ràng để giới thiệu, xác thực và cuối cùng phê duyệt các giao thức trong các kiến trúc tương ứng của họ. Chúng tôi sẽ mô tả ngắn gọn các kiến trúc do IETF và ISO định nghĩa ngay sau đây, nhưng trước tiên còn hai điều nữa cần giải thích về cơ chế phân tầng giao thức.
 
-1.3.2 Encapsulation
--------------------
+1.3.2 Đóng gói (Encapsulation)
+------------------------------
 
-Consider what happens in :numref:`Figure %s <fig-protgraph>` when one
-of the application programs sends a message to its peer by passing the
-message to RRP. From RRP’s perspective, the message it is given by the
-application is an uninterpreted string of bytes. RRP does not care that
-these bytes represent an array of integers, an email message, a digital
-image, or whatever; it is simply charged with sending them to its peer.
-However, RRP must communicate control information to its peer,
-instructing it how to handle the message when it is received. RRP does
-this by attaching a *header* to the message. Generally speaking, a header
-is a small data structure—from a few bytes to a few dozen bytes—that is
-used among peers to communicate with each other. As the name suggests,
-headers are usually attached to the front of a message. In some cases,
-however, this peer-to-peer control information is sent at the end of the
-message, in which case it is called a *trailer*. The exact format for the
-header attached by RRP is defined by its protocol specification. The rest
-of the message—that is, the data being transmitted on behalf of the
-application—is called the message’s *body* or *payload*. We say that the
-application’s data is *encapsulated* in the new message created by RRP.
+Hãy xem điều gì xảy ra trong :numref:`Hình %s <fig-protgraph>` khi một trong các chương trình ứng dụng gửi một thông điệp tới peer của nó bằng cách chuyển thông điệp cho RRP. Từ góc nhìn của RRP, thông điệp mà nó nhận từ ứng dụng là một chuỗi byte không được diễn giải. RRP không quan tâm các byte này đại diện cho một mảng số nguyên, một thông điệp email, một ảnh số hóa, hay bất cứ thứ gì; nó chỉ có nhiệm vụ gửi chúng tới peer của nó. Tuy nhiên, RRP phải truyền thông tin điều khiển tới peer, hướng dẫn nó cách xử lý thông điệp khi nhận được. RRP làm điều này bằng cách gắn một *header* (phần đầu) vào thông điệp. Nói chung, header là một cấu trúc dữ liệu nhỏ—từ vài byte đến vài chục byte—được các peer sử dụng để giao tiếp với nhau. Như tên gọi, header thường được gắn vào đầu thông điệp. Tuy nhiên, trong một số trường hợp, thông tin điều khiển peer-to-peer này được gửi ở cuối thông điệp, khi đó nó được gọi là *trailer*. Định dạng chính xác của header do RRP gắn vào được xác định bởi đặc tả giao thức của nó. Phần còn lại của thông điệp—tức là, dữ liệu được truyền thay mặt cho ứng dụng—được gọi là *body* hoặc *payload* của thông điệp. Chúng ta nói rằng dữ liệu của ứng dụng được *đóng gói* (encapsulated) trong thông điệp mới do RRP tạo ra.
 
 .. _fig-encapsulation:
 .. figure:: figures/f01-12-9780123850591.png
    :width: 500px
    :align: center
 
-   High-level messages are encapsulated inside of low-level messages.
+   Thông điệp tầng cao được đóng gói bên trong thông điệp tầng thấp.
 
-This process of encapsulation is then repeated at each level of the
-protocol graph; for example, HHP encapsulates RRP’s message by
-attaching a header of its own. If we now assume that HHP sends the
-message to its peer over some network, then when the message arrives
-at the destination host, it is processed in the opposite order: HHP
-first interprets the HHP header at the front of the message (i.e.,
-takes whatever action is appropriate given the contents of the header)
-and passes the body of the message (but not the HHP header) up to RRP,
-which takes whatever action is indicated by the RRP header that its
-peer attached and passes the body of the message (but not the RRP
-header) up to the application program. The message passed up from RRP
-to the application on host 2 is exactly the same message as the
-application passed down to RRP on host 1; the application does not see
-any of the headers that have been attached to it to implement the
-lower-level communication services. This whole process is illustrated
-in :numref:`Figure %s <fig-encapsulation>`. Note that in this example,
-nodes in the network (e.g., switches and routers) may inspect the HHP
-header at the front of the message.
+Quá trình đóng gói này sau đó được lặp lại ở mỗi tầng của đồ thị giao thức; ví dụ, HHP đóng gói thông điệp của RRP bằng cách gắn một header của riêng nó. Nếu bây giờ giả sử HHP gửi thông điệp tới peer của nó qua một mạng nào đó, thì khi thông điệp đến host đích, nó được xử lý theo thứ tự ngược lại: HHP trước tiên diễn giải header HHP ở đầu thông điệp (tức là, thực hiện hành động phù hợp dựa trên nội dung của header) và chuyển phần body của thông điệp (nhưng không kèm header HHP) lên RRP, RRP lại thực hiện hành động được chỉ định bởi header RRP mà peer của nó đã gắn vào và chuyển phần body của thông điệp (nhưng không kèm header RRP) lên chương trình ứng dụng. Thông điệp được chuyển lên từ RRP tới ứng dụng trên host 2 chính là thông điệp mà ứng dụng đã chuyển xuống RRP trên host 1; ứng dụng không nhìn thấy bất kỳ header nào đã được gắn vào để triển khai các dịch vụ giao tiếp tầng thấp hơn. Toàn bộ quá trình này được minh họa trong :numref:`Hình %s <fig-encapsulation>`. Lưu ý rằng trong ví dụ này, các nút trong mạng (ví dụ, switch và router) có thể kiểm tra header HHP ở đầu thông điệp.
 
-Note that when we say a low-level protocol does not interpret the
-message it is given by some high-level protocol, we mean that it does
-not know how to extract any meaning from the data contained in the
-message. It is sometimes the case, however, that the low-level protocol
-applies some simple transformation to the data it is given, such as to
-compress or encrypt it. In this case, the protocol is transforming the
-entire body of the message, including both the original application’s
-data and all the headers attached to that data by higher-level
-protocols.
+Lưu ý rằng khi chúng ta nói một giao thức tầng thấp không diễn giải thông điệp mà nó nhận từ một giao thức tầng cao, ý là nó không biết cách trích xuất bất kỳ ý nghĩa nào từ dữ liệu chứa trong thông điệp. Tuy nhiên, đôi khi giao thức tầng thấp áp dụng một số biến đổi đơn giản lên dữ liệu mà nó nhận, chẳng hạn như nén hoặc mã hóa nó. Trong trường hợp này, giao thức đang biến đổi toàn bộ body của thông điệp, bao gồm cả dữ liệu gốc của ứng dụng và tất cả các header do các giao thức tầng cao hơn gắn vào dữ liệu đó.
 
-1.3.3 Multiplexing and Demultiplexing
--------------------------------------
+1.3.3 Ghép kênh và Tách kênh (Multiplexing and Demultiplexing)
+--------------------------------------------------------------
 
-Recall that a fundamental idea of packet switching is to multiplex
-multiple flows of data over a single physical link. This same idea
-applies up and down the protocol graph, not just to switching nodes. In
-:numref:`Figure %s <fig-protgraph>`, for example, we can think of RRP as
-implementing a logical communication channel, with messages from two
-different applications multiplexed over this channel at the source host
-and then demultiplexed back to the appropriate application at the
-destination host.
+Hãy nhớ rằng một ý tưởng cơ bản của chuyển mạch gói là ghép kênh nhiều luồng dữ liệu qua một liên kết vật lý duy nhất. Ý tưởng này cũng áp dụng lên xuống đồ thị giao thức, không chỉ ở các nút chuyển mạch. Trong :numref:`Hình %s <fig-protgraph>`, ví dụ, chúng ta có thể coi RRP như đang triển khai một kênh giao tiếp logic, với các thông điệp từ hai ứng dụng khác nhau được ghép kênh qua kênh này tại host nguồn và sau đó được tách kênh trở lại ứng dụng phù hợp tại host đích.
 
-Practically speaking, this simply means that the header that RRP
-attaches to its messages contains an identifier that records the
-application to which the message belongs. We call this identifier RRP’s
-*demultiplexing key*, or *demux key* for short. At the source host, RRP
-includes the appropriate demux key in its header. When the message is
-delivered to RRP on the destination host, it strips its header, examines
-the demux key, and demultiplexes the message to the correct application.
+Trên thực tế, điều này đơn giản có nghĩa là header mà RRP gắn vào thông điệp của nó chứa một định danh ghi lại ứng dụng mà thông điệp thuộc về. Chúng ta gọi định danh này là *khóa tách kênh* (demultiplexing key), hoặc viết tắt là *demux key* của RRP. Tại host nguồn, RRP chèn demux key phù hợp vào header của nó. Khi thông điệp được chuyển tới RRP trên host đích, nó loại bỏ header, kiểm tra demux key, và tách kênh thông điệp tới đúng ứng dụng.
 
-RRP is not unique in its support for multiplexing; nearly every protocol
-implements this mechanism. For example, HHP has its own demux key to
-determine which messages to pass up to RRP and which to pass up to MSP.
-However, there is no uniform agreement among protocols—even those within
-a single network architecture—on exactly what constitutes a demux key.
-Some protocols use an 8-bit field (meaning they can support only 256
-high-level protocols), and others use 16- or 32-bit fields. Also, some
-protocols have a single demultiplexing field in their header, while
-others have a pair of demultiplexing fields. In the former case, the
-same demux key is used on both sides of the communication, while in the
-latter case each side uses a different key to identify the high-level
-protocol (or application program) to which the message is to be
-delivered.
+RRP không phải là duy nhất trong việc hỗ trợ ghép kênh; gần như mọi giao thức đều triển khai cơ chế này. Ví dụ, HHP có demux key riêng để xác định thông điệp nào chuyển lên RRP và thông điệp nào chuyển lên MSP. Tuy nhiên, không có sự thống nhất giữa các giao thức—ngay cả trong cùng một kiến trúc mạng—về chính xác demux key là gì. Một số giao thức dùng trường 8 bit (nghĩa là chỉ hỗ trợ được 256 giao thức tầng cao), số khác dùng trường 16 hoặc 32 bit. Ngoài ra, một số giao thức có một trường tách kênh duy nhất trong header, số khác có một cặp trường tách kênh. Trong trường hợp đầu, cùng một demux key được dùng ở cả hai phía giao tiếp, còn trong trường hợp sau, mỗi phía dùng một key khác nhau để xác định giao thức tầng cao (hoặc chương trình ứng dụng) mà thông điệp sẽ được chuyển tới.
 
-1.3.4 OSI Model
----------------
+1.3.4 Mô hình OSI
+-----------------
 
-The ISO was one of the first organizations to formally define a common
-way to connect computers. Their architecture, called the *Open Systems
-Interconnection* (OSI) architecture and illustrated in :numref:`Figure
-%s <fig-osi>`, defines a partitioning of network functionality into
-seven layers, where one or more protocols implement the functionality
-assigned to a given layer. In this sense, the schematic given in
-:numref:`Figure %s <fig-osi>` is not a protocol graph, *per se*, but
-rather a *reference model* for a protocol graph. It is often referred
-to as the 7-layer model.  While there is no OSI-based network running
-today, the terminology it defined is still widely used, so it is still
-worth a cursory look.
+ISO là một trong những tổ chức đầu tiên chính thức định nghĩa một cách chung để kết nối các máy tính. Kiến trúc của họ, gọi là *Open Systems Interconnection* (OSI) và minh họa trong :numref:`Hình %s <fig-osi>`, định nghĩa việc phân chia chức năng mạng thành bảy tầng, trong đó một hoặc nhiều giao thức triển khai chức năng được gán cho một tầng nhất định. Theo nghĩa này, sơ đồ trong :numref:`Hình %s <fig-osi>` không phải là một đồ thị giao thức, *per se*, mà là một *mô hình tham chiếu* cho một đồ thị giao thức. Nó thường được gọi là mô hình 7 tầng. Mặc dù hiện nay không còn mạng nào dựa trên OSI đang hoạt động, nhưng thuật ngữ mà nó định nghĩa vẫn được sử dụng rộng rãi, nên vẫn đáng để xem qua.
 
 .. _fig-osi:
 .. figure:: figures/f01-13-9780123850591.png
    :width: 600px
    :align: center
 
-   The OSI 7-layer model.
+   Mô hình 7 tầng OSI.
 
-Starting at the bottom and working up, the *physical* layer handles the
-transmission of raw bits over a communications link. The *data link*
-layer then collects a stream of bits into a larger aggregate called a
-*frame*. Network adaptors, along with device drivers running in the
-node’s operating system, typically implement the data link level. This
-means that frames, not raw bits, are actually delivered to hosts. The
-*network* layer handles routing among nodes within a packet-switched
-network. At this layer, the unit of data exchanged among nodes is
-typically called a *packet* rather than a frame, although they are
-fundamentally the same thing. The lower three layers are implemented on
-all network nodes, including switches within the network and hosts
-connected to the exterior of the network. The *transport* layer then
-implements what we have up to this point been calling a
-*process-to-process channel*. Here, the unit of data exchanged is
-commonly called a *message* rather than a packet or a frame. The
-transport layer and higher layers typically run only on the end hosts
-and not on the intermediate switches or routers.
+Bắt đầu từ dưới lên, tầng *vật lý* (physical) xử lý việc truyền các bit thô qua một liên kết truyền thông. Tầng *liên kết dữ liệu* (data link) sau đó gom một dòng bit thành một tập hợp lớn hơn gọi là *frame* (khung). Các bộ điều hợp mạng, cùng với trình điều khiển thiết bị chạy trong hệ điều hành của nút, thường triển khai tầng liên kết dữ liệu. Điều này có nghĩa là các khung, chứ không phải bit thô, thực sự được chuyển tới các host. Tầng *mạng* (network) xử lý việc định tuyến giữa các nút trong một mạng chuyển mạch gói. Ở tầng này, đơn vị dữ liệu trao đổi giữa các nút thường được gọi là *gói* (packet) thay vì khung, mặc dù về cơ bản chúng giống nhau. Ba tầng dưới được triển khai trên tất cả các nút mạng, bao gồm cả switch trong mạng và các host kết nối bên ngoài mạng. Tầng *giao vận* (transport) sau đó triển khai cái mà đến giờ chúng ta gọi là *kênh process-to-process*. Ở đây, đơn vị dữ liệu trao đổi thường được gọi là *thông điệp* (message) thay vì gói hay khung. Tầng giao vận và các tầng cao hơn thường chỉ chạy trên các host đầu cuối chứ không chạy trên các switch hoặc router trung gian.
 
-Skipping ahead to the top (seventh) layer and working our way back
-down, we find the *application* layer. Application layer protocols
-include things like the Hypertext Transfer Protocol (HTTP), which is
-the basis of the World Wide Web and is what enables web browsers to
-request pages from web servers. Below that, the *presentation* layer
-is concerned with the format of data exchanged between peers—for
-example, whether an integer is 16, 32, or 64 bits long, whether the
-most significant byte is transmitted first or last, or how a video
-stream is formatted. Finally, the *session* layer provides a name
-space that is used to tie together the potentially different transport
-streams that are part of a single application. For example, it might
-manage an audio stream and a video stream that are being combined in a
-teleconferencing application.
+Bỏ qua lên tầng trên cùng (tầng thứ bảy) và đi ngược lại xuống, chúng ta có tầng *ứng dụng* (application). Các giao thức tầng ứng dụng bao gồm những thứ như Hypertext Transfer Protocol (HTTP), là nền tảng của World Wide Web và cho phép trình duyệt web yêu cầu các trang từ máy chủ web. Bên dưới đó, tầng *trình bày* (presentation) quan tâm đến định dạng dữ liệu trao đổi giữa các peer—ví dụ, một số nguyên là 16, 32 hay 64 bit, byte quan trọng nhất được truyền trước hay sau, hoặc một luồng video được định dạng thế nào. Cuối cùng, tầng *phiên* (session) cung cấp không gian tên được dùng để liên kết các luồng giao vận có thể khác nhau thuộc về một ứng dụng. Ví dụ, nó có thể quản lý một luồng âm thanh và một luồng video được kết hợp trong một ứng dụng hội nghị truyền hình.
 
-1.3.5 Internet Architecture
----------------------------
+1.3.5 Kiến trúc Internet
+------------------------
 
-The Internet architecture, which is also sometimes called the TCP/IP
-architecture after its two main protocols, is depicted in
-:numref:`Figure %s <fig-internet1>`. An alternative representation is
-given in :numref:`Figure %s <fig-internet2>`. The Internet
-architecture evolved out of experiences with an earlier
-packet-switched network called the ARPANET. Both the Internet and the
-ARPANET were funded by the Advanced Research Projects Agency (ARPA),
-one of the research and development funding agencies of the
-U.S. Department of Defense. The Internet and ARPANET were around
-before the OSI architecture, and the experience gained from building
-them was a major influence on the OSI reference model.
+Kiến trúc Internet, đôi khi còn gọi là kiến trúc TCP/IP theo tên hai giao thức chính của nó, được mô tả trong :numref:`Hình %s <fig-internet1>`. Một cách biểu diễn khác được đưa ra trong :numref:`Hình %s <fig-internet2>`. Kiến trúc Internet phát triển từ kinh nghiệm với một mạng chuyển mạch gói trước đó gọi là ARPANET. Cả Internet và ARPANET đều được tài trợ bởi Advanced Research Projects Agency (ARPA), một trong các cơ quan tài trợ nghiên cứu và phát triển của Bộ Quốc phòng Hoa Kỳ. Internet và ARPANET xuất hiện trước kiến trúc OSI, và kinh nghiệm xây dựng chúng đã ảnh hưởng lớn đến mô hình tham chiếu OSI.
 
 .. _fig-internet1:
 .. figure:: figures/f01-14-9780123850591.png
    :width: 300px
    :align: center
 
-   Internet protocol graph.
+   Đồ thị giao thức Internet.
 
 .. _fig-internet2:
 .. figure:: figures/f01-15-9780123850591.png
    :width: 250px
    :align: center
 
-   Alternative view of the Internet architecture. The "subnetwork" layer
-   was historically referred to as the “network” layer and is now often
-   referred to as “Layer 2” (influenced by the OSI model).
+   Cách nhìn thay thế về kiến trúc Internet. Tầng "subnetwork" trước đây được gọi là tầng “network” và nay thường được gọi là “Layer 2” (theo ảnh hưởng của mô hình OSI).
 
-While the 7-layer OSI model can, with some imagination, be applied to
-the Internet, a simpler stack is often used instead. At the lowest
-level is a wide variety of network protocols, denoted NET\ :sub:`1`,
-NET\ :sub:`2`, and so on. In practice, these protocols are implemented
-by a combination of hardware (e.g., a network adaptor) and software
-(e.g., a network device driver). For example, you might find Ethernet
-or wireless protocols (such as the 802.11 Wi-Fi standards) at this
-layer. (These protocols in turn may actually involve several
-sublayers, but the Internet architecture does not presume anything
-about them.) The next layer consists of a single protocol—the
-*Internet Protocol* (IP). This is the protocol that supports the
-interconnection of multiple networking technologies into a single,
-logical internetwork. The layer on top of IP contains two main
-protocols—the *Transmission Control Protocol* (TCP) and the *User
-Datagram Protocol* (UDP). TCP and UDP provide alternative logical
-channels to application programs: TCP provides a reliable byte-stream
-channel, and UDP provides an unreliable datagram delivery channel
-(*datagram* may be thought of as a synonym for message). In the
-language of the Internet, TCP and UDP are sometimes called
-*end-to-end* protocols, although it is equally correct to refer to
-them as *transport* protocols.
+Mặc dù mô hình 7 tầng OSI có thể, với một chút tưởng tượng, được áp dụng cho Internet, nhưng thường sử dụng một ngăn xếp đơn giản hơn. Ở tầng thấp nhất là nhiều giao thức mạng khác nhau, ký hiệu là NET\ :sub:`1`, NET\ :sub:`2`, v.v. Trên thực tế, các giao thức này được triển khai bằng sự kết hợp giữa phần cứng (ví dụ, bộ điều hợp mạng) và phần mềm (ví dụ, trình điều khiển thiết bị mạng). Ví dụ, bạn có thể thấy các giao thức Ethernet hoặc không dây (như chuẩn Wi-Fi 802.11) ở tầng này. (Các giao thức này thực ra có thể gồm nhiều tầng con, nhưng kiến trúc Internet không giả định gì về chúng.) Tầng tiếp theo chỉ gồm một giao thức—*Internet Protocol* (IP). Đây là giao thức hỗ trợ việc kết nối nhiều công nghệ mạng thành một mạng logic duy nhất. Tầng trên IP gồm hai giao thức chính—*Transmission Control Protocol* (TCP) và *User Datagram Protocol* (UDP). TCP và UDP cung cấp các kênh logic thay thế cho các chương trình ứng dụng: TCP cung cấp kênh luồng byte tin cậy, còn UDP cung cấp kênh truyền datagram không tin cậy (*datagram* có thể coi là đồng nghĩa với message). Trong ngôn ngữ Internet, TCP và UDP đôi khi được gọi là các giao thức *end-to-end*, mặc dù gọi chúng là giao thức *transport* cũng đúng.
 
-Running above the transport layer is a range of application protocols,
-such as HTTP, FTP, Telnet (remote login), and the Simple Mail Transfer
-Protocol (SMTP), that enable the interoperation of popular applications.
-To understand the difference between an application layer protocol and
-an application, think of all the different World Wide Web browsers that
-are or have been available (e.g., Firefox, Chrome, Safari, Netscape,
-Mosaic, Internet Explorer). There is a similarly large number of
-different implementations of web servers. The reason that you can use
-any one of these application programs to access a particular site on the
-Web is that they all conform to the same application layer protocol:
-HTTP. Confusingly, the same term sometimes applies to both an
-application and the application layer protocol that it uses (e.g., FTP
-is often used as the name of an application that implements the FTP
-protocol).
+Chạy phía trên tầng giao vận là một loạt các giao thức ứng dụng, như HTTP, FTP, Telnet (đăng nhập từ xa), và Simple Mail Transfer Protocol (SMTP), cho phép các ứng dụng phổ biến tương tác với nhau. Để hiểu sự khác biệt giữa giao thức tầng ứng dụng và ứng dụng, hãy nghĩ về tất cả các trình duyệt web khác nhau từng tồn tại (ví dụ, Firefox, Chrome, Safari, Netscape, Mosaic, Internet Explorer). Cũng có số lượng lớn các triển khai máy chủ web khác nhau. Lý do bạn có thể dùng bất kỳ chương trình ứng dụng nào trong số này để truy cập một trang web cụ thể là vì tất cả đều tuân thủ cùng một giao thức tầng ứng dụng: HTTP. Đôi khi, cùng một thuật ngữ được dùng cho cả ứng dụng và giao thức tầng ứng dụng mà nó sử dụng (ví dụ, FTP thường được dùng để chỉ cả ứng dụng triển khai giao thức FTP).
 
-Most people who work actively in the networking field are familiar with
-both the Internet architecture and the 7-layer OSI architecture, and
-there is general agreement on how the layers map between architectures.
-The Internet’s application layer is considered to be at layer 7, its
-transport layer is layer 4, the IP (internetworking or just network)
-layer is layer 3, and the link or subnet layer below IP is layer 2.
+Hầu hết những người làm việc trong lĩnh vực mạng đều quen thuộc với cả kiến trúc Internet và mô hình 7 tầng OSI, và có sự đồng thuận chung về cách các tầng ánh xạ giữa hai kiến trúc. Tầng ứng dụng của Internet được coi là tầng 7, tầng giao vận là tầng 4, tầng IP (internetworking hoặc chỉ network) là tầng 3, và tầng liên kết hoặc subnet bên dưới IP là tầng 2.
 
-.. sidebar:: IETF and Standardization
+.. sidebar:: IETF và Tiêu chuẩn hóa
 
-   Although we call it the "Internet architecture" rather than the
-   "IETF architecture," it's fair to say that the IETF is the primary
-   standardization body responsible for its definition, as well as the
-   specification of many of its protocols, such as TCP, UDP, IP,
-   DNS, and BGP. But the Internet architecture also embraces many
-   protocols defined by other organizations, including IEEE's
-   802.11 ethernet and Wi-Fi standards, W3C's HTTP/HTML web
-   specifications, 3GPP's 4G and 5G cellular networks standards,
-   and ITU-T's H.232 video encoding standards, to name a few.
+   Mặc dù chúng ta gọi nó là "kiến trúc Internet" thay vì "kiến trúc IETF", nhưng có thể nói rằng IETF là tổ chức tiêu chuẩn hóa chính chịu trách nhiệm định nghĩa nó, cũng như đặc tả nhiều giao thức của nó, như TCP, UDP, IP, DNS và BGP. Nhưng kiến trúc Internet cũng bao gồm nhiều giao thức do các tổ chức khác định nghĩa, bao gồm chuẩn ethernet và Wi-Fi 802.11 của IEEE, chuẩn HTTP/HTML của W3C, chuẩn mạng di động 4G và 5G của 3GPP, và chuẩn mã hóa video H.232 của ITU-T, chỉ kể một vài ví dụ.
 
-   In addition to defining architectures and specifying protocols,
-   there are yet other organizations that support the larger goal of
-   interoperability. One example is the IANA (Internet Assigned
-   Numbers Authority), which as its name implies, is responsible for
-   handing out the unique identifiers needed to make the protocols
-   work. IANA, in turn, is a department within the ICANN (Internet
-   Corporation for Assigned Names and Numbers), a non-profit
-   organization that's responsible for the overall stewardship of the
-   Internet.
+   Ngoài việc định nghĩa kiến trúc và đặc tả giao thức, còn có các tổ chức khác hỗ trợ mục tiêu lớn hơn là khả năng tương tác. Một ví dụ là IANA (Internet Assigned Numbers Authority), đúng như tên gọi, chịu trách nhiệm phân phát các định danh duy nhất cần thiết để các giao thức hoạt động. IANA, đến lượt mình, là một bộ phận thuộc ICANN (Internet Corporation for Assigned Names and Numbers), một tổ chức phi lợi nhuận chịu trách nhiệm quản lý tổng thể Internet.
 
-The Internet architecture has three features that are worth
-highlighting. First, as best illustrated by :numref:`Figure %s
-<fig-internet2>`, the Internet architecture does not imply strict
-layering. The application is free to bypass the defined transport
-layers and to directly use IP or one of the underlying networks. In
-fact, programmers are free to define new channel abstractions or
-applications that run on top of any of the existing protocols.
+Kiến trúc Internet có ba đặc điểm đáng chú ý. Thứ nhất, như minh họa rõ nhất trong :numref:`Hình %s <fig-internet2>`, kiến trúc Internet không ngụ ý phân tầng nghiêm ngặt. Ứng dụng có thể bỏ qua các tầng giao vận đã định nghĩa và sử dụng trực tiếp IP hoặc một trong các mạng nền tảng. Thực tế, lập trình viên có thể tự do định nghĩa các trừu tượng kênh mới hoặc ứng dụng chạy trên bất kỳ giao thức nào hiện có.
 
-Second, if you look closely at the protocol graph in :numref:`Figure
-%s <fig-internet1>`, you will notice an hourglass shape—wide at the top,
-narrow in the middle, and wide at the bottom. This shape actually
-reflects the central philosophy of the architecture. That is, IP serves
-as the focal point for the architecture—it defines a common method for
-exchanging packets among a wide collection of networks. Above IP there
-can be arbitrarily many transport protocols, each offering a different
-channel abstraction to application programs. Thus, the issue of
-delivering messages from host to host is completely separated from the
-issue of providing a useful process-to-process communication service.
-Below IP, the architecture allows for arbitrarily many different network
-technologies, ranging from Ethernet to wireless to single point-to-point
-links.
+Thứ hai, nếu bạn nhìn kỹ vào đồ thị giao thức trong :numref:`Hình %s <fig-internet1>`, bạn sẽ nhận thấy hình dạng đồng hồ cát—rộng ở trên, hẹp ở giữa, và rộng ở dưới. Hình dạng này thực sự phản ánh triết lý trung tâm của kiến trúc. Nghĩa là, IP đóng vai trò là điểm hội tụ của kiến trúc—nó định nghĩa một phương pháp chung để trao đổi các gói tin giữa một tập hợp lớn các mạng. Phía trên IP có thể có vô số giao thức giao vận, mỗi giao thức cung cấp một trừu tượng kênh khác nhau cho các chương trình ứng dụng. Do đó, vấn đề truyền thông điệp từ host này tới host khác hoàn toàn tách biệt với vấn đề cung cấp dịch vụ giao tiếp process-to-process hữu ích. Bên dưới IP, kiến trúc cho phép vô số công nghệ mạng khác nhau, từ Ethernet đến không dây đến các liên kết điểm-điểm đơn lẻ.
 
-A final attribute of the Internet architecture (or more accurately, of
-the IETF culture) is that in order for a new protocol to be officially
-included in the architecture, there must be both a protocol
-specification and at least one (and preferably two) representative
-implementations of the specification. The existence of working
-implementations is required for standards to be adopted by the
-IETF. This cultural assumption of the design community helps to ensure
-that the architecture’s protocols can be efficiently implemented.
-Perhaps the value the Internet culture places on working software is
-best exemplified by a quote on T-shirts commonly worn at IETF
-meetings:
+Một thuộc tính cuối cùng của kiến trúc Internet (hoặc chính xác hơn, của văn hóa IETF) là để một giao thức mới được chính thức đưa vào kiến trúc, phải có cả đặc tả giao thức và ít nhất một (tốt nhất là hai) triển khai đại diện của đặc tả đó. Sự tồn tại của các triển khai hoạt động là điều kiện cần để tiêu chuẩn được IETF thông qua. Giả định văn hóa này của cộng đồng thiết kế giúp đảm bảo rằng các giao thức của kiến trúc có thể được triển khai hiệu quả. Có lẽ giá trị mà văn hóa Internet đặt vào phần mềm hoạt động được thể hiện rõ nhất qua câu nói trên áo phông thường thấy tại các cuộc họp IETF:
 
-   *We reject kings, presidents, and voting. We believe in rough
-   consensus and running code.* **(David Clark)**
+   *Chúng tôi từ chối vua chúa, tổng thống và bỏ phiếu. Chúng tôi tin vào đồng thuận thô và mã nguồn chạy được.* **(David Clark)**
 
 .. _key-hourglass:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   Of these three attributes of the Internet architecture, the hourglass
-   design philosophy is important enough to bear repeating. The
-   hourglass’s narrow waist represents a minimal and carefully chosen
-   set of global capabilities that allows both higher-level applications
-   and lower-level communication technologies to coexist, share
-   capabilities, and evolve rapidly. The narrow-waisted model is
-   critical to the Internet’s ability to adapt to new user
-   demands and changing technologies. :ref:`[Next] <key-pipe-full>`
-
+   Trong ba đặc điểm của kiến trúc Internet, triết lý thiết kế đồng hồ cát quan trọng đến mức cần nhắc lại. Phần eo hẹp của đồng hồ cát đại diện cho một tập hợp tối thiểu và được lựa chọn cẩn thận các khả năng toàn cục cho phép cả các ứng dụng tầng cao hơn và các công nghệ truyền thông tầng thấp hơn cùng tồn tại, chia sẻ khả năng và phát triển nhanh chóng. Mô hình eo hẹp này là then chốt cho khả năng thích nghi của Internet với các nhu cầu người dùng mới và công nghệ thay đổi. :ref:`[Tiếp theo] <key-pipe-full>`
