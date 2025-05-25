@@ -1,4 +1,4 @@
-Chương 2: Kết nối trực tiếp
+Chương 2: Liên kết trực tiếp
 ===========================
 
    Thật sai lầm khi nhìn quá xa về phía trước. Chỉ có thể xử lý từng mắt xích
