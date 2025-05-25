@@ -1,8 +1,8 @@
-Chapter 2:  Direct Links
-========================
+Chương 2: Kết nối trực tiếp
+===========================
 
-   It is a mistake to look too far ahead. Only one link in the chain
-   of destiny can be handled at a time.
+   Thật sai lầm khi nhìn quá xa về phía trước. Chỉ có thể xử lý từng mắt xích
+   trong chuỗi định mệnh tại một thời điểm.
 
    *—Winston Churchill*
 
@@ -19,4 +19,3 @@ Chapter 2:  Direct Links
    direct/wireless.rst
    direct/access.rst
    direct/trend.rst
-
