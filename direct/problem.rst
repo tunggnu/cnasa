@@ -1,56 +1,14 @@
-Problem: Connecting to a Network
---------------------------------
+Bài toán: Kết nối vào một mạng
+---------------------------
 
-In Chapter 1 we saw that networks consist of links interconnecting
-nodes. One of the fundamental problems we face is how to connect two
-nodes together. We also introduced the “cloud” abstraction to represent
-a network without revealing all of its internal complexities. So we also
-need to address the similar problem of connecting a host to a cloud.
-This, in effect, is the problem every Internet Service Provider (ISP)
-faces when it wants to connect a new customer to its network.
+Trong Chương 1, chúng ta đã thấy rằng các mạng bao gồm các liên kết kết nối các nút với nhau. Một trong những vấn đề cơ bản mà chúng ta phải đối mặt là làm thế nào để kết nối hai nút lại với nhau. Chúng ta cũng đã giới thiệu trừu tượng “đám mây” để biểu diễn một mạng mà không tiết lộ tất cả các phức tạp bên trong của nó. Vì vậy, chúng ta cũng cần giải quyết vấn đề tương tự là kết nối một host vào một đám mây. Thực chất, đây chính là vấn đề mà mọi Nhà cung cấp Dịch vụ Internet (ISP) phải đối mặt khi muốn kết nối một khách hàng mới vào mạng của mình.
 
-Whether we want to construct a trivial two-node network with one link or
-connect the one-billionth host to an existing network like the Internet,
-we need to address a common set of issues. First, we need some physical
-medium over which to make the connection. The medium may be a length of
-wire, a piece of optical fiber, or some less tangible medium (such as
-air) through which electromagnetic radiation (e.g., radio waves) can be
-transmitted. It may cover a small area (e.g., an office building) or a
-wide area (e.g., transcontinental).
+Dù chúng ta muốn xây dựng một mạng hai nút đơn giản với một liên kết hay kết nối host thứ một tỷ vào một mạng hiện có như Internet, chúng ta đều cần giải quyết một tập hợp các vấn đề chung. Đầu tiên, chúng ta cần một môi trường vật lý để thực hiện kết nối. Môi trường này có thể là một đoạn dây dẫn, một sợi cáp quang, hoặc một môi trường ít hữu hình hơn (chẳng hạn như không khí) mà qua đó bức xạ điện từ (ví dụ: sóng vô tuyến) có thể được truyền đi. Nó có thể bao phủ một khu vực nhỏ (ví dụ: một tòa nhà văn phòng) hoặc một khu vực rộng lớn (ví dụ: xuyên lục địa).
 
-Connecting two nodes with a suitable medium is only the first step,
-however. Five additional problems must be addressed before the nodes can
-successfully exchange packets, and once addressed, we will have provided
-*Layer 2* (L2) connectivity (using terminology from the OSI
-architecture).
+Tuy nhiên, kết nối hai nút bằng một môi trường phù hợp chỉ là bước đầu tiên. Còn năm vấn đề bổ sung nữa cần được giải quyết trước khi các nút có thể trao đổi các gói tin thành công, và khi đã giải quyết xong, chúng ta sẽ cung cấp được kết nối *Tầng 2* (L2) (theo thuật ngữ của kiến trúc OSI).
 
-The first is *encoding* bits onto the transmission medium so that they
-can be understood by a receiving node. Second is the matter of
-delineating the sequence of bits transmitted over the link into complete
-messages that can be delivered to the end node. This is the *framing*
-problem, and the messages delivered to the end hosts are often called
-*frames* (or sometimes *packets*). Third, because frames are sometimes
-corrupted during transmission, it is necessary to detect these errors
-and take the appropriate action; this is the *error detection* problem.
-The fourth issue is making a link appear reliable in spite of the fact
-that it corrupts frames from time to time. Finally, in those cases where
-the link is shared by multiple hosts—as is often the case with wireless
-links, for example—it is necessary to mediate access to this link. This
-is the *media access control* problem.
+Đầu tiên là vấn đề *mã hóa* các bit lên môi trường truyền dẫn để chúng có thể được một nút nhận hiểu được. Thứ hai là việc phân định chuỗi bit được truyền qua liên kết thành các thông điệp hoàn chỉnh có thể chuyển đến nút đích. Đây là vấn đề *đóng khung* (framing), và các thông điệp được chuyển đến các host cuối thường được gọi là *khung* (frame) (hoặc đôi khi là *gói* - packet). Thứ ba, vì các khung đôi khi bị lỗi trong quá trình truyền, nên cần phải phát hiện các lỗi này và thực hiện hành động phù hợp; đây là vấn đề *phát hiện lỗi* (error detection). Vấn đề thứ tư là làm cho một liên kết có vẻ như tin cậy mặc dù thực tế nó đôi khi làm hỏng các khung. Cuối cùng, trong những trường hợp liên kết được chia sẻ bởi nhiều host—như thường thấy với các liên kết không dây, chẳng hạn—cần phải điều phối quyền truy cập vào liên kết này. Đây là vấn đề *kiểm soát truy cập môi trường* (media access control).
 
-Although these five issues—encoding, framing, error detection, reliable
-delivery, and access mediation—can be discussed in the abstract, they
-are very real problems that are addressed in different ways by different
-networking technologies. This chapter considers these issues in the
-context of specific network technologies: point-to-point fiber links
-(for which SONET is the prevalent example); Carrier Sense Multiple
-Access (CSMA) networks (of which classical Ethernet and Wi-Fi are the
-most famous examples); fiber-to-the home (for which PON is the
-dominant standard); and mobile wireless (where 4G is rapidly morphing
-into 5G).
+Mặc dù năm vấn đề này—mã hóa, đóng khung, phát hiện lỗi, truyền tin cậy, và điều phối truy cập—có thể được thảo luận một cách trừu tượng, nhưng chúng là những vấn đề rất thực tế và được giải quyết theo nhiều cách khác nhau bởi các công nghệ mạng khác nhau. Chương này sẽ xem xét các vấn đề này trong bối cảnh các công nghệ mạng cụ thể: các liên kết cáp quang điểm-điểm (trong đó SONET là ví dụ phổ biến); mạng Carrier Sense Multiple Access (CSMA) (trong đó Ethernet cổ điển và Wi-Fi là những ví dụ nổi tiếng nhất); cáp quang đến tận nhà (PON là tiêu chuẩn chủ đạo); và mạng di động không dây (nơi 4G đang nhanh chóng chuyển mình thành 5G).
 
-The goal of this chapter is simultaneously to survey the available
-link-level technology and to explore these five fundamental issues. We
-will examine what it takes to make a wide variety of different physical
-media and link technologies useful as building blocks for the
-construction of robust, scalable networks.
+Mục tiêu của chương này là đồng thời khảo sát các công nghệ liên kết hiện có và khám phá năm vấn đề cơ bản này. Chúng ta sẽ xem xét những gì cần thiết để biến nhiều loại môi trường vật lý và công nghệ liên kết khác nhau trở nên hữu ích như những khối xây dựng cho việc xây dựng các mạng mạnh mẽ, có khả năng mở rộng.
