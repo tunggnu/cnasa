@@ -10,3 +10,5 @@ systemsapproach.github.io/
 _build/
 venv-docs/
 cover.docx
+*.code-workspace
+/html/
