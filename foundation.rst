@@ -1,8 +1,8 @@
-Chapter 1:  Foundation
-======================
+Chương 1: Nền tảng
+==================
 
-   I must create a System, or be enslav’d by another Man’s; I will not
-   Reason and Compare: my business is to Create.
+   Tôi phải tạo ra một Hệ thống, hoặc sẽ bị làm nô lệ bởi Hệ thống của người khác; tôi sẽ không
+   Lý luận và So sánh: công việc của tôi là Sáng tạo.
 
    *—William Blake*
 
