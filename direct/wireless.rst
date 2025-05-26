@@ -1,607 +1,222 @@
-2.7 Wireless Networks
-=====================
+2.7 Mạng Không Dây
+==================
 
-Wireless technologies differ from wired links in some important ways,
-while at the same time sharing many common properties. Like wired links,
-issues of bit errors are of great concern—typically even more so due to
-the unpredictable noise environment of most wireless links. Framing and
-reliability also have to be addressed. Unlike wired links, power is a
-big issue for wireless, especially because wireless links are often used
-by small mobile devices (like phones and sensors) that have limited
-access to power (e.g., a small battery). Furthermore, you can’t go
-blasting away at arbitrarily high power with a radio transmitter—there
-are concerns about interference with other devices and usually
-regulations about how much power a device may emit at any given
-frequency.
+Các công nghệ không dây khác biệt với các liên kết có dây ở một số điểm quan trọng, đồng thời cũng chia sẻ nhiều đặc tính chung. Giống như liên kết có dây, các vấn đề về lỗi bit là mối quan tâm lớn—thường còn nghiêm trọng hơn do môi trường nhiễu không thể đoán trước của hầu hết các liên kết không dây. Việc đóng khung và đảm bảo độ tin cậy cũng cần được giải quyết. Không giống như liên kết có dây, năng lượng là một vấn đề lớn đối với không dây, đặc biệt vì các liên kết không dây thường được sử dụng bởi các thiết bị di động nhỏ (như điện thoại và cảm biến) có nguồn năng lượng hạn chế (ví dụ, pin nhỏ). Hơn nữa, bạn không thể cứ phát sóng ở công suất tùy ý cao với bộ phát radio—có những lo ngại về việc gây nhiễu cho các thiết bị khác và thường có quy định về lượng công suất mà một thiết bị có thể phát ra ở bất kỳ tần số nào.
 
-Wireless media are also inherently multi-access; it’s difficult to
-direct your radio transmission to just a single receiver or to avoid
-receiving radio signals from any transmitter with enough power in your
-neighborhood. Hence, media access control is a central issue for
-wireless links. And, because it’s hard to control who receives your
-signal when you transmit over the air, issues of eavesdropping may also
-have to be addressed.
+Môi trường không dây vốn dĩ là đa truy cập; rất khó để hướng tín hiệu radio của bạn chỉ đến một bộ thu duy nhất hoặc tránh nhận tín hiệu radio từ bất kỳ bộ phát nào đủ mạnh trong khu vực của bạn. Do đó, kiểm soát truy cập môi trường là một vấn đề trung tâm đối với các liên kết không dây. Và, bởi vì khó kiểm soát ai nhận được tín hiệu của bạn khi bạn truyền qua không khí, các vấn đề về nghe lén cũng cần được xem xét.
 
-There is a baffling assortment of different wireless technologies, each
-of which makes different tradeoffs in various dimensions. One simple way
-to categorize the different technologies is by the data rates they
-provide and how far apart communicating nodes can be. Other important
-differences include which part of the electromagnetic spectrum they use
-(including whether it requires a license) and how much power they
-consume. In this section, we discuss two prominent wireless
-technologies: Wi-Fi (more formally known as 802.11), and Bluetooth. The
-next section discusses cellular networks in the context of ISP access
-services. :numref:`Table %s <tab-wireless-tech>` gives an overview of
-these technologies and how they compare to each other.
+Có rất nhiều công nghệ không dây khác nhau, mỗi loại đánh đổi các yếu tố khác nhau. Một cách đơn giản để phân loại các công nghệ này là theo tốc độ dữ liệu mà chúng cung cấp và khoảng cách giữa các nút giao tiếp. Các khác biệt quan trọng khác bao gồm phần nào của phổ điện từ mà chúng sử dụng (bao gồm việc có cần giấy phép hay không) và mức tiêu thụ năng lượng. Trong phần này, chúng tôi thảo luận về hai công nghệ không dây nổi bật: Wi-Fi (tên chính thức là 802.11) và Bluetooth. Phần tiếp theo sẽ thảo luận về mạng di động trong bối cảnh dịch vụ truy cập ISP. :numref:`Bảng %s <tab-wireless-tech>` cung cấp tổng quan về các công nghệ này và cách chúng so sánh với nhau.
 
 .. _tab-wireless-tech:
-.. table:: Overview of Leading Wireless Technologies.
+.. table:: Tổng quan các công nghệ không dây hàng đầu.
    :widths: auto
    :align: center
 
    +-------------+-----------------------+-----------------+--------------+
    |             | Bluetooth (802.15.1)  | Wi-Fi (802.11)  | 4G Cellular  |
    +=============+=======================+=================+==============+
-   | Typical     | 10 m                  | 100 m           | Tens of      |
-   | link length |                       |                 | kilometers   |
+   | Độ dài      | 10 m                  | 100 m           | Hàng chục    |
+   | liên kết    |                       |                 | kilômét      |
    +-------------+-----------------------+-----------------+--------------+
-   | Typical     | 2 Mbps (shared)       | 150-450 Mbps    | 1-5 Mbps     |
-   | data rate   |                       |                 |              |
+   | Tốc độ      | 2 Mbps (chia sẻ)      | 150-450 Mbps    | 1-5 Mbps     |
+   | dữ liệu     |                       |                 |              |
    +-------------+-----------------------+-----------------+--------------+
-   | Typical use | Link a peripheral to  | Link a computer | Link mobile  |
-   |             | a computer            | to a wired base | phone to a   |
-   |             |                       |                 | wired tower  |
+   | Ứng dụng    | Kết nối thiết bị      | Kết nối máy     | Kết nối điện |
+   | điển hình   | ngoại vi với máy tính | tính với trạm   | thoại di động|
+   |             |                       | gốc có dây      | với trạm gốc |
    +-------------+-----------------------+-----------------+--------------+
-   | Wired       | USB                   | Ethernet        | PON          |
-   | technology  |                       |                 |              |
-   | analogy     |                       |                 |              |
+   | Công nghệ   | USB                   | Ethernet        | PON          |
+   | có dây      |                       |                 |              |
+   | tương tự    |                       |                 |              |
    +-------------+-----------------------+-----------------+--------------+
 
-You may recall that bandwidth sometimes means the width of a frequency
-band in hertz and sometimes the data rate of a link. Because both these
-concepts come up in discussions of wireless networks, we’re going to use
-*bandwidth* here in its stricter sense—width of a frequency band—and use
-the term *data rate* to describe the number of bits per second that can
-be sent over the link, as in :numref:`Table %s <tab-wireless-tech>`.
+Bạn có thể nhớ rằng *băng thông* đôi khi có nghĩa là độ rộng của một dải tần số tính bằng hertz và đôi khi là tốc độ dữ liệu của một liên kết. Vì cả hai khái niệm này đều xuất hiện trong thảo luận về mạng không dây, chúng tôi sẽ sử dụng *băng thông* ở đây theo nghĩa hẹp hơn—độ rộng của một dải tần số—và sử dụng thuật ngữ *tốc độ dữ liệu* để mô tả số bit mỗi giây có thể truyền qua liên kết, như trong :numref:`Bảng %s <tab-wireless-tech>`.
 
-2.7.1 Basic Issues
-------------------
+2.7.1 Các Vấn Đề Cơ Bản
+-----------------------
 
-Because wireless links all share the same medium, the challenge is to
-share that medium efficiently, without unduly interfering with each
-other. Most of this sharing is accomplished by dividing it up along the
-dimensions of frequency and space. Exclusive use of a particular
-frequency in a particular geographic area may be allocated to an
-individual entity such as a corporation. It is feasible to limit the
-area covered by an electromagnetic signal because such signals weaken,
-or *attenuate*, with the distance from their origin. To reduce the area
-covered by your signal, reduce the power of your transmitter.
+Vì các liên kết không dây đều chia sẻ cùng một môi trường, thách thức là chia sẻ môi trường đó một cách hiệu quả, mà không gây nhiễu lẫn nhau quá mức. Phần lớn việc chia sẻ này được thực hiện bằng cách phân chia theo tần số và không gian. Việc sử dụng độc quyền một tần số nhất định trong một khu vực địa lý nhất định có thể được cấp cho một thực thể riêng biệt như một công ty. Có thể giới hạn vùng phủ sóng của tín hiệu điện từ vì các tín hiệu này sẽ yếu đi, hoặc *suy hao*, theo khoảng cách từ nguồn phát. Để giảm vùng phủ sóng của tín hiệu, hãy giảm công suất của bộ phát.
 
-These allocations are typically determined by government agencies, such
-as the Federal Communications Commission (FCC) in the United States.
-Specific bands (frequency ranges) are allocated to certain uses. Some
-bands are reserved for government use. Other bands are reserved for uses
-such as AM radio, FM radio, television, satellite communication, and
-cellular phones. Specific frequencies within these bands are then
-licensed to individual organizations for use within certain geographical
-areas. Finally, several frequency bands are set aside for license-exempt
-usage—bands in which a license is not needed.
+Việc phân bổ này thường do các cơ quan chính phủ quyết định, như Ủy ban Truyền thông Liên bang (FCC) ở Hoa Kỳ. Các dải tần số cụ thể được phân bổ cho các mục đích nhất định. Một số dải dành riêng cho chính phủ. Các dải khác dành cho các mục đích như radio AM, radio FM, truyền hình, thông tin vệ tinh và điện thoại di động. Các tần số cụ thể trong các dải này sau đó được cấp phép cho các tổ chức cá nhân sử dụng trong các khu vực địa lý nhất định. Cuối cùng, một số dải tần số được dành cho sử dụng không cần giấy phép—các dải mà không cần giấy phép.
 
-Devices that use license-exempt frequencies are still subject to certain
-restrictions to make that otherwise unconstrained sharing work. Most
-important of these is a limit on transmission power. This limits the
-range of a signal, making it less likely to interfere with another
-signal. For example, a cordless phone (a common unlicensed device) might
-have a range of about 100 feet.
+Các thiết bị sử dụng tần số không cần giấy phép vẫn phải tuân theo một số hạn chế nhất định để việc chia sẻ không bị kiểm soát này có thể hoạt động. Quan trọng nhất là giới hạn công suất phát. Điều này giới hạn phạm vi của tín hiệu, làm giảm khả năng gây nhiễu cho tín hiệu khác. Ví dụ, một điện thoại không dây (thiết bị không cần giấy phép phổ biến) có thể có phạm vi khoảng 30 mét.
 
-One idea that shows up a lot when spectrum is shared among many devices
-and applications is *spread spectrum*. The idea behind spread spectrum
-is to spread the signal over a wider frequency band, so as to minimize
-the impact of interference from other devices. (Spread spectrum was
-originally designed for military use, so these “other devices” were
-often attempting to jam the signal.) For example, *frequency hopping* is
-a spread spectrum technique that involves transmitting the signal over a
-random sequence of frequencies; that is, first transmitting at one
-frequency, then a second, then a third, and so on. The sequence of
-frequencies is not truly random but is instead computed algorithmically
-by a pseudorandom number generator. The receiver uses the same algorithm
-as the sender and initializes it with the same seed; hence, it is able
-to hop frequencies in sync with the transmitter to correctly receive the
-frame. This scheme reduces interference by making it unlikely that two
-signals would be using the same frequency for more than the infrequent
-isolated bit.
+Một ý tưởng thường xuất hiện khi phổ tần được chia sẻ giữa nhiều thiết bị và ứng dụng là *phổ trải* (spread spectrum). Ý tưởng của phổ trải là trải tín hiệu trên một dải tần số rộng hơn, nhằm giảm thiểu tác động của nhiễu từ các thiết bị khác. (Phổ trải ban đầu được thiết kế cho mục đích quân sự, nên các “thiết bị khác” này thường cố tình gây nhiễu tín hiệu.) Ví dụ, *nhảy tần số* là một kỹ thuật phổ trải, trong đó tín hiệu được truyền trên một chuỗi tần số ngẫu nhiên; tức là, truyền ở một tần số, sau đó là tần số thứ hai, rồi thứ ba, v.v. Chuỗi tần số này không thực sự ngẫu nhiên mà được tính toán bằng thuật toán tạo số giả ngẫu nhiên. Bộ thu sử dụng cùng thuật toán với bộ phát và khởi tạo với cùng giá trị ban đầu; do đó, nó có thể nhảy tần đồng bộ với bộ phát để nhận đúng khung. Cách này giúp giảm nhiễu bằng cách làm cho hai tín hiệu khó sử dụng cùng một tần số trong hơn một vài bit rời rạc.
 
-A second spread spectrum technique, called *direct sequence*, adds
-redundancy for greater tolerance of interference. Each bit of data is
-represented by multiple bits in the transmitted signal so that, if
-some of the transmitted bits are damaged by interference, there is
-usually enough redundancy to recover the original bit. For each bit
-the sender wants to transmit, it actually sends the exclusive-OR of
-that bit and n random bits. As with frequency hopping, the sequence of
-random bits is generated by a pseudorandom number generator known to
-both the sender and the receiver. The transmitted values, known as an
-n-bit *chipping code*, spread the signal across a frequency band that
-is n times wider than the frame would have otherwise
-required. :numref:`Figure %s <fig-chipping>` gives an example of a
-4-bit chipping sequence.
+Một kỹ thuật phổ trải thứ hai, gọi là *trực tiếp* (direct sequence), bổ sung dư thừa để tăng khả năng chịu nhiễu. Mỗi bit dữ liệu được biểu diễn bằng nhiều bit trong tín hiệu truyền, để nếu một số bit bị nhiễu làm hỏng, vẫn còn đủ dư thừa để khôi phục bit gốc. Với mỗi bit cần truyền, bộ phát thực tế gửi phép XOR giữa bit đó và n bit ngẫu nhiên. Giống như nhảy tần, chuỗi bit ngẫu nhiên này được tạo bởi một bộ sinh số giả ngẫu nhiên mà cả bộ phát và bộ thu đều biết. Các giá trị truyền này, gọi là *mã chipping* n bit, trải tín hiệu trên một dải tần số rộng gấp n lần so với khung thông thường. :numref:`Hình %s <fig-chipping>` cho ví dụ về chuỗi chipping 4 bit.
 
 .. _fig-chipping:
 .. figure:: figures/f02-27-9780123850591.png
    :width: 500px
    :align: center
 
-   Example 4-bit chipping sequence.
+   Ví dụ chuỗi chipping 4 bit.
 
-Different parts of the electromagnetic spectrum have different
-properties, making some better suited to communication, and some less
-so. For example, some can penetrate buildings and some cannot.
-Governments regulate only the prime communication portion: the radio and
-microwave ranges. As demand for prime spectrum increases, there is great
-interest in the spectrum that is becoming available as analog television
-is phased out in favor of digital.
+Các phần khác nhau của phổ điện từ có các đặc tính khác nhau, khiến một số phù hợp hơn cho truyền thông, số khác thì không. Ví dụ, một số có thể xuyên qua tòa nhà, số khác thì không. Chính phủ chỉ quản lý phần phổ thông tin chính: dải radio và vi ba. Khi nhu cầu về phổ thông tin tăng lên, có sự quan tâm lớn đến phổ đang trở nên khả dụng khi truyền hình analog bị loại bỏ để chuyển sang truyền hình số.
 
-In many wireless networks today we observe that there are two
-different classes of endpoints. One endpoint, sometimes described as
-the *base station*, usually has no mobility but has a wired (or at
-least high-bandwidth) connection to the Internet or other networks, as
-shown in :numref:`Figure %s <fig-wirelessBaseStation>`. The node at
-the other end of the link—shown here as a client node—is often mobile
-and relies on its link to the base station for all of its
-communication with other nodes.
+Trong nhiều mạng không dây ngày nay, chúng ta thấy có hai loại điểm cuối khác nhau. Một điểm cuối, đôi khi gọi là *trạm gốc* (base station), thường không di động nhưng có kết nối có dây (hoặc ít nhất là băng thông cao) tới Internet hoặc các mạng khác, như minh họa trong :numref:`Hình %s <fig-wirelessBaseStation>`. Nút ở đầu kia của liên kết—ở đây là nút khách—thường di động và dựa vào liên kết tới trạm gốc để giao tiếp với các nút khác.
 
-Observe that in :numref:`Figure %s <fig-wirelessBaseStation>` we have
-used a wavy pair of lines to represent the wireless “link” abstraction
-provided between two devices (e.g., between a base station and one of
-its client nodes). One of the interesting aspects of wireless
-communication is that it naturally supports point-to-multipoint
-communication, because radio waves sent by one device can be
-simultaneously received by many devices.  However, it is often useful
-to create a point-to-point link abstraction for higher layer
-protocols, and we will see examples of how this works later in this
-section.
+Lưu ý rằng trong :numref:`Hình %s <fig-wirelessBaseStation>`, chúng tôi sử dụng cặp đường lượn sóng để biểu diễn trừu tượng “liên kết” không dây giữa hai thiết bị (ví dụ, giữa trạm gốc và một nút khách). Một điểm thú vị của truyền thông không dây là nó tự nhiên hỗ trợ truyền thông điểm-đa điểm, vì sóng radio do một thiết bị phát ra có thể được nhiều thiết bị nhận đồng thời. Tuy nhiên, thường hữu ích khi tạo ra trừu tượng liên kết điểm-điểm cho các giao thức tầng cao hơn, và chúng ta sẽ thấy các ví dụ về cách điều này hoạt động ở phần sau.
 
-Note that in :numref:`Figure %s <fig-wirelessBaseStation>`
-communication between non-base (client) nodes is routed via the base
-station. This is in spite of the fact that radio waves emitted by one
-client node may well be received by other client nodes—the common base
-station model does not permit direct communication between the client
-nodes.
+Lưu ý rằng trong :numref:`Hình %s <fig-wirelessBaseStation>`, việc giao tiếp giữa các nút không phải trạm gốc (nút khách) được định tuyến qua trạm gốc. Điều này mặc dù sóng radio phát ra từ một nút khách có thể được các nút khách khác nhận—mô hình trạm gốc chung không cho phép giao tiếp trực tiếp giữa các nút khách.
 
 .. _fig-wirelessBaseStation:
 .. figure:: figures/f02-28-9780123850591.png
    :width: 500px
    :align: center
 
-   A wireless network using a base station.
+   Một mạng không dây sử dụng trạm gốc.
 
-This topology implies three qualitatively different levels of mobility.
-The first level is no mobility, such as when a receiver must be in a
-fixed location to receive a directional transmission from the base
-station. The second level is mobility within the range of a base, as is
-the case with Bluetooth. The third level is mobility between bases, as
-is the case with cell phones and Wi-Fi.
+Cấu trúc này ngụ ý ba mức độ di động khác nhau về chất lượng. Mức đầu tiên là không di động, ví dụ khi bộ thu phải ở vị trí cố định để nhận truyền dẫn định hướng từ trạm gốc. Mức thứ hai là di động trong phạm vi một trạm gốc, như với Bluetooth. Mức thứ ba là di động giữa các trạm gốc, như với điện thoại di động và Wi-Fi.
 
 .. _fig-wirelessMesh:
 .. figure:: figures/f02-29-9780123850591.png
    :width: 500px
    :align: center
 
-   A wireless ad hoc or mesh network.
+   Mạng mesh hoặc ad hoc không dây.
 
-An alternative topology that is seeing increasing interest is the
-*mesh* or *ad hoc* network. In a wireless mesh, nodes are peers; that
-is, there is no special base station node. Messages may be forwarded
-via a chain of peer nodes as long as each node is within range of the
-preceding node. This is illustrated in :numref:`Figure %s
-<fig-wirelessMesh>`. This allows the wireless portion of a network to
-extend beyond the limited range of a single radio. From the point of
-view of competition between technologies, this allows a shorter-range
-technology to extend its range and potentially compete with a
-longer-range technology. Meshes also offer fault tolerance by
-providing multiple routes for a message to get from point A to
-point B. A mesh network can be extended incrementally, with
-incremental costs. On the other hand, a mesh network requires non-base
-nodes to have a certain level of sophistication in their hardware and
-software, potentially increasing per-unit costs and power consumption,
-a critical consideration for battery-powered devices.  Wireless mesh
-networks are of considerable research interest, but they are still in
-their relative infancy compared to networks with base
-stations. Wireless sensor networks, another hot emerging technology,
-often form wireless meshes.
+Một cấu trúc thay thế đang ngày càng được quan tâm là mạng *mesh* hoặc *ad hoc*. Trong mạng mesh không dây, các nút là ngang hàng; tức là không có nút trạm gốc đặc biệt. Thông điệp có thể được chuyển tiếp qua chuỗi các nút ngang hàng miễn là mỗi nút nằm trong phạm vi của nút trước đó. Điều này được minh họa trong :numref:`Hình %s <fig-wirelessMesh>`. Điều này cho phép phần không dây của mạng mở rộng vượt ra ngoài phạm vi giới hạn của một radio đơn lẻ. Xét về cạnh tranh giữa các công nghệ, điều này cho phép một công nghệ tầm ngắn mở rộng phạm vi và có thể cạnh tranh với công nghệ tầm xa hơn. Mesh cũng cung cấp khả năng chịu lỗi bằng cách cung cấp nhiều tuyến đường cho một thông điệp đi từ điểm A đến điểm B. Một mạng mesh có thể được mở rộng dần dần, với chi phí tăng dần. Tuy nhiên, mạng mesh yêu cầu các nút không phải trạm gốc phải có phần cứng và phần mềm đủ phức tạp, có thể làm tăng chi phí và tiêu thụ năng lượng—một yếu tố quan trọng với thiết bị dùng pin. Mạng mesh không dây là chủ đề nghiên cứu đáng kể, nhưng vẫn còn khá mới so với mạng có trạm gốc. Mạng cảm biến không dây, một công nghệ mới nổi khác, thường tạo thành các mesh không dây.
 
-Now that we have covered some of the common wireless issues, let’s take
-a look at the details of two common wireless technologies.
+Sau khi đã đề cập đến một số vấn đề chung của không dây, hãy cùng xem chi tiết hai công nghệ không dây phổ biến.
 
 2.7.2 Wi-Fi (802.11)
 --------------------
 
-Most readers will have used a wireless network based on the IEEE 802.11
-standards, often referred to as *Wi-Fi*. Wi-Fi is technically a
-trademark, owned by a trade group called the Wi-Fi Alliance, which
-certifies product compliance with 802.11. Like Ethernet, 802.11 is
-designed for use in a limited geographical area (homes, office
-buildings, campuses), and its primary challenge is to mediate access to
-a shared communication medium—in this case, signals propagating through
-space.
+Hầu hết độc giả sẽ từng sử dụng mạng không dây dựa trên chuẩn IEEE 802.11, thường gọi là *Wi-Fi*. Wi-Fi thực ra là một thương hiệu, thuộc sở hữu của một nhóm thương mại gọi là Wi-Fi Alliance, tổ chức chứng nhận sản phẩm tuân thủ 802.11. Giống như Ethernet, 802.11 được thiết kế để sử dụng trong khu vực địa lý hạn chế (nhà, văn phòng, khuôn viên), và thách thức chính là điều phối truy cập vào môi trường truyền thông chia sẻ—trong trường hợp này là các tín hiệu lan truyền trong không gian.
 
-Physical Properties
-~~~~~~~~~~~~~~~~~~~
+Đặc Tính Vật Lý
+~~~~~~~~~~~~~~~
 
-802.11 defines a number of different physical layers that operate in
-various frequency bands and provide a range of different data rates.
+802.11 định nghĩa một số lớp vật lý khác nhau hoạt động ở các dải tần số khác nhau và cung cấp nhiều tốc độ dữ liệu khác nhau.
 
-The original 802.11 standard defined two radio-based physical layers
-standards, one using frequency hopping (over 79 1-MHz-wide frequency
-bandwidths) and the other using direct sequence spread spectrum (with
-an 11-bit chipping sequence). Both provided data rates in the 2 Mbps
-range.  Subsequently, the physical layer standard 802.11b was added,
-and using a variant of direct sequence, supported up to 11 Mbps. These
-three standards all operated in the license-exempt 2.4-GHz frequency
-band of the electromagnetic spectrum. Then came 802.11a, which
-delivered up to 54 Mbps using a variant of frequency division
-multiplexing called *orthogonal frequency division multiplexing
-(OFDM)*. 802.11a runs in the license-exempt 5-GHz band.  802.11g
-followed, and also using OFDM, delivered up to 54 Mbps. 802.11g is
-backward compatible with 802.11b (and returns to the 2.4-GHz band).
+Chuẩn 802.11 gốc định nghĩa hai lớp vật lý dựa trên radio, một sử dụng nhảy tần (trên 79 dải tần 1 MHz) và một sử dụng phổ trải trực tiếp (với chuỗi chipping 11 bit). Cả hai đều cung cấp tốc độ dữ liệu khoảng 2 Mbps. Sau đó, chuẩn lớp vật lý 802.11b được bổ sung, sử dụng biến thể của phổ trải trực tiếp, hỗ trợ tới 11 Mbps. Cả ba chuẩn này đều hoạt động ở dải tần số 2.4 GHz không cần giấy phép. Tiếp theo là 802.11a, cung cấp tới 54 Mbps sử dụng biến thể của ghép kênh phân chia tần số gọi là *OFDM* (orthogonal frequency division multiplexing). 802.11a chạy ở dải tần 5 GHz không cần giấy phép. 802.11g ra đời sau, cũng sử dụng OFDM, cung cấp tới 54 Mbps. 802.11g tương thích ngược với 802.11b (và quay lại dải 2.4 GHz).
 
-At the time of writing, many devices support 802.11n or 802.11ac,
-which typically achieve per-device data rates of 150 Mbps to 450 Mbps,
-respectively. This improvement is partly due to the use of multiple
-antennas and allowing greater wireless channel bandwidths. The use of
-multiple antennas is often called *MIMO* for multiple-input,
-multiple-output. The latest emerging standard, 802.11ax, promises
-another substantial improvement in throughput, in part by adopting
-many of the coding and modulation techniques used in the 4G/5G
-cellular network, which we describe in the next section.
+Tại thời điểm viết sách, nhiều thiết bị hỗ trợ 802.11n hoặc 802.11ac, thường đạt tốc độ dữ liệu mỗi thiết bị từ 150 Mbps đến 450 Mbps. Sự cải thiện này một phần nhờ sử dụng nhiều ăng-ten và cho phép băng thông kênh không dây lớn hơn. Việc sử dụng nhiều ăng-ten thường gọi là *MIMO* (multiple-input, multiple-output). Chuẩn mới nhất, 802.11ax, hứa hẹn cải thiện thông lượng đáng kể nữa, một phần nhờ áp dụng nhiều kỹ thuật mã hóa và điều chế được sử dụng trong mạng di động 4G/5G, sẽ được mô tả ở phần sau.
 
-It is common for commercial products to support more than one flavor of
-802.11; many base stations support all five variants (a,b, g, n, and ac).
-This not only ensures compatibility with any device that supports any
-one of the standards but also makes it possible for two such products to
-choose the highest bandwidth option for a particular environment.
+Các sản phẩm thương mại thường hỗ trợ nhiều phiên bản 802.11; nhiều trạm gốc hỗ trợ cả năm biến thể (a, b, g, n, ac). Điều này không chỉ đảm bảo tương thích với bất kỳ thiết bị nào hỗ trợ một trong các chuẩn mà còn cho phép hai sản phẩm chọn tùy chọn băng thông cao nhất cho môi trường cụ thể.
 
-It is worth noting that while all the 802.11 standards define a
-*maximum* bit rate that can be supported, they mostly support lower bit
-rates as well (e.g., 802.11a allows for bit rates of 6, 9, 12,
-18, 24, 36, 48, and 54 Mbps). At lower bit rates, it is easier to decode
-transmitted signals in the presence of noise. Different modulation
-schemes are used to achieve the various bit rates. In addition, the
-amount of redundant information in the form of error-correcting codes is
-varied. More redundant information means higher resilience to bit errors
-at the cost of lowering the effective data rate (since more of the
-transmitted bits are redundant).
+Đáng chú ý là trong khi tất cả các chuẩn 802.11 đều định nghĩa tốc độ bit *tối đa* có thể hỗ trợ, chúng cũng hỗ trợ các tốc độ thấp hơn (ví dụ, 802.11a cho phép các tốc độ 6, 9, 12, 18, 24, 36, 48 và 54 Mbps). Ở tốc độ thấp hơn, việc giải mã tín hiệu truyền trong môi trường nhiễu dễ dàng hơn. Các sơ đồ điều chế khác nhau được sử dụng để đạt các tốc độ bit khác nhau. Ngoài ra, lượng thông tin dư thừa dưới dạng mã sửa lỗi cũng thay đổi. Thông tin dư thừa nhiều hơn nghĩa là khả năng chịu lỗi bit cao hơn nhưng làm giảm tốc độ dữ liệu hiệu dụng (vì nhiều bit truyền là dư thừa).
 
-The systems try to pick an optimal bit rate based on the noise
-environment in which they find themselves; the algorithms for bit rate
-selection can be quite complex. Interestingly, the 802.11 standards do
-not specify a particular approach but leave the algorithms to the
-various vendors. The basic approach to picking a bit rate is to estimate
-the bit error rate either by directly measuring the signal-to-noise
-ratio (SNR) at the physical layer or by estimating the SNR by measuring
-how often packets are successfully transmitted and acknowledged. In some
-approaches, a sender will occasionally probe a higher bit rate by
-sending one or more packets at that rate to see if it succeeds.
+Các hệ thống cố gắng chọn tốc độ bit tối ưu dựa trên môi trường nhiễu mà chúng gặp phải; các thuật toán chọn tốc độ bit có thể khá phức tạp. Thú vị là các chuẩn 802.11 không quy định cách tiếp cận cụ thể mà để các nhà sản xuất tự quyết định. Cách tiếp cận cơ bản là ước lượng tỷ lệ lỗi bit bằng cách đo trực tiếp tỷ số tín hiệu trên nhiễu (SNR) ở lớp vật lý hoặc ước lượng SNR bằng cách đo tần suất các gói được truyền và xác nhận thành công. Trong một số phương pháp, bộ phát sẽ thỉnh thoảng thử tốc độ bit cao hơn bằng cách gửi một hoặc vài gói ở tốc độ đó để xem có thành công không.
 
-Collision Avoidance
-~~~~~~~~~~~~~~~~~~~
+Tránh Va Chạm
+~~~~~~~~~~~~~
 
-At first glance, it might seem that a wireless protocol would follow the
-same algorithm as the Ethernet—wait until the link becomes idle before
-transmitting and back off should a collision occur—and, to a first
-approximation, this is what 802.11 does. The additional complication for
-wireless is that, while a node on an Ethernet receives every other
-node’s transmissions and can transmit and receive at the same time,
-neither of these conditions holds for wireless nodes. This makes
-detection of collisions rather more complex. The reason why wireless
-nodes cannot usually transmit and receive at the same time (on the same
-frequency) is that the power generated by the transmitter is much higher
-than any received is likely to be and so swamps the receiving circuitry.
-The reason why a node may not receive transmissions from another node is
-because that node may be too far away or blocked by an obstacle. This
-situation is a bit more complex than it first appears, as the following
-discussion will illustrate.
+Thoạt nhìn, có thể nghĩ rằng một giao thức không dây sẽ tuân theo cùng thuật toán như Ethernet—chờ đến khi liên kết rỗi trước khi truyền và lùi lại nếu xảy ra va chạm—và, về cơ bản, 802.11 cũng làm như vậy. Tuy nhiên, điểm phức tạp thêm cho không dây là, trong khi một nút trên Ethernet nhận được mọi truyền của các nút khác và có thể truyền và nhận cùng lúc, thì điều này không đúng với các nút không dây. Điều này làm cho việc phát hiện va chạm trở nên phức tạp hơn. Lý do các nút không dây thường không thể truyền và nhận cùng lúc (trên cùng tần số) là công suất phát ra lớn hơn nhiều so với tín hiệu nhận được, làm nhiễu mạch thu. Lý do một nút có thể không nhận được truyền của nút khác là vì nút đó có thể ở quá xa hoặc bị vật cản. Tình huống này phức tạp hơn tưởng tượng, như sẽ thấy dưới đây.
 
 .. _fig-wifiHiddenNode:
 .. figure:: figures/f02-30-9780123850591.png
    :width: 400px
    :align: center
 
-   The hidden node problem. Although A and C are hidden
-   from each other, their signals can collide at B. (B's reach is not
-   shown.)
+   Vấn đề nút ẩn. Dù A và C không thấy nhau, tín hiệu của họ có thể va chạm tại B. (Phạm vi của B không được vẽ.)
 
-Consider the situation depicted in :numref:`Figure %s <fig-wifiHiddenNode>`,
-where A and C are both within range of B but not each other. Suppose both A
-and C want to communicate with B and so they each send it a frame. A and
-C are unaware of each other since their signals do not carry that far.
-These two frames collide with each other at B, but unlike an Ethernet,
-neither A nor C is aware of this collision. A and C are said to be
-*hidden nodes* with respect to each other.
+Xét tình huống trong :numref:`Hình %s <fig-wifiHiddenNode>`, nơi A và C đều trong phạm vi của B nhưng không thấy nhau. Giả sử cả A và C đều muốn giao tiếp với B nên mỗi bên gửi cho B một khung. A và C không biết về nhau vì tín hiệu của họ không tới được đối phương. Hai khung này va chạm tại B, nhưng không giống Ethernet, cả A và C đều không biết về va chạm này. A và C được gọi là *nút ẩn* đối với nhau.
 
 .. _fig-wifiExposedNode:
 .. figure:: figures/f02-31-9780123850591.png
    :width: 325px
    :align: center
 
-   The exposed node problem. Although B and C are exposed
-   to each other's signals, there is no interference if B transmits
-   to A while C transmits to D. (A and D's reaches are not shown.)
+   Vấn đề nút lộ. Dù B và C nghe được tín hiệu của nhau, không có nhiễu nếu B truyền cho A trong khi C truyền cho D. (Phạm vi của A và D không được vẽ.)
 
-A related problem, called the *exposed node problem*, occurs under the
-circumstances illustrated in :numref:`Figure %s <fig-wifiExposedNode>`,
-where each
-of the four nodes is able to send and receive signals that reach just
-the nodes to its immediate left and right. For example, B can exchange
-frames with A and C but it cannot reach D, while C can reach B and D but
-not A. Suppose B is sending to A. Node C is aware of this communication
-because it hears B’s transmission. It would be a mistake, however, for C
-to conclude that it cannot transmit to anyone just because it can hear
-B’s transmission. For example, suppose C wants to transmit to node D.
-This is not a problem since C’s transmission to D will not interfere
-with A’s ability to receive from B. (It would interfere with A sending
-to B, but B is transmitting in our example.)
+Một vấn đề liên quan, gọi là *nút lộ* (exposed node), xảy ra trong tình huống minh họa ở :numref:`Hình %s <fig-wifiExposedNode>`, nơi mỗi trong bốn nút chỉ có thể gửi và nhận tín hiệu tới các nút liền kề trái và phải. Ví dụ, B có thể trao đổi khung với A và C nhưng không tới D, trong khi C có thể tới B và D nhưng không tới A. Giả sử B đang gửi cho A. Nút C biết về giao tiếp này vì nó nghe được truyền của B. Tuy nhiên, sẽ là sai lầm nếu C kết luận rằng nó không thể truyền cho ai chỉ vì nó nghe được truyền của B. Ví dụ, nếu C muốn truyền cho D, điều này không thành vấn đề vì truyền của C tới D sẽ không ảnh hưởng đến việc A nhận từ B. (Nó sẽ ảnh hưởng nếu A gửi cho B, nhưng trong ví dụ này B đang truyền.)
 
-802.11 addresses these problems by using CSMA/CA, where the CA stands
-for collision *avoidance*, in contrast to the collision *detection* of
-CSMA/CD used on Ethernets. There are a few pieces to make this work.
+802.11 giải quyết các vấn đề này bằng cách sử dụng CSMA/CA, trong đó CA là *tránh va chạm* (collision avoidance), trái ngược với *phát hiện va chạm* (collision detection) của CSMA/CD trên Ethernet. Có một số thành phần để làm việc này.
 
-The Carrier Sense part seems simple enough: Before sending a packet, the
-transmitter checks if it can hear any other transmissions; if not, it
-sends. However, because of the hidden node problem, just waiting for the
-absence of signals from other transmitters does not guarantee that a
-collision will not occur from the perspective of the receiver. For this
-reason, one part of CSMA/CA is an explicit ACK from the receiver to the
-sender. If the packet was successfully decoded and passed its CRC at the
-receiver, the receiver sends an ACK back to the sender.
+Phần cảm nhận sóng mang có vẻ đơn giản: Trước khi gửi gói, bộ phát kiểm tra xem có nghe thấy truyền nào khác không; nếu không, nó gửi. Tuy nhiên, do vấn đề nút ẩn, chỉ chờ không có tín hiệu từ các bộ phát khác không đảm bảo sẽ không có va chạm từ góc nhìn của bộ thu. Vì vậy, một phần của CSMA/CA là ACK rõ ràng từ bộ thu gửi về bộ phát. Nếu gói được giải mã thành công và vượt qua CRC ở bộ thu, bộ thu gửi ACK lại cho bộ phát.
 
-Note that if a collision does occur, it will render the entire packet
-useless. For this reason, 802.11 adds an optional mechanism called
-RTS-CTS (Ready to Send-Clear to Send). This goes some way toward
-addressing the hidden node problem. The sender sends an RTS—a short
-packet—to the intended receiver, and if that packet is received
-successfully the receiver responds with another short packet, the CTS.
-Even though the RTS may not have been heard by a hidden node, the CTS
-probably will be. This effectively tells the nodes within range of the
-receiver that they should not send anything for a while—the amount of
-time of the intended transmission is included in the RTS and CTS
-packets. After that time plus a small interval has passed, the carrier
-can be assumed to be available again, and another node is free to try to
-send.
+Lưu ý rằng nếu xảy ra va chạm, toàn bộ gói sẽ bị hỏng. Vì vậy, 802.11 bổ sung cơ chế tùy chọn gọi là RTS-CTS (Ready to Send–Clear to Send). Cơ chế này phần nào giải quyết vấn đề nút ẩn. Bộ phát gửi một RTS—một gói ngắn—cho bộ thu dự định, và nếu gói này được nhận thành công, bộ thu trả lời bằng một gói ngắn khác, CTS. Dù RTS có thể không được nút ẩn nghe thấy, CTS có thể sẽ được nghe. Điều này báo cho các nút trong phạm vi bộ thu rằng họ không nên gửi gì trong một thời gian—thời gian truyền dự kiến được ghi trong RTS và CTS. Sau thời gian đó cộng thêm một khoảng nhỏ, môi trường được coi là rỗi và nút khác có thể thử gửi.
 
-Of course, two nodes might detect an idle link and try to transmit an
-RTS frame at the same time, causing their RTS frames to collide with
-each other. The senders realize the collision has happened when they do
-not receive the CTS frame after a period of time, in which case they
-each wait a random amount of time before trying again. The amount of
-time a given node delays is defined by an exponential backoff algorithm
-very much like that used on the Ethernet.
+Tất nhiên, hai nút có thể cùng phát hiện liên kết rỗi và cùng lúc gửi RTS, gây va chạm RTS. Các bộ phát nhận ra va chạm khi không nhận được CTS sau một thời gian, khi đó mỗi bên chờ ngẫu nhiên trước khi thử lại. Thời gian chờ của mỗi nút được xác định bởi thuật toán lùi theo hàm mũ giống như trên Ethernet.
 
-After a successful RTS-CTS exchange, the sender sends its data packet
-and, if all goes well, receives an ACK for that packet. In the absence
-of a timely ACK, the sender will try again to request usage of the
-channel again, using the same process described above. By this time, of
-course, other nodes may again be trying to get access to the channel as
-well.
+Sau khi trao đổi RTS-CTS thành công, bộ phát gửi gói dữ liệu và, nếu mọi việc suôn sẻ, nhận được ACK cho gói đó. Nếu không nhận được ACK kịp thời, bộ phát sẽ thử lại xin quyền sử dụng kênh như trên. Lúc này, các nút khác cũng có thể đang cố truy cập kênh.
 
-Distribution System
-~~~~~~~~~~~~~~~~~~~
+Hệ Thống Phân Phối
+~~~~~~~~~~~~~~~~~~
 
-As described so far, 802.11 would be suitable for a network with a mesh
-(*ad hoc*) topology, and development of an 802.11s standard for mesh
-networks is nearing completion. At the current time, however, nearly all
-802.11 networks use a base-station-oriented topology.
+Như mô tả ở trên, 802.11 phù hợp cho mạng có cấu trúc mesh (*ad hoc*), và chuẩn 802.11s cho mạng mesh đang gần hoàn thiện. Tuy nhiên, hiện nay hầu hết các mạng 802.11 sử dụng cấu trúc dựa trên trạm gốc.
 
-Instead of all nodes being created equal, some nodes are allowed to
-roam (e.g., your laptop) and some are connected to a wired network
-infrastructure. 802.11 calls these base stations *access points*
-(APs), and they are connected to each other by a so-called
-*distribution system*. :numref:`Figure %s <fig-wireless2>` illustrates
-a distribution system that connects three access points, each of which
-services the nodes in some region. Each access point operates on some
-channel in the appropriate frequency range, and each AP will typically
-be on a different channel than its neighbors.
+Thay vì tất cả các nút đều bình đẳng, một số nút được phép di chuyển (ví dụ, laptop của bạn) và một số được kết nối với hạ tầng mạng có dây. 802.11 gọi các trạm gốc này là *điểm truy cập* (AP), và chúng được kết nối với nhau qua cái gọi là *hệ thống phân phối*. :numref:`Hình %s <fig-wireless2>` minh họa một hệ thống phân phối kết nối ba điểm truy cập, mỗi điểm phục vụ các nút trong một vùng. Mỗi điểm truy cập hoạt động trên một kênh trong dải tần phù hợp, và thường mỗi AP sẽ ở kênh khác với hàng xóm.
 
 .. _fig-wireless2:
 .. figure:: figures/f02-32-9780123850591.png
    :width: 500px
    :align: center
 
-   Access points connected to a distribution system.
+   Các điểm truy cập kết nối với hệ thống phân phối.
 
-The details of the distribution system are not important to this
-discussion—it could be an Ethernet, for example. The only important
-point is that the distribution network operates at the link layer, the
-same protocol layer as the wireless links. In other words, it does not
-depend on any higher-level protocols (such as the network layer).
+Chi tiết của hệ thống phân phối không quan trọng ở đây—nó có thể là Ethernet chẳng hạn. Điều quan trọng là mạng phân phối hoạt động ở tầng liên kết, cùng tầng với các liên kết không dây. Nói cách khác, nó không phụ thuộc vào giao thức tầng cao hơn (như tầng mạng).
 
-Although two nodes can communicate directly with each other if they are
-within reach of each other, the idea behind this configuration is that
-each node associates itself with one access point. For node A to
-communicate with node E, for example, A first sends a frame to its
-access point (AP-1), which forwards the frame across the distribution
-system to AP-3, which finally transmits the frame to E. How AP-1 knew to
-forward the message to AP-3 is beyond the scope of 802.11; it may have
-used a bridging protocol. What 802.11 does specify is how nodes select
-their access points and, more interestingly, how this algorithm works in
-light of nodes moving from one cell to another.
+Dù hai nút có thể giao tiếp trực tiếp nếu trong phạm vi nhau, ý tưởng của cấu hình này là mỗi nút liên kết với một điểm truy cập. Để nút A giao tiếp với E, ví dụ, A gửi khung tới điểm truy cập của nó (AP-1), AP-1 chuyển khung qua hệ thống phân phối tới AP-3, AP-3 truyền khung tới E. Cách AP-1 biết chuyển thông điệp tới AP-3 nằm ngoài phạm vi 802.11; có thể dùng giao thức cầu nối. 802.11 quy định cách các nút chọn điểm truy cập và, thú vị hơn, cách thuật toán này hoạt động khi các nút di chuyển giữa các vùng.
 
-The technique for selecting an AP is called *scanning* and involves the
-following four steps:
+Kỹ thuật chọn điểm truy cập gọi là *quét* (scanning) và gồm bốn bước:
 
-1. The node sends a ``Probe`` frame.
+1. Nút gửi một khung ``Probe``.
 
-2. All APs within reach reply with a ``Probe Response`` frame.
+2. Tất cả các AP trong phạm vi trả lời bằng khung ``Probe Response``.
 
-3. The node selects one of the access points and sends that AP an
-   ``Association Request`` frame.
+3. Nút chọn một điểm truy cập và gửi cho AP đó một khung ``Association Request``.
 
-4. The AP replies with an ``Association Response`` frame.
+4. AP trả lời bằng khung ``Association Response``.
 
-A node engages this protocol whenever it joins the network, as well as
-when it becomes unhappy with its current AP. This might happen, for
-example, because the signal from its current AP has weakened due to the
-node moving away from it. Whenever a node acquires a new AP, the new AP
-notifies the old AP of the change (this happens in step 4) via the
-distribution system.
+Một nút thực hiện giao thức này mỗi khi tham gia mạng, cũng như khi không hài lòng với AP hiện tại. Điều này có thể xảy ra, ví dụ, khi tín hiệu từ AP hiện tại yếu đi do nút di chuyển xa. Khi một nút kết nối với AP mới, AP mới sẽ thông báo cho AP cũ về sự thay đổi (diễn ra ở bước 4) qua hệ thống phân phối.
 
 .. _fig-wireless3:
 .. figure:: figures/f02-33-9780123850591.png
    :width: 500px
    :align: center
 
-   Node mobility.
+   Di động của nút.
 
-Consider the situation shown in :numref:`Figure %s <fig-wireless3>`,
-where node C moves from the cell serviced by AP-1 to the cell serviced
-by AP-2. As it moves, it sends ``Probe`` frames, which eventually
-result in ``Probe Response`` frames from AP-2. At some point, C
-prefers AP-2 over AP-1, and so it associates itself with that access
-point.
+Xét tình huống trong :numref:`Hình %s <fig-wireless3>`, nơi nút C di chuyển từ vùng của AP-1 sang vùng của AP-2. Khi di chuyển, nó gửi các khung ``Probe``, cuối cùng nhận được ``Probe Response`` từ AP-2. Đến một lúc nào đó, C ưu tiên AP-2 hơn AP-1 và liên kết với AP đó.
 
-The mechanism just described is called *active scanning* since the
-node is actively searching for an access point. APs also periodically
-send a ``Beacon`` frame that advertises the capabilities of the access
-point; these include the transmission rates supported by the AP. This
-is called *passive scanning*, and a node can change to this AP based
-on the ``Beacon`` frame simply by sending an ``Association Request``
-frame back to the access point.
+Cơ chế vừa mô tả gọi là *quét chủ động* (active scanning) vì nút chủ động tìm kiếm điểm truy cập. AP cũng định kỳ gửi khung ``Beacon`` quảng bá khả năng của mình; bao gồm các tốc độ truyền mà AP hỗ trợ. Đây gọi là *quét thụ động* (passive scanning), và nút có thể chuyển sang AP này dựa trên khung ``Beacon`` chỉ bằng cách gửi khung ``Association Request`` lại cho AP.
 
-Frame Format
-~~~~~~~~~~~~
+Định Dạng Khung
+~~~~~~~~~~~~~~~
 
-Most of the 802.11 frame format, which is depicted in
-:numref:`Figure %s <fig-802.11-format>`, is exactly what we would
-expect. The frame contains the source and destination node addresses,
-each of which is 48 bits long; up to 2312 bytes of data; and a 32-bit
-CRC. The ``Control`` field contains three subfields of interest (not
-shown): a 6-bit ``Type`` field that indicates whether the frame
-carries data, is an RTS or CTS frame, or is being used by the scanning
-algorithm, and a pair of 1-bit fields—called ``ToDS`` and
-``FromDS``—that are described below.
+Phần lớn định dạng khung 802.11, như minh họa ở :numref:`Hình %s <fig-802.11-format>`, đúng như mong đợi. Khung chứa địa chỉ nguồn và đích, mỗi địa chỉ 48 bit; tối đa 2312 byte dữ liệu; và CRC 32 bit. Trường ``Control`` chứa ba trường con quan trọng (không hiển thị): trường ``Type`` 6 bit cho biết khung mang dữ liệu, là khung RTS hay CTS, hay dùng cho thuật toán quét, và cặp trường 1 bit—gọi là ``ToDS`` và ``FromDS``—được mô tả dưới đây.
 
 .. _fig-802.11-format:
 .. figure:: figures/f02-34-9780123850591.png
    :width: 550px
    :align: center
 
-   802.11 frame format.
+   Định dạng khung 802.11.
 
-The peculiar thing about the 802.11 frame format is that it contains
-four, rather than two, addresses. How these addresses are interpreted
-depends on the settings of the ``ToDS`` and ``FromDS`` bits in the
-frame’s ``Control`` field. This is to account for the possibility that
-the frame had to be forwarded across the distribution system, which
-would mean that the original sender is not necessarily the same as the
-most recent transmitting node. Similar reasoning applies to the
-destination address. In the simplest case, when one node is sending
-directly to another, both the ``DS`` bits are 0, ``Addr1`` identifies
-the target node, and ``Addr2`` identifies the source node. In the most
-complex case, both ``DS`` bits are set to 1, indicating that the
-message went from a wireless node onto the distribution system, and
-then from the distribution system to another wireless node. With both
-bits set, ``Addr1`` identifies the ultimate destination, ``Addr2``
-identifies the immediate sender (the one that forwarded the frame from
-the distribution system to the ultimate destination), ``Addr3``
-identifies the intermediate destination (the one that accepted the
-frame from a wireless node and forwarded it across the distribution
-system), and ``Addr4`` identifies the original source. In terms of the
-example given in :numref:`Figure %s <fig-wireless2>`, ``Addr1``
-corresponds to E, ``Addr2`` identifies AP-3, ``Addr3`` corresponds to
-AP-1, and ``Addr4`` identifies
-A.
+Điểm đặc biệt của định dạng khung 802.11 là nó có bốn, thay vì hai, địa chỉ. Cách diễn giải các địa chỉ này phụ thuộc vào giá trị của các bit ``ToDS`` và ``FromDS`` trong trường ``Control`` của khung. Điều này để xử lý trường hợp khung phải được chuyển qua hệ thống phân phối, nghĩa là bộ phát gốc không nhất thiết là nút truyền gần nhất. Tương tự với địa chỉ đích. Trong trường hợp đơn giản nhất, khi một nút gửi trực tiếp cho nút khác, cả hai bit DS đều là 0, ``Addr1`` là nút đích, ``Addr2`` là nút nguồn. Trong trường hợp phức tạp nhất, cả hai bit DS đều là 1, nghĩa là thông điệp đi từ nút không dây lên hệ thống phân phối, rồi từ hệ thống phân phối tới nút không dây khác. Khi cả hai bit đều bật, ``Addr1`` là đích cuối cùng, ``Addr2`` là bộ phát gần nhất (chuyển khung từ hệ thống phân phối tới đích cuối), ``Addr3`` là đích trung gian (nhận khung từ nút không dây và chuyển lên hệ thống phân phối), và ``Addr4`` là nguồn gốc. Trong ví dụ ở :numref:`Hình %s <fig-wireless2>`, ``Addr1`` là E, ``Addr2`` là AP-3, ``Addr3`` là AP-1, và ``Addr4`` là A.
 
-Security of Wireless Links
+Bảo Mật Liên Kết Không Dây
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One of the fairly obvious problems of wireless links compared to wires
-or fibers is that you can’t be too sure where your data has gone. You
-can probably figure out if it was received by the intended receiver, but
-there is no telling how many other receivers might have also picked up
-your transmission. So, if you are concerned about the privacy of your
-data, wireless networks present a challenge.
+Một trong những vấn đề khá rõ ràng của liên kết không dây so với dây hoặc cáp quang là bạn không thể chắc chắn dữ liệu của mình đã đi đâu. Bạn có thể biết nó đã được nhận bởi bộ thu dự định, nhưng không thể biết có bao nhiêu bộ thu khác cũng nhận được truyền của bạn. Vì vậy, nếu bạn quan tâm đến quyền riêng tư của dữ liệu, mạng không dây là một thách thức.
 
-Even if you are not concerned about data privacy—or perhaps have taken
-care of it in some other way—you may be concerned about an unauthorized
-user injecting data into your network. If nothing else, such a user
-might be able to consume resources that you would prefer to consume
-yourself, such as the finite bandwidth between your house and your ISP.
+Ngay cả khi bạn không quan tâm đến quyền riêng tư dữ liệu—hoặc đã xử lý nó theo cách khác—bạn có thể lo lắng về việc người dùng trái phép chèn dữ liệu vào mạng của bạn. Nếu không gì khác, người dùng đó có thể tiêu tốn tài nguyên mà bạn muốn dành cho mình, như băng thông hữu hạn giữa nhà bạn và ISP.
 
-For these reasons, wireless networks typically come with some sort of
-mechanism to control access to both the link itself and the transmitted
-data. These mechanisms are often categorized as *wireless security.* The
-widely adopted WPA2 is described in Chapter 8.
+Vì những lý do này, mạng không dây thường đi kèm với một số cơ chế kiểm soát truy cập cả vào liên kết lẫn dữ liệu truyền. Các cơ chế này thường được gọi chung là *bảo mật không dây*. Chuẩn WPA2 được sử dụng rộng rãi sẽ được mô tả ở Chương 8.
 
 2.7.3 Bluetooth (802.15.1)
 --------------------------
 
-Bluetooth fills the niche of very short range communication between
-mobile phones, PDAs, notebook computers, and other personal or
-peripheral devices. For example, Bluetooth can be used to connect a
-mobile phone to a headset or a notebook computer to a keyboard. Roughly
-speaking, Bluetooth is a more convenient alternative to connecting two
-devices with a wire. In such applications, it is not necessary to
-provide much range or bandwidth. This means that Bluetooth radios can
-use quite low power transmission, since transmission power is one of the
-main factors affecting bandwidth and range of wireless links. This
-matches the target applications for Bluetooth-enabled devices—most of
-them are battery powered (such as the ubiquitous phone headset) and
-hence it is important that they not consume much power.
+Bluetooth lấp đầy khoảng trống truyền thông tầm rất ngắn giữa điện thoại di động, PDA, máy tính xách tay và các thiết bị cá nhân hoặc ngoại vi khác. Ví dụ, Bluetooth có thể dùng để kết nối điện thoại với tai nghe hoặc máy tính xách tay với bàn phím. Nói chung, Bluetooth là giải pháp tiện lợi hơn so với nối hai thiết bị bằng dây. Trong các ứng dụng này, không cần phạm vi hay băng thông lớn. Điều này nghĩa là radio Bluetooth có thể sử dụng công suất phát rất thấp, vì công suất phát là một trong những yếu tố chính ảnh hưởng đến băng thông và phạm vi của liên kết không dây. Điều này phù hợp với các ứng dụng mục tiêu của thiết bị Bluetooth—hầu hết đều dùng pin (như tai nghe điện thoại phổ biến) nên rất quan trọng là không tiêu tốn nhiều năng lượng.
 
-Bluetooth operates in the license-exempt band at 2.45 GHz. Bluetooth
-links have typical bandwidths around 1 to 3 Mbps and a range of about
-10 m. For this reason, and because the communicating devices typically
-belong to one individual or group, Bluetooth is sometimes categorized as
-a Personal Area Network (PAN).
+Bluetooth hoạt động ở dải tần không cần giấy phép 2.45 GHz. Liên kết Bluetooth có băng thông điển hình khoảng 1 đến 3 Mbps và phạm vi khoảng 10 m. Vì lý do này, và vì các thiết bị giao tiếp thường thuộc về một cá nhân hoặc nhóm, Bluetooth đôi khi được xếp vào loại Mạng Cá Nhân (PAN).
 
-Bluetooth is specified by an industry consortium called the *Bluetooth
-Special Interest Group*. It specifies an entire suite of protocols,
-going beyond the link layer to define application protocols, which it
-calls *profiles*, for a range of applications. For example, there is a
-profile for synchronizing a PDA with a personal computer. Another
-profile gives a mobile computer access to a wired LAN in the manner of
-802.11, although this was not Bluetooth’s original goal. The IEEE
-802.15.1 standard is based on Bluetooth but excludes the application
-protocols.
+Bluetooth được quy định bởi một liên minh công nghiệp gọi là *Bluetooth Special Interest Group*. Nó quy định một bộ giao thức đầy đủ, vượt ra ngoài tầng liên kết để định nghĩa các giao thức ứng dụng, gọi là *profile*, cho nhiều ứng dụng khác nhau. Ví dụ, có profile để đồng bộ PDA với máy tính cá nhân. Một profile khác cho phép máy tính di động truy cập LAN có dây giống như 802.11, dù đây không phải mục tiêu ban đầu của Bluetooth. Chuẩn IEEE 802.15.1 dựa trên Bluetooth nhưng loại bỏ các giao thức ứng dụng.
 
-The basic Bluetooth network configuration, called a *piconet*,
-consists of a master device and up to seven slave devices, as shown in
-:numref:`Figure %s <fig-wirelessBluetoothPiconet>`. Any communication
-is between the master and a slave; the slaves do not communicate
-directly with each other. Because slaves have a simpler role, their
-Bluetooth hardware and software can be simpler and cheaper.
+Cấu hình mạng Bluetooth cơ bản, gọi là *piconet*, gồm một thiết bị chủ và tối đa bảy thiết bị phụ, như minh họa ở :numref:`Hình %s <fig-wirelessBluetoothPiconet>`. Mọi giao tiếp đều giữa chủ và phụ; các thiết bị phụ không giao tiếp trực tiếp với nhau. Vì vai trò của phụ đơn giản hơn, phần cứng và phần mềm Bluetooth của chúng có thể đơn giản và rẻ hơn.
 
 .. _fig-wirelessBluetoothPiconet:
 .. figure:: figures/f02-35-9780123850591.png
    :width: 400px
    :align: center
 
-   A Bluetooth piconet.
+   Một piconet Bluetooth.
 
-Since Bluetooth operates in an license-exempt band, it is required to
-use a spread spectrum technique to deal with possible interference in
-the band. It uses frequency-hopping with 79 *channels* (frequencies),
-using each for 625 μs at a time. This provides a natural time slot for
-Bluetooth to use for
-synchronous time division multiplexing. A frame takes up 1, 3, or 5
-consecutive time slots. Only the master can start to transmit in
-odd-numbered slots. A slave can start to transmit in an even-numbered
-slot—but only in response to a request from the master during the
-previous slot, thereby preventing any contention between the slave
-devices.
+Vì Bluetooth hoạt động ở dải tần không cần giấy phép, nó phải sử dụng kỹ thuật phổ trải để xử lý nhiễu có thể có trong dải này. Nó sử dụng nhảy tần với 79 *kênh* (tần số), mỗi kênh dùng trong 625 μs. Điều này cung cấp một khe thời gian tự nhiên để Bluetooth sử dụng cho ghép kênh phân chia theo thời gian đồng bộ. Một khung chiếm 1, 3 hoặc 5 khe liên tiếp. Chỉ thiết bị chủ mới có thể bắt đầu truyền ở các khe lẻ. Thiết bị phụ có thể bắt đầu truyền ở khe chẵn—nhưng chỉ để đáp lại yêu cầu từ chủ ở khe trước đó, nhờ đó tránh tranh chấp giữa các thiết bị phụ.
 
-A slave device can be *parked*; that is, it is set to an inactive,
-low-power state. A parked device cannot communicate on the piconet; it
-can only be reactivated by the master. A piconet can have up to 255
-parked devices in addition to its active slave devices.
+Một thiết bị phụ có thể được *parked*; tức là, được đặt ở trạng thái không hoạt động, tiêu thụ năng lượng thấp. Thiết bị parked không thể giao tiếp trên piconet; chỉ có thể được kích hoạt lại bởi chủ. Một piconet có thể có tối đa 255 thiết bị parked ngoài các thiết bị phụ đang hoạt động.
 
-In the realm of very low-power, short-range communication there are a
-few other technologies besides Bluetooth. One of these is ZigBee,
-devised by the ZigBee alliance and standardized as IEEE 802.15.4. It is
-designed for situations where the bandwidth requirements are low and
-power consumption must be very low to give very long battery life. It is
-also intended to be simpler and cheaper than Bluetooth, making it
-feasible to incorporate in cheaper devices such as *sensors*. Sensors
-are becoming an increasingly important class of networked device, as
-technology advances to the point where very cheap small devices can be
-deployed in large quantities to monitor things like temperature,
-humidity, and energy consumption in a building.
+Trong lĩnh vực truyền thông tầm rất ngắn, công suất thấp còn có một số công nghệ khác ngoài Bluetooth. Một trong số đó là ZigBee, do liên minh ZigBee phát triển và chuẩn hóa thành IEEE 802.15.4. Nó được thiết kế cho các tình huống yêu cầu băng thông thấp và tiêu thụ năng lượng rất thấp để kéo dài tuổi thọ pin. Nó cũng nhằm đơn giản và rẻ hơn Bluetooth, giúp dễ tích hợp vào các thiết bị giá rẻ như *cảm biến*. Cảm biến đang trở thành một lớp thiết bị mạng ngày càng quan trọng, khi công nghệ phát triển đến mức các thiết bị nhỏ, rẻ có thể được triển khai số lượng lớn để giám sát các yếu tố như nhiệt độ, độ ẩm, tiêu thụ năng lượng trong tòa nhà.
