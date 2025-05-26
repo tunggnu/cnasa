@@ -1,55 +1,14 @@
-Problem: Not All Networks are Directly Connected
+Vấn đề: Không phải mọi mạng đều kết nối trực tiếp
 ------------------------------------------------
 
-As we have seen, there are many technologies that can be used to build
-last-mile links or to connect a modest number of nodes together, but how
-do we build networks of global scale? A single Ethernet can interconnect
-no more than 1024 hosts; a point-to-point link connects only two.
-Wireless networks are limited by the range of their radios. To build a
-global network, we need a way to interconnect these different types of
-links and multi-access networks. The concept of interconnecting
-different types of networks to build a large, global network is the core
-idea of the Internet and is often referred to as *internetworking*.
+Như chúng ta đã thấy, có rất nhiều công nghệ có thể được sử dụng để xây dựng các liên kết “dặm cuối” hoặc kết nối một số lượng nhỏ các nút với nhau, nhưng làm thế nào để chúng ta xây dựng các mạng ở quy mô toàn cầu? Một mạng Ethernet đơn lẻ chỉ có thể kết nối tối đa 1024 máy chủ; một liên kết điểm-điểm chỉ kết nối hai thiết bị. Mạng không dây bị giới hạn bởi phạm vi của sóng radio. Để xây dựng một mạng toàn cầu, chúng ta cần một cách để liên kết các loại liên kết và mạng đa truy cập khác nhau này. Khái niệm liên kết các loại mạng khác nhau để xây dựng một mạng lớn, toàn cầu là ý tưởng cốt lõi của Internet và thường được gọi là *liên mạng* (internetworking).
 
-We can divide the internetworking problem up into a few subproblems.
-First of all, we need a way to interconnect links. Devices that
-interconnect links of the same type are often called *switches*, or
-sometimes *Layer 2* (L2) switches. These devices are the first topic of
-this chapter. A particularly important class of L2 switches in use today
-are those used to interconnect Ethernet segments. These switches are
-also sometimes called *bridges*.
+Chúng ta có thể chia nhỏ vấn đề liên mạng thành một vài bài toán con. Trước hết, chúng ta cần một cách để liên kết các liên kết. Các thiết bị liên kết các liên kết cùng loại thường được gọi là *switch* (bộ chuyển mạch), hoặc đôi khi là *switch tầng 2* (L2 switch). Các thiết bị này là chủ đề đầu tiên của chương này. Một lớp switch tầng 2 đặc biệt quan trọng hiện nay là các switch dùng để liên kết các đoạn Ethernet. Những switch này đôi khi còn được gọi là *bridge* (cầu nối).
 
-The core job of a switch is to take packets that arrive on an input and
-*forward* (or *switch*) them to the right output so that they will reach
-their appropriate destination. There are a variety of ways that the
-switch can determine the “right” output for a packet, which can be
-broadly categorized as connectionless and connection-oriented
-approaches. These two approaches have both found important application
-areas over the years.
+Công việc cốt lõi của một switch là nhận các gói tin đến ở một đầu vào và *chuyển tiếp* (hoặc *chuyển mạch*) chúng tới đầu ra đúng để chúng đến được đích phù hợp. Có nhiều cách khác nhau để switch xác định “đầu ra đúng” cho một gói tin, có thể được phân loại rộng rãi thành hai hướng: không kết nối và hướng kết nối. Cả hai hướng tiếp cận này đều đã tìm được những ứng dụng quan trọng qua nhiều năm.
 
-Given the enormous diversity of network types, we also need a way to
-interconnect disparate networks and links (i.e., deal with
-*heterogeneity*). Devices that perform this task, once called
-*gateways*, are now mostly known as *routers*, or alternatively, *Layer
-3* (L3) switches. The protocol that was invented to deal with
-interconnection of disparate network types, the Internet Protocol (IP),
-is the topic of our second section.
+Với sự đa dạng to lớn của các loại mạng, chúng ta cũng cần một cách để liên kết các mạng và liên kết dị biệt (tức là xử lý *tính không đồng nhất*). Các thiết bị thực hiện nhiệm vụ này, trước đây gọi là *gateway* (cổng), ngày nay chủ yếu được gọi là *router* (bộ định tuyến), hoặc thay thế là *switch tầng 3* (L3 switch). Giao thức được phát minh để xử lý việc liên kết các loại mạng khác nhau, Giao thức Internet (IP), là chủ đề của phần thứ hai trong chương này.
 
-Once we interconnect a whole lot of links and networks with switches and
-routers, there are likely to be many different possible ways to get from
-one point to another. Finding a suitable path or *route* through a
-network is one of the fundamental problems of networking. Such paths
-should be efficient (e.g., no longer than necessary), loop free, and
-able to respond to the fact that networks are not static—nodes may fail
-or reboot, links may break, and new nodes or links may be added. Our
-third section looks at some of the algorithms and protocols that have
-been developed to address these issues.
+Khi chúng ta liên kết rất nhiều liên kết và mạng với các switch và router, sẽ có rất nhiều cách khác nhau để đi từ một điểm này đến một điểm khác. Tìm một đường đi hoặc *tuyến* (route) phù hợp qua mạng là một trong những vấn đề cơ bản của mạng máy tính. Những đường đi này nên hiệu quả (ví dụ, không dài hơn mức cần thiết), không có vòng lặp, và có khả năng thích ứng với thực tế là mạng không tĩnh—các nút có thể hỏng hoặc khởi động lại, các liên kết có thể bị đứt, và các nút hoặc liên kết mới có thể được thêm vào. Phần thứ ba của chương này sẽ xem xét một số thuật toán và giao thức đã được phát triển để giải quyết các vấn đề này.
 
-Once we understand the problems of switching and routing, we need some
-devices to perform those functions. This chapter concludes with some
-discussion of the ways switches and routers are implemented. While many
-packet switches and routers are quite similar to a general-purpose
-computer, there are many situations where more specialized designs are
-used. This is particularly the case at the high end, where there seems
-to be a never-ending need for more switching capacity that can handle
-the ever-increasing traffic load in the Internet’s core.
+Khi đã hiểu các vấn đề về chuyển mạch và định tuyến, chúng ta cần một số thiết bị để thực hiện các chức năng đó. Chương này kết thúc với một số thảo luận về các cách switch và router được triển khai. Mặc dù nhiều switch và router gói tin khá giống với một máy tính đa dụng, nhưng có nhiều tình huống mà các thiết kế chuyên biệt hơn được sử dụng. Điều này đặc biệt đúng ở phân khúc cao cấp, nơi dường như luôn có nhu cầu không ngừng về năng lực chuyển mạch lớn hơn để xử lý lưu lượng ngày càng tăng trong lõi của Internet.
