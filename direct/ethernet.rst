@@ -1,347 +1,115 @@
-2.6 Multi-Access Networks
+2.6 Mạng Truy Cập Đa Điểm
 =========================
 
-Developed in the mid-1970s by researchers at the Xerox Palo Alto
-Research Center (PARC), the Ethernet eventually became the dominant
-local area networking technology, emerging from a pack of competing
-technologies. Today, it competes mainly with 802.11 wireless networks
-but remains extremely popular in campus networks and data centers. The
-more general name for the technology behind the Ethernet is Carrier
-Sense, Multiple Access with Collision Detect (CSMA/CD).
+Được phát triển vào giữa những năm 1970 bởi các nhà nghiên cứu tại Trung tâm Nghiên cứu Palo Alto của Xerox (PARC), Ethernet cuối cùng đã trở thành công nghệ mạng cục bộ (LAN) thống trị, vượt lên từ một nhóm các công nghệ cạnh tranh. Ngày nay, nó chủ yếu cạnh tranh với các mạng không dây 802.11 nhưng vẫn cực kỳ phổ biến trong các mạng khuôn viên trường và trung tâm dữ liệu. Tên gọi chung hơn cho công nghệ đứng sau Ethernet là Carrier Sense, Multiple Access with Collision Detect (CSMA/CD) – Cảm nhận sóng mang, truy cập đa điểm với phát hiện va chạm.
 
-As indicated by the CSMA name, the Ethernet is a multiple-access
-network, meaning that a set of nodes sends and receives frames over a
-shared link. You can, therefore, think of an Ethernet as being like a
-bus that has multiple stations plugged into it. The “carrier sense” in
-CSMA/CD means that all the nodes can distinguish between an idle and a
-busy link, and “collision detect” means that a node listens as it
-transmits and can therefore detect when a frame it is transmitting has
-interfered (collided) with a frame transmitted by another node.
+Như tên gọi CSMA cho thấy, Ethernet là một mạng truy cập đa điểm, nghĩa là một tập hợp các nút gửi và nhận khung dữ liệu qua một liên kết chia sẻ. Bạn có thể hình dung Ethernet giống như một xe buýt mà nhiều trạm được cắm vào đó. “Cảm nhận sóng mang” trong CSMA/CD nghĩa là tất cả các nút có thể phân biệt được liên kết đang rỗi hay bận, và “phát hiện va chạm” nghĩa là một nút sẽ lắng nghe khi nó truyền và do đó có thể phát hiện khi một khung mà nó đang truyền bị can thiệp (va chạm) với một khung do nút khác truyền.
 
-The Ethernet has its roots in an early packet radio network, called
-Aloha, developed at the University of Hawaii to support computer
-communication across the Hawaiian Islands. Like the Aloha network, the
-fundamental problem faced by the Ethernet is how to mediate access to a
-shared medium fairly and efficiently (in Aloha, the medium was the
-atmosphere, while in the Ethernet the medium was originally a coax
-cable). The core idea in both Aloha and the Ethernet is an algorithm
-that controls when each node can transmit.
+Ethernet có nguồn gốc từ một mạng radio gói tin đầu tiên, gọi là Aloha, được phát triển tại Đại học Hawaii để hỗ trợ truyền thông máy tính trên các đảo Hawaii. Giống như mạng Aloha, vấn đề cơ bản mà Ethernet phải đối mặt là làm thế nào để điều phối việc truy cập vào một môi trường chia sẻ một cách công bằng và hiệu quả (ở Aloha, môi trường là khí quyển, còn ở Ethernet ban đầu là cáp đồng trục). Ý tưởng cốt lõi ở cả Aloha và Ethernet là một thuật toán kiểm soát thời điểm mỗi nút có thể truyền.
 
-Modern Ethernet links are now largely point to point;
-that is, they connect one host to an Ethernet *switch*, or they
-interconnect switches. As a consequence, the “multiple access” algorithm
-is not used much in today’s wired Ethernets, but a variant is now used in
-wireless networks, such as 802.11 networks (also known as Wi-Fi). Due to
-the enormous influence of Ethernet, we chose to describe its classic
-algorithm here, and then explain how it has been adapted to Wi-Fi in the
-next section. We will also discuss Ethernet switches elsewhere. For now,
-we’ll focus on how a single Ethernet link works.
+Các liên kết Ethernet hiện đại chủ yếu là điểm-điểm; tức là, chúng kết nối một máy chủ với một *switch* Ethernet, hoặc kết nối các switch với nhau. Do đó, thuật toán “truy cập đa điểm” không còn được sử dụng nhiều trong các Ethernet có dây ngày nay, nhưng một biến thể của nó lại được sử dụng trong các mạng không dây, như mạng 802.11 (còn gọi là Wi-Fi). Do ảnh hưởng to lớn của Ethernet, chúng tôi chọn mô tả thuật toán cổ điển của nó ở đây, sau đó giải thích cách nó được điều chỉnh cho Wi-Fi ở phần tiếp theo. Chúng tôi cũng sẽ thảo luận về các switch Ethernet ở nơi khác. Hiện tại, chúng ta sẽ tập trung vào cách một liên kết Ethernet đơn lẻ hoạt động.
 
-Digital Equipment Corporation and Intel Corporation joined Xerox to
-define a 10-Mbps Ethernet standard in 1978. This standard then formed
-the basis for IEEE standard 802.3, which additionally defines a much
-wider collection of physical media over which an Ethernet can operate,
-including 100-Mbps, 1-Gbps, 10-Gbps, 40-Gbps, and 100-Gbps versions.
+Digital Equipment Corporation và Intel Corporation đã cùng Xerox định nghĩa một chuẩn Ethernet 10-Mbps vào năm 1978. Chuẩn này sau đó trở thành cơ sở cho chuẩn IEEE 802.3, vốn còn định nghĩa thêm nhiều loại môi trường vật lý mà Ethernet có thể hoạt động, bao gồm các phiên bản 100-Mbps, 1-Gbps, 10-Gbps, 40-Gbps và 100-Gbps.
 
-2.6.1 Physical Properties
--------------------------
+2.6.1 Đặc Tính Vật Lý
+---------------------
 
-Ethernet segments were originally implemented using coaxial cable of
-length up to 500 m. (Modern Ethernets use twisted copper pairs, usually
-a particular type known as “Category 5,” or optical fibers, and in some
-cases can be quite a lot longer than 500 m.) This cable was similar to
-the type used for cable TV. Hosts connected to an Ethernet segment by
-tapping into it. A *transceiver*, a small device directly attached to
-the tap, detected when the line was idle and drove the signal when the
-host was transmitting. It also received incoming signals. The
-transceiver, in turn, connected to an Ethernet adaptor, which was
-plugged into the host. This configuration is shown in :numref:`Figure
-%s <fig-tap>`.
+Các đoạn Ethernet ban đầu được triển khai bằng cáp đồng trục dài tới 500 m. (Ethernet hiện đại sử dụng cặp dây đồng xoắn, thường là loại “Category 5”, hoặc cáp quang, và trong một số trường hợp có thể dài hơn 500 m khá nhiều.) Loại cáp này tương tự như loại dùng cho truyền hình cáp. Các máy chủ kết nối vào một đoạn Ethernet bằng cách “tap” vào nó. Một *transceiver* (bộ thu phát), là một thiết bị nhỏ gắn trực tiếp vào điểm tap, phát hiện khi đường truyền đang rỗi và điều khiển tín hiệu khi máy chủ truyền dữ liệu. Nó cũng nhận các tín hiệu đến. Bộ thu phát này lại kết nối với một bộ chuyển đổi Ethernet (Ethernet adaptor), được cắm vào máy chủ. Cấu hình này được minh họa trong :numref:`Hình %s <fig-tap>`.
 
 .. _fig-tap:
 .. figure:: figures/f02-22-9780123850591.png
    :width: 300px
    :align: center
 
-   Ethernet transceiver and adaptor.
+   Bộ thu phát và bộ chuyển đổi Ethernet.
 
-Multiple Ethernet segments can be joined together by *repeaters* (or a
-multi-port variant of a repeater, called a *hub*). A
-repeater is a device that forwards digital signals, much like an
-amplifier forwards analog signals; repeaters do not understand bits or
-frames. No more than four repeaters could be positioned between any pair
-of hosts, meaning that a classical Ethernet had a total reach of only
-2500 m. For example, using just two repeaters between any pair of hosts
-supports a configuration similar to the one illustrated in
-:numref:`Figure %s <fig-net-repeat>`; that is, a segment running down the
-spine of a building with a segment on each floor.
+Nhiều đoạn Ethernet có thể được nối với nhau bằng *repeater* (hoặc một biến thể nhiều cổng gọi là *hub*). Repeater là một thiết bị chuyển tiếp tín hiệu số, giống như bộ khuếch đại chuyển tiếp tín hiệu tương tự; repeater không hiểu bit hay khung dữ liệu. Không được có quá bốn repeater giữa bất kỳ cặp máy chủ nào, nghĩa là một Ethernet cổ điển chỉ có thể kéo dài tối đa 2500 m. Ví dụ, chỉ cần hai repeater giữa bất kỳ cặp máy chủ nào là đã hỗ trợ một cấu hình tương tự như minh họa trong :numref:`Hình %s <fig-net-repeat>`; tức là, một đoạn chạy dọc theo trục chính của tòa nhà với một đoạn trên mỗi tầng.
 
 .. _fig-net-repeat:
 .. figure:: figures/f02-23-9780123850591.png
    :width: 500px
    :align: center
 
-   Ethernet repeater, interconnecting segments to form a larger
-   collision domain.
+   Repeater Ethernet, kết nối các đoạn để tạo thành một miền va chạm lớn hơn.
 
-Any signal placed on the Ethernet by a host is broadcast over the entire
-network; that is, the signal is propagated in both directions, and
-repeaters and hubs forward the signal on all outgoing segments.
-Terminators attached to the end of each segment absorb the signal and
-keep it from bouncing back and interfering with trailing signals. The
-original Ethernet specifications used the Manchester encoding scheme
-described in an earlier section, while 4B/5B encoding (or the similar
-8B/10B) scheme is used today on higher speed Ethernets.
+Bất kỳ tín hiệu nào được đặt lên Ethernet bởi một máy chủ đều được phát sóng trên toàn bộ mạng; tức là, tín hiệu được truyền đi theo cả hai hướng, và repeater cũng như hub sẽ chuyển tiếp tín hiệu trên tất cả các đoạn đầu ra. Các bộ kết thúc (terminator) gắn ở cuối mỗi đoạn sẽ hấp thụ tín hiệu và ngăn nó dội lại, gây nhiễu cho các tín hiệu phía sau. Đặc tả Ethernet ban đầu sử dụng sơ đồ mã hóa Manchester như đã mô tả ở phần trước, trong khi mã hóa 4B/5B (hoặc tương tự là 8B/10B) được sử dụng ngày nay trên các Ethernet tốc độ cao hơn.
 
-It is important to understand that whether a given Ethernet spans a
-single segment, a linear sequence of segments connected by repeaters, or
-multiple segments connected in a star configuration, data
-transmitted by any one host on that Ethernet reaches all the other
-hosts. This is the good news. The bad news is that all these hosts are
-competing for access to the same link, and, as a consequence, they are
-said to be in the same *collision domain*. The multi-access part of the
-Ethernet is all about dealing with the competition for the link that
-arises in a collision domain.
+Điều quan trọng cần hiểu là dù một Ethernet trải dài trên một đoạn đơn, một chuỗi tuyến tính các đoạn nối bằng repeater, hay nhiều đoạn nối theo cấu hình hình sao, dữ liệu được truyền bởi bất kỳ máy chủ nào trên Ethernet đó đều đến được tất cả các máy chủ khác. Đây là tin tốt. Tin xấu là tất cả các máy chủ này đều cạnh tranh quyền truy cập vào cùng một liên kết, và do đó, chúng được cho là nằm trong cùng một *miền va chạm* (collision domain). Phần truy cập đa điểm của Ethernet chủ yếu là xử lý sự cạnh tranh cho liên kết phát sinh trong một miền va chạm.
 
-2.6.2 Access Protocol
----------------------
+2.6.2 Giao Thức Truy Cập
+------------------------
 
-We now turn our attention to the algorithm that controls access to a
-shared Ethernet link. This algorithm is commonly called the Ethernet’s
-*media access control* (MAC). It is typically implemented in hardware on
-the network adaptor. We will not describe the hardware *per se*, but
-instead focus on the algorithm it implements. First, however, we
-describe the Ethernet’s frame format and addresses.
+Bây giờ chúng ta chuyển sang thuật toán kiểm soát truy cập vào một liên kết Ethernet chia sẻ. Thuật toán này thường được gọi là *media access control* (MAC) của Ethernet. Nó thường được triển khai bằng phần cứng trên bộ chuyển đổi mạng. Chúng tôi sẽ không mô tả phần cứng *per se*, mà tập trung vào thuật toán mà nó thực hiện. Tuy nhiên, trước tiên, chúng tôi sẽ mô tả định dạng khung và địa chỉ của Ethernet.
 
-Frame Format
-~~~~~~~~~~~~
+Định Dạng Khung
+~~~~~~~~~~~~~~~
 
-Each Ethernet frame is defined by the format given in :numref:`Figure
-%s <fig-enet-format>`. The 64-bit preamble allows the receiver to
-synchronize with the signal; it is a sequence of alternating 0s and 1s.
-Both the source and destination hosts are identified with a 48-bit
-address. The packet type field serves as the demultiplexing key; it
-identifies to which of possibly many higher-level protocols this frame
-should be delivered. Each frame contains up to 1500 bytes of data.
-Minimally, a frame must contain at least 46 bytes of data, even if this
-means the host has to pad the frame before transmitting it. The reason
-for this minimum frame size is that the frame must be long enough to
-detect a collision; we discuss this more below. Finally, each frame
-includes a 32-bit CRC. Like the HDLC protocol described in an earlier
-section, the Ethernet is a bit-oriented framing protocol. Note that from
-the host’s perspective, an Ethernet frame has a 14-byte header: two
-6-byte addresses and a 2-byte type field. The sending adaptor attaches
-the preamble and CRC before transmitting, and the receiving adaptor
-removes them.
+Mỗi khung Ethernet được xác định bởi định dạng trong :numref:`Hình %s <fig-enet-format>`. Phần tiền tố 64 bit cho phép bộ nhận đồng bộ với tín hiệu; nó là một chuỗi các số 0 và 1 xen kẽ. Cả máy chủ nguồn và đích đều được xác định bằng địa chỉ 48 bit. Trường loại gói tin đóng vai trò là khóa phân kênh; nó xác định khung này sẽ được chuyển cho giao thức tầng cao nào. Mỗi khung chứa tối đa 1500 byte dữ liệu. Tối thiểu, một khung phải chứa ít nhất 46 byte dữ liệu, ngay cả khi điều này có nghĩa là máy chủ phải đệm thêm dữ liệu trước khi truyền. Lý do cho kích thước khung tối thiểu này là khung phải đủ dài để phát hiện va chạm; chúng ta sẽ bàn thêm về điều này bên dưới. Cuối cùng, mỗi khung bao gồm một CRC 32 bit. Giống như giao thức HDLC đã mô tả ở phần trước, Ethernet là một giao thức đóng khung theo bit. Lưu ý rằng từ góc nhìn của máy chủ, một khung Ethernet có phần đầu 14 byte: hai địa chỉ 6 byte và một trường loại 2 byte. Bộ chuyển đổi gửi sẽ gắn thêm phần tiền tố và CRC trước khi truyền, và bộ chuyển đổi nhận sẽ loại bỏ chúng.
 
 .. _fig-enet-format:
 .. figure:: figures/f02-25-9780123850591.png
    :width: 400px
    :align: center
 
-   Ethernet frame format.
+   Định dạng khung Ethernet.
 
-Addresses
-~~~~~~~~~
+Địa Chỉ
+~~~~~~~
 
-Each host on an Ethernet—in fact, every Ethernet host in the world—has a
-unique Ethernet address. Technically, the address belongs to the
-adaptor, not the host; it is usually burned into ROM. Ethernet addresses
-are typically printed in a form humans can read as a sequence of six
-numbers separated by colons. Each number corresponds to 1 byte of the
-6-byte address and is given by a pair of hexadecimal digits, one for
-each of the 4-bit nibbles in the byte; leading 0s are dropped. For
-example, ``8:0:2b:e4:b1:2`` is the human-readable representation of
-Ethernet address
+Mỗi máy chủ trên Ethernet—thực ra là mọi máy chủ Ethernet trên thế giới—đều có một địa chỉ Ethernet duy nhất. Về mặt kỹ thuật, địa chỉ này thuộc về bộ chuyển đổi, không phải máy chủ; nó thường được ghi sẵn vào ROM. Địa chỉ Ethernet thường được in dưới dạng dễ đọc cho con người, là một chuỗi sáu số phân tách bằng dấu hai chấm. Mỗi số tương ứng với 1 byte của địa chỉ 6 byte và được biểu diễn bằng một cặp ký tự thập lục phân, mỗi ký tự cho một nửa byte (4 bit); các số 0 ở đầu được lược bỏ. Ví dụ, ``8:0:2b:e4:b1:2`` là dạng dễ đọc của địa chỉ Ethernet
 
 ::
 
    00001000  00000000  00101011  11100100  10110001  00000010
 
-To ensure that every adaptor gets a unique address, each manufacturer of
-Ethernet devices is allocated a different prefix that must be prepended
-to the address on every adaptor they build. For example, Advanced Micro
-Devices has been assigned the 24-bit prefix ``080020`` (or ``8:0:20``).
-A given manufacturer then makes sure the address suffixes it produces
-are unique.
+Để đảm bảo mỗi bộ chuyển đổi có một địa chỉ duy nhất, mỗi nhà sản xuất thiết bị Ethernet được cấp một tiền tố khác nhau phải được gắn vào địa chỉ trên mọi bộ chuyển đổi mà họ sản xuất. Ví dụ, Advanced Micro Devices được cấp tiền tố 24 bit ``080020`` (hoặc ``8:0:20``). Nhà sản xuất sau đó đảm bảo các hậu tố địa chỉ mà họ tạo ra là duy nhất.
 
-Each frame transmitted on an Ethernet is received by every adaptor
-connected to that Ethernet. Each adaptor recognizes those frames
-addressed to its address and passes only those frames on to the host.
-(An adaptor can also be programmed to run in *promiscuous* mode, in
-which case it delivers all received frames to the host, but this is not
-the normal mode.) In addition to these *unicast* addresses, an Ethernet
-address consisting of all 1s is treated as a *broadcast* address; all
-adaptors pass frames addressed to the broadcast address up to the host.
-Similarly, an address that has the first bit set to 1 but is not the
-broadcast address is called a *multicast* address. A given host can
-program its adaptor to accept some set of multicast addresses. Multicast
-addresses are used to send messages to some subset of the hosts on an
-Ethernet (e.g., all file servers). To summarize, an Ethernet adaptor
-receives all frames and accepts
+Mỗi khung được truyền trên Ethernet đều được mọi bộ chuyển đổi kết nối với Ethernet đó nhận được. Mỗi bộ chuyển đổi nhận biết các khung được gửi đến địa chỉ của nó và chỉ chuyển các khung đó lên máy chủ. (Một bộ chuyển đổi cũng có thể được lập trình để chạy ở chế độ *promiscuous*, khi đó nó chuyển tất cả các khung nhận được lên máy chủ, nhưng đây không phải là chế độ bình thường.) Ngoài các địa chỉ *unicast* này, một địa chỉ Ethernet gồm toàn số 1 được coi là địa chỉ *broadcast*; tất cả các bộ chuyển đổi sẽ chuyển các khung gửi đến địa chỉ broadcast lên máy chủ. Tương tự, một địa chỉ có bit đầu tiên là 1 nhưng không phải địa chỉ broadcast được gọi là địa chỉ *multicast*. Một máy chủ có thể lập trình bộ chuyển đổi của mình để chấp nhận một tập hợp các địa chỉ multicast. Địa chỉ multicast được dùng để gửi thông điệp đến một tập con các máy chủ trên Ethernet (ví dụ, tất cả các máy chủ tệp). Tóm lại, một bộ chuyển đổi Ethernet nhận tất cả các khung và chấp nhận
 
--  Frames addressed to its own address
+-  Các khung gửi đến địa chỉ của chính nó
 
--  Frames addressed to the broadcast address
+-  Các khung gửi đến địa chỉ broadcast
 
--  Frames addressed to a multicast address, if it has been instructed to
-   listen to that address
+-  Các khung gửi đến địa chỉ multicast, nếu nó đã được chỉ định lắng nghe địa chỉ đó
 
--  All frames, if it has been placed in promiscuous mode
+-  Tất cả các khung, nếu nó được đặt ở chế độ promiscuous
 
-It passes to the host only the frames that it accepts.
+Nó chỉ chuyển lên máy chủ các khung mà nó chấp nhận.
 
-Transmitter Algorithm
-~~~~~~~~~~~~~~~~~~~~~
+Thuật Toán Truyền Dữ Liệu
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As we have just seen, the receiver side of the Ethernet protocol is
-simple; the real smarts are implemented at the sender’s side. The
-transmitter algorithm is defined as follows.
+Như chúng ta vừa thấy, phía nhận của giao thức Ethernet khá đơn giản; phần thông minh thực sự được triển khai ở phía gửi. Thuật toán truyền dữ liệu được định nghĩa như sau.
 
-When the adaptor has a frame to send and the line is idle, it transmits
-the frame immediately; there is no negotiation with the other adaptors.
-The upper bound of 1500 bytes in the message means that the adaptor can
-occupy the line for only a fixed length of time.
+Khi bộ chuyển đổi có một khung cần gửi và đường truyền đang rỗi, nó truyền khung ngay lập tức; không có thương lượng gì với các bộ chuyển đổi khác. Giới hạn trên 1500 byte trong thông điệp nghĩa là bộ chuyển đổi chỉ có thể chiếm đường truyền trong một khoảng thời gian cố định.
 
-When an adaptor has a frame to send and the line is busy, it waits for
-the line to go idle and then transmits immediately. (To be more precise,
-all adaptors wait 9.6 μs after the end of one frame before beginning to
-transmit the next frame. This is true for both the sender of the first
-frame as well as those nodes listening for the line to become idle.) The
-Ethernet is said to be a *1-persistent* protocol because an adaptor with
-a frame to send transmits with probability 1 whenever a busy line goes
-idle. In general, a *p-persistent* algorithm transmits with
-probability :math:`0 \le p \le 1` after a line becomes idle and defers
-with probability *q = 1 - p*. The
-reasoning behind choosing a *p<1* is that there might be multiple
-adaptors waiting for the busy line to become idle, and we don’t want all
-of them to begin transmitting at the same time. If each adaptor
-transmits immediately with a probability of, say, 33%, then up to three
-adaptors can be waiting to transmit and the odds are that only one will
-begin transmitting when the line becomes idle. Despite this reasoning,
-an Ethernet adaptor always transmits immediately after noticing that the
-network has become idle and has been very effective in doing so.
+Khi một bộ chuyển đổi có khung cần gửi và đường truyền đang bận, nó chờ cho đến khi đường truyền rỗi rồi truyền ngay lập tức. (Chính xác hơn, tất cả các bộ chuyển đổi chờ 9,6 μs sau khi một khung kết thúc trước khi bắt đầu truyền khung tiếp theo. Điều này đúng cho cả bộ gửi khung đầu tiên cũng như các nút đang lắng nghe để đường truyền trở nên rỗi.) Ethernet được gọi là giao thức *1-persistent* vì một bộ chuyển đổi có khung cần gửi sẽ truyền với xác suất 1 bất cứ khi nào đường truyền bận trở nên rỗi. Nói chung, một thuật toán *p-persistent* sẽ truyền với xác suất :math:`0 \le p \le 1` sau khi đường truyền trở nên rỗi và trì hoãn với xác suất *q = 1 - p*. Lý do chọn *p<1* là vì có thể có nhiều bộ chuyển đổi đang chờ đường truyền bận trở nên rỗi, và chúng ta không muốn tất cả đều bắt đầu truyền cùng lúc. Nếu mỗi bộ chuyển đổi truyền ngay với xác suất, ví dụ, 33%, thì tối đa ba bộ chuyển đổi có thể chờ truyền và khả năng chỉ một bộ sẽ bắt đầu truyền khi đường truyền rỗi là cao. Tuy nhiên, trên thực tế, một bộ chuyển đổi Ethernet luôn truyền ngay lập tức sau khi phát hiện mạng đã rỗi và điều này đã tỏ ra rất hiệu quả.
 
-To complete the story about *p*-persistent protocols for the case when
-*p<1*, you might wonder how long a sender that loses the coin flip
-(i.e., decides to defer) has to wait before it can transmit. The answer
-for the Aloha network, which originally developed this style of
-protocol, was to divide time into discrete slots, with each slot
-corresponding to the length of time it takes to transmit a full frame.
-Whenever a node has a frame to send and it senses an empty (idle) slot,
-it transmits with probability *p* and defers until the next slot with
-probability *q = 1 - p*. If that next slot is also empty, the node again
-decides to transmit or defer, with probabilities *p* and *q*,
-respectively. If that next slot is not empty—that is, some other station
-has decided to transmit—then the node simply waits for the next idle
-slot and the algorithm repeats.
+Để hoàn thiện câu chuyện về các giao thức *p-persistent* cho trường hợp *p<1*, bạn có thể thắc mắc một bộ gửi bị “thua” khi tung đồng xu (tức là quyết định trì hoãn) sẽ phải chờ bao lâu trước khi có thể truyền. Câu trả lời cho mạng Aloha, vốn phát triển kiểu giao thức này, là chia thời gian thành các khe rời rạc, mỗi khe tương ứng với thời gian cần để truyền một khung đầy đủ. Bất cứ khi nào một nút có khung cần gửi và nó phát hiện một khe rỗi, nó sẽ truyền với xác suất *p* và trì hoãn đến khe tiếp theo với xác suất *q = 1 - p*. Nếu khe tiếp theo cũng rỗi, nút lại quyết định truyền hoặc trì hoãn, với xác suất *p* và *q* tương ứng. Nếu khe tiếp theo không rỗi—tức là, một trạm khác đã quyết định truyền—thì nút chỉ chờ đến khe rỗi tiếp theo và thuật toán lặp lại.
 
-Returning to our discussion of the Ethernet, because there is no
-centralized control it is possible for two (or more) adaptors to begin
-transmitting at the same time, either because both found the line to be
-idle or because both had been waiting for a busy line to become idle.
-When this happens, the two (or more) frames are said to *collide* on the
-network. Each sender, because the Ethernet supports collision detection,
-is able to determine that a collision is in progress. At the moment an
-adaptor detects that its frame is colliding with another, it first makes
-sure to transmit a 32-bit jamming sequence and then stops the
-transmission. Thus, a transmitter will minimally send 96 bits in the
-case of a collision: 64-bit preamble plus 32-bit jamming sequence.
+Quay lại với Ethernet, vì không có kiểm soát tập trung nên có thể hai (hoặc nhiều) bộ chuyển đổi bắt đầu truyền cùng lúc, hoặc vì cả hai đều thấy đường truyền rỗi hoặc vì cả hai đều đã chờ đường truyền bận trở nên rỗi. Khi điều này xảy ra, hai (hoặc nhiều) khung được cho là *va chạm* trên mạng. Mỗi bộ gửi, nhờ Ethernet hỗ trợ phát hiện va chạm, có thể xác định rằng một va chạm đang diễn ra. Ngay khi một bộ chuyển đổi phát hiện khung của nó đang va chạm với khung khác, nó sẽ chắc chắn truyền một chuỗi gây nhiễu 32 bit rồi dừng truyền. Do đó, một bộ gửi sẽ gửi tối thiểu 96 bit trong trường hợp va chạm: 64 bit tiền tố cộng 32 bit chuỗi gây nhiễu.
 
-One way that an adaptor will send only 96 bits—which is sometimes called
-a *runt frame*—is if the two hosts are close to each other. Had the two
-hosts been farther apart, they would have had to transmit longer, and
-thus send more bits, before detecting the collision. In fact, the
-worst-case scenario happens when the two hosts are at opposite ends of
-the Ethernet. To know for sure that the frame it just sent did not
-collide with another frame, the transmitter may need to send as many as
-512 bits. Not coincidentally, every Ethernet frame must be at least
-512 bits (64 bytes) long: 14 bytes of header plus 46 bytes of data plus
-4 bytes of CRC.
+Một trường hợp mà một bộ chuyển đổi chỉ gửi 96 bit—đôi khi gọi là *runt frame*—là khi hai máy chủ ở gần nhau. Nếu hai máy chủ ở xa nhau hơn, chúng sẽ phải truyền lâu hơn, và do đó gửi nhiều bit hơn, trước khi phát hiện va chạm. Thực tế, kịch bản tệ nhất xảy ra khi hai máy chủ ở hai đầu đối diện của Ethernet. Để chắc chắn rằng khung vừa gửi không bị va chạm với khung khác, bộ gửi có thể cần gửi tới 512 bit. Không phải ngẫu nhiên mà mỗi khung Ethernet phải dài ít nhất 512 bit (64 byte): 14 byte tiêu đề cộng 46 byte dữ liệu cộng 4 byte CRC.
 
-Why 512 bits? The answer is related to another question you might ask
-about an Ethernet: Why is its length limited to only 2500 m? Why not 10
-or 1000 km? The answer to both questions has to do with the fact that
-the farther apart two nodes are, the longer it takes for a frame sent by
-one to reach the other, and the network is vulnerable to a collision
-during this time.
+Tại sao lại là 512 bit? Câu trả lời liên quan đến một câu hỏi khác bạn có thể đặt ra về Ethernet: Tại sao chiều dài của nó chỉ giới hạn ở 2500 m? Tại sao không phải 10 hay 1000 km? Câu trả lời cho cả hai câu hỏi đều liên quan đến thực tế là càng xa nhau, hai nút càng mất nhiều thời gian để một khung do một nút gửi đến được nút kia, và mạng dễ bị va chạm trong thời gian này.
 
 .. _fig-worst:
 .. figure:: figures/f02-26-9780123850591.png
    :width: 350px
    :align: center
 
-   Worst-case scenario: (a) A sends a frame at time t;
-   (b) A's frame arrives at B at time t+d; (c) B begins transmitting
-   at time t+d and collides with A's frame; (d) B's runt (32-bit)
-   frame arrives at A at time t+2×d.
+   Kịch bản tệ nhất: (a) A gửi một khung tại thời điểm t;
+   (b) Khung của A đến B tại thời điểm t+d; (c) B bắt đầu truyền
+   tại thời điểm t+d và va chạm với khung của A; (d) Khung “runt” (32 bit)
+   của B đến A tại thời điểm t+2×d.
 
-:numref:`Figure %s <fig-worst>` illustrates the worst-case scenario,
-where hosts A
-and B are at opposite ends of the network. Suppose host A begins
-transmitting a frame at time t, as shown in (a). It takes it one link
-latency (let’s denote the latency as d) for the frame to reach host B.
-Thus, the first bit of A’s frame arrives at B at time t+d, as shown
-in (b). Suppose an instant before host A’s frame arrives (i.e., B still
-sees an idle line), host B begins to transmit its own frame. B’s frame
-will immediately collide with A’s frame, and this collision will be
-detected by host B (c). Host B will send the 32-bit jamming sequence, as
-described above. (B’s frame will be a runt.) Unfortunately, host A will
-not know that the collision occurred until B’s frame reaches it, which
-will happen one link latency later, at time *t+2×d*, as shown in (d).
-Host A must continue to transmit until this time in order to detect the
-collision. In other words, host A must transmit for *2×d* to be sure
-that it detects all possible collisions. Considering that a maximally
-configured Ethernet is 2500 m long, and that there may be up to four
-repeaters between any two hosts, the round-trip delay has been
-determined to be 51.2 μs, which on a 10-Mbps Ethernet corresponds to
-512 bits. The other way to look at this situation is that we need to
-limit the Ethernet’s maximum latency to a fairly small value (e.g.,
-51.2 μs) for the access algorithm to work; hence, an Ethernet’s maximum
-length must be something on the order of 2500 m.
+:numref:`Hình %s <fig-worst>` minh họa kịch bản tệ nhất, khi các máy chủ A và B ở hai đầu đối diện của mạng. Giả sử A bắt đầu truyền một khung tại thời điểm t, như trong (a). Mất một độ trễ liên kết (ký hiệu là d) để khung đến được B. Do đó, bit đầu tiên của khung A đến B tại thời điểm t+d, như trong (b). Giả sử ngay trước khi khung của A đến (tức là B vẫn thấy đường truyền rỗi), B bắt đầu truyền khung của mình. Khung của B sẽ ngay lập tức va chạm với khung của A, và va chạm này sẽ được B phát hiện (c). B sẽ gửi chuỗi gây nhiễu 32 bit như mô tả ở trên. (Khung của B sẽ là “runt”.) Đáng tiếc, A sẽ không biết va chạm xảy ra cho đến khi khung của B đến được nó, điều này sẽ xảy ra sau một độ trễ liên kết nữa, tại thời điểm t+2×d, như trong (d). A phải tiếp tục truyền cho đến thời điểm này để phát hiện mọi va chạm có thể xảy ra. Nói cách khác, A phải truyền trong *2×d* để chắc chắn phát hiện tất cả các va chạm. Xét rằng một Ethernet cấu hình tối đa dài 2500 m, và có thể có tới bốn repeater giữa hai máy chủ bất kỳ, độ trễ vòng đã được xác định là 51,2 μs, tương ứng với 512 bit trên Ethernet 10-Mbps. Một cách nhìn khác là chúng ta cần giới hạn độ trễ tối đa của Ethernet ở một giá trị khá nhỏ (ví dụ, 51,2 μs) để thuật toán truy cập hoạt động; do đó, chiều dài tối đa của một Ethernet phải vào khoảng 2500 m.
 
-Once an adaptor has detected a collision and stopped its transmission,
-it waits a certain amount of time and tries again. Each time it tries to
-transmit but fails, the adaptor doubles the amount of time it waits
-before trying again. This strategy of doubling the delay interval
-between each retransmission attempt is a general technique known as
-*exponential backoff*. More precisely, the adaptor first delays either 0
-or 51.2 μs, selected at random. If this effort fails, it then waits 0,
-51.2, 102.4, or 153.6 μs (selected randomly) before trying again; this
-is k × 51.2 for k=0..3. After the third collision, it waits *k × 51.2*
-for k = 0..2\ :sup:`3` - 1, again selected at random. In general,
-the algorithm randomly selects a *k* between 0 and 2\ :sup:`n` - 1
-and waits k × 51.2 μs, where *n* is the number of collisions
-experienced so far. The adaptor gives up after a given number of tries
-and reports a transmit error to the host. Adaptors typically retry up to
-16 times, although the backoff algorithm caps *n* in the above formula
-at 10.
+Khi một bộ chuyển đổi phát hiện va chạm và dừng truyền, nó sẽ chờ một khoảng thời gian nhất định rồi thử lại. Mỗi lần thử truyền nhưng thất bại, bộ chuyển đổi sẽ nhân đôi khoảng thời gian chờ trước khi thử lại. Chiến lược nhân đôi khoảng chờ giữa các lần thử truyền lại này là một kỹ thuật chung gọi là *exponential backoff* (lùi theo hàm mũ). Cụ thể hơn, bộ chuyển đổi đầu tiên sẽ chờ 0 hoặc 51,2 μs, chọn ngẫu nhiên. Nếu lần này thất bại, nó sẽ chờ 0, 51,2, 102,4 hoặc 153,6 μs (chọn ngẫu nhiên) trước khi thử lại; tức là k × 51,2 với k=0..3. Sau va chạm thứ ba, nó sẽ chờ *k × 51,2* với k = 0..2³ - 1, lại chọn ngẫu nhiên. Nói chung, thuật toán chọn ngẫu nhiên một *k* trong khoảng 0 đến 2ⁿ - 1 và chờ k × 51,2 μs, với *n* là số lần va chạm đã gặp. Bộ chuyển đổi sẽ bỏ cuộc sau một số lần thử nhất định và báo lỗi truyền cho máy chủ. Thông thường, các bộ chuyển đổi thử lại tối đa 16 lần, mặc dù thuật toán lùi theo hàm mũ sẽ giới hạn *n* trong công thức trên ở mức 10.
 
-2.6.3 Longevity of Ethernet
+2.6.3 Tuổi Thọ của Ethernet
 ---------------------------
 
-Ethernet has been the dominant local area network technology for over 30
-years. Today it is typically deployed point-to-point rather than tapping
-into a coax cable, it often runs at speeds of 1 or 10 Gbps rather than
-10 Mbps, and it allows jumbo packets with up to 9000 bytes of data
-rather than 1500 bytes. But, it remains backwards compatible with the
-original standard. This makes it worth saying a few words about why
-Ethernets have been so successful, so that we can understand the
-properties we should emulate with any technology that tries to replace
-it.
+Ethernet đã là công nghệ mạng cục bộ thống trị trong hơn 30 năm. Ngày nay nó thường được triển khai điểm-điểm thay vì tap vào cáp đồng trục, thường chạy ở tốc độ 1 hoặc 10 Gbps thay vì 10 Mbps, và cho phép các gói jumbo lên tới 9000 byte dữ liệu thay vì 1500 byte. Tuy nhiên, nó vẫn tương thích ngược với tiêu chuẩn ban đầu. Điều này khiến chúng ta nên nói vài lời về lý do tại sao Ethernet lại thành công đến vậy, để chúng ta có thể hiểu những đặc tính nào nên được mô phỏng với bất kỳ công nghệ nào muốn thay thế nó.
 
-First, an Ethernet is extremely easy to administer and maintain: There
-is no routing or configuration tables to be kept up-to-date, and it is
-easy to add a new host to the network. It is hard to imagine a simpler
-network to administer. Second, it is inexpensive: cable/fiber is
-relatively cheap, and the only other cost is the network adaptor on each
-host. Ethernet became deeply entrenched for these reasons, and any
-switch-based approach that aspired to displace it required additional
-investment in infrastructure (the switches), on top of the cost of each
-adaptor. The switch-based variant of Ethernet did eventually succeed in
-replacing multi-access Ethernet, but this is primarily because it
-could be *deployed incrementally*—with some hosts connected by
-point-to-point links to switches while others remained tapped into
-coax and connected to repeaters or hubs—all the while retaining the
-simplicity of network administration.
-
+Thứ nhất, Ethernet cực kỳ dễ quản trị và bảo trì: Không có bảng định tuyến hay cấu hình nào cần cập nhật, và việc thêm một máy chủ mới vào mạng rất dễ dàng. Thật khó tưởng tượng một mạng nào đơn giản hơn để quản trị. Thứ hai, nó rẻ: cáp/quang khá rẻ, và chi phí duy nhất khác là bộ chuyển đổi mạng trên mỗi máy chủ. Ethernet đã ăn sâu vào thực tế vì những lý do này, và bất kỳ phương pháp dựa trên switch nào muốn thay thế nó đều đòi hỏi đầu tư thêm vào hạ tầng (các switch), ngoài chi phí cho mỗi bộ chuyển đổi. Biến thể dựa trên switch của Ethernet cuối cùng đã thành công trong việc thay thế Ethernet truy cập đa điểm, nhưng chủ yếu là vì nó có thể *triển khai từng bước*—với một số máy chủ kết nối điểm-điểm tới switch trong khi các máy chủ khác vẫn tap vào cáp đồng trục và kết nối với repeater hoặc hub—tất cả vẫn giữ được sự đơn giản trong quản trị mạng.
