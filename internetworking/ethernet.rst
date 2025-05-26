@@ -1,81 +1,35 @@
-3.2 Switched Ethernet
-=====================
+3.2 Ethernet chuyển mạch
+========================
 
-Having discussed some of the basic ideas behind switching, we now
-focus more closely on a specific switching technology: *Switched
-Ethernet*. The switches used to build such networks, which are often
-referred to as *L2 switches*, are widely used in campus and enterprise
-networks. Historically, they were more commonly referred to as
-*bridges* because they were used to “bridge” ethernet segments to
-build an *extended LAN*. But today most networks deploy Ethernet in a
-point-to-point configuration, with these links interconnected by L2
-switches to form a switched Ethernet.
+Sau khi đã thảo luận một số ý tưởng cơ bản về chuyển mạch, giờ chúng ta sẽ tập trung kỹ hơn vào một công nghệ chuyển mạch cụ thể: *Ethernet chuyển mạch* (*Switched Ethernet*). Các switch dùng để xây dựng các mạng như vậy, thường được gọi là *switch tầng 2* (*L2 switches*), được sử dụng rộng rãi trong các mạng campus và doanh nghiệp. Trước đây, chúng thường được gọi là *bridge* vì chúng được dùng để “bắc cầu” các đoạn Ethernet nhằm xây dựng một *LAN mở rộng* (*extended LAN*). Nhưng ngày nay, hầu hết các mạng triển khai Ethernet theo cấu hình điểm-điểm, với các liên kết này được kết nối với nhau qua các switch tầng 2 để tạo thành một Ethernet chuyển mạch.
 
-The following starts with the historical perspective (using bridges to
-connect a set of Ethernet segments), and then shifts to the perspective
-in wide-spread use today (using L2 switches to connect a set of
-point-to-point links). But whether we call the device a bridge or a
-switch—and the network you build an extended LAN or a switched
-Ethernet—the two behave in *exactly* the same way.
+Phần sau đây bắt đầu với góc nhìn lịch sử (dùng bridge để kết nối một tập các đoạn Ethernet), rồi chuyển sang góc nhìn phổ biến ngày nay (dùng switch tầng 2 để kết nối một tập các liên kết điểm-điểm). Nhưng dù ta gọi thiết bị đó là bridge hay switch—và mạng bạn xây là LAN mở rộng hay Ethernet chuyển mạch—thì cả hai đều hoạt động *chính xác* như nhau.
 
-To begin, suppose you have a pair of Ethernets that you want to
-interconnect. One approach you might try is to put a repeater between
-them. This would not be a workable solution, however, if doing so
-exceeded the physical limitations of the Ethernet. (Recall that no more
-than four repeaters between any pair of hosts and no more than a total of
-2500 m in length are allowed.) An alternative would be to put a node
-with a pair of Ethernet adaptors between the two Ethernets and have the
-node forward frames from one Ethernet to the other. This node would
-differ from a repeater, which operates on bits, not frames, and just
-blindly copies the bits received on one interface to another. Instead,
-this node would fully implement the Ethernet’s collision detection and
-media access protocols on each interface. Hence, the length and
-number-of-host restrictions of the Ethernet, which are all about
-managing collisions, would not apply to the combined pair of Ethernets
-connected in this way. This device operates in promiscuous mode,
-accepting all frames transmitted on either of the Ethernets, and
-forwarding them to the other.
+Đầu tiên, giả sử bạn có một cặp mạng Ethernet mà bạn muốn kết nối với nhau. Một cách tiếp cận là đặt một repeater giữa chúng. Tuy nhiên, điều này sẽ không khả thi nếu làm vậy vượt quá các giới hạn vật lý của Ethernet. (Nhớ rằng không được có quá bốn repeater giữa bất kỳ cặp máy chủ nào và tổng chiều dài không quá 2500 m.) Một lựa chọn khác là đặt một nút với hai card mạng Ethernet giữa hai mạng này và để nút đó chuyển tiếp frame từ một Ethernet sang Ethernet còn lại. Nút này sẽ khác với repeater, vốn hoạt động ở mức bit, không phải frame, và chỉ đơn giản sao chép các bit nhận được từ một giao diện sang giao diện khác. Thay vào đó, nút này sẽ thực hiện đầy đủ các giao thức phát hiện va chạm và truy cập môi trường của Ethernet trên từng giao diện. Do đó, các giới hạn về chiều dài và số lượng máy chủ của Ethernet, vốn liên quan đến quản lý va chạm, sẽ không áp dụng cho cặp Ethernet kết nối theo cách này. Thiết bị này hoạt động ở chế độ promiscuous, nhận tất cả các frame truyền trên bất kỳ Ethernet nào và chuyển tiếp chúng sang Ethernet còn lại.
 
-In their simplest variants, bridges simply accept LAN frames on their
-inputs and forward them out on all other outputs. This simple strategy
-was used by early bridges but has some pretty serious limitations as
-we’ll see below. A number of refinements were added over the years
-to make bridges an effective mechanism for interconnecting a set of
-LANs. The rest of this section fills in the more interesting details.
+Ở dạng đơn giản nhất, bridge chỉ nhận các frame LAN ở đầu vào và chuyển tiếp chúng ra tất cả các đầu ra khác. Chiến lược đơn giản này được dùng bởi các bridge đời đầu nhưng có một số hạn chế nghiêm trọng như ta sẽ thấy bên dưới. Qua nhiều năm, nhiều cải tiến đã được bổ sung để làm cho bridge trở thành một cơ chế hiệu quả để kết nối một tập các LAN. Phần còn lại của mục này sẽ trình bày các chi tiết thú vị hơn.
 
-3.2.1 Learning Bridges
-----------------------
+3.2.1 Bridge học địa chỉ (Learning Bridges)
+-------------------------------------------
 
-The first optimization we can make to a bridge is to observe that it
-need not forward all frames that it receives. Consider the bridge in
-:numref:`Figure %s <fig-elan2>`. Whenever a frame from host A that is
-addressed to host B arrives on port 1, there is no need for the bridge
-to forward the frame out over port 2. The question, then, is how does
-a bridge come to learn on which port the various hosts reside?
+Tối ưu hóa đầu tiên mà ta có thể thực hiện với bridge là nhận ra rằng nó không cần chuyển tiếp tất cả các frame mà nó nhận được. Xét bridge trong :numref:`Hình %s <fig-elan2>`. Bất cứ khi nào một frame từ host A gửi tới host B đến cổng 1, bridge không cần chuyển tiếp frame đó ra cổng 2. Vậy làm sao bridge biết được các host nằm ở cổng nào?
 
 .. _fig-elan2:
 .. figure:: figures/f03-09-9780123850591.png
    :width: 500px
    :align: center
 
-   Illustration of a learning bridge.
+   Minh họa bridge học địa chỉ.
 
-One option would be to have a human download a table into the bridge
-similar to the one given in :numref:`Table %s <tab-learn>`. Then,
-whenever the bridge receives a frame on port 1 that is addressed to
-host A, it would not forward the frame out on port 2; there would be
-no need because host A would have already directly received the frame
-on the LAN connected to port 1. Anytime a frame addressed to host A
-was received on port 2, the bridge would forward the frame out on
-port 1.
+Một lựa chọn là để con người tải một bảng vào bridge giống như trong :numref:`Bảng %s <tab-learn>`. Khi đó, bất cứ khi nào bridge nhận một frame ở cổng 1 gửi tới host A, nó sẽ không chuyển tiếp frame ra cổng 2; không cần thiết vì host A đã trực tiếp nhận frame trên LAN kết nối với cổng 1. Bất cứ khi nào một frame gửi tới host A được nhận ở cổng 2, bridge sẽ chuyển tiếp frame ra cổng 1.
 
 .. _tab-learn:
-.. table:: Forwarding Table Maintained by a Bridge.
+.. table:: Bảng chuyển tiếp do bridge duy trì.
    :align: center
    :widths: auto
 
    +------+------+
-   | Host | Port |
+   | Host | Cổng |
    +======+======+
    | A    | 1    |
    +------+------+
@@ -90,41 +44,16 @@ port 1.
    | Z    | 2    |
    +------+------+
 
-Having a human maintain this table is too burdensome, and there is a
-simple trick by which a bridge can learn this information for itself.
-The idea is for each bridge to inspect the *source* address in all the
-frames it receives. Thus, when host A sends a frame to a host on either
-side of the bridge, the bridge receives this frame and records the fact
-that a frame from host A was just received on port 1. In this way, the
-bridge can build a table just like :numref:`Table %s <tab-learn>`.
+Việc để con người duy trì bảng này là quá phiền phức, và có một mẹo đơn giản để bridge tự học thông tin này. Ý tưởng là mỗi bridge sẽ kiểm tra địa chỉ *nguồn* trong tất cả các frame mà nó nhận được. Do đó, khi host A gửi một frame tới một host ở bất kỳ phía nào của bridge, bridge sẽ nhận frame này và ghi nhận rằng vừa nhận một frame từ host A ở cổng 1. Bằng cách này, bridge có thể xây dựng một bảng giống như :numref:`Bảng %s <tab-learn>`.
 
-Note that a bridge using such a table implements a version of the
-datagram (or connectionless) model of forwarding described earlier. Each
-packet carries a global address, and the bridge decides which output to
-send a packet on by looking up that address in a table.
+Lưu ý rằng bridge sử dụng bảng như vậy thực hiện một phiên bản của mô hình datagram (hoặc không kết nối) đã mô tả trước đó. Mỗi gói mang một địa chỉ toàn cục, và bridge quyết định gửi gói ra đầu ra nào bằng cách tra cứu địa chỉ đó trong bảng.
 
-When a bridge first boots, this table is empty; entries are added over
-time. Also, a timeout is associated with each entry, and the bridge
-discards the entry after a specified period of time. This is to protect
-against the situation in which a host—and, as a consequence, its LAN
-address—is moved from one network to another. Thus, this table is not
-necessarily complete. Should the bridge receive a frame that is
-addressed to a host not currently in the table, it goes ahead and
-forwards the frame out on all the other ports. In other words, this
-table is simply an optimization that filters out some frames; it is not
-required for correctness.
+Khi bridge vừa khởi động, bảng này rỗng; các mục được thêm dần theo thời gian. Ngoài ra, mỗi mục có một thời gian timeout, và bridge sẽ loại bỏ mục đó sau một khoảng thời gian nhất định. Điều này nhằm bảo vệ trường hợp một host—và do đó địa chỉ LAN của nó—bị chuyển sang mạng khác. Do đó, bảng này không nhất thiết phải đầy đủ. Nếu bridge nhận một frame gửi tới một host chưa có trong bảng, nó sẽ chuyển tiếp frame ra tất cả các cổng còn lại. Nói cách khác, bảng này chỉ là một tối ưu hóa để lọc bớt một số frame; nó không bắt buộc để đảm bảo tính đúng đắn.
 
-3.2.2 Implementation
---------------------
+3.2.2 Triển khai (Implementation)
+---------------------------------
 
-The code that implements the learning bridge algorithm is quite
-simple, and we sketch it here. Structure ``BridgeEntry`` defines a
-single entry in the bridge’s forwarding table; these are stored in a
-``Map`` structure (which supports ``mapCreate``, ``mapBind``, and
-``mapResolve`` operations) to enable entries to be efficiently located
-when packets arrive from sources already in the table. The constant
-``MAX_TTL`` specifies how long an entry is kept in the table before it
-is discarded.
+Mã thực hiện thuật toán bridge học địa chỉ khá đơn giản, và chúng tôi phác thảo ở đây. Cấu trúc ``BridgeEntry`` định nghĩa một mục trong bảng chuyển tiếp của bridge; các mục này được lưu trong một cấu trúc ``Map`` (hỗ trợ các thao tác ``mapCreate``, ``mapBind``, và ``mapResolve``) để cho phép tra cứu mục hiệu quả khi các gói đến từ các nguồn đã có trong bảng. Hằng số ``MAX_TTL`` xác định thời gian một mục được giữ trong bảng trước khi bị loại bỏ.
 
 .. code-block:: c
 
@@ -141,16 +70,7 @@ is discarded.
    int     numEntries = 0;
    Map     bridgeMap = mapCreate(BRIDGE_TAB_SIZE, sizeof(BridgeEntry));
 
-The routine that updates the forwarding table when a new packet arrives
-is given by ``updateTable``. The arguments passed are the source media
-access control (MAC) address contained in the packet and the interface
-number on which it was received. Another routine, not shown here, is
-invoked at regular intervals, scans the entries in the forwarding table,
-and decrements the ``TTL`` (time to live) field of each entry,
-discarding any entries whose ``TTL`` has reached 0. Note that the
-``TTL`` is reset to ``MAX_TTL`` every time a packet arrives to refresh
-an existing table entry and that the interface on which the destination
-can be reached is updated to reflect the most recently received packet.
+Hàm cập nhật bảng chuyển tiếp khi một gói mới đến được gọi là ``updateTable``. Tham số truyền vào là địa chỉ MAC nguồn chứa trong gói và số hiệu giao diện mà nó nhận được. Một hàm khác, không trình bày ở đây, sẽ được gọi định kỳ, quét các mục trong bảng chuyển tiếp và giảm trường ``TTL`` (thời gian sống) của mỗi mục, loại bỏ các mục có ``TTL`` bằng 0. Lưu ý rằng ``TTL`` được đặt lại thành ``MAX_TTL`` mỗi khi một gói đến để làm mới mục bảng hiện có và giao diện mà đích có thể đến được cũng được cập nhật theo gói nhận gần nhất.
 
 .. code-block:: c
 
@@ -161,389 +81,152 @@ can be reached is updated to reflect the most recently received packet.
 
        if (mapResolve(bridgeMap, &src, (void **)&b) == FALSE )
        {
-           /* this address is not in the table, so try to add it */
+           /* địa chỉ này chưa có trong bảng, thử thêm vào */
            if (numEntries < BRIDGE_TAB_SIZE)
            {
                b = NEW(BridgeEntry);
                b->binding = mapBind( bridgeMap, &src, b);
-               /* use source address of packet as dest. address in table */
+               /* dùng địa chỉ nguồn của gói làm địa chỉ đích trong bảng */
                b->destination = src;
                numEntries++;
            }
            else
            {
-               /* can't fit this address in the table now, so give up */
+               /* không thể thêm địa chỉ này vào bảng lúc này, bỏ qua */
                return;
            }
        }
-       /* reset TTL and use most recent input interface */
+       /* đặt lại TTL và dùng giao diện vào mới nhất */
        b->TTL = MAX_TTL;
        b->ifnumber = inif;
    }
 
-Note that this implementation adopts a simple strategy in the case where
-the bridge table has become full to capacity—it simply fails to add the
-new address. Recall that completeness of the bridge table is not
-necessary for correct forwarding; it just optimizes performance. If
-there is some entry in the table that is not currently being used, it
-will eventually time out and be removed, creating space for a new entry.
-An alternative approach would be to invoke some sort of cache
-replacement algorithm on finding the table full; for example, we might
-locate and remove the entry with the smallest TTL to accommodate the new
-entry.
+Lưu ý rằng triển khai này dùng chiến lược đơn giản khi bảng bridge đã đầy—nó chỉ đơn giản không thêm địa chỉ mới. Nhớ rằng bảng bridge không cần phải đầy đủ để chuyển tiếp đúng; nó chỉ tối ưu hóa hiệu năng. Nếu có mục nào trong bảng không còn được dùng, nó sẽ hết hạn và bị loại bỏ, tạo chỗ cho mục mới. Một cách tiếp cận khác là dùng một thuật toán thay thế bộ nhớ đệm khi bảng đầy; ví dụ, ta có thể tìm và loại bỏ mục có TTL nhỏ nhất để nhường chỗ cho mục mới.
 
-3.2.3 Spanning Tree Algorithm
------------------------------
+3.2.3 Thuật toán cây bao phủ (Spanning Tree Algorithm)
+------------------------------------------------------
 
-The preceding strategy works just fine until the network has a loop in
-it, in which case it fails in a horrible way—frames potentially get
-forwarded forever. This is easy to see in the example depicted in
-:numref:`Figure %s <fig-elan3>`, where switches S1, S4, and S6 form a loop.
+Chiến lược trên hoạt động tốt cho đến khi mạng có một vòng lặp, khi đó nó sẽ thất bại nghiêm trọng—các frame có thể bị chuyển tiếp mãi mãi. Điều này dễ thấy trong ví dụ ở :numref:`Hình %s <fig-elan3>`, nơi các switch S1, S4 và S6 tạo thành một vòng lặp.
 
 .. _fig-elan3:
 .. figure:: figures/impl/Slide5.png
    :width: 500px
    :align: center
 
-   Switched Ethernet with loops.
+   Ethernet chuyển mạch có vòng lặp.
 
-Note that we are now making the shift from calling the each forwarding
-device a bridge (connecting segments that might reach multiple other
-devices) to instead calling them L2 switches (connecting point-to-point
-links that reach just one other device). To keep the example manageable,
-we include just three hosts. In practice, switches typically have 16,
-24, or 48 ports, meaning they are able to connect to that many hosts
-(and other switches).
+Lưu ý rằng giờ chúng ta chuyển từ gọi mỗi thiết bị chuyển tiếp là bridge (kết nối các đoạn có thể nối tới nhiều thiết bị khác) sang gọi là switch tầng 2 (kết nối các liên kết điểm-điểm chỉ tới một thiết bị khác). Để ví dụ dễ quản lý, chúng tôi chỉ đưa vào ba host. Trong thực tế, các switch thường có 16, 24 hoặc 48 cổng, nghĩa là chúng có thể kết nối tới từng đó host (và các switch khác).
 
-In our example switched network, suppose that a packet enters switch S4
-from Host C and that the destination address is one not yet in any
-switch's forwarding table: S4 sends a copy of the packet out its two
-other ports: to switches S1 and S6. Switch S6 forwards the packet onto
-S1 (and meanwhile, S1 forwards the packet onto S6), both of which in
-turn forward their packets back to S4. Switch S4 still doesn’t have this
-destination in its table, so it forwards the packet out its two other
-ports. There is nothing to stop this cycle from repeating endlessly,
-with packets looping in both directions among S1, S4, and S6.
+Trong mạng chuyển mạch ví dụ, giả sử một gói vào switch S4 từ Host C và địa chỉ đích chưa có trong bảng chuyển tiếp của bất kỳ switch nào: S4 gửi một bản sao gói ra hai cổng còn lại: tới switch S1 và S6. Switch S6 chuyển tiếp gói tới S1 (đồng thời, S1 chuyển tiếp gói tới S6), cả hai lại chuyển tiếp gói về S4. S4 vẫn chưa có đích này trong bảng, nên lại chuyển tiếp gói ra hai cổng còn lại. Không có gì ngăn chu trình này lặp lại mãi mãi, với các gói lặp vòng giữa S1, S4 và S6.
 
-Why would a switched Ethernet (or extended LAN) come to have a loop in
-it? One possibility is that the network is managed by more than one
-administrator, for example, because it spans multiple departments in an
-organization. In such a setting, it is possible that no single person
-knows the entire configuration of the network, meaning that a switch
-that closes a loop might be added without anyone knowing. A second, more
-likely scenario is that loops are built into the network on purpose—to
-provide redundancy in case of failure. After all, a network with no
-loops needs only one link failure to become split into two separate
-partitions.
+Tại sao một Ethernet chuyển mạch (hoặc LAN mở rộng) lại có vòng lặp? Một khả năng là mạng được quản lý bởi nhiều quản trị viên, ví dụ vì nó trải rộng qua nhiều phòng ban trong tổ chức. Trong trường hợp này, có thể không ai biết toàn bộ cấu hình mạng, nghĩa là một switch đóng vòng lặp có thể được thêm vào mà không ai biết. Một kịch bản khác, phổ biến hơn, là các vòng lặp được xây dựng có chủ đích—để cung cấp dự phòng khi có sự cố. Dù sao, một mạng không có vòng lặp chỉ cần một liên kết bị hỏng là bị chia tách thành hai phần riêng biệt.
 
-Whatever the cause, switches must be able to correctly handle loops.
-This problem is addressed by having the switches run a distributed
-*spanning tree* algorithm. If you think of the network as being
-represented by a graph that possibly has loops (cycles), then a
-spanning tree is a subgraph of this graph that covers (spans) all the
-vertices but contains no cycles. That is, a spanning tree keeps all of
-the vertices of the original graph but throws out some of the
-edges. For example, :numref:`Figure %s <fig-graphs>` shows a cyclic
-graph on the left and one of possibly many spanning trees on the
-right.
+Dù nguyên nhân là gì, switch phải có khả năng xử lý đúng các vòng lặp. Vấn đề này được giải quyết bằng cách cho các switch chạy một thuật toán *cây bao phủ* phân tán. Nếu bạn coi mạng là một đồ thị có thể có vòng lặp (chu trình), thì cây bao phủ là một đồ thị con của đồ thị này bao phủ (span) tất cả các đỉnh nhưng không chứa chu trình nào. Tức là, cây bao phủ giữ lại tất cả các đỉnh của đồ thị gốc nhưng loại bỏ một số cạnh. Ví dụ, :numref:`Hình %s <fig-graphs>` cho thấy một đồ thị có chu trình ở bên trái và một trong nhiều cây bao phủ ở bên phải.
 
 .. _fig-graphs:
 .. figure:: figures/f03-11-9780123850591.png
    :width: 500px
    :align: center
 
-   Example of (a) a cyclic graph; (b) a corresponding spanning
-   tree.
+   Ví dụ về (a) đồ thị có chu trình; (b) cây bao phủ tương ứng.
 
-The idea of a spanning tree is simple enough: It’s a subset of the
-actual network topology that has no loops and that reaches all the
-devices in the network. The hard part is how all of the switches
-coordinate their decisions to arrive at a single view of the spanning
-tree. After all, one topology is typically able to be covered by
-multiple spanning trees. The answer lies in the spanning tree protocol,
-which we’ll describe now.
+Ý tưởng về cây bao phủ khá đơn giản: Đó là một tập con của cấu trúc liên kết mạng thực tế không có vòng lặp và bao phủ tất cả các thiết bị trong mạng. Phần khó là làm sao tất cả các switch phối hợp để đạt được một quan điểm chung về cây bao phủ. Dù sao, một cấu trúc liên kết thường có thể có nhiều cây bao phủ. Câu trả lời nằm ở giao thức cây bao phủ, sẽ được mô tả ngay sau đây.
 
-The spanning tree algorithm, which was developed by Radia Perlman, then
-at the Digital Equipment Corporation, is a protocol used by a set of
-switches to agree upon a spanning tree for a particular network. (The
-IEEE 802.1 specification is based on this algorithm.) In practice, this
-means that each switch decides the ports over which it is and is not
-willing to forward frames. In a sense, it is by removing ports from the
-topology that the network is reduced to an acyclic tree. It is even
-possible that an entire switch will not participate in forwarding
-frames, which seems kind of strange at first glance. The algorithm is
-dynamic, however, meaning that the switches are always prepared to
-reconfigure themselves into a new spanning tree should some switch fail,
-and so those unused ports and switches provide the redundant capacity
-needed to recover from failures.
+Thuật toán cây bao phủ, do Radia Perlman phát triển khi làm việc tại Digital Equipment Corporation, là một giao thức để một tập các switch đồng thuận về một cây bao phủ cho một mạng nhất định. (Chuẩn IEEE 802.1 dựa trên thuật toán này.) Trong thực tế, điều này có nghĩa là mỗi switch quyết định các cổng mà nó sẽ và sẽ không chuyển tiếp frame. Theo một nghĩa nào đó, bằng cách loại bỏ các cổng khỏi cấu trúc liên kết, mạng được giảm thành một cây không chu trình. Thậm chí có thể một switch sẽ không tham gia chuyển tiếp frame, điều này thoạt nhìn có vẻ lạ. Tuy nhiên, thuật toán là động, nghĩa là các switch luôn sẵn sàng tự cấu hình lại thành một cây bao phủ mới nếu có switch bị hỏng, và do đó các cổng và switch không dùng đến cung cấp khả năng dự phòng cần thiết để phục hồi khi có sự cố.
 
-The main idea of the spanning tree is for the switches to select the
-ports over which they will forward frames. The algorithm selects ports
-as follows. Each switch has a unique identifier; for our purposes, we
-use the labels S1, S2, S3, and so on. The algorithm first elects the
-switch with the smallest ID as the root of the spanning tree; exactly
-how this election takes place is described below. The root switch always
-forwards frames out over all of its ports. Next, each switch computes
-the shortest path to the root and notes which of its ports is on this
-path. This port is also selected as the switch’s preferred path to the
-root. Finally, to account for the possibility there could be another
-switch connected to its ports, the switch elects a single *designated*
-switch that will be responsible for forwarding frames toward the root.
-Each designated switch is the one that is closest to the root. If two or
-more switches are equally close to the root, then the switches’
-identifiers are used to break ties, and the smallest ID wins. Of course,
-each switch might be connected to more than one other switch, so it
-participates in the election of a designated switch for each such port.
-In effect, this means that each switch decides if it is the designated
-switch relative to each of its ports. The switch forwards frames over
-those ports for which it is the designated switch.
+Ý tưởng chính của cây bao phủ là các switch chọn các cổng mà chúng sẽ chuyển tiếp frame. Thuật toán chọn cổng như sau. Mỗi switch có một định danh duy nhất; ở đây, chúng tôi dùng nhãn S1, S2, S3, v.v. Thuật toán đầu tiên bầu switch có ID nhỏ nhất làm gốc của cây bao phủ; cách bầu chọn sẽ được mô tả bên dưới. Switch gốc luôn chuyển tiếp frame ra tất cả các cổng của nó. Tiếp theo, mỗi switch tính đường ngắn nhất tới gốc và ghi nhận cổng nào nằm trên đường này. Cổng này cũng được chọn là đường ưu tiên tới gốc của switch. Cuối cùng, để xét khả năng có switch khác kết nối tới các cổng của mình, switch bầu một *switch đại diện* chịu trách nhiệm chuyển tiếp frame về phía gốc. Switch đại diện là switch gần gốc nhất. Nếu hai hoặc nhiều switch cùng gần gốc như nhau, thì dùng ID để phân xử, ID nhỏ nhất thắng. Tất nhiên, mỗi switch có thể kết nối tới nhiều switch khác, nên nó tham gia bầu switch đại diện cho từng cổng. Thực chất, điều này nghĩa là mỗi switch quyết định nó có phải là switch đại diện so với từng cổng không. Switch chuyển tiếp frame qua các cổng mà nó là switch đại diện.
 
 .. _fig-elan4:
 .. figure:: figures/impl/Slide6.png
    :width: 500px
    :align: center
 
-   Spanning tree with some ports not selected.
+   Cây bao phủ với một số cổng không được chọn.
 
-:numref:`Figure %s <fig-elan4>` shows the spanning tree that
-corresponds to the network shown in :numref:`Figure %s
-<fig-elan3>`. In this example, S1 is the root, since it has the
-smallest ID. Notice that S3 and S5 are connected to each other, but S5
-is the designated switch since it is closer to the root. Similarly, S5
-and S7 are connected to each other, but in this case S5 is the
-designated switch since it has the smaller ID; both are an equal
-distance from S1.
+:numref:`Hình %s <fig-elan4>` cho thấy cây bao phủ tương ứng với mạng ở :numref:`Hình %s <fig-elan3>`. Trong ví dụ này, S1 là gốc vì nó có ID nhỏ nhất. Lưu ý rằng S3 và S5 kết nối với nhau, nhưng S5 là switch đại diện vì nó gần gốc hơn. Tương tự, S5 và S7 kết nối với nhau, nhưng lần này S5 là switch đại diện vì nó có ID nhỏ hơn; cả hai đều cách S1 một khoảng như nhau.
 
-While it is possible for a human to look at the network given in
-:numref:`Figure %s <fig-elan3>` and to compute the spanning tree given
-in the :numref:`Figure %s <fig-elan4>` according to the rules given
-above, the switches do not have the luxury of being able to see the
-topology of the entire network, let alone peek inside other switches
-to see their ID. Instead, they have to exchange configuration messages
-with each other and then decide whether or not they are the root or a
-designated switch based on these messages.
+Dù con người có thể nhìn vào mạng trong :numref:`Hình %s <fig-elan3>` và tính toán cây bao phủ trong :numref:`Hình %s <fig-elan4>` theo các quy tắc trên, các switch không có đặc quyền nhìn thấy toàn bộ cấu trúc mạng, càng không thể nhìn vào switch khác để biết ID của chúng. Thay vào đó, chúng phải trao đổi các thông điệp cấu hình với nhau rồi quyết định mình có phải là gốc hay switch đại diện dựa trên các thông điệp này.
 
-Specifically, the configuration messages contain three pieces of
-information:
+Cụ thể, thông điệp cấu hình chứa ba thông tin:
 
-1. The ID for the switch that is sending the message.
+1. ID của switch gửi thông điệp.
 
-2. The ID for what the sending switch believes to be the root switch.
+2. ID của switch mà switch gửi tin cho là gốc.
 
-3. The distance, measured in hops, from the sending switch to the root
-   switch.
+3. Khoảng cách, tính bằng số bước nhảy, từ switch gửi tin tới switch gốc.
 
-Each switch records the current *best* configuration message it has seen
-on each of its ports (“best” is defined below), including both messages
-it has received from other switches and messages that it has itself
-transmitted.
+Mỗi switch ghi nhận thông điệp cấu hình *tốt nhất* mà nó thấy trên mỗi cổng (“tốt nhất” được định nghĩa bên dưới), bao gồm cả thông điệp nhận từ switch khác và thông điệp chính nó gửi.
 
-Initially, each switch thinks it is the root, and so it sends a
-configuration message out on each of its ports identifying itself as the
-root and giving a distance to the root of 0. Upon receiving a
-configuration message over a particular port, the switch checks to see
-if that new message is better than the current best configuration
-message recorded for that port. The new configuration message is
-considered *better* than the currently recorded information if any of
-the following is true:
+Ban đầu, mỗi switch nghĩ mình là gốc, nên gửi thông điệp cấu hình ra tất cả các cổng, nhận mình là gốc và khoảng cách tới gốc là 0. Khi nhận được thông điệp cấu hình qua một cổng, switch kiểm tra xem thông điệp mới có tốt hơn thông tin hiện tại ghi nhận cho cổng đó không. Thông điệp mới được coi là *tốt hơn* nếu một trong các điều sau đúng:
 
--  It identifies a root with a smaller ID.
+-  Nó nhận diện một gốc có ID nhỏ hơn.
 
--  It identifies a root with an equal ID but with a shorter distance.
+-  Nó nhận diện một gốc có ID bằng nhưng khoảng cách ngắn hơn.
 
--  The root ID and distance are equal, but the sending switch has a
-   smaller ID
+-  ID gốc và khoảng cách bằng nhau, nhưng switch gửi tin có ID nhỏ hơn.
 
-If the new message is better than the currently recorded information,
-the switch discards the old information and saves the new information.
-However, it first adds 1 to the distance-to-root field since the switch
-is one hop farther away from the root than the switch that sent the
-message.
+Nếu thông điệp mới tốt hơn thông tin hiện tại, switch loại bỏ thông tin cũ và lưu thông tin mới. Tuy nhiên, trước đó nó cộng thêm 1 vào trường khoảng cách tới gốc vì switch này cách gốc xa hơn switch gửi tin một bước.
 
-When a switch receives a configuration message indicating that it is not
-the root—that is, a message from a switch with a smaller ID—the switch
-stops generating configuration messages on its own and instead only
-forwards configuration messages from other switches, after first adding
-1 to the distance field. Likewise, when a switch receives a
-configuration message that indicates it is not the designated switch for
-that port—that is, a message from a switch that is closer to the root or
-equally far from the root but with a smaller ID—the switch stops sending
-configuration messages over that port. Thus, when the system stabilizes,
-only the root switch is still generating configuration messages, and the
-other switches are forwarding these messages only over ports for which
-they are the designated switch. At this point, a spanning tree has been
-built, and all the switches are in agreement on which ports are in use
-for the spanning tree. Only those ports may be used for forwarding data
-packets.
+Khi một switch nhận thông điệp cấu hình cho thấy nó không phải là gốc—tức là thông điệp từ switch có ID nhỏ hơn—switch ngừng tự gửi thông điệp cấu hình và chỉ chuyển tiếp thông điệp từ switch khác, sau khi cộng thêm 1 vào trường khoảng cách. Tương tự, khi switch nhận thông điệp cấu hình cho thấy nó không phải là switch đại diện cho cổng đó—tức là thông điệp từ switch gần gốc hơn hoặc cùng khoảng cách nhưng ID nhỏ hơn—switch ngừng gửi thông điệp cấu hình qua cổng đó. Như vậy, khi hệ thống ổn định, chỉ switch gốc còn gửi thông điệp cấu hình, các switch khác chỉ chuyển tiếp thông điệp này qua các cổng mà chúng là switch đại diện. Lúc này, một cây bao phủ đã được xây dựng, và tất cả các switch đồng thuận về các cổng được dùng cho cây bao phủ. Chỉ các cổng này được dùng để chuyển tiếp gói dữ liệu.
 
-Let’s see how this works with an example. Consider what would happen in
-:numref:`Figure %s <fig-elan4>` if the power had just been restored to a campus,
-so that all the switches boot at about the same time. All the switches
-would start off by claiming to be the root. We denote a configuration
-message from node X in which it claims to be distance d from root node Y
-as (Y,d,X). Focusing on the activity at S3, a sequence of events would
-unfold as follows:
+Hãy xem ví dụ. Giả sử trong :numref:`Hình %s <fig-elan4>`, vừa có điện lại cho một campus, nên tất cả switch khởi động cùng lúc. Tất cả switch sẽ bắt đầu bằng việc nhận mình là gốc. Ta ký hiệu thông điệp cấu hình từ nút X, nhận mình cách d bước từ gốc Y là (Y,d,X). Tập trung vào hoạt động tại S3, một chuỗi sự kiện sẽ diễn ra như sau:
 
-1. S3 receives (S2, 0, S2).
+1. S3 nhận (S2, 0, S2).
 
-2. Since 2 < 3, S3 accepts S2 as root.
+2. Vì 2 < 3, S3 chấp nhận S2 là gốc.
 
-3. S3 adds one to the distance advertised by S2 (0) and thus sends
-   (S2, 1, S3) toward S5.
+3. S3 cộng thêm 1 vào khoảng cách do S2 quảng bá (0) và gửi (S2, 1, S3) tới S5.
 
-4. Meanwhile, S2 accepts S1 as root because it has the lower ID, and it
-   sends (S1, 1, S2) toward S3.
+4. Trong khi đó, S2 chấp nhận S1 là gốc vì ID nhỏ hơn, và gửi (S1, 1, S2) tới S3.
 
-5. S5 accepts S1 as root and sends (S1, 1, S5) toward S3.
+5. S5 chấp nhận S1 là gốc và gửi (S1, 1, S5) tới S3.
 
-6. S3 accepts S1 as root, and it notes that both S2 and S5 are closer to
-   the root than it is, but S2 has the smaller id, so it remains on S3’s
-   path to the root.
+6. S3 chấp nhận S1 là gốc, và ghi nhận cả S2 và S5 đều gần gốc hơn nó, nhưng S2 có ID nhỏ hơn, nên S2 nằm trên đường ưu tiên tới gốc của S3.
 
-This leaves S3 with active ports as shown in :numref:`Figure %s <fig-elan4>`.
-Note that Hosts A and B are not able to communicate over the shortest
-path (via S5) because frames have to “flow up the tree and back down,”
-but that’s the price you pay to avoid loops.
+Điều này khiến S3 có các cổng hoạt động như trong :numref:`Hình %s <fig-elan4>`. Lưu ý rằng Host A và B không thể liên lạc qua đường ngắn nhất (qua S5) vì frame phải “chảy lên cây rồi xuống lại”, nhưng đó là cái giá phải trả để tránh vòng lặp.
 
-Even after the system has stabilized, the root switch continues to send
-configuration messages periodically, and the other switches continue to
-forward these messages as just described. Should a particular switch
-fail, the downstream switches will not receive these configuration
-messages, and after waiting a specified period of time they will once
-again claim to be the root, and the algorithm will kick in again to
-elect a new root and new designated switches.
+Ngay cả khi hệ thống đã ổn định, switch gốc vẫn tiếp tục gửi thông điệp cấu hình định kỳ, và các switch khác tiếp tục chuyển tiếp các thông điệp này như vừa mô tả. Nếu một switch nào đó bị hỏng, các switch phía dưới sẽ không nhận được thông điệp cấu hình, và sau một thời gian chờ nhất định, chúng lại nhận mình là gốc, thuật toán lại khởi động để bầu gốc và switch đại diện mới.
 
-One important thing to notice is that although the algorithm is able to
-reconfigure the spanning tree whenever a switch fails, it is not able to
-forward frames over alternative paths for the sake of routing around a
-congested switch.
+Một điều quan trọng cần lưu ý là dù thuật toán có thể cấu hình lại cây bao phủ khi một switch bị hỏng, nó không thể chuyển tiếp frame qua các đường thay thế để tránh một switch bị tắc nghẽn.
 
-3.2.4 Broadcast and Multicast
------------------------------
+3.2.4 Broadcast và Multicast
+----------------------------
 
-The preceding discussion focuses on how switches forward unicast
-frames from one port to another. Since the goal of a switch is to
-transparently extend a LAN across multiple networks, and since most LANs
-support both broadcast and multicast, then switches must also support
-these two features. Broadcast is simple—each switch forwards a frame
-with a destination broadcast address out on each active (selected) port
-other than the one on which the frame was received.
+Phần thảo luận trước tập trung vào cách switch chuyển tiếp frame unicast từ một cổng sang cổng khác. Vì mục tiêu của switch là mở rộng LAN một cách trong suốt qua nhiều mạng, và vì hầu hết LAN đều hỗ trợ cả broadcast và multicast, nên switch cũng phải hỗ trợ hai tính năng này. Broadcast thì đơn giản—mỗi switch chuyển tiếp frame có địa chỉ broadcast ra tất cả các cổng đang hoạt động (được chọn) trừ cổng nhận frame.
 
-Multicast can be implemented in exactly the same way, with each host
-deciding for itself whether or not to accept the message. This is
-exactly what is done in practice. Notice, however, that since not all
-hosts are a member of any particular multicast group, it is possible
-to do better. Specifically, the spanning tree algorithm can be
-extended to prune networks over which multicast frames need not be
-forwarded.  Consider a frame sent to group M by a host A in
-:numref:`Figure %s <fig-elan4>`.  If host C does not belong to group
-M, then there is no need for switch S4 to forward the frames over that
-network.
+Multicast có thể được triển khai tương tự, mỗi host tự quyết định có nhận thông điệp hay không. Thực tế cũng làm như vậy. Tuy nhiên, vì không phải tất cả host đều là thành viên của một nhóm multicast cụ thể, nên có thể làm tốt hơn. Cụ thể, thuật toán cây bao phủ có thể được mở rộng để cắt tỉa các mạng mà frame multicast không cần được chuyển tiếp. Xét một frame gửi tới nhóm M bởi host A trong :numref:`Hình %s <fig-elan4>`. Nếu host C không thuộc nhóm M, thì không cần switch S4 chuyển tiếp frame qua mạng đó.
 
-How would a given switch learn whether it should forward a multicast
-frame over a given port? It learns exactly the same way that a switch
-learns whether it should forward a unicast frame over a particular
-port—by observing the *source* addresses that it receives over that
-port. Of course, groups are not typically the source of frames, so we
-have to cheat a little. In particular, each host that is a member of
-group M must periodically send a frame with the address for group M in
-the source field of the frame header. This frame would have as its
-destination address the multicast address for the switches.
+Làm sao một switch biết có nên chuyển tiếp frame multicast qua một cổng không? Nó học giống như cách switch học có nên chuyển tiếp frame unicast qua một cổng—bằng cách quan sát địa chỉ *nguồn* mà nó nhận được qua cổng đó. Tất nhiên, các nhóm thường không phải là nguồn của frame, nên ta phải “lách luật” một chút. Cụ thể, mỗi host là thành viên của nhóm M phải định kỳ gửi một frame với địa chỉ nhóm M ở trường nguồn của tiêu đề frame. Frame này sẽ có địa chỉ đích là địa chỉ multicast cho các switch.
 
-Although the multicast extension just described was once proposed, it
-was not widely adopted. Instead, multicast is implemented in exactly the
-same way as broadcast.
+Dù mở rộng multicast như vừa mô tả từng được đề xuất, nó không được áp dụng rộng rãi. Thay vào đó, multicast được triển khai giống hệt như broadcast.
 
-3.2.5 Virtual LANs (VLANs)
---------------------------
+3.2.5 LAN ảo (VLANs)
+--------------------
 
-One limitation of switches is that they do not scale. It is not
-realistic to connect more than a few switches, where in practice *few*
-typically means “tens of.” One reason for this is that the spanning
-tree algorithm scales linearly; that is, there is no provision for
-imposing a hierarchy on the set of switches. A second reason is that
-switches forward all broadcast frames. While it is reasonable for all
-hosts within a limited setting (say, a department) to see each other’s
-broadcast messages, it is unlikely that all the hosts in a larger
-environment (say, a large company or university) would want to have to
-be bothered by each other’s broadcast messages. Said another way,
-broadcast does not scale, and as a consequence L2-based networks do
-not scale.
+Một hạn chế của switch là không khả mở. Không thực tế khi kết nối quá nhiều switch, mà trong thực tế *nhiều* thường nghĩa là “vài chục”. Một lý do là thuật toán cây bao phủ khả mở tuyến tính; tức là không có cơ chế phân cấp cho tập switch. Lý do thứ hai là switch chuyển tiếp tất cả frame broadcast. Dù hợp lý khi tất cả host trong một môi trường hạn chế (ví dụ, một phòng ban) nhìn thấy broadcast của nhau, nhưng không hợp lý khi tất cả host trong một môi trường lớn hơn (ví dụ, một công ty hay trường đại học lớn) phải nhận broadcast của nhau. Nói cách khác, broadcast không khả mở, và do đó mạng dựa trên tầng 2 không khả mở.
 
-One approach to increasing the scalability is the *virtual LAN* (VLAN).
-VLANs allow a single extended LAN to be partitioned into several
-seemingly separate LANs. Each virtual LAN is assigned an identifier
-(sometimes called a *color*), and packets can only travel from one
-segment to another if both segments have the same identifier. This has
-the effect of limiting the number of segments in an extended LAN that
-will receive any given broadcast packet.
+Một cách để tăng khả mở là *LAN ảo* (VLAN). VLAN cho phép một LAN mở rộng được chia thành nhiều LAN dường như tách biệt. Mỗi VLAN được gán một định danh (đôi khi gọi là *màu*), và gói chỉ có thể đi từ một đoạn sang đoạn khác nếu cả hai cùng có định danh đó. Điều này giới hạn số đoạn trong một LAN mở rộng sẽ nhận bất kỳ gói broadcast nào.
 
 .. _fig-vlan:
 .. figure:: figures/impl/Slide7.png
    :width: 350px
    :align: center
 
-   Two virtual LANs share a common backbone.
+   Hai LAN ảo chia sẻ một backbone chung.
 
-We can see how VLANs work with an example. :numref:`Figure %s
-<fig-vlan>` shows four hosts and two switches. In the absence of
-VLANs, any broadcast packet from any host will reach all the other
-hosts. Now let’s suppose that we define the segments connected to
-hosts W and X as being in one VLAN, which we’ll call VLAN 100. We also
-define the segments that connect to hosts Y and Z as being in
-VLAN 200. To do this, we need to configure a VLAN ID on each port of
-switches S1 and S2. The link between S1 and S2 is considered to be in
-both VLANs.
+Ta có thể thấy VLAN hoạt động qua ví dụ. :numref:`Hình %s <fig-vlan>` cho thấy bốn host và hai switch. Nếu không có VLAN, bất kỳ gói broadcast nào từ bất kỳ host nào cũng sẽ tới tất cả các host khác. Giờ giả sử ta định nghĩa các đoạn kết nối tới host W và X thuộc một VLAN, gọi là VLAN 100. Ta cũng định nghĩa các đoạn kết nối tới host Y và Z thuộc VLAN 200. Để làm điều này, ta cần cấu hình một VLAN ID trên mỗi cổng của switch S1 và S2. Liên kết giữa S1 và S2 được coi là thuộc cả hai VLAN.
 
-When a packet sent by host X arrives at switch S2, the switch observes
-that it came in a port that was configured as being in VLAN 100. It
-inserts a VLAN header between the Ethernet header and its payload. The
-interesting part of the VLAN header is the VLAN ID; in this case, that
-ID is set to 100. The switch now applies its normal rules for forwarding
-to the packet, with the extra restriction that the packet may not be
-sent out an interface that is not part of VLAN 100. Thus, under no
-circumstances will the packet—even a broadcast packet—be sent out the
-interface to host Z, which is in VLAN 200. The packet, however, is
-forwarded on to switch S1, which follows the same rules and thus may
-forward the packet to host W but not to host Y.
+Khi một gói do host X gửi đến switch S2, switch nhận thấy nó đến từ một cổng được cấu hình thuộc VLAN 100. Nó chèn một tiêu đề VLAN giữa tiêu đề Ethernet và payload. Phần quan trọng của tiêu đề VLAN là VLAN ID; ở đây, ID được đặt là 100. Switch giờ áp dụng các quy tắc chuyển tiếp thông thường cho gói, với ràng buộc bổ sung là gói không được gửi ra giao diện không thuộc VLAN 100. Như vậy, trong mọi trường hợp, gói—even broadcast—sẽ không được gửi ra giao diện tới host Z, vốn thuộc VLAN 200. Tuy nhiên, gói sẽ được chuyển tiếp tới switch S1, switch này cũng áp dụng quy tắc tương tự và có thể chuyển tiếp gói tới host W nhưng không tới host Y.
 
-An attractive feature of VLANs is that it is possible to change the
-logical topology without moving any wires or changing any addresses. For
-example, if we wanted to make the link that connects to host Z be part
-of VLAN 100 and thus enable X, W, and Z to be on the same virtual LAN,
-then we would just need to change one piece of configuration on switch
-S2.
+Một điểm hấp dẫn của VLAN là có thể thay đổi cấu trúc logic mà không cần di chuyển dây hay đổi địa chỉ. Ví dụ, nếu muốn liên kết tới host Z thuộc VLAN 100 và cho phép X, W, Z cùng thuộc một LAN ảo, ta chỉ cần thay đổi một cấu hình trên switch S2.
 
-Supporting VLANs requires a fairly simple extension to the
-original 802.1 header specification, inserting a 12-bit VLAN ID
-(``VID``) field between the ``SrcAddr`` and ``Type`` fields, as shown in
-:numref:`Figure %s <fig-vlan-tag>`. (This VID is typically referred to as
-a *VLAN Tag*.) There are actually 32-bits inserted in the middle of
-the header, but the first 16-bits are used to preserve backwards
-compatibility with the original specification (they use ``Type =
-0x8100`` to indicate that this frame includes the VLAN extension); the
-other four bits hold control information used to prioritize
-frames. This means it is possible to map :math:`2^{12} = 4096` virtual
-networks onto a single physical LAN.
+Hỗ trợ VLAN chỉ cần mở rộng đơn giản cho đặc tả tiêu đề 802.1 gốc, chèn một trường VLAN ID 12 bit (``VID``) giữa các trường ``SrcAddr`` và ``Type``, như minh họa trong :numref:`Hình %s <fig-vlan-tag>`. (VID này thường gọi là *VLAN Tag*.) Thực tế có 32 bit được chèn vào giữa tiêu đề, nhưng 16 bit đầu dùng để đảm bảo tương thích ngược với đặc tả gốc (dùng ``Type = 0x8100`` để chỉ frame này có mở rộng VLAN); bốn bit còn lại chứa thông tin điều khiển dùng để ưu tiên frame. Điều này nghĩa là có thể ánh xạ :math:`2^{12} = 4096` mạng ảo lên một LAN vật lý duy nhất.
 
 .. _fig-vlan-tag:
 .. figure:: figures/impl/Slide4.png
    :width: 500px
    :align: center
 
-   802.1Q VLAN tag embedded within an Ethernet (802.1)
-   header.
+   Thẻ VLAN 802.1Q nhúng trong tiêu đề Ethernet (802.1).
 
-We conclude this discussion by observing there is another limitation
-of networks built by interconnecting L2 switches: lack of support for
-heterogeneity. That is, switches are limited in the kinds of networks
-they can interconnect. In particular, switches make use of the
-network’s frame header and so can support only networks that have
-exactly the same format for addresses. For example, switches can be
-used to connect Ethernet and 802.11-based networks to each other, since
-they share a common header format, but switches do not readily
-generalize to other kinds of networks with different addressing
-formats, such as ATM, SONET, PON, or the cellular network. The next
-section explains how to address this limitation, as well as to scale
-switched networks to even larger sizes.
-
+Kết thúc phần này, cần lưu ý một hạn chế khác của mạng xây dựng bằng cách kết nối các switch tầng 2: thiếu hỗ trợ dị chủng. Tức là, switch bị giới hạn trong các loại mạng mà chúng có thể kết nối. Cụ thể, switch sử dụng tiêu đề frame của mạng và chỉ có thể hỗ trợ các mạng có định dạng địa chỉ giống hệt nhau. Ví dụ, switch có thể dùng để kết nối mạng Ethernet và 802.11 với nhau, vì chúng có định dạng tiêu đề chung, nhưng switch không dễ dàng tổng quát hóa cho các loại mạng khác có định dạng địa chỉ khác, như ATM, SONET, PON hoặc mạng di động. Phần tiếp theo sẽ giải thích cách khắc phục hạn chế này, cũng như mở rộng mạng chuyển mạch lên quy mô lớn hơn nữa.
