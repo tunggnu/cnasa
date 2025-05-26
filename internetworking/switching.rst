@@ -1,144 +1,56 @@
-3.1 Switching Basics
-====================
+3.1 Cơ bản về chuyển mạch
+=========================
 
-In the simplest terms, a switch is a mechanism that allows us to
-interconnect links to form a larger network. A switch is a multi-input,
-multi-output device that transfers packets from an input to one or more
-outputs. Thus, a switch adds the star topology (see
-:numref:`Figure %s <fig-star>`) to the set of possible network
-structures. A star topology has several attractive properties:
+Nói một cách đơn giản nhất, một switch là một cơ chế cho phép chúng ta liên kết các liên kết để tạo thành một mạng lớn hơn. Một switch là một thiết bị nhiều đầu vào, nhiều đầu ra, chuyển các gói tin từ một đầu vào đến một hoặc nhiều đầu ra. Do đó, switch bổ sung cấu trúc hình sao (xem :numref:`Hình %s <fig-star>`) vào tập các cấu trúc mạng khả dĩ. Mạng hình sao có một số đặc tính hấp dẫn:
 
--  Even though a switch has a fixed number of inputs and outputs, which
-   limits the number of hosts that can be connected to a single switch,
-   large networks can be built by interconnecting a number of switches.
+-  Mặc dù một switch có số lượng đầu vào và đầu ra cố định, điều này giới hạn số lượng máy chủ có thể kết nối với một switch đơn, nhưng có thể xây dựng các mạng lớn bằng cách liên kết nhiều switch với nhau.
 
--  We can connect switches to each other and to hosts using
-   point-to-point links, which typically means that we can build
-   networks of large geographic scope.
+-  Chúng ta có thể kết nối các switch với nhau và với các máy chủ bằng các liên kết điểm-điểm, điều này thường có nghĩa là chúng ta có thể xây dựng các mạng có phạm vi địa lý rộng lớn.
 
--  Adding a new host to the network by connecting it to a switch does
-   not necessarily reduce the performance of the network for other hosts
-   already connected.
+-  Thêm một máy chủ mới vào mạng bằng cách kết nối nó với một switch không nhất thiết làm giảm hiệu năng của mạng đối với các máy chủ khác đã kết nối.
 
 .. _fig-star:
 .. figure:: figures/f03-01-9780123850591.png
    :width: 400px
    :align: center
 
-   A switch provides a star topology.
+   Một switch cung cấp cấu trúc hình sao.
 
-This last claim cannot be made for the shared-media networks discussed
-in the last chapter. For example, it is impossible for two hosts on the
-same 10-Mbps Ethernet segment to transmit continuously at 10 Mbps
-because they share the same transmission medium. Every host on a
-switched network has its own link to the switch, so it may be entirely
-possible for many hosts to transmit at the full link speed (bandwidth),
-provided that the switch is designed with enough aggregate capacity.
-Providing high aggregate throughput is one of the design goals for a
-switch; we return to this topic later. In general, switched networks are
-considered more *scalable* (i.e., more capable of growing to large
-numbers of nodes) than shared-media networks because of this ability to
-support many hosts at full speed.
+Khẳng định cuối cùng này không thể áp dụng cho các mạng dùng chung môi trường truyền dẫn đã được thảo luận ở chương trước. Ví dụ, không thể để hai máy chủ trên cùng một đoạn Ethernet 10-Mbps truyền liên tục ở 10 Mbps vì họ chia sẻ cùng một môi trường truyền dẫn. Mỗi máy chủ trên mạng chuyển mạch đều có liên kết riêng tới switch, nên hoàn toàn có thể nhiều máy chủ truyền ở tốc độ liên kết tối đa (băng thông), miễn là switch được thiết kế với đủ tổng công suất. Cung cấp tổng thông lượng cao là một trong những mục tiêu thiết kế của switch; chúng ta sẽ quay lại chủ đề này sau. Nói chung, các mạng chuyển mạch được coi là *khả mở* hơn (tức là có khả năng mở rộng tới số lượng nút lớn hơn) so với các mạng dùng chung môi trường truyền dẫn nhờ khả năng hỗ trợ nhiều máy chủ ở tốc độ tối đa.
 
-.. sidebar:: Dense Wavelength Division Multiplexing
+.. sidebar:: Ghép kênh phân chia bước sóng mật độ cao (DWDM)
 
-   Our focus on packet-switched networks obscures the fact that,
-   especially in wide-area networks, the underlying physical transport
-   is all-optical: there are no packets. At this layer, commercially
-   available DWDM (*Dense Wavelength Division Multiplexing*) equipment
-   is able to transmit a large numbers of optical wavelengths (colors)
-   down a single fiber. For example, one might send data on 100 or more
-   different wavelengths, and each wavelength might carry as much as 100
-   Gbps of data.
+   Việc chúng ta tập trung vào các mạng chuyển mạch gói làm lu mờ thực tế rằng, đặc biệt trong các mạng diện rộng, lớp truyền vật lý bên dưới là hoàn toàn quang học: không có gói tin nào cả. Ở lớp này, thiết bị DWDM (*Dense Wavelength Division Multiplexing*) thương mại có thể truyền một số lượng lớn bước sóng quang học (màu sắc) trên một sợi quang đơn. Ví dụ, có thể truyền dữ liệu trên 100 hoặc nhiều hơn các bước sóng khác nhau, và mỗi bước sóng có thể mang tới 100 Gbps dữ liệu.
 
-   Connecting these fibers is an optical device called a ROADM
-   (*Reconfigurable Optical Add/Drop Multiplexers*). A collection of
-   ROADMs (nodes) and fibers (links) form an optical transport network,
-   where each ROADM is able to forward individual wavelengths along a
-   multi-hop path, creating a logical end-to-end circuit. From the
-   perspective of a packet-switched network that might be constructed on
-   top of this optical transport, one wavelength, even if it crosses
-   multiple ROADMs, appears to be a single point-to-point link between
-   two switches, over which one might elect to run SONET or 100-Gbps
-   Ethernet as the framing protocol. The reconfigurability feature of
-   ROADMs means that it is possible to change these underlying
-   end-to-end wavelengths, effectively creating a new topology at the
-   packet-switching layer.
+   Kết nối các sợi quang này là một thiết bị quang học gọi là ROADM (*Reconfigurable Optical Add/Drop Multiplexers*). Một tập hợp các ROADM (nút) và sợi quang (liên kết) tạo thành một mạng truyền tải quang, nơi mỗi ROADM có thể chuyển tiếp từng bước sóng dọc theo một đường đi nhiều bước, tạo thành một mạch logic đầu-cuối. Từ góc nhìn của mạng chuyển mạch gói được xây dựng trên lớp truyền tải quang này, một bước sóng, dù đi qua nhiều ROADM, vẫn xuất hiện như một liên kết điểm-điểm giữa hai switch, trên đó có thể chạy SONET hoặc Ethernet 100-Gbps làm giao thức đóng khung. Tính năng cấu hình lại của ROADM cho phép thay đổi các bước sóng đầu-cuối này, thực chất tạo ra một cấu trúc liên kết mới ở tầng chuyển mạch gói.
 
-A switch is connected to a set of links and, for each of these links,
-runs the appropriate data link protocol to communicate with the node at
-the other end of the link. A switch’s primary job is to receive incoming
-packets on one of its links and to transmit them on some other link.
-This function is sometimes referred to as either *switching* or
-*forwarding,* and in terms of the Open Systems Interconnection (OSI)
-architecture, it is considered a function of the network layer. (This is a
-case where OSI layering isn't a perfect reflection of the real world,
-as we'll see later.)
+Một switch được kết nối với một tập hợp các liên kết và, với mỗi liên kết này, chạy giao thức tầng liên kết dữ liệu phù hợp để giao tiếp với nút ở đầu kia của liên kết. Nhiệm vụ chính của switch là nhận các gói tin đến trên một trong các liên kết của nó và truyền chúng trên một liên kết khác. Chức năng này đôi khi được gọi là *chuyển mạch* hoặc *chuyển tiếp*, và theo kiến trúc OSI (Open Systems Interconnection), nó được coi là chức năng của tầng mạng. (Đây là một trường hợp mà phân tầng OSI không hoàn toàn phản ánh thực tế, như chúng ta sẽ thấy sau.)
 
-The question, then, is how does the switch decide which output link to
-place each packet on? The general answer is that it looks at the header
-of the packet for an identifier that it uses to make the decision. The
-details of how it uses this identifier vary, but there are two common
-approaches. The first is the *datagram* or *connectionless* approach.
-The second is the *virtual circuit* or *connection-oriented* approach. A
-third approach, *source routing*, is less common than these other two,
-but it does have some useful applications.
+Vậy câu hỏi đặt ra là: switch quyết định đặt mỗi gói tin lên liên kết đầu ra nào như thế nào? Câu trả lời chung là nó nhìn vào tiêu đề của gói tin để tìm một định danh mà nó dùng để ra quyết định. Chi tiết cách sử dụng định danh này có thể khác nhau, nhưng có hai cách tiếp cận phổ biến. Đầu tiên là cách tiếp cận *datagram* hoặc *không kết nối*. Thứ hai là cách tiếp cận *mạch ảo* hoặc *hướng kết nối*. Cách thứ ba, *định tuyến nguồn* (source routing), ít phổ biến hơn hai cách kia, nhưng cũng có một số ứng dụng hữu ích.
 
-One thing that is common to all networks is that we need to have a way
-to identify the end nodes. Such identifiers are usually called
-*addresses*. We have already seen examples of addresses, such as the
-48-bit address used for Ethernet. The only requirement for Ethernet
-addresses is that no two nodes on a network have the same address. This
-is accomplished by making sure that all Ethernet cards are assigned a
-*globally unique* identifier. For the following discussion, we assume
-that each host has a globally unique address. Later on, we consider
-other useful properties that an address might have, but global
-uniqueness is adequate to get us started.
+Một điểm chung cho mọi mạng là chúng ta cần có cách nhận diện các nút cuối. Các định danh này thường được gọi là *địa chỉ*. Chúng ta đã thấy các ví dụ về địa chỉ, như địa chỉ 48-bit dùng cho Ethernet. Yêu cầu duy nhất đối với địa chỉ Ethernet là không có hai nút nào trên mạng có cùng địa chỉ. Điều này được đảm bảo bằng cách chắc chắn rằng mọi card Ethernet đều được gán một định danh *toàn cục duy nhất*. Trong phần thảo luận tiếp theo, chúng ta giả định rằng mỗi máy chủ có một địa chỉ toàn cục duy nhất. Sau này, chúng ta sẽ xét các thuộc tính hữu ích khác mà một địa chỉ có thể có, nhưng tính duy nhất toàn cục là đủ để bắt đầu.
 
-Another assumption that we need to make is that there is some way to
-identify the input and output ports of each switch. There are at least
-two sensible ways to identify ports: One is to number each port, and the
-other is to identify the port by the name of the node (switch or host)
-to which it leads. For now, we use numbering of the ports.
+Một giả định khác cần đặt ra là phải có cách nhận diện các cổng vào và ra của mỗi switch. Có ít nhất hai cách hợp lý để nhận diện cổng: Một là đánh số từng cổng, hai là nhận diện cổng bằng tên của nút (switch hoặc máy chủ) mà nó kết nối tới. Hiện tại, chúng ta sẽ dùng cách đánh số cổng.
 
-3.1.1 Datagrams
----------------
+3.1.1 Datagram
+--------------
 
-The idea behind datagrams is incredibly simple: You just include in
-every packet enough information to enable any switch to decide how to
-get it to its destination. That is, every packet contains the complete
-destination address. Consider the example network illustrated in
-:numref:`Figure %s <fig-dgram>`, in which the hosts have addresses A,
-B, C, and so on. To decide how to forward a packet, a switch consults
-a *forwarding table* (sometimes called a *routing table*), an example
-of which is depicted in :numref:`Table %s <tab-fwdtab>`. This
-particular table shows the forwarding information that switch 2 needs
-to forward datagrams in the example network. It is pretty easy to
-figure out such a table when you have a complete map of a simple
-network like that depicted here; we could imagine a network operator
-configuring the tables statically. It is a lot harder to create the
-forwarding tables in large, complex networks with dynamically changing
-topologies and multiple paths between destinations. That harder
-problem is known as *routing* and is the topic of a later section. We
-can think of routing as a process that takes place in the background
-so that, when a data packet turns up, we will have the right
-information in the forwarding table to be able to forward, or switch,
-the packet.
+Ý tưởng đằng sau datagram cực kỳ đơn giản: Chỉ cần đưa vào mỗi gói tin đủ thông tin để bất kỳ switch nào cũng có thể quyết định cách chuyển nó tới đích. Tức là, mỗi gói tin chứa đầy đủ địa chỉ đích. Xét ví dụ mạng minh họa trong :numref:`Hình %s <fig-dgram>`, trong đó các máy chủ có địa chỉ A, B, C, v.v. Để quyết định chuyển tiếp một gói tin, switch tra cứu *bảng chuyển tiếp* (đôi khi gọi là *bảng định tuyến*), ví dụ như minh họa trong :numref:`Bảng %s <tab-fwdtab>`. Bảng này cho thấy thông tin chuyển tiếp mà switch 2 cần để chuyển tiếp datagram trong mạng ví dụ. Việc xác định bảng như vậy khá dễ khi bạn có bản đồ đầy đủ của một mạng đơn giản như hình minh họa; ta có thể tưởng tượng một quản trị viên mạng cấu hình bảng này tĩnh. Việc tạo bảng chuyển tiếp trong các mạng lớn, phức tạp với cấu trúc động và nhiều đường đi giữa các đích thì khó hơn nhiều. Bài toán khó hơn này gọi là *định tuyến* (routing) và sẽ được bàn ở phần sau. Ta có thể coi định tuyến là một quá trình diễn ra ở hậu trường để, khi một gói dữ liệu xuất hiện, ta đã có thông tin đúng trong bảng chuyển tiếp để có thể chuyển tiếp, hoặc chuyển mạch, gói tin đó.
 
 .. _fig-dgram:
 .. figure:: figures/f03-02-9780123850591.png
    :width: 500px
    :align: center
 
-   Datagram forwarding: an example network.
+   Chuyển tiếp datagram: một ví dụ mạng.
 
 .. _tab-fwdtab:
-.. table:: Forwarding Table for Switch 2.
+.. table:: Bảng chuyển tiếp cho Switch 2.
    :align: center
    :widths: auto
 
    +-------------+------+
-   | Destination | Port |
+   | Đích        | Cổng |
    +=============+======+
    | A           | 3    |
    +-------------+------+
@@ -157,157 +69,81 @@ the packet.
    | H           | 0    |
    +-------------+------+
 
-Datagram networks have the following characteristics:
+Mạng datagram có các đặc điểm sau:
 
--  A host can send a packet anywhere at any time, since any packet that
-   turns up at a switch can be immediately forwarded (assuming a
-   correctly populated forwarding table). For this reason, datagram
-   networks are often called *connectionless*; this contrasts with the
-   *connection-oriented* networks described below, in which some
-   *connection state* needs to be established before the first data
-   packet is sent.
+-  Một máy chủ có thể gửi gói tin đi bất cứ đâu vào bất kỳ lúc nào, vì bất kỳ gói tin nào đến switch đều có thể được chuyển tiếp ngay lập tức (giả sử bảng chuyển tiếp đã được điền đúng). Vì lý do này, mạng datagram thường được gọi là *không kết nối*; điều này trái ngược với các mạng *hướng kết nối* mô tả bên dưới, trong đó cần thiết lập một số *trạng thái kết nối* trước khi gửi gói dữ liệu đầu tiên.
 
--  When a host sends a packet, it has no way of knowing if the network
-   is capable of delivering it or if the destination host is even up and
-   running.
+-  Khi một máy chủ gửi gói tin, nó không biết liệu mạng có thể chuyển được gói đó hay không, hoặc thậm chí máy chủ đích có đang hoạt động hay không.
 
--  Each packet is forwarded independently of previous packets that might
-   have been sent to the same destination. Thus, two successive packets
-   from host A to host B may follow completely different paths (perhaps
-   because of a change in the forwarding table at some switch in the
-   network).
+-  Mỗi gói tin được chuyển tiếp độc lập với các gói trước đó có thể đã được gửi tới cùng đích. Do đó, hai gói liên tiếp từ máy chủ A tới máy chủ B có thể đi theo các đường hoàn toàn khác nhau (có thể do thay đổi bảng chuyển tiếp ở một switch nào đó trong mạng).
 
--  A switch or link failure might not have any serious effect on
-   communication if it is possible to find an alternate route around the
-   failure and to update the forwarding table accordingly.
+-  Một switch hoặc liên kết bị lỗi có thể không gây ảnh hưởng nghiêm trọng tới liên lạc nếu có thể tìm một đường thay thế vòng qua chỗ lỗi và cập nhật bảng chuyển tiếp tương ứng.
 
-This last fact is particularly important to the history of datagram
-networks. One of the important design goals of the Internet is
-robustness to failures, and history has shown it to be quite effective
-at meeting this goal. Since datagram-based networks are the dominant
-technology discussed in this book, we postpone illustrative examples
-for the following sections, and move on to the two main alternatives.
+Điểm cuối cùng này đặc biệt quan trọng trong lịch sử mạng datagram. Một trong những mục tiêu thiết kế quan trọng của Internet là khả năng chịu lỗi, và lịch sử đã chứng minh nó khá hiệu quả trong việc đạt mục tiêu này. Vì mạng dựa trên datagram là công nghệ chủ đạo được thảo luận trong sách này, chúng ta sẽ hoãn các ví dụ minh họa cho các phần tiếp theo, và chuyển sang hai lựa chọn chính còn lại.
 
-3.1.2 Virtual Circuit Switching
--------------------------------
+3.1.2 Chuyển mạch mạch ảo (Virtual Circuit Switching)
+-----------------------------------------------------
 
-A second technique for packet switching uses the concept of a *virtual
-circuit* (VC). This approach, which is also referred to as a
-*connection-oriented model*, requires setting up a virtual connection
-from the source host to the destination host before any data is
-sent. To understand how this works, consider :numref:`Figure %s
-<fig-vcircuit>`, where host A again wants to send packets to
-host B. We can think of this as a two-stage process. The first stage
-is “connection setup.” The second is data transfer. We consider each
-in turn.
+Một kỹ thuật thứ hai cho chuyển mạch gói sử dụng khái niệm *mạch ảo* (VC). Cách tiếp cận này, còn gọi là *mô hình hướng kết nối*, yêu cầu thiết lập một kết nối ảo từ máy chủ nguồn tới máy chủ đích trước khi gửi bất kỳ dữ liệu nào. Để hiểu cách hoạt động, xét :numref:`Hình %s <fig-vcircuit>`, nơi máy chủ A muốn gửi gói tin tới máy chủ B. Ta có thể coi đây là quá trình hai giai đoạn. Giai đoạn đầu là “thiết lập kết nối”. Giai đoạn hai là truyền dữ liệu. Ta sẽ xét từng giai đoạn.
 
 .. _fig-vcircuit:
 .. figure:: figures/f03-03-9780123850591.png
    :width: 500px
    :align: center
 
-   An example of a virtual circuit network.
+   Ví dụ về mạng mạch ảo.
 
-In the connection setup phase, it is necessary to establish a
-“connection state” in each of the switches between the source and
-destination hosts. The connection state for a single connection consists
-of an entry in a “VC table” in each switch through which the connection
-passes. One entry in the VC table on a single switch contains:
+Trong giai đoạn thiết lập kết nối, cần thiết lập “trạng thái kết nối” ở mỗi switch giữa máy chủ nguồn và đích. Trạng thái kết nối cho một kết nối gồm một mục trong “bảng VC” ở mỗi switch mà kết nối đi qua. Một mục trong bảng VC trên một switch gồm:
 
--  A *virtual circuit identifier* (VCI) that uniquely identifies the
-   connection at this switch and which will be carried inside the header
-   of the packets that belong to this connection
+-  Một *định danh mạch ảo* (VCI) xác định duy nhất kết nối tại switch này và sẽ được mang trong tiêu đề của các gói thuộc kết nối này
 
--  An incoming interface on which packets for this VC arrive at the
-   switch
+-  Một giao diện vào mà các gói cho VC này đến switch
 
--  An outgoing interface in which packets for this VC leave the switch
+-  Một giao diện ra mà các gói cho VC này rời switch
 
--  A potentially different VCI that will be used for outgoing packets
+-  Một VCI có thể khác sẽ được dùng cho các gói đi ra
 
-The semantics of one such entry is as follows: If a packet arrives on
-the designated incoming interface and that packet contains the
-designated VCI value in its header, then that packet should be sent out
-the specified outgoing interface with the specified outgoing VCI value
-having been first placed in its header.
+Ý nghĩa của một mục như vậy là: Nếu một gói đến trên giao diện vào chỉ định và gói đó chứa giá trị VCI chỉ định trong tiêu đề, thì gói đó sẽ được gửi ra giao diện ra chỉ định với giá trị VCI ra chỉ định được đặt vào tiêu đề.
 
-Note that the combination of the VCI of packets as they are received at
-the switch *and* the interface on which they are received uniquely
-identifies the virtual connection. There may of course be many virtual
-connections established in the switch at one time. Also, we observe that
-the incoming and outgoing VCI values are generally not the same. Thus,
-the VCI is not a globally significant identifier for the connection;
-rather, it has significance only on a given link (i.e., it has
-*link-local scope*).
+Lưu ý rằng sự kết hợp giữa VCI của các gói khi chúng được nhận tại switch *và* giao diện mà chúng được nhận xác định duy nhất kết nối ảo. Tất nhiên, có thể có nhiều kết nối ảo được thiết lập trong switch cùng lúc. Ngoài ra, ta thấy rằng giá trị VCI vào và ra thường không giống nhau. Do đó, VCI không phải là định danh toàn cục cho kết nối; nó chỉ có ý nghĩa trên một liên kết nhất định (tức là có *phạm vi cục bộ liên kết*).
 
-Whenever a new connection is created, we need to assign a new VCI for
-that connection on each link that the connection will traverse. We also
-need to ensure that the chosen VCI on a given link is not currently in
-use on that link by some existing connection.
+Mỗi khi tạo một kết nối mới, cần gán một VCI mới cho kết nối đó trên mỗi liên kết mà kết nối sẽ đi qua. Cũng cần đảm bảo rằng VCI được chọn trên một liên kết nhất định chưa được dùng bởi kết nối nào khác trên liên kết đó.
 
-There are two broad approaches to establishing connection state. One is
-to have a network administrator configure the state, in which case the
-virtual circuit is “permanent.” Of course, it can also be deleted by the
-administrator, so a permanent virtual circuit (PVC) might best be
-thought of as a long-lived or administratively configured VC.
-Alternatively, a host can send messages into the network to cause the
-state to be established. This is referred to as *signalling*, and the
-resulting virtual circuits are said to be *switched*. The salient
-characteristic of a switched virtual circuit (SVC) is that a host may
-set up and delete such a VC dynamically without the involvement of a
-network administrator. Note that an SVC should more accurately be called
-a *signalled* VC, since it is the use of signalling (not switching) that
-distinguishes an SVC from a PVC.
+Có hai cách tiếp cận chính để thiết lập trạng thái kết nối. Một là để quản trị viên mạng cấu hình trạng thái, khi đó mạch ảo là “vĩnh viễn”. Tất nhiên, nó cũng có thể bị xóa bởi quản trị viên, nên mạch ảo vĩnh viễn (PVC) có thể coi là một VC sống lâu hoặc được cấu hình thủ công. Ngoài ra, một máy chủ có thể gửi thông điệp vào mạng để thiết lập trạng thái. Cách này gọi là *báo hiệu* (signalling), và các mạch ảo kết quả gọi là *mạch ảo chuyển mạch* (SVC). Đặc điểm nổi bật của SVC là máy chủ có thể thiết lập và xóa VC động mà không cần quản trị viên mạng can thiệp. Lưu ý rằng SVC nên gọi chính xác là VC báo hiệu, vì chính việc báo hiệu (không phải chuyển mạch) phân biệt SVC với PVC.
 
-Let’s assume that a network administrator wants to manually create a
-new virtual connection from host A to host B. First, the administrator
-needs to identify a path through the network from A to B. In the
-example network of :numref:`Figure %s <fig-vcircuit>`, there is only
-one such path, but in general, this may not be the case. The
-administrator then picks a VCI value that is currently unused on each
-link for the connection. For the purposes of our example, let’s
-suppose that the VCI value 5 is chosen for the link from host A to
-switch 1, and that 11 is chosen for the link from switch 1 to
-switch 2. In that case, switch 1 needs to have an entry in its VC
-table configured as shown in :numref:`Table %s <tab-vctab>`.
+Giả sử quản trị viên mạng muốn tạo thủ công một kết nối ảo mới từ máy chủ A tới máy chủ B. Đầu tiên, quản trị viên cần xác định một đường đi qua mạng từ A tới B. Trong mạng ví dụ ở :numref:`Hình %s <fig-vcircuit>`, chỉ có một đường như vậy, nhưng nói chung có thể không phải vậy. Quản trị viên sau đó chọn một giá trị VCI chưa dùng trên mỗi liên kết cho kết nối. Trong ví dụ, giả sử chọn giá trị VCI 5 cho liên kết từ A tới switch 1, và 11 cho liên kết từ switch 1 tới switch 2. Khi đó, switch 1 cần có một mục trong bảng VC được cấu hình như trong :numref:`Bảng %s <tab-vctab>`.
 
 .. _tab-vctab:
-.. table:: Example Virtual Circuit Table Entry for Switch 1.
+.. table:: Ví dụ mục bảng mạch ảo cho Switch 1.
    :align: center
    :widths: auto
 
    +--------------------+--------------+--------------------+--------------+
-   | Incoming Interface | Incoming VCI | Outgoing Interface | Outgoing VCI |
+   | Giao diện vào      | VCI vào      | Giao diện ra       | VCI ra       |
    +====================+==============+====================+==============+
    | 2                  | 5            | 1                  | 11           |
    +--------------------+--------------+--------------------+--------------+
 
-Similarly, suppose that the VCI of 7 is chosen to identify this
-connection on the link from switch 2 to switch 3 and that a VCI of 4 is
-chosen for the link from switch 3 to host B. In that case, switches 2
-and 3 need to be configured with VC table entries as shown in
-:numref:`Table %s <tab-vctab2>` and  :numref:`Table %s <tab-vctab3>`,
-respectively. Note that the “outgoing” VCI value at one switch is the
-“incoming” VCI value at the next switch.
+Tương tự, giả sử chọn VCI 7 để nhận diện kết nối này trên liên kết từ switch 2 tới switch 3 và VCI 4 cho liên kết từ switch 3 tới B. Khi đó, switch 2 và 3 cần được cấu hình với các mục bảng VC như trong :numref:`Bảng %s <tab-vctab2>` và :numref:`Bảng %s <tab-vctab3>`. Lưu ý rằng giá trị VCI “ra” ở một switch là giá trị VCI “vào” ở switch tiếp theo.
 
 .. _tab-vctab2:
-.. table:: Virtual Circuit Table Entry at Switch 2.
+.. table:: Mục bảng mạch ảo tại Switch 2.
    :align: center
    :widths: auto
 
    +--------------------+--------------+--------------------+--------------+
-   | Incoming Interface | Incoming VCI | Outgoing Interface | Outgoing VCI |
+   | Giao diện vào      | VCI vào      | Giao diện ra       | VCI ra       |
    +====================+==============+====================+==============+
    | 3                  | 11           | 2                  | 7            |
    +--------------------+--------------+--------------------+--------------+
 
 .. _tab-vctab3:
-.. table:: Virtual Circuit Table Entry at Switch 3.
+.. table:: Mục bảng mạch ảo tại Switch 3.
    :align: center
    :widths: auto
 
    +--------------------+--------------+--------------------+--------------+
-   | Incoming Interface | Incoming VCI | Outgoing Interface | Outgoing VCI |
+   | Giao diện vào      | VCI vào      | Giao diện ra       | VCI ra       |
    +====================+==============+====================+==============+
    | 0                  | 7            | 1                  | 4            |
    +--------------------+--------------+--------------------+--------------+
@@ -317,408 +153,119 @@ respectively. Note that the “outgoing” VCI value at one switch is the
    :width: 500px
    :align: center
 
-   A packet is sent into a virtual circuit network.
+   Một gói tin được gửi vào mạng mạch ảo.
 
-Once the VC tables have been set up, the data transfer phase can
-proceed, as illustrated in :numref:`Figure %s <fig-vcdat>`. For any
-packet that it wants to send to host B, A puts the VCI value of 5 in
-the header of the packet and sends it to switch 1. Switch 1 receives
-any such packet on interface 2, and it uses the combination of the
-interface and the VCI in the packet header to find the appropriate VC
-table entry. As shown in :numref:`Table %s <tab-vctab>`, the table
-entry in this case tells switch 1 to forward the packet out of
-interface 1 and to put the VCI value 11 in the header when the packet
-is sent. Thus, the packet will arrive at switch 2 on interface 3
-bearing VCI 11. Switch 2 looks up interface 3 and VCI 11 in its VC
-table (as shown in :numref:`Table %s <tab-vctab2>`) and sends the
-packet on to switch  3 after updating the VCI value in the packet
-header appropriately, as shown in :numref:`Figure %s
-<fig-vcdat2>`. This process continues until it arrives at host B with
-the VCI value of 4 in the packet. To host B, this identifies the
-packet as having come from host A.
+Khi các bảng VC đã được thiết lập, giai đoạn truyền dữ liệu có thể tiến hành, như minh họa trong :numref:`Hình %s <fig-vcdat>`. Với bất kỳ gói tin nào muốn gửi tới B, A đặt giá trị VCI 5 vào tiêu đề gói và gửi tới switch 1. Switch 1 nhận bất kỳ gói nào như vậy trên giao diện 2, và dùng kết hợp giao diện và VCI trong tiêu đề gói để tìm mục bảng VC phù hợp. Như trong :numref:`Bảng %s <tab-vctab>`, mục bảng này bảo switch 1 chuyển tiếp gói ra giao diện 1 và đặt giá trị VCI 11 vào tiêu đề khi gửi. Như vậy, gói sẽ đến switch 2 trên giao diện 3 mang VCI 11. Switch 2 tra cứu giao diện 3 và VCI 11 trong bảng VC (như trong :numref:`Bảng %s <tab-vctab2>`) và gửi gói tới switch 3 sau khi cập nhật giá trị VCI trong tiêu đề gói phù hợp, như minh họa trong :numref:`Hình %s <fig-vcdat2>`. Quá trình này tiếp tục cho đến khi đến B với VCI 4 trong gói. Với B, điều này nhận diện gói là đến từ A.
 
-In real networks of reasonable size, the burden of configuring VC tables
-correctly in a large number of switches would quickly become excessive
-using the above procedures. Thus, either a network management tool or
-some sort of signalling (or both) is almost always used, even when
-setting up “permanent” VCs. In the case of PVCs, signalling is initiated
-by the network administrator, while SVCs are usually set up using
-signalling by one of the hosts. We consider now how the same VC just
-described could be set up by signalling from the host.
+Trong các mạng thực tế có quy mô vừa phải trở lên, việc cấu hình đúng bảng VC ở nhiều switch sẽ nhanh chóng trở nên quá tải nếu làm thủ công như trên. Do đó, gần như luôn dùng công cụ quản lý mạng hoặc một dạng báo hiệu (hoặc cả hai), ngay cả khi thiết lập VC “vĩnh viễn”. Với PVC, báo hiệu được khởi tạo bởi quản trị viên mạng, còn SVC thường được thiết lập bằng báo hiệu từ một trong các máy chủ. Giờ ta xét cách cùng một VC vừa mô tả có thể được thiết lập bằng báo hiệu từ máy chủ.
 
 .. _fig-vcdat2:
 .. figure:: figures/f03-05-9780123850591.png
    :width: 500px
    :align: center
 
-   A packet makes its way through a virtual circuit
-   network.
+   Một gói tin đi qua mạng mạch ảo.
 
-To start the signalling process, host A sends a setup message into the
-network—that is, to switch 1. The setup message contains, among other
-things, the complete destination address of host B. The setup message
-needs to get all the way to B to create the necessary connection state
-in every switch along the way. We can see that getting the setup message
-to B is a lot like getting a datagram to B, in that the switches have to
-know which output to send the setup message to so that it eventually
-reaches B. For now, let’s just assume that the switches know enough
-about the network topology to figure out how to do that, so that the
-setup message flows on to switches 2 and 3 before finally reaching
-host B.
+Để bắt đầu quá trình báo hiệu, A gửi một thông điệp thiết lập vào mạng—tức là tới switch 1. Thông điệp thiết lập này chứa, ngoài các thông tin khác, địa chỉ đích đầy đủ của B. Thông điệp thiết lập cần đi tới tận B để tạo trạng thái kết nối cần thiết ở mọi switch trên đường đi. Ta thấy rằng việc đưa thông điệp thiết lập tới B khá giống việc gửi một datagram tới B, ở chỗ các switch phải biết gửi thông điệp thiết lập ra cổng nào để cuối cùng tới B. Tạm thời, giả sử các switch biết đủ về cấu trúc mạng để làm điều đó, nên thông điệp thiết lập sẽ đi qua switch 2 và 3 trước khi tới B.
 
-When switch 1 receives the connection request, in addition to sending
-it on to switch 2, it creates a new entry in its virtual circuit table
-for this new connection. This entry is exactly the same as shown
-previously in :numref:`Table %s <tab-vctab>`. The main difference is
-that now the task of assigning an unused VCI value on the interface is
-performed by the switch for that port. In this example, the switch
-picks the value 5. The virtual circuit table now has the following
-information: “When packets arrive on port 2 with identifier 5, send
-them out on port 1.” Another issue is that, somehow, host A will need
-to learn that it should put the VCI value of 5 in packets that it
-wants to send to B; we will see how that happens below.
+Khi switch 1 nhận yêu cầu kết nối, ngoài việc gửi tiếp tới switch 2, nó tạo một mục mới trong bảng mạch ảo cho kết nối mới này. Mục này giống hệt như đã mô tả ở :numref:`Bảng %s <tab-vctab>`. Khác biệt chính là giờ đây việc gán giá trị VCI chưa dùng trên giao diện được thực hiện bởi switch cho cổng đó. Trong ví dụ này, switch chọn giá trị 5. Bảng mạch ảo giờ có thông tin: “Khi gói đến cổng 2 với định danh 5, gửi ra cổng 1.” Một vấn đề khác là, bằng cách nào đó, A sẽ cần biết rằng nó nên đặt giá trị VCI 5 vào các gói gửi tới B; ta sẽ thấy cách điều này xảy ra bên dưới.
 
-When switch 2 receives the setup message, it performs a similar process;
-in this example, it picks the value 11 as the incoming VCI value.
-Similarly, switch 3 picks 7 as the value for its incoming VCI. Each
-switch can pick any number it likes, as long as that number is not
-currently in use for some other connection on that port of that switch.
-As noted above, VCIs have link-local scope; that is, they have no global
-significance.
+Khi switch 2 nhận thông điệp thiết lập, nó thực hiện quá trình tương tự; trong ví dụ này, nó chọn giá trị 11 làm VCI vào. Tương tự, switch 3 chọn 7 làm giá trị VCI vào. Mỗi switch có thể chọn bất kỳ số nào nó muốn, miễn là số đó chưa được dùng cho kết nối nào khác trên cổng đó của switch. Như đã nói, VCI có phạm vi cục bộ liên kết; tức là không có ý nghĩa toàn cục.
 
-Finally, the setup message arrives as host B. Assuming that B is healthy
-and willing to accept a connection from host A, it too allocates an
-incoming VCI value, in this case 4. This VCI value can be used by B to
-identify all packets coming from host A.
+Cuối cùng, thông điệp thiết lập đến B. Giả sử B hoạt động tốt và sẵn sàng nhận kết nối từ A, nó cũng gán một giá trị VCI vào, ở đây là 4. Giá trị VCI này có thể được B dùng để nhận diện mọi gói đến từ A.
 
-Now, to complete the connection, everyone needs to be told what their
-downstream neighbor is using as the VCI for this connection. Host B
-sends an acknowledgment of the connection setup to switch 3 and includes
-in that message the VCI that it chose (4). Now switch 3 can complete the
-virtual circuit table entry for this connection, since it knows the
-outgoing value must be 4. Switch 3 sends the acknowledgment on to
-switch 2, specifying a VCI of 7. Switch 2 sends the message on to
-switch 1, specifying a VCI of 11. Finally, switch 1 passes the
-acknowledgment on to host A, telling it to use the VCI of 5 for this
-connection.
+Giờ, để hoàn tất kết nối, mọi người cần được thông báo về giá trị VCI mà hàng xóm phía dưới dùng cho kết nối này. B gửi một thông điệp xác nhận thiết lập kết nối tới switch 3 và kèm theo giá trị VCI mà nó chọn (4). Giờ switch 3 có thể hoàn tất mục bảng mạch ảo cho kết nối này, vì nó biết giá trị ra phải là 4. Switch 3 gửi xác nhận tới switch 2, chỉ định VCI 7. Switch 2 gửi tiếp tới switch 1, chỉ định VCI 11. Cuối cùng, switch 1 chuyển xác nhận tới A, báo cho nó dùng VCI 5 cho kết nối này.
 
-At this point, everyone knows all that is necessary to allow traffic to
-flow from host A to host B. Each switch has a complete virtual circuit
-table entry for the connection. Furthermore, host A has a firm
-acknowledgment that everything is in place all the way to host B. At
-this point, the connection table entries are in place in all three
-switches just as in the administratively configured example above, but
-the whole process happened automatically in response to the signalling
-message sent from A. The data transfer phase can now begin and is
-identical to that used in the PVC case.
+Tại thời điểm này, mọi thành phần đều biết đủ để cho phép lưu lượng chảy từ A tới B. Mỗi switch có mục bảng mạch ảo hoàn chỉnh cho kết nối. Hơn nữa, A đã nhận xác nhận chắc chắn rằng mọi thứ đã sẵn sàng tới tận B. Lúc này, các mục bảng kết nối đã có ở cả ba switch giống như ví dụ cấu hình thủ công ở trên, nhưng toàn bộ quá trình diễn ra tự động nhờ thông điệp báo hiệu từ A. Giai đoạn truyền dữ liệu giờ có thể bắt đầu và giống hệt như trường hợp PVC.
 
-When host A no longer wants to send data to host B, it tears down the
-connection by sending a teardown message to switch 1. The switch removes
-the relevant entry from its table and forwards the message on to the
-other switches in the path, which similarly delete the appropriate table
-entries. At this point, if host A were to send a packet with a VCI of 5
-to switch 1, it would be dropped as if the connection had never existed.
+Khi A không còn muốn gửi dữ liệu tới B, nó xóa kết nối bằng cách gửi thông điệp teardown tới switch 1. Switch xóa mục liên quan khỏi bảng và chuyển tiếp thông điệp tới các switch khác trên đường đi, các switch này cũng xóa mục bảng phù hợp. Lúc này, nếu A gửi một gói với VCI 5 tới switch 1, nó sẽ bị loại bỏ như thể kết nối chưa từng tồn tại.
 
-There are several things to note about virtual circuit switching:
+Có một số điểm cần lưu ý về chuyển mạch mạch ảo:
 
--  Since host A has to wait for the connection request to reach the far
-   side of the network and return before it can send its first data
-   packet, there is at least one round-trip time (RTT) of delay before
-   data is sent.
+-  Vì A phải chờ yêu cầu kết nối tới đầu xa của mạng và quay lại trước khi có thể gửi gói dữ liệu đầu tiên, nên có ít nhất một vòng trễ (RTT) trước khi dữ liệu được gửi.
 
--  While the connection request contains the full address for host B
-   (which might be quite large, being a global identifier on the
-   network), each data packet contains only a small identifier, which is
-   only unique on one link. Thus, the per-packet overhead caused by the
-   header is reduced relative to the datagram model. More importantly,
-   the lookup is fast because the virtual circuit number can be treated
-   as an index into a table rather than as a key that has to be looked
-   up.
+-  Trong khi yêu cầu kết nối chứa địa chỉ đầy đủ của B (có thể khá lớn, là định danh toàn cục trên mạng), mỗi gói dữ liệu chỉ chứa một định danh nhỏ, chỉ duy nhất trên một liên kết. Do đó, chi phí trên mỗi gói do tiêu đề gây ra giảm so với mô hình datagram. Quan trọng hơn, việc tra cứu nhanh vì số mạch ảo có thể dùng làm chỉ số vào bảng thay vì là khóa phải tra cứu.
 
--  If a switch or a link in a connection fails, the connection is broken
-   and a new one will need to be established. Also, the old one needs to
-   be torn down to free up table storage space in the switches.
+-  Nếu một switch hoặc liên kết trong kết nối bị lỗi, kết nối sẽ bị đứt và cần thiết lập lại kết nối mới. Ngoài ra, kết nối cũ cần được xóa để giải phóng bộ nhớ bảng trong các switch.
 
--  The issue of how a switch decides which link to forward the
-   connection request on has been glossed over. In essence, this is the
-   same problem as building up the forwarding table for datagram
-   forwarding, which requires some sort of *routing algorithm*. Routing
-   is described in a later section, and the algorithms described there
-   are generally applicable to routing setup requests as well as
-   datagrams.
+-  Vấn đề switch quyết định gửi yêu cầu kết nối ra liên kết nào đã được lướt qua. Thực chất, đây cũng là bài toán xây dựng bảng chuyển tiếp cho datagram, đòi hỏi một dạng *thuật toán định tuyến*. Định tuyến sẽ được mô tả ở phần sau, và các thuật toán ở đó áp dụng cho cả định tuyến yêu cầu thiết lập lẫn datagram.
 
-One of the nice aspects of virtual circuits is that by the time the host
-gets the go-ahead to send data, it knows quite a lot about the
-network—for example, that there really is a route to the receiver and
-that the receiver is willing and able to receive data. It is also
-possible to allocate resources to the virtual circuit at the time it is
-established. For example, X.25 (an early and now largely obsolete
-virtual-circuit-based networking technology) employed the following
-three-part strategy:
+Một điểm hay của mạch ảo là khi máy chủ nhận được tín hiệu sẵn sàng gửi dữ liệu, nó biết khá nhiều về mạng—ví dụ, thực sự có đường tới máy nhận và máy nhận sẵn sàng nhận dữ liệu. Cũng có thể cấp phát tài nguyên cho mạch ảo khi thiết lập. Ví dụ, X.25 (một công nghệ mạng dựa trên mạch ảo đã lỗi thời) dùng chiến lược ba phần sau:
 
-1. Buffers are allocated to each virtual circuit when the circuit is
-   initialized.
+1. Cấp phát bộ đệm cho mỗi mạch ảo khi khởi tạo mạch.
 
-2. The sliding window protocol is run between each pair of nodes along
-   the virtual circuit, and this protocol is augmented with flow control
-   to keep the sending node from over-running the buffers allocated at
-   the receiving node.
+2. Chạy giao thức cửa sổ trượt giữa từng cặp nút dọc theo mạch ảo, và giao thức này được bổ sung kiểm soát lưu lượng để ngăn nút gửi vượt quá bộ đệm cấp phát ở nút nhận.
 
-3. The circuit is rejected by a given node if not enough buffers are
-   available at that node when the connection request message is
-   processed.
+3. Mạch bị từ chối bởi một nút nếu không đủ bộ đệm tại nút đó khi xử lý thông điệp yêu cầu kết nối.
 
-In doing these three things, each node is ensured of having the buffers
-it needs to queue the packets that arrive on that circuit. This basic
-strategy is usually called *hop-by-hop flow control.*
+Bằng cách làm ba điều này, mỗi nút được đảm bảo có đủ bộ đệm để xếp hàng các gói đến trên mạch đó. Chiến lược cơ bản này thường gọi là *kiểm soát lưu lượng từng bước* (hop-by-hop flow control).
 
-By comparison, a datagram network has no connection establishment phase,
-and each switch processes each packet independently, making it less
-obvious how a datagram network would allocate resources in a meaningful
-way. Instead, each arriving packet competes with all other packets for
-buffer space. If there are no free buffers, the incoming packet must be
-discarded. We observe, however, that even in a datagram-based network a
-source host often sends a sequence of packets to the same destination
-host. It is possible for each switch to distinguish among the set of
-packets it currently has queued, based on the source/destination pair,
-and thus for the switch to ensure that the packets belonging to each
-source/destination pair are receiving a fair share of the switch’s
-buffers.
+So sánh, mạng datagram không có giai đoạn thiết lập kết nối, và mỗi switch xử lý từng gói độc lập, khiến việc cấp phát tài nguyên trong mạng datagram trở nên không rõ ràng. Thay vào đó, mỗi gói đến cạnh tranh với tất cả các gói khác cho không gian bộ đệm. Nếu không còn bộ đệm trống, gói đến sẽ bị loại bỏ. Tuy nhiên, ngay cả trong mạng datagram, một máy chủ nguồn thường gửi một chuỗi gói tới cùng một máy chủ đích. Mỗi switch có thể phân biệt các gói đang xếp hàng dựa trên cặp nguồn/đích, nhờ đó đảm bảo các gói thuộc mỗi cặp nguồn/đích nhận được phần công bằng bộ đệm của switch.
 
-In the virtual circuit model, we could imagine providing each circuit
-with a different *quality of service* (QoS). In this setting, the term
-*quality of service* is usually taken to mean that the network gives the
-user some kind of performance-related guarantee, which in turn implies
-that switches set aside the resources they need to meet this guarantee.
-For example, the switches along a given virtual circuit might allocate a
-percentage of each outgoing link’s bandwidth to that circuit. As another
-example, a sequence of switches might ensure that packets belonging to a
-particular circuit not be delayed (queued) for more than a certain
-amount of time.
+Trong mô hình mạch ảo, ta có thể tưởng tượng cung cấp cho mỗi mạch một *chất lượng dịch vụ* (QoS) khác nhau. Trong bối cảnh này, thuật ngữ *chất lượng dịch vụ* thường có nghĩa là mạng cung cấp cho người dùng một dạng đảm bảo liên quan đến hiệu năng, điều này ngụ ý các switch dành riêng tài nguyên cần thiết để đáp ứng đảm bảo đó. Ví dụ, các switch dọc theo một mạch ảo có thể cấp phát một phần băng thông của mỗi liên kết ra cho mạch đó. Một ví dụ khác, một chuỗi switch có thể đảm bảo các gói thuộc một mạch nhất định không bị trễ (xếp hàng) quá một khoảng thời gian nhất định.
 
-There have been a number of successful examples of virtual circuit
-technologies over the years, notably X.25, Frame Relay, and Asynchronous
-Transfer Mode (ATM). With the success of the Internet’s connectionless
-model, however, none of them enjoys great popularity today. One of the
-most common applications of virtual circuits for many years was the
-construction of *virtual private networks* (VPNs), a subject discussed
-in a later section. Even that application is now mostly supported using
-Internet-based technologies today.
+Đã có nhiều ví dụ thành công về công nghệ mạch ảo qua các năm, nổi bật là X.25, Frame Relay, và Asynchronous Transfer Mode (ATM). Tuy nhiên, với thành công của mô hình không kết nối của Internet, không công nghệ nào trong số này còn phổ biến ngày nay. Một trong những ứng dụng phổ biến nhất của mạch ảo trong nhiều năm là xây dựng *mạng riêng ảo* (VPN), sẽ được bàn ở phần sau. Ngay cả ứng dụng đó hiện nay cũng chủ yếu được hỗ trợ bằng công nghệ dựa trên Internet.
 
 Asynchronous Transfer Mode (ATM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Asynchronous Transfer Mode (ATM) is probably the most well-known virtual
-circuit-based networking technology, although it is now well past its
-peak in terms of deployment. ATM became an important technology in the
-1980s and early 1990s for a variety of reasons, not the least of which
-is that it was embraced by the telephone industry, which at that point
-in time was less active in computer networks (other than as a supplier
-of links from which other people built networks). ATM also happened to
-be in the right place at the right time, as a high-speed switching
-technology that appeared on the scene just when shared media like
-Ethernet and token rings were starting to look a bit too slow for many
-users of computer networks. In some ways ATM was a competing technology
-with Ethernet switching, and it was seen by many as a competitor to IP
-as well.
+Asynchronous Transfer Mode (ATM) có lẽ là công nghệ mạng dựa trên mạch ảo nổi tiếng nhất, dù hiện nay đã qua thời kỳ đỉnh cao triển khai. ATM trở thành công nghệ quan trọng vào những năm 1980 và đầu 1990 vì nhiều lý do, trong đó không nhỏ là do ngành viễn thông ủng hộ, vốn lúc đó ít tham gia vào mạng máy tính (ngoài việc cung cấp liên kết cho người khác xây mạng). ATM cũng xuất hiện đúng thời điểm, là công nghệ chuyển mạch tốc độ cao khi các công nghệ dùng chung môi trường như Ethernet và token ring bắt đầu trở nên quá chậm với nhiều người dùng mạng máy tính. Ở một số khía cạnh, ATM là công nghệ cạnh tranh với chuyển mạch Ethernet, và nhiều người coi nó là đối thủ của IP.
 
 .. _fig-atmcell:
 .. figure:: figures/f03-06-9780123850591.png
    :width: 550px
    :align: center
 
-   ATM cell format at the UNI.
+   Định dạng cell ATM tại UNI.
 
-The approach ATM takes has some interesting properties, which makes it
-worth examining a bit further. The picture of the ATM packet format—more
-commonly called an ATM *cell*—in :numref:`Figure %s <fig-atmcell>` will illustrate
-the main points. We’ll skip the generic flow control (GFC) bits, which
-never saw much use, and start with the 24 bits that are labelled VPI
-(virtual path identifier—8 bits) and VCI (virtual circuit identifier—16
-bits). If you consider these bits together as a single 24-bit field,
-they correspond to the virtual circuit identifier introduced above. The
-reason for breaking the field into two parts was to allow for a level of
-hierarchy: All the circuits with the same VPI could, in some cases, be
-treated as a group (a virtual path) and could all be switched together
-looking only at the VPI, simplifying the work of a switch that could
-ignore all the VCI bits and reducing the size of the VC table
-considerably.
+Cách tiếp cận của ATM có một số đặc điểm thú vị, đáng để xem xét kỹ hơn. Hình định dạng gói ATM—thường gọi là *cell* ATM—trong :numref:`Hình %s <fig-atmcell>` sẽ minh họa các điểm chính. Ta sẽ bỏ qua các bit điều khiển luồng tổng quát (GFC), vốn ít được dùng, và bắt đầu với 24 bit được gắn nhãn VPI (virtual path identifier—8 bit) và VCI (virtual circuit identifier—16 bit). Nếu coi hai trường này là một trường 24 bit, chúng tương ứng với định danh mạch ảo đã giới thiệu ở trên. Lý do chia trường thành hai phần là để cho phép một mức phân cấp: Tất cả các mạch có cùng VPI có thể, trong một số trường hợp, được xử lý như một nhóm (một đường ảo) và có thể được chuyển mạch cùng nhau chỉ cần nhìn VPI, đơn giản hóa công việc của switch khi có thể bỏ qua các bit VCI và giảm đáng kể kích thước bảng VC.
 
-Skipping to the last header byte we find an 8-bit cyclic redundancy
-check (CRC), known as the *header error check* (``HEC``). It uses CRC-8
-and provides error detection and single-bit error correction capability
-on the cell header only. Protecting the cell header is particularly
-important because an error in the ``VCI`` will cause the cell to be
-misdelivered.
+Chuyển sang byte tiêu đề cuối cùng, ta thấy một kiểm tra chẵn lẻ chu kỳ 8 bit (CRC), gọi là *kiểm tra lỗi tiêu đề* (``HEC``). Nó dùng CRC-8 và cung cấp khả năng phát hiện lỗi và sửa lỗi một bit trên tiêu đề cell. Bảo vệ tiêu đề cell đặc biệt quan trọng vì lỗi ở ``VCI`` sẽ khiến cell bị chuyển nhầm.
 
-Probably the most significant thing to notice about the ATM cell, and
-the reason it is called a cell and not a packet, is that it comes in
-only one size: 53 bytes. What was the reason for this? One big reason
-was to facilitate the implementation of hardware switches. When ATM was
-being created in the mid- and late 1980s, 10-Mbps Ethernet was the
-cutting-edge technology in terms of speed. To go much faster, most
-people thought in terms of hardware. Also, in the telephone world,
-people think big when they think of switches—telephone switches often
-serve tens of thousands of customers. Fixed-length packets turn out to
-be a very helpful thing if you want to build fast, highly scalable
-switches. There are two main reasons for this:
+Điểm đáng chú ý nhất về cell ATM, và lý do nó được gọi là cell chứ không phải packet, là nó chỉ có một kích thước: 53 byte. Tại sao lại như vậy? Một lý do lớn là để thuận tiện cho việc xây dựng switch phần cứng. Khi ATM được tạo ra vào giữa và cuối thập niên 1980, Ethernet 10-Mbps là công nghệ tiên tiến nhất về tốc độ. Để nhanh hơn nữa, hầu hết mọi người nghĩ đến phần cứng. Ngoài ra, trong thế giới điện thoại, người ta nghĩ lớn khi nói về switch—switch điện thoại thường phục vụ hàng chục nghìn khách hàng. Gói cố định độ dài hóa ra rất hữu ích nếu muốn xây dựng switch phần cứng nhanh, khả mở cao. Có hai lý do chính:
 
-1. It is easier to build hardware to do simple jobs, and the job of
-   processing packets is simpler when you already know how long each one
-   will be.
+1. Dễ xây dựng phần cứng cho các tác vụ đơn giản, và việc xử lý gói đơn giản hơn khi đã biết trước độ dài từng gói.
 
-2. If all packets are the same length, then you can have lots of
-   switching elements all doing much the same thing in parallel, each of
-   them taking the same time to do its job.
+2. Nếu tất cả các gói đều cùng độ dài, có thể có nhiều phần tử chuyển mạch cùng làm việc song song, mỗi phần tử mất cùng thời gian để xử lý.
 
-This second reason, the enabling of parallelism, greatly improves the
-scalability of switch designs. It would be overstating the case to say
-that fast parallel hardware switches can only be built using
-fixed-length cells. However, it is certainly true that cells ease the
-task of building such hardware and that there was a lot of knowledge
-available about how to build cell switches in hardware at the time the
-ATM standards were being defined. As it turns out, this same principle
-is still applied in many switches and routers today, even if they deal
-in variable length packets—they cut those packets into some sort of cell
-in order to forward them from input port to output port, but this is all
-internal to the switch.
+Lý do thứ hai này, cho phép song song hóa, giúp tăng khả mở của thiết kế switch. Nói rằng chỉ có thể xây switch phần cứng song song nhanh bằng cell cố định là quá lời. Tuy nhiên, rõ ràng cell giúp đơn giản hóa việc xây phần cứng như vậy, và thời điểm chuẩn ATM được định nghĩa đã có nhiều kiến thức về cách xây switch cell phần cứng. Nguyên lý này vẫn còn được áp dụng trong nhiều switch và router ngày nay, ngay cả khi chúng xử lý gói độ dài thay đổi—chúng cắt các gói thành cell để chuyển từ cổng vào sang cổng ra, nhưng tất cả đều là xử lý nội bộ của switch.
 
-There is another good argument in favor of small ATM cells, having to do
-with end-to-end latency. ATM was designed to carry both voice phone
-calls (the dominant use case at the time) and data. Because voice is
-low-bandwidth but has strict delay requirements, the last thing you want
-is for a small voice packet queued behind a large data packet at a
-switch. If you force all packets to be small (i.e., cell-sized), then
-large data packets can still be supported by reassembling a set of cells
-into a packet, and you get the benefit of being able to interleave the
-forwarding of voice cells and data cells at every switch along the path
-from source to destination. This idea of using small cells to improve
-end-to-end latency is alive and well today in cellular access networks.
+Có một lý do khác ủng hộ cell ATM nhỏ, liên quan đến độ trễ đầu-cuối. ATM được thiết kế để truyền cả thoại (ứng dụng chủ đạo lúc đó) và dữ liệu. Vì thoại băng thông thấp nhưng yêu cầu trễ nghiêm ngặt, điều tối kỵ là một gói thoại nhỏ bị xếp hàng sau một gói dữ liệu lớn tại switch. Nếu buộc tất cả các gói đều nhỏ (tức là kích thước cell), thì các gói dữ liệu lớn vẫn có thể được hỗ trợ bằng cách ghép nhiều cell thành một gói, và ta được lợi là có thể xen kẽ chuyển tiếp cell thoại và cell dữ liệu tại mọi switch trên đường từ nguồn tới đích. Ý tưởng dùng cell nhỏ để cải thiện độ trễ đầu-cuối vẫn còn tồn tại trong các mạng truy cập di động ngày nay.
 
-Having decided to use small, fixed-length packets, the next question was
-what is the right length to fix them at? If you make them too short,
-then the amount of header information that needs to be carried around
-relative to the amount of data that fits in one cell gets larger, so the
-percentage of link bandwidth that is actually used to carry data goes
-down. Even more seriously, if you build a device that processes cells at
-some maximum number of cells per second, then as cells get shorter the
-total data rate drops in direct proportion to cell size. An example of
-such a device might be a network adaptor that reassembles cells into
-larger units before handing them up to the host. The performance of such
-a device depends directly on cell size. On the other hand, if you make
-the cells too big, then there is a problem of wasted bandwidth caused by
-the need to pad transmitted data to fill a complete cell. If the cell
-payload size is 48 bytes and you want to send 1 byte, you’ll need to
-send 47 bytes of padding. If this happens a lot, then the utilization of
-the link will be very low. The combination of relatively high
-header-to-payload ratio plus the frequency of sending partially filled
-cells did actually lead to some noticeable inefficiency in ATM networks
-that some detractors called the *cell tax*.
+Sau khi quyết định dùng gói nhỏ, cố định độ dài, câu hỏi tiếp theo là nên cố định ở độ dài bao nhiêu? Nếu làm quá ngắn, lượng thông tin tiêu đề cần mang so với dữ liệu thực trong một cell sẽ lớn, nên tỷ lệ băng thông liên kết thực sự dùng để mang dữ liệu giảm. Nghiêm trọng hơn, nếu xây thiết bị xử lý cell ở tốc độ tối đa cell/giây, thì khi cell ngắn, tổng tốc độ dữ liệu giảm tỷ lệ thuận với kích thước cell. Ví dụ là card mạng ghép cell thành đơn vị lớn hơn trước khi chuyển lên máy chủ. Hiệu năng thiết bị như vậy phụ thuộc trực tiếp vào kích thước cell. Ngược lại, nếu cell quá lớn, sẽ lãng phí băng thông do phải đệm dữ liệu truyền để đủ một cell. Nếu kích thước payload cell là 48 byte mà muốn gửi 1 byte, phải gửi 47 byte đệm. Nếu việc này xảy ra nhiều, hiệu suất sử dụng liên kết sẽ rất thấp. Kết hợp tỷ lệ tiêu đề/dữ liệu cao và tần suất gửi cell chưa đầy đã dẫn tới một số lãng phí đáng kể trong mạng ATM mà một số người gọi là *thuế cell*.
 
-As it turns out, 48 bytes was picked for the ATM cell payload as a
-compromise. There were good arguments for both larger and smaller cells,
-and 48 made almost no one happy—a power of two would certainly have been
-better for computers to process.
+Cuối cùng, 48 byte được chọn cho payload cell ATM như một sự thỏa hiệp. Có nhiều lý do ủng hộ cell lớn hơn hoặc nhỏ hơn, và 48 không làm ai thực sự hài lòng—một số là lũy thừa của hai chắc chắn sẽ tốt hơn cho máy tính xử lý.
 
-3.1.3 Source Routing
---------------------
+3.1.3 Định tuyến nguồn (Source Routing)
+---------------------------------------
 
-A third approach to switching that uses neither virtual circuits nor
-conventional datagrams is known as *source routing*. The name derives
-from the fact that all the information about network topology that is
-required to switch a packet across the network is provided by the source
-host.
+Cách tiếp cận thứ ba cho chuyển mạch, không dùng mạch ảo cũng không dùng datagram thông thường, gọi là *định tuyến nguồn* (source routing). Tên gọi xuất phát từ việc mọi thông tin về cấu trúc mạng cần thiết để chuyển mạch một gói qua mạng đều được cung cấp bởi máy chủ nguồn.
 
-There are various ways to implement source routing. One would be to
-assign a number to each output of each switch and to place that number
-in the header of the packet. The switching function is then very
-simple: For each packet that arrives on an input, the switch would
-read the port number in the header and transmit the packet on that
-output. However, since there will in general be more than one switch
-in the path between the sending and the receiving host, the header for
-the packet needs to contain enough information to allow every switch
-in the path to determine which output the packet needs to be placed
-on. One way to do this would be to put an ordered list of switch ports
-in the header and to rotate the list so that the next switch in the
-path is always at the front of the list. :numref:`Figure %s
-<fig-source-route>` illustrates this idea.
+Có nhiều cách triển khai định tuyến nguồn. Một cách là gán số cho mỗi đầu ra của mỗi switch và đặt số đó vào tiêu đề gói. Chức năng chuyển mạch khi đó rất đơn giản: Với mỗi gói đến một đầu vào, switch đọc số cổng trong tiêu đề và truyền gói ra đầu ra đó. Tuy nhiên, vì thường có nhiều switch trên đường từ máy gửi tới máy nhận, tiêu đề gói cần chứa đủ thông tin để mọi switch trên đường đi xác định đầu ra cần chuyển gói. Một cách là đặt một danh sách có thứ tự các cổng switch vào tiêu đề và xoay danh sách sao cho switch tiếp theo luôn ở đầu danh sách. :numref:`Hình %s <fig-source-route>` minh họa ý tưởng này.
 
 .. _fig-source-route:
 .. figure:: figures/f03-07-9780123850591.png
    :width: 500px
    :align: center
 
-   Source routing in a switched network (where the switch
-   reads the rightmost number).
+   Định tuyến nguồn trong mạng chuyển mạch (switch đọc số ngoài cùng bên phải).
 
-In this example, the packet needs to traverse three switches to get from
-host A to host B. At switch 1, it needs to exit on port 1, at the next
-switch it needs to exit at port 0, and at the third switch it needs to
-exit at port 3. Thus, the original header when the packet leaves host A
-contains the list of ports (3, 0, 1), where we assume that each switch
-reads the rightmost element of the list. To make sure that the next
-switch gets the appropriate information, each switch rotates the list
-after it has read its own entry. Thus, the packet header as it leaves
-switch 1 en route to switch 2 is now (1, 3, 0); switch 2 performs another
-rotation and sends out a packet with (0, 1, 3) in the header. Although
-not shown, switch 3 performs yet another rotation, restoring the header
-to what it was when host A sent it.
+Trong ví dụ này, gói cần đi qua ba switch để từ A tới B. Ở switch 1, nó cần ra cổng 1, ở switch tiếp theo ra cổng 0, và ở switch thứ ba ra cổng 3. Như vậy, tiêu đề ban đầu khi gói rời A chứa danh sách cổng (3, 0, 1), giả sử mỗi switch đọc phần tử ngoài cùng bên phải. Để switch tiếp theo nhận được thông tin phù hợp, mỗi switch xoay danh sách sau khi đọc mục của mình. Như vậy, tiêu đề gói khi rời switch 1 tới switch 2 là (1, 3, 0); switch 2 lại xoay và gửi gói với (0, 1, 3) trong tiêu đề. Dù không minh họa, switch 3 lại xoay nữa, khôi phục tiêu đề về như khi A gửi.
 
-There are several things to note about this approach. First, it assumes
-that host A knows enough about the topology of the network to form a
-header that has all the right directions in it for every switch in the
-path. This is somewhat analogous to the problem of building the
-forwarding tables in a datagram network or figuring out where to send a
-setup packet in a virtual circuit network. In practice, however, it is
-the first switch at the ingress to the network (as opposed to the end
-host connected to that switch) that appends the source route.
+Có một số điểm cần lưu ý về cách tiếp cận này. Thứ nhất, nó giả định A biết đủ về cấu trúc mạng để tạo tiêu đề có đủ chỉ dẫn đúng cho mọi switch trên đường đi. Điều này phần nào tương tự bài toán xây dựng bảng chuyển tiếp trong mạng datagram hoặc xác định nơi gửi gói thiết lập trong mạng mạch ảo. Tuy nhiên, trên thực tế, thường là switch đầu vào mạng (thay vì máy chủ đầu cuối kết nối với switch đó) sẽ gắn định tuyến nguồn.
 
-Second, observe that we cannot predict how big the header needs to be,
-since it must be able to hold one word of information for every switch
-on the path. This implies that headers are probably of variable length
-with no upper bound, unless we can predict with absolute certainty the
-maximum number of switches through which a packet will ever need to
-pass.
+Thứ hai, ta không thể dự đoán tiêu đề cần lớn bao nhiêu, vì nó phải chứa một trường thông tin cho mỗi switch trên đường đi. Điều này ngụ ý tiêu đề có thể có độ dài thay đổi không giới hạn, trừ khi ta biết chắc chắn số switch tối đa mà một gói sẽ đi qua.
 
-Third, there are some variations on this approach. For example, rather
-than rotate the header, each switch could just strip the first element
-as it uses it. Rotation has an advantage over stripping, however: Host B
-gets a copy of the complete header, which may help it figure out how to
-get back to host A. Yet another alternative is to have the header carry
-a pointer to the current “next port” entry, so that each switch just
-updates the pointer rather than rotating the header; this may be more
-efficient to implement. We show these three approaches in
-:numref:`Figure %s <fig-sroute-apps>`. In each case, the entry that
-this switch needs to read is ``A``, and the entry that the next switch
-needs to read is ``B``.
+Thứ ba, có một số biến thể của cách tiếp cận này. Ví dụ, thay vì xoay tiêu đề, mỗi switch có thể chỉ cần loại bỏ phần tử đầu tiên khi dùng nó. Tuy nhiên, xoay có lợi thế so với loại bỏ: B nhận được bản đầy đủ của tiêu đề, có thể giúp nó xác định đường về A. Một biến thể khác là tiêu đề mang một con trỏ tới mục “cổng tiếp theo”, để mỗi switch chỉ cần cập nhật con trỏ thay vì xoay tiêu đề; cách này có thể hiệu quả hơn khi triển khai. Ba cách này được minh họa trong :numref:`Hình %s <fig-sroute-apps>`. Trong mỗi trường hợp, mục mà switch này cần đọc là ``A``, và mục mà switch tiếp theo cần đọc là ``B``.
 
 .. _fig-sroute-apps:
 .. figure:: figures/f03-08-9780123850591.png
    :width: 550px
    :align: center
 
-   Three ways to handle headers for source routing:
-   (a) rotation; (b) stripping; (c) pointer. The labels are read
-   right to left.
+   Ba cách xử lý tiêu đề cho định tuyến nguồn:
+   (a) xoay; (b) loại bỏ; (c) con trỏ. Các nhãn đọc từ phải sang trái.
 
-Source routing can be used in both datagram networks and virtual circuit
-networks. For example, the Internet Protocol, which is a datagram
-protocol, includes a source route option that allows selected packets to
-be source routed, while the majority are switched as conventional
-datagrams. Source routing is also used in some virtual circuit networks
-as the means to get the initial setup request along the path from source
-to destination.
+Định tuyến nguồn có thể dùng trong cả mạng datagram và mạng mạch ảo. Ví dụ, Giao thức Internet, vốn là giao thức datagram, có tùy chọn định tuyến nguồn cho phép một số gói được định tuyến nguồn, trong khi phần lớn vẫn chuyển mạch như datagram thông thường. Định tuyến nguồn cũng được dùng trong một số mạng mạch ảo như cách để gửi yêu cầu thiết lập ban đầu dọc đường từ nguồn tới đích.
 
-Source routes are sometimes categorized as *strict* or *loose*. In a
-strict source route, every node along the path must be specified,
-whereas a loose source route only specifies a set of nodes to be
-traversed, without saying exactly how to get from one node to the next.
-A loose source route can be thought of as a set of waypoints rather than
-a completely specified route. The loose option can be helpful to limit
-the amount of information that a source must obtain to create a source
-route. In any reasonably large network, it is likely to be hard for a
-host to get the complete path information it needs to construct correctly
-a strict source route to any destination. But both types of source
-routes do find application in certain scenarios, as we will see in later
-chapters.
-
+Định tuyến nguồn đôi khi được phân loại là *nghiêm ngặt* hoặc *lỏng*. Trong định tuyến nguồn nghiêm ngặt, mọi nút trên đường đi phải được chỉ định, trong khi định tuyến nguồn lỏng chỉ chỉ định một tập nút cần đi qua, không nói rõ cách đi từ nút này sang nút kia. Định tuyến nguồn lỏng có thể coi là một tập các điểm trung gian thay vì một đường đi hoàn chỉnh. Tùy chọn lỏng này hữu ích để giảm lượng thông tin mà nguồn cần có để tạo định tuyến nguồn. Trong bất kỳ mạng đủ lớn nào, sẽ khó để một máy chủ có đủ thông tin về đường đi hoàn chỉnh tới mọi đích. Nhưng cả hai loại định tuyến nguồn đều có ứng dụng trong một số kịch bản, như sẽ thấy ở các chương sau.
