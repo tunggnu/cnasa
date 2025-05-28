@@ -1,44 +1,10 @@
-Problem: Scaling to Billions
-----------------------------
+Vấn đề: Mở rộng tới hàng tỷ thiết bị
+-----------------------------------
 
-We have now seen how to build an internetwork that consists of a number
-of networks of different types. That is, we have dealt with the problem
-of *heterogeneity*. The second critical problem in
-internetworking—arguably the fundamental problem for all networking—is
-*scale*. To understand the problem of scaling a network, it is worth
-considering the growth of the Internet, which has roughly doubled in
-size each year for 30 years. This sort of growth forces us to face a
-number of challenges.
+Chúng ta vừa xem cách xây dựng một liên mạng bao gồm nhiều mạng thuộc các loại khác nhau. Tức là, chúng ta đã giải quyết vấn đề *không đồng nhất*. Vấn đề quan trọng thứ hai trong liên mạng—có lẽ là vấn đề cơ bản nhất của mọi hệ thống mạng—là *khả năng mở rộng*. Để hiểu vấn đề mở rộng một mạng, đáng để xem xét sự phát triển của Internet, vốn đã tăng gấp đôi về kích thước mỗi năm trong suốt 30 năm. Kiểu tăng trưởng này buộc chúng ta phải đối mặt với một loạt thách thức.
 
-Chief among these is how do you build a routing system that can handle
-hundreds of thousands of networks and billions of end nodes? As we will
-see in this chapter, most approaches to tackling the scalability of
-routing depend on the introduction of hierarchy. We can introduce
-hierarchy in the form of areas within a domain; we also use hierarchy to
-scale the routing system among domains. The interdomain routing protocol
-that has enabled the Internet to scale to its current size is BGP. We
-will take a look at how BGP operates, and consider the challenges faced
-by BGP as the Internet continues to grow.
+Nổi bật nhất trong số này là làm thế nào để xây dựng một hệ thống định tuyến có thể xử lý hàng trăm nghìn mạng và hàng tỷ nút cuối? Như chúng ta sẽ thấy trong chương này, hầu hết các cách tiếp cận để giải quyết khả năng mở rộng của định tuyến đều dựa vào việc đưa vào yếu tố phân cấp. Chúng ta có thể đưa phân cấp dưới dạng các khu vực trong một miền; chúng ta cũng sử dụng phân cấp để mở rộng hệ thống định tuyến giữa các miền. Giao thức định tuyến liên miền đã cho phép Internet mở rộng đến quy mô hiện tại là BGP. Chúng ta sẽ xem xét cách BGP hoạt động, và cân nhắc những thách thức mà BGP phải đối mặt khi Internet tiếp tục phát triển.
 
-Closely related to the scalability of routing is the problem of
-addressing. Even two decades ago it had become apparent that the 32-bit
-addressing scheme of IP version 4 would not last forever. That led to
-the definition of a new version of IP—version 6, since version 5 had
-been used in an earlier experiment. IPv6 primarily expands the address
-space but also adds a number of new features, some of which have been
-retrofitted to IPv4.
+Liên quan chặt chẽ đến khả năng mở rộng của định tuyến là vấn đề địa chỉ hóa. Ngay cả hai thập kỷ trước, người ta đã nhận thấy rằng sơ đồ địa chỉ 32 bit của IP phiên bản 4 sẽ không thể tồn tại mãi mãi. Điều đó đã dẫn đến việc định nghĩa một phiên bản IP mới—phiên bản 6, vì phiên bản 5 đã được sử dụng trong một thử nghiệm trước đó. IPv6 chủ yếu mở rộng không gian địa chỉ nhưng cũng bổ sung một số tính năng mới, một số trong đó đã được bổ sung ngược trở lại cho IPv4.
 
-While the Internet continues to grow in size, it also needs to evolve
-its functionality. The final sections of this chapter cover some
-significant enhancements to the Internet’s capabilities. The first,
-multicast, is an enhancement of the basic service model. We show how
-multicast—the ability to deliver the same packets to a group of
-receivers efficiently—can be incorporated into an internet, and we
-describe several of the routing protocols that have been developed to
-support multicast. The second enhancement, Multiprotocol Label Switching
-(MPLS), modifies the forwarding mechanism of IP networks. This
-modification has enabled some changes in the way IP routing is performed
-and in the services offered by IP networks. Finally, we look at the
-effects of mobility on routing and describe some enhancements to IP to
-support mobile hosts and routers. For each of these enhancements, issues
-of scalability continue to be important.
+Trong khi Internet tiếp tục phát triển về quy mô, nó cũng cần phát triển về chức năng. Các phần cuối của chương này đề cập đến một số cải tiến quan trọng cho khả năng của Internet. Đầu tiên, multicast, là một sự mở rộng của mô hình dịch vụ cơ bản. Chúng tôi sẽ chỉ ra cách multicast—khả năng chuyển cùng một gói tin đến một nhóm các bộ nhận một cách hiệu quả—có thể được tích hợp vào một liên mạng, và mô tả một số giao thức định tuyến đã được phát triển để hỗ trợ multicast. Cải tiến thứ hai, Multiprotocol Label Switching (MPLS), sửa đổi cơ chế chuyển tiếp của các mạng IP. Sự sửa đổi này đã cho phép một số thay đổi trong cách định tuyến IP được thực hiện và trong các dịch vụ mà mạng IP cung cấp. Cuối cùng, chúng ta sẽ xem xét tác động của tính di động lên định tuyến và mô tả một số cải tiến cho IP để hỗ trợ các host và router di động. Đối với mỗi cải tiến này, các vấn đề về khả năng mở rộng vẫn tiếp tục giữ vai trò quan trọng.
