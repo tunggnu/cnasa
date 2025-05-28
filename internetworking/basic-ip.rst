@@ -1,576 +1,176 @@
 3.3 Internet (IP)
 =================
 
-In the previous section, we saw that it was possible to build reasonably
-large LANs using bridges and LAN switches, but that such approaches were
-limited in their ability to scale and to handle heterogeneity. In this
-section, we explore some ways to go beyond the limitations of bridged
-networks, enabling us to build large, highly heterogeneous networks with
-reasonably efficient routing. We refer to such networks as
-*internetworks.* We’ll continue the discussion of how to build a truly
-global internetwork in the next chapter, but for now we’ll explore the
-basics. We start by considering more carefully what the word
-*internetwork* means.
+Trong phần trước, chúng ta đã thấy rằng có thể xây dựng các LAN khá lớn bằng cách sử dụng bridge và switch LAN, nhưng các phương pháp này bị giới hạn về khả năng mở rộng và xử lý dị chủng. Trong phần này, chúng ta sẽ khám phá một số cách để vượt qua các giới hạn của mạng bridge, cho phép xây dựng các mạng lớn, dị chủng cao với khả năng định tuyến hợp lý. Chúng ta gọi các mạng như vậy là *liên mạng* (*internetworks*). Chúng ta sẽ tiếp tục thảo luận về cách xây dựng một liên mạng toàn cầu thực sự ở chương tiếp theo, nhưng trước mắt sẽ tìm hiểu các khái niệm cơ bản. Chúng ta bắt đầu bằng cách xem xét kỹ hơn ý nghĩa của từ *internetwork*.
 
-3.3.1 What Is an Internetwork?
-------------------------------
+3.3.1 Liên mạng là gì?
+----------------------
 
-We use the term *internetwork*, or sometimes just *internet* with a
-lowercase *i*, to refer to an arbitrary collection of networks
-interconnected to provide some sort of host-to-host packet delivery
-service. For example, a corporation with many sites might construct a
-private internetwork by interconnecting the LANs at their different
-sites with point-to-point links leased from the phone company. When we
-are talking about the widely used global internetwork to which a large
-percentage of networks are now connected, we call it the *Internet* with
-a capital *I.* In keeping with the first-principles approach of this
-book, we mainly want you to learn about the principles of “lowercase
-*i*” internetworking, but we illustrate these ideas with real-world
-examples from the “big *I*” Internet.
+Chúng ta sử dụng thuật ngữ *liên mạng* (*internetwork*), hoặc đôi khi chỉ là *internet* với chữ *i* thường, để chỉ một tập hợp bất kỳ các mạng được liên kết với nhau nhằm cung cấp một dịch vụ truyền gói tin từ máy chủ tới máy chủ. Ví dụ, một công ty có nhiều chi nhánh có thể xây dựng một liên mạng riêng bằng cách kết nối các LAN tại các địa điểm khác nhau bằng các liên kết điểm-điểm thuê từ công ty điện thoại. Khi nói về liên mạng toàn cầu được sử dụng rộng rãi mà phần lớn các mạng hiện nay đều kết nối tới, chúng ta gọi nó là *Internet* với chữ *I* hoa. Theo cách tiếp cận nguyên lý đầu tiên của cuốn sách này, chúng tôi chủ yếu muốn bạn học về các nguyên lý của liên mạng “chữ *i* thường”, nhưng sẽ minh họa các ý tưởng này bằng các ví dụ thực tế từ Internet “chữ *I* lớn”.
 
-Another piece of terminology that can be confusing is the difference
-between networks, subnetworks, and internetworks. We are going to avoid
-subnetworks (or subnets) altogether until a later section. For now,
-we use *network* to mean either a directly connected or a switched
-network of the kind described in the previous section and the previous
-chapter. Such a network uses one technology, such as 802.11 or Ethernet.
-An *internetwork* is an interconnected collection of such networks.
-Sometimes, to avoid ambiguity, we refer to the underlying networks that
-we are interconnecting as *physical* networks. An internet is a
-*logical* network built out of a collection of physical networks. In
-this context, a collection of Ethernet segments connected by bridges or
-switches would still be viewed as a single network.
+Một thuật ngữ khác cũng dễ gây nhầm lẫn là sự khác biệt giữa mạng, mạng con (subnetworks), và liên mạng. Chúng ta sẽ tránh đề cập đến mạng con (hoặc subnet) cho đến phần sau. Hiện tại, chúng ta dùng *mạng* để chỉ một mạng kết nối trực tiếp hoặc một mạng chuyển mạch như đã mô tả ở phần trước và chương trước. Một mạng như vậy sử dụng một công nghệ, ví dụ như 802.11 hoặc Ethernet. Một *liên mạng* là một tập hợp các mạng như vậy được liên kết với nhau. Đôi khi, để tránh nhầm lẫn, chúng ta gọi các mạng cơ sở mà chúng ta đang liên kết là *mạng vật lý*. Một internet là một *mạng logic* được xây dựng từ một tập hợp các mạng vật lý. Trong bối cảnh này, một tập hợp các đoạn Ethernet được kết nối bằng bridge hoặc switch vẫn được coi là một mạng duy nhất.
 
 .. _fig-inet:
 .. figure:: figures/f03-14-9780123850591.png
    :width: 500px
    :align: center
 
-   A simple internetwork. H denotes a host and R denotes
-   a router.
+   Một liên mạng đơn giản. H là máy chủ, R là bộ định tuyến.
 
-:numref:`Figure %s <fig-inet>` shows an example internetwork. An
-internetwork is often referred to as a “network of networks” because
-it is made up of lots of smaller networks. In this figure, we see
-Ethernets, a wireless network, and a point-to-point link. Each of
-these is a single-technology network. The nodes that interconnect the
-networks are called *routers*.  They are also sometimes called
-*gateways*, but since this term has several other connotations, we
-restrict our usage to router.
+:numref:`Hình %s <fig-inet>` minh họa một ví dụ về liên mạng. Một liên mạng thường được gọi là “mạng của các mạng” vì nó được tạo thành từ nhiều mạng nhỏ hơn. Trong hình này, ta thấy các mạng Ethernet, một mạng không dây, và một liên kết điểm-điểm. Mỗi cái là một mạng đơn công nghệ. Các nút kết nối các mạng này được gọi là *bộ định tuyến* (*routers*). Chúng đôi khi cũng được gọi là *gateway*, nhưng vì thuật ngữ này có nhiều nghĩa khác, chúng ta sẽ chỉ dùng từ router.
 
 .. _fig-ip-graph:
 .. figure:: figures/f03-15-9780123850591.png
    :width: 600px
    :align: center
 
-   A simple internetwork, showing the protocol layers
-   used to connect H5 to H8 in the above figure. ETH is the protocol
-   that runs over the Ethernet.
+   Một liên mạng đơn giản, minh họa các tầng giao thức dùng để kết nối H5 tới H8 trong hình trên. ETH là giao thức chạy trên Ethernet.
 
-The *Internet Protocol* is the key tool used today to build scalable,
-heterogeneous internetworks. It was originally known as the Kahn-Cerf
-protocol after its inventors. One way to think of IP is that it runs on
-all the nodes (both hosts and routers) in a collection of networks and
-defines the infrastructure that allows these nodes and networks to
-function as a single logical internetwork. For example, :numref:`Figure
-%s <fig-ip-graph>` shows how hosts H5 and H8 are logically connected by
-the internet in :numref:`Figure %s <fig-inet>`, including the protocol graph
-running on each node. Note that higher-level protocols, such as TCP and
-UDP, typically run on top of IP on the hosts.
+*Giao thức Internet* là công cụ chủ chốt được sử dụng ngày nay để xây dựng các liên mạng dị chủng, khả mở. Ban đầu nó được gọi là giao thức Kahn-Cerf theo tên các nhà phát minh. Một cách để hình dung IP là nó chạy trên tất cả các nút (cả máy chủ và bộ định tuyến) trong một tập hợp các mạng và định nghĩa hạ tầng cho phép các nút và mạng này hoạt động như một liên mạng logic duy nhất. Ví dụ, :numref:`Hình %s <fig-ip-graph>` cho thấy cách các máy chủ H5 và H8 được kết nối logic bởi internet trong :numref:`Hình %s <fig-inet>`, bao gồm đồ thị giao thức chạy trên mỗi nút. Lưu ý rằng các giao thức tầng cao hơn, như TCP và UDP, thường chạy trên IP ở các máy chủ.
 
-The rest of this and the next chapter are about various aspects of IP.
-While it is certainly possible to build an internetwork that does not
-use IP—and in fact, in the early days of the Internet there were
-alternative solutions—IP is the most interesting case to study simply
-because of the size of the Internet. Said another way, it is only the IP
-Internet that has really faced the issue of scale. Thus, it provides the
-best case study of a scalable internetworking protocol.
+Phần còn lại của chương này và chương tiếp theo sẽ nói về các khía cạnh khác nhau của IP. Dù chắc chắn có thể xây dựng một liên mạng mà không dùng IP—và thực tế, trong những ngày đầu của Internet đã có các giải pháp thay thế—IP là trường hợp thú vị nhất để nghiên cứu đơn giản vì quy mô của Internet. Nói cách khác, chỉ có Internet dựa trên IP mới thực sự đối mặt với vấn đề về khả mở. Do đó, nó cung cấp ví dụ điển hình nhất về một giao thức liên mạng khả mở.
 
-.. sidebar:: L2 vs L3 Networks
+.. sidebar:: Mạng tầng 2 vs tầng 3 (L2 vs L3)
 
-   As seen in the previous section, an Ethernet can be treated as a
-   point-to-point *link* interconnecting a pair of switches, with a
-   mesh of interconnected switches forming a *Switched Ethernet*. This
-   configuration is also known as an *L2 Network*.
+   Như đã thấy ở phần trước, một Ethernet có thể được coi là một *liên kết* điểm-điểm kết nối một cặp switch, với một mạng lưới các switch kết nối tạo thành một *Ethernet chuyển mạch*. Cấu hình này còn gọi là *mạng tầng 2* (*L2 Network*).
 
-   But as we'll discover in this section, an Ethernet (even when
-   arranged in a point-to-point configuration rather than a shared
-   CSMA/CD network) can be treated as a *network* interconnecting a
-   pair of routers, with a mesh of such routers forming an Internet.
-   This configuration is also known as an *L3 Network*.
+   Nhưng như chúng ta sẽ thấy ở phần này, một Ethernet (ngay cả khi được cấu hình điểm-điểm thay vì mạng chia sẻ CSMA/CD) có thể được coi là một *mạng* kết nối một cặp bộ định tuyến, với một mạng lưới các bộ định tuyến như vậy tạo thành một Internet. Cấu hình này còn gọi là *mạng tầng 3* (*L3 Network*).
 
-   Confusingly, this is because a point-to-point Ethernet is both a
-   link and a network (albeit a trivial two-node network in the second
-   case), depending on whether it's connected to a pair of L2 switches
-   running the spanning tree algorithm, or to a pair of L3 routers
-   running IP (plus the routing protocols described later in this
-   chapter). Why pick one configuration over the other? It partly
-   depends on whether you want the network to be a single broadcast
-   domain (if yes, pick L2), and whether you want the hosts connected
-   to the network to be on different networks (if yes, select L3).
+   Điều gây nhầm lẫn là vì một Ethernet điểm-điểm vừa là một liên kết vừa là một mạng (dù là mạng hai nút tầm thường trong trường hợp thứ hai), tùy thuộc vào việc nó kết nối một cặp switch tầng 2 chạy thuật toán cây bao phủ, hay một cặp bộ định tuyến tầng 3 chạy IP (cộng với các giao thức định tuyến sẽ được mô tả sau trong chương này). Tại sao chọn cấu hình này thay vì cấu hình kia? Một phần phụ thuộc vào việc bạn muốn mạng là một miền quảng bá duy nhất (nếu có, chọn L2), và liệu bạn muốn các máy chủ kết nối tới mạng thuộc các mạng khác nhau (nếu có, chọn L3).
 
-   The good news is that when you fully understand the implications of
-   this duality, you will have cleared a major hurdle in mastering
-   modern packet-switched networks.
+   Tin tốt là khi bạn hiểu rõ ý nghĩa của sự song hành này, bạn đã vượt qua một rào cản lớn trong việc làm chủ các mạng chuyển mạch gói hiện đại.
 
-3.3.2 Service Model
--------------------
+3.3.2 Mô hình dịch vụ
+---------------------
 
-A good place to start when you build an internetwork is to define its
-*service model*, that is, the host-to-host services you want to provide.
-The main concern in defining a service model for an internetwork is that
-we can provide a host-to-host service only if this service can somehow
-be provided over each of the underlying physical networks. For example,
-it would be no good deciding that our internetwork service model was
-going to provide guaranteed delivery of every packet in 1 ms or less if
-there were underlying network technologies that could arbitrarily delay
-packets. The philosophy used in defining the IP service model,
-therefore, was to make it undemanding enough that just about any network
-technology that might turn up in an internetwork would be able to
-provide the necessary service.
+Một điểm khởi đầu tốt khi xây dựng một liên mạng là xác định *mô hình dịch vụ* của nó, tức là các dịch vụ từ máy chủ tới máy chủ mà bạn muốn cung cấp. Mối quan tâm chính khi xác định mô hình dịch vụ cho một liên mạng là chúng ta chỉ có thể cung cấp dịch vụ máy chủ tới máy chủ nếu dịch vụ này có thể được cung cấp trên mỗi mạng vật lý bên dưới. Ví dụ, sẽ không có ý nghĩa gì nếu quyết định rằng mô hình dịch vụ liên mạng sẽ đảm bảo chuyển phát mọi gói tin trong 1 ms hoặc ít hơn nếu có các công nghệ mạng bên dưới có thể trì hoãn gói tin tùy ý. Triết lý khi xác định mô hình dịch vụ IP, do đó, là làm cho nó đủ đơn giản để hầu như bất kỳ công nghệ mạng nào có thể xuất hiện trong một liên mạng đều có thể cung cấp dịch vụ cần thiết.
 
-The IP service model can be thought of as having two parts: an
-addressing scheme, which provides a way to identify all hosts in the
-internetwork, and a datagram (connectionless) model of data delivery.
-This service model is sometimes called *best effort* because, although
-IP makes every effort to deliver datagrams, it makes no guarantees. We
-postpone a discussion of the addressing scheme for now and look first at
-the data delivery model.
+Mô hình dịch vụ IP có thể được coi là gồm hai phần: một sơ đồ địa chỉ, cung cấp cách nhận diện tất cả các máy chủ trong liên mạng, và một mô hình truyền dữ liệu kiểu datagram (không kết nối). Mô hình dịch vụ này đôi khi được gọi là *best effort* (nỗ lực tối đa) vì, dù IP cố gắng hết sức để chuyển phát datagram, nó không đưa ra bất kỳ đảm bảo nào. Chúng ta sẽ hoãn thảo luận về sơ đồ địa chỉ và trước tiên xem xét mô hình truyền dữ liệu.
 
-Datagram Delivery
+Truyền datagram
+~~~~~~~~~~~~~~~
+
+Datagram IP là nền tảng của Giao thức Internet. Nhớ lại từ phần trước rằng một datagram là một gói tin được gửi theo kiểu không kết nối qua mạng. Mỗi datagram mang đủ thông tin để mạng có thể chuyển tiếp gói tin tới đích đúng; không cần bất kỳ cơ chế thiết lập trước nào để báo cho mạng biết phải làm gì khi gói tin đến. Bạn chỉ cần gửi nó đi, và mạng sẽ cố gắng hết sức để chuyển nó tới đích mong muốn. Phần “nỗ lực tối đa” nghĩa là nếu có sự cố và gói tin bị mất, bị lỗi, bị chuyển nhầm, hoặc bằng cách nào đó không đến được đích, mạng sẽ không làm gì cả—nó đã cố gắng hết sức, và đó là tất cả những gì nó phải làm. Nó không cố gắng phục hồi từ lỗi. Điều này đôi khi được gọi là dịch vụ *không tin cậy*.
+
+Dịch vụ không kết nối, nỗ lực tối đa là dịch vụ đơn giản nhất mà bạn có thể yêu cầu từ một liên mạng, và đó cũng là điểm mạnh lớn nhất của nó. Ví dụ, nếu bạn cung cấp dịch vụ nỗ lực tối đa trên một mạng cung cấp dịch vụ tin cậy, thì cũng tốt—bạn sẽ có một dịch vụ nỗ lực tối đa mà tình cờ luôn chuyển phát gói tin. Ngược lại, nếu bạn có một mô hình dịch vụ tin cậy trên một mạng không tin cậy, bạn sẽ phải bổ sung rất nhiều chức năng vào các bộ định tuyến để bù đắp cho các thiếu sót của mạng bên dưới. Giữ cho các bộ định tuyến càng đơn giản càng tốt là một trong những mục tiêu thiết kế ban đầu của IP.
+
+Khả năng “chạy trên bất cứ thứ gì” của IP thường được coi là một trong những đặc điểm quan trọng nhất của nó. Đáng chú ý là nhiều công nghệ mà IP chạy trên ngày nay chưa tồn tại khi IP được phát minh. Cho đến nay, chưa có công nghệ mạng nào được phát minh mà IP không thể chạy được. Về nguyên tắc, IP có thể chạy trên một mạng truyền thông bằng chim bồ câu.
+
+Dịch vụ nỗ lực tối đa không chỉ có nghĩa là gói tin có thể bị mất. Đôi khi chúng có thể được chuyển phát không theo thứ tự, và đôi khi cùng một gói tin có thể được chuyển phát nhiều lần. Các giao thức tầng cao hơn hoặc ứng dụng chạy trên IP cần nhận thức được tất cả các kiểu lỗi có thể xảy ra này.
+
+Định dạng gói tin
 ~~~~~~~~~~~~~~~~~
 
-The IP datagram is fundamental to the Internet Protocol. Recall from
-an earlier section that a datagram is a packet sent in a
-connectionless manner over a network. Every datagram carries enough
-information to let the network forward the packet to its correct
-destination; there is no need for any advance setup mechanism to tell
-the network what to do when the packet arrives. You just send it, and
-the network makes its best effort to get it to the desired
-destination.  The “best-effort” part means that if something goes
-wrong and the packet gets lost, corrupted, misdelivered, or in any way
-fails to reach its intended destination, the network does nothing—it
-made its best effort, and that is all it has to do. It does not make
-any attempt to recover from the failure. This is sometimes called an
-*unreliable* service.
-
-Best-effort, connectionless service is about the simplest service you
-could ask for from an internetwork, and this is its great strength. For
-example, if you provide best-effort service over a network that provides
-a reliable service, then that’s fine—you end up with a best-effort
-service that just happens to always deliver the packets. If, on the
-other hand, you had a reliable service model over an unreliable network,
-you would have to put lots of extra functionality into the routers to
-make up for the deficiencies of the underlying network. Keeping the
-routers as simple as possible was one of the original design goals
-of IP.
-
-The ability of IP to “run over anything” is frequently cited as one of
-its most important characteristics. It is noteworthy that many of the
-technologies over which IP runs today did not exist when IP was
-invented. So far, no networking technology has been invented that has
-proven too bizarre for IP. In principle, IP can run over a network that
-transports messages using carrier pigeons.
-
-Best-effort delivery does not just mean that packets can get lost.
-Sometimes they can get delivered out of order, and sometimes the same
-packet can get delivered more than once. The higher-level protocols or
-applications that run above IP need to be aware of all these possible
-failure modes.
-
-Packet Format
-~~~~~~~~~~~~~
-
-Clearly, a key part of the IP service model is the type of packets
-that can be carried. The IP datagram, like most packets, consists of a
-header followed by a number of bytes of data. The format of the header
-is shown in :numref:`Figure %s <fig-iphead>`. Note that we have
-adopted a different style of representing packets than the one we used
-in previous chapters. This is because packet formats at the
-internetworking layer and above, where we will be focusing our
-attention for the next few chapters, are almost invariably designed to
-align on 32-bit boundaries to simplify the task of processing them in
-software. Thus, the common way of representing them (used in Internet
-Requests for Comments, for example) is to draw them as a succession of
-32-bit words. The top word is the one transmitted first, and the
-leftmost byte of each word is the one transmitted first. In this
-representation, you can easily recognize fields that are a multiple of
-8 bits long. On the odd occasion when fields are not an even multiple
-of 8 bits, you can determine the field lengths by looking at the bit
-positions marked at the top of the packet.
+Rõ ràng, một phần quan trọng của mô hình dịch vụ IP là kiểu gói tin có thể được mang. Datagram IP, giống như hầu hết các gói tin, gồm một tiêu đề (header) theo sau là một số byte dữ liệu. Định dạng của tiêu đề được minh họa trong :numref:`Hình %s <fig-iphead>`. Lưu ý rằng chúng tôi đã áp dụng một kiểu biểu diễn gói tin khác với các chương trước. Đó là vì các định dạng gói tin ở tầng liên mạng và cao hơn, nơi chúng ta sẽ tập trung trong các chương tới, gần như luôn được thiết kế để căn chỉnh theo biên 32 bit để đơn giản hóa xử lý trong phần mềm. Do đó, cách biểu diễn phổ biến (dùng trong các RFC của Internet, chẳng hạn) là vẽ chúng như một chuỗi các từ 32 bit. Từ trên cùng là từ được truyền trước, và byte ngoài cùng bên trái của mỗi từ là byte được truyền trước. Trong biểu diễn này, bạn có thể dễ dàng nhận ra các trường có độ dài là bội số của 8 bit. Khi có trường không phải là bội số của 8 bit, bạn có thể xác định độ dài trường bằng cách nhìn vào vị trí bit ở đầu gói tin.
 
 .. _fig-iphead:
 .. figure:: figures/f03-16-9780123850591.png
    :width: 450px
    :align: center
 
-   IPv4 packet header.
+   Tiêu đề gói tin IPv4.
 
-Looking at each field in the IP header, we see that the “simple” model
-of best-effort datagram delivery still has some subtle features. The
-``Version`` field specifies the version of IP. The still-assumed version
-of IP is 4, which is typically called *IPv4*. Observe that putting this
-field right at the start of the datagram makes it easy for everything
-else in the packet format to be redefined in subsequent versions; the
-header processing software starts off by looking at the version and then
-branches off to process the rest of the packet according to the
-appropriate format. The next field, ``HLen``, specifies the length of
-the header in 32-bit words. When there are no options, which is most of
-the time, the header is 5 words (20 bytes) long. The 8-bit ``TOS`` (type
-of service) field has had a number of different definitions over the
-years, but its basic function is to allow packets to be treated
-differently based on application needs. For example, the ``TOS`` value
-might determine whether or not a packet should be placed in a special
-queue that receives low delay.
+Khi xem xét từng trường trong tiêu đề IP, ta thấy rằng mô hình đơn giản về truyền datagram nỗ lực tối đa vẫn có một số tính năng tinh vi. Trường ``Version`` chỉ định phiên bản của IP. Phiên bản IP vẫn được giả định hiện nay là 4, thường gọi là *IPv4*. Lưu ý rằng đặt trường này ngay đầu datagram giúp dễ dàng định nghĩa lại mọi thứ khác trong định dạng gói tin ở các phiên bản sau; phần mềm xử lý tiêu đề bắt đầu bằng cách nhìn vào phiên bản rồi xử lý phần còn lại của gói tin theo định dạng phù hợp. Trường tiếp theo, ``HLen``, chỉ độ dài tiêu đề tính theo từ 32 bit. Khi không có tùy chọn, điều này thường là 5 từ (20 byte). Trường ``TOS`` (type of service) 8 bit đã có nhiều định nghĩa khác nhau qua các năm, nhưng chức năng cơ bản là cho phép các gói tin được xử lý khác nhau tùy theo nhu cầu ứng dụng. Ví dụ, giá trị ``TOS`` có thể quyết định liệu một gói tin có nên được đặt vào hàng đợi đặc biệt nhận độ trễ thấp hay không.
 
-The next 16 bits of the header contain the ``Length`` of the datagram,
-including the header. Unlike the ``HLen`` field, the ``Length`` field
-counts bytes rather than words. Thus, the maximum size of an IP datagram
-is 65,535 bytes. The physical network over which IP is running, however,
-may not support such long packets. For this reason, IP supports a
-fragmentation and reassembly process. The second word of the header
-contains information about fragmentation, and the details of its use are
-presented in the following section entitled “Fragmentation and
-Reassembly.”
+16 bit tiếp theo của tiêu đề chứa trường ``Length`` của datagram, bao gồm cả tiêu đề. Không giống trường ``HLen``, trường ``Length`` tính theo byte chứ không phải từ. Do đó, kích thước tối đa của một datagram IP là 65.535 byte. Tuy nhiên, mạng vật lý mà IP chạy trên đó có thể không hỗ trợ các gói tin dài như vậy. Vì lý do này, IP hỗ trợ quá trình phân mảnh và lắp ráp lại. Từ thứ hai của tiêu đề chứa thông tin về phân mảnh, chi tiết sẽ được trình bày ở phần sau “Phân mảnh và lắp ráp lại”.
 
-Moving on to the third word of the header, the next byte is the ``TTL``
-(time to live) field. Its name reflects its historical meaning rather
-than the way it is commonly used today. The intent of the field is to
-catch packets that have been going around in routing loops and discard
-them, rather than let them consume resources indefinitely. Originally,
-``TTL`` was set to a specific number of seconds that the packet would be
-allowed to live, and routers along the path would decrement this field
-until it reached 0. However, since it was rare for a packet to sit for
-as long as 1 second in a router, and routers did not all have access to
-a common clock, most routers just decremented the ``TTL`` by 1 as they
-forwarded the packet. Thus, it became more of a hop count than a timer,
-which is still a perfectly good way to catch packets that are stuck in
-routing loops. One subtlety is in the initial setting of this field by
-the sending host: Set it too high and packets could circulate rather a
-lot before getting dropped; set it too low and they may not reach their
-destination. The value 64 is the current default.
+Tiếp theo, byte đầu tiên của từ thứ ba trong tiêu đề là trường ``TTL`` (time to live). Tên trường này phản ánh ý nghĩa lịch sử hơn là cách sử dụng hiện nay. Ý định của trường này là bắt các gói tin bị lặp trong các vòng lặp định tuyến và loại bỏ chúng, thay vì để chúng tiêu tốn tài nguyên vô hạn. Ban đầu, ``TTL`` được đặt thành một số giây cụ thể mà gói tin được phép tồn tại, và các bộ định tuyến trên đường đi sẽ giảm trường này cho đến khi nó về 0. Tuy nhiên, vì hiếm khi một gói tin phải chờ tới 1 giây trong một bộ định tuyến, và các bộ định tuyến không có đồng hồ chung, hầu hết các bộ định tuyến chỉ giảm ``TTL`` đi 1 mỗi khi chuyển tiếp gói tin. Do đó, nó trở thành bộ đếm số bước nhảy hơn là bộ đếm thời gian, nhưng vẫn là cách tốt để bắt các gói tin bị kẹt trong vòng lặp định tuyến. Một điểm tinh tế là giá trị khởi tạo trường này do máy gửi đặt: Nếu đặt quá cao, gói tin có thể lặp lại nhiều lần trước khi bị loại bỏ; nếu đặt quá thấp, có thể không đến được đích. Giá trị mặc định hiện nay là 64.
 
-The ``Protocol`` field is simply a demultiplexing key that identifies
-the higher-level protocol to which this IP packet should be passed.
-There are values defined for the TCP (Transmission Control Protocol—6),
-UDP (User Datagram Protocol—17), and many other protocols that may sit
-above IP in the protocol graph.
+Trường ``Protocol`` đơn giản là một khóa phân kênh xác định giao thức tầng cao hơn mà gói tin IP này nên chuyển tới. Có các giá trị xác định cho TCP (Transmission Control Protocol—6), UDP (User Datagram Protocol—17), và nhiều giao thức khác có thể nằm trên IP trong đồ thị giao thức.
 
-The ``Checksum`` is calculated by considering the entire IP header as a
-sequence of 16-bit words, adding them up using ones’ complement
-arithmetic, and taking the ones’ complement of the result. Thus, if any
-bit in the header is corrupted in transit, the checksum will not contain
-the correct value upon receipt of the packet. Since a corrupted header
-may contain an error in the destination address—and, as a result, may
-have been misdelivered—it makes sense to discard any packet that fails
-the checksum. It should be noted that this type of checksum does not
-have the same strong error detection properties as a CRC, but it is much
-easier to calculate in software.
+Trường ``Checksum`` được tính bằng cách coi toàn bộ tiêu đề IP là một chuỗi các từ 16 bit, cộng chúng lại bằng toán học bù một, và lấy bù một của kết quả. Do đó, nếu bất kỳ bit nào trong tiêu đề bị lỗi khi truyền, checksum sẽ không đúng khi nhận gói tin. Vì một tiêu đề bị lỗi có thể chứa lỗi ở địa chỉ đích—và do đó có thể đã bị chuyển nhầm—nên hợp lý khi loại bỏ bất kỳ gói tin nào không vượt qua kiểm tra checksum. Lưu ý rằng loại checksum này không có khả năng phát hiện lỗi mạnh như CRC, nhưng dễ tính toán hơn nhiều trong phần mềm.
 
-The last two required fields in the header are the ``SourceAddr`` and
-the ``DestinationAddr`` for the packet. The latter is the key to
-datagram delivery: Every packet contains a full address for its intended
-destination so that forwarding decisions can be made at each router. The
-source address is required to allow recipients to decide if they want to
-accept the packet and to enable them to reply. IP addresses are
-discussed in a later section—for now, the important thing to know is
-that IP defines its own global address space, independent of whatever
-physical networks it runs over. As we will see, this is one of the keys
-to supporting heterogeneity.
+Hai trường bắt buộc cuối cùng trong tiêu đề là ``SourceAddr`` và ``DestinationAddr`` của gói tin. Trường sau là chìa khóa cho truyền datagram: Mỗi gói tin chứa địa chỉ đầy đủ của đích để các quyết định chuyển tiếp có thể được thực hiện tại mỗi bộ định tuyến. Địa chỉ nguồn là cần thiết để người nhận quyết định có nhận gói tin không và để trả lời. Địa chỉ IP sẽ được thảo luận ở phần sau—hiện tại, điều quan trọng là IP định nghĩa không gian địa chỉ toàn cục riêng, độc lập với bất kỳ mạng vật lý nào mà nó chạy trên đó. Như chúng ta sẽ thấy, đây là một trong những chìa khóa để hỗ trợ dị chủng.
 
-Finally, there may be a number of options at the end of the header. The
-presence or absence of options may be determined by examining the header
-length (``HLen``) field. While options are used fairly rarely, a
-complete IP implementation must handle them all.
+Cuối cùng, có thể có một số tùy chọn ở cuối tiêu đề. Có hay không các tùy chọn này có thể xác định bằng cách kiểm tra trường độ dài tiêu đề (``HLen``). Dù các tùy chọn này khá hiếm khi dùng, một triển khai IP đầy đủ phải xử lý được tất cả.
 
-Fragmentation and Reassembly
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Phân mảnh và lắp ráp lại
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-One of the problems of providing a uniform host-to-host service model
-over a heterogeneous collection of networks is that each network
-technology tends to have its own idea of how large a packet can be. For
-example, classic Ethernet can accept packets up to 1500 bytes long, but
-modern-day variants can deliver larger (jumbo) packets that carry up to
-9000 bytes of payload. This leaves two choices for the IP service model:
-Make sure that all IP datagrams are small enough to fit inside one
-packet on any network technology, or provide a means by which packets
-can be fragmented and reassembled when they are too big to go over a
-given network technology. The latter turns out to be a good choice,
-especially when you consider the fact that new network technologies are
-always turning up, and IP needs to run over all of them; this would make
-it hard to pick a suitably small bound on datagram size. This also means
-that a host will not send needlessly small packets, which wastes
-bandwidth and consumes processing resources by requiring more headers
-per byte of data sent.
+Một trong những vấn đề khi cung cấp mô hình dịch vụ máy chủ tới máy chủ thống nhất trên một tập hợp dị chủng các mạng là mỗi công nghệ mạng thường có ý tưởng riêng về kích thước gói tin tối đa. Ví dụ, Ethernet cổ điển có thể nhận các gói tin dài tới 1500 byte, nhưng các biến thể hiện đại có thể truyền các gói lớn hơn (jumbo) mang tới 9000 byte dữ liệu. Điều này để lại hai lựa chọn cho mô hình dịch vụ IP: Đảm bảo rằng mọi datagram IP đều đủ nhỏ để vừa trong một gói tin trên bất kỳ công nghệ mạng nào, hoặc cung cấp một cơ chế để các gói tin có thể bị phân mảnh và lắp ráp lại khi chúng quá lớn để truyền qua một công nghệ mạng nhất định. Lựa chọn thứ hai hóa ra là tốt, đặc biệt khi bạn cân nhắc rằng các công nghệ mạng mới luôn xuất hiện, và IP cần chạy trên tất cả; điều này sẽ khiến việc chọn một giới hạn nhỏ phù hợp cho kích thước datagram trở nên khó khăn. Điều này cũng có nghĩa là máy chủ sẽ không gửi các gói tin nhỏ không cần thiết, gây lãng phí băng thông và tiêu tốn tài nguyên xử lý do phải có nhiều tiêu đề hơn cho mỗi byte dữ liệu gửi đi.
 
-The central idea here is that every network type has a *maximum
-transmission unit* (MTU), which is the largest IP datagram that it can
-carry in a frame.\ [#]_ Note that this value is smaller than the largest
-packet size on that network because the IP datagram needs to fit in the
-*payload* of the link-layer frame.
+Ý tưởng trung tâm ở đây là mỗi loại mạng đều có một *đơn vị truyền tối đa* (MTU), là datagram IP lớn nhất mà nó có thể mang trong một frame. Lưu ý rằng giá trị này nhỏ hơn kích thước gói tin lớn nhất trên mạng vì datagram IP cần vừa trong *payload* của frame tầng liên kết.
 
-.. [#] In ATM networks, the MTU is, fortunately, much larger than a
-       single cell, as ATM has its own fragmentation and reassembly
-       mechanism. The link-layer frame in ATM is called a
-       *convergence-sublayer protocol data unit* (CS-PDU).
+.. [#] Trong mạng ATM, MTU may mắn là lớn hơn nhiều so với một cell, vì ATM có cơ chế phân mảnh và lắp ráp riêng. Frame tầng liên kết trong ATM gọi là *convergence-sublayer protocol data unit* (CS-PDU).
 
-When a host sends an IP datagram, therefore, it can choose any size that
-it wants. A reasonable choice is the MTU of the network to which the
-host is directly attached. Then, fragmentation will only be necessary if
-the path to the destination includes a network with a smaller MTU.
-Should the transport protocol that sits on top of IP give IP a packet
-larger than the local MTU, however, then the source host must
-fragment it.
+Khi một máy chủ gửi một datagram IP, nó có thể chọn bất kỳ kích thước nào nó muốn. Một lựa chọn hợp lý là MTU của mạng mà máy chủ kết nối trực tiếp. Khi đó, phân mảnh chỉ cần thiết nếu đường đi tới đích có mạng với MTU nhỏ hơn. Nếu giao thức tầng vận chuyển trên IP đưa cho IP một gói lớn hơn MTU cục bộ, máy chủ nguồn phải phân mảnh nó.
 
-Fragmentation typically occurs in a router when it receives a datagram
-that it wants to forward over a network that has an MTU that is smaller
-than the received datagram. To enable these fragments to be reassembled
-at the receiving host, they all carry the same identifier in the
-``Ident`` field. This identifier is chosen by the sending host and is
-intended to be unique among all the datagrams that might arrive at the
-destination from this source over some reasonable time period. Since all
-fragments of the original datagram contain this identifier, the
-reassembling host will be able to recognize those fragments that go
-together. Should all the fragments not arrive at the receiving host, the
-host gives up on the reassembly process and discards the fragments that
-did arrive. IP does not attempt to recover from missing fragments.
+Phân mảnh thường xảy ra ở một bộ định tuyến khi nó nhận một datagram mà nó muốn chuyển tiếp qua một mạng có MTU nhỏ hơn datagram nhận được. Để các mảnh này có thể được lắp ráp lại ở máy chủ nhận, tất cả đều mang cùng một định danh trong trường ``Ident``. Định danh này do máy chủ gửi chọn và phải là duy nhất trong số các datagram có thể đến đích từ nguồn này trong một khoảng thời gian hợp lý. Vì tất cả các mảnh của datagram gốc đều chứa định danh này, máy chủ lắp ráp sẽ nhận ra các mảnh thuộc về nhau. Nếu không phải tất cả các mảnh đều đến được máy chủ nhận, máy chủ sẽ từ bỏ quá trình lắp ráp và loại bỏ các mảnh đã nhận. IP không cố gắng phục hồi các mảnh bị mất.
 
 .. _fig-frag:
 .. figure:: figures/f03-17-9780123850591.png
    :width: 600px
    :align: center
 
-   IP datagrams traversing the sequence of physical
-   networks graphed in the earlier figure.
+   Các datagram IP đi qua chuỗi các mạng vật lý như trong hình trước.
 
-To see what this all means, consider what happens when host H5 sends a
-datagram to host H8 in the example internet shown in :numref:`Figure
-%s <fig-inet>`. Assuming that the MTU is 1500 bytes for the two
-Ethernets and the 802.11 network, and 532 bytes for the point-to-point
-network, then a 1420-byte datagram (20-byte IP header plus 1400 bytes
-of data) sent from H5 makes it across the 802.11 network and the first
-Ethernet without fragmentation but must be fragmented into three
-datagrams at router R2. These three fragments are then forwarded by
-router R3 across the second Ethernet to the destination host. This
-situation is illustrated in :numref:`Figure %s <fig-frag>`. This
-figure also serves to reinforce two important points:
+Để hiểu ý nghĩa của điều này, hãy xem điều gì xảy ra khi máy chủ H5 gửi một datagram tới H8 trong ví dụ internet ở :numref:`Hình %s <fig-inet>`. Giả sử MTU là 1500 byte cho hai mạng Ethernet và mạng 802.11, và 532 byte cho mạng điểm-điểm, thì một datagram 1420 byte (20 byte tiêu đề IP cộng 1400 byte dữ liệu) gửi từ H5 sẽ đi qua mạng 802.11 và Ethernet đầu tiên mà không bị phân mảnh nhưng phải bị phân mảnh thành ba datagram tại bộ định tuyến R2. Ba mảnh này sau đó được R3 chuyển tiếp qua Ethernet thứ hai tới máy chủ đích. Tình huống này được minh họa trong :numref:`Hình %s <fig-frag>`. Hình này cũng củng cố hai điểm quan trọng:
 
-1. Each fragment is itself a self-contained IP datagram that is
-   transmitted over a sequence of physical networks, independent of the
-   other fragments.
+1. Mỗi mảnh là một datagram IP độc lập được truyền qua một chuỗi các mạng vật lý, độc lập với các mảnh khác.
 
-2. Each IP datagram is re-encapsulated for each physical network over
-   which it travels.
+2. Mỗi datagram IP được đóng gói lại cho mỗi mạng vật lý mà nó đi qua.
 
 .. _fig-fragment:
 .. figure:: figures/f03-18-9780123850591.png
    :align: center
    :width: 350px
 
-   Header fields used in IP fragmentation:
-   (a) unfragmented packet; (b) fragmented packets.
+   Các trường tiêu đề dùng trong phân mảnh IP: (a) gói chưa phân mảnh; (b) các gói đã phân mảnh.
 
-The fragmentation process can be understood in detail by looking at
-the header fields of each datagram, as is done in :numref:`Figure %s
-<fig-fragment>`.  The unfragmented packet, shown at the top, has
-1400 bytes of data and a 20-byte IP header. When the packet arrives at
-router R2, which has an MTU of 532 bytes, it has to be fragmented. A
-532-byte MTU leaves 512 bytes for data after the 20-byte IP header, so
-the first fragment contains 512 bytes of data. The router sets the M
-bit in the ``Flags`` field (see :numref:`Figure %s <fig-iphead>`),
-meaning that there are more fragments to follow, and it sets the
-``Offset`` to 0, since this fragment contains the first part of the
-original datagram. The data carried in the second fragment starts with
-the 513th byte of the original data, so the ``Offset`` field in this
-header is set to 64, which is 512/8. Why the division by 8? Because
-the designers of IP decided that fragmentation should always happen on
-8-byte boundaries, which means that the ``Offset`` field counts 8-byte
-chunks, not bytes.  (We leave it as an exercise for you to figure out
-why this design decision was made.) The third fragment contains the
-last 376 bytes of data, and the offset is now 2 × 512/8 = 128. Since
-this is the last fragment, the M bit is not set.
+Quá trình phân mảnh có thể hiểu chi tiết bằng cách xem các trường tiêu đề của từng datagram, như minh họa trong :numref:`Hình %s <fig-fragment>`. Gói chưa phân mảnh ở trên cùng có 1400 byte dữ liệu và 20 byte tiêu đề IP. Khi gói đến bộ định tuyến R2, có MTU là 532 byte, nó phải bị phân mảnh. MTU 532 byte để lại 512 byte cho dữ liệu sau khi trừ 20 byte tiêu đề IP, nên mảnh đầu tiên chứa 512 byte dữ liệu. Bộ định tuyến đặt bit M trong trường ``Flags`` (xem :numref:`Hình %s <fig-iphead>`), nghĩa là còn các mảnh tiếp theo, và đặt ``Offset`` là 0, vì mảnh này chứa phần đầu của datagram gốc. Dữ liệu trong mảnh thứ hai bắt đầu từ byte thứ 513 của dữ liệu gốc, nên trường ``Offset`` trong tiêu đề này được đặt là 64, tức là 512/8. Tại sao chia cho 8? Vì các nhà thiết kế IP quyết định rằng phân mảnh luôn xảy ra trên biên 8 byte, nghĩa là trường ``Offset`` đếm theo đơn vị 8 byte, không phải byte. (Bạn có thể tự tìm hiểu lý do thiết kế này.) Mảnh thứ ba chứa 376 byte dữ liệu cuối cùng, và offset là 2 × 512/8 = 128. Vì đây là mảnh cuối cùng, bit M không được đặt.
 
-Observe that the fragmentation process is done in such a way that it
-could be repeated if a fragment arrived at another network with an even
-smaller MTU. Fragmentation produces smaller, valid IP datagrams that can
-be readily reassembled into the original datagram upon receipt,
-independent of the order of their arrival. Reassembly is done at the
-receiving host and not at each router.
+Lưu ý rằng quá trình phân mảnh được thực hiện sao cho nó có thể lặp lại nếu một mảnh đến một mạng khác có MTU còn nhỏ hơn. Phân mảnh tạo ra các datagram IP nhỏ hơn, hợp lệ, có thể dễ dàng lắp ráp lại thành datagram gốc khi nhận, bất kể thứ tự các mảnh đến. Việc lắp ráp lại được thực hiện tại máy chủ nhận, không phải tại mỗi bộ định tuyến.
 
-IP reassembly is far from a simple process. For example, if a single
-fragment is lost, the receiver will still attempt to reassemble the
-datagram, and it will eventually give up and have to garbage-collect the
-resources that were used to perform the failed reassembly. Getting a
-host to tie up resources needlessly can be the basis of a
-denial-of-service attack.
+Việc lắp ráp lại IP không hề đơn giản. Ví dụ, nếu một mảnh bị mất, máy nhận vẫn cố gắng lắp ráp datagram, và cuối cùng sẽ từ bỏ và phải giải phóng tài nguyên đã dùng cho quá trình lắp ráp thất bại. Việc một máy chủ giữ tài nguyên vô ích có thể là cơ sở cho một cuộc tấn công từ chối dịch vụ.
 
-For this reason, among others, IP fragmentation is generally considered
-a good thing to avoid. Hosts are now strongly encouraged to perform
-“path MTU discovery,” a process by which fragmentation is avoided by
-sending packets that are small enough to traverse the link with the
-smallest MTU in the path from sender to receiver.
+Vì lý do này và các lý do khác, phân mảnh IP thường được coi là điều nên tránh. Hiện nay, các máy chủ được khuyến khích mạnh mẽ thực hiện “khám phá MTU đường đi” (path MTU discovery), một quá trình giúp tránh phân mảnh bằng cách gửi các gói đủ nhỏ để đi qua liên kết có MTU nhỏ nhất trên đường từ nguồn tới đích.
 
-3.3.3 Global Addresses
+3.3.3 Địa chỉ toàn cục
 ----------------------
 
-In the above discussion of the IP service model, we mentioned that one
-of the things that it provides is an addressing scheme. After all, if
-you want to be able to send data to any host on any network, there needs
-to be a way of identifying all the hosts. Thus, we need a global
-addressing scheme—one in which no two hosts have the same address.
-Global uniqueness is the first property that should be provided in an
-addressing scheme.
+Trong phần thảo luận về mô hình dịch vụ IP ở trên, chúng ta đã đề cập rằng một trong những điều mà nó cung cấp là một sơ đồ địa chỉ. Rốt cuộc, nếu bạn muốn gửi dữ liệu tới bất kỳ máy chủ nào trên bất kỳ mạng nào, cần có cách nhận diện tất cả các máy chủ. Do đó, chúng ta cần một sơ đồ địa chỉ toàn cục—trong đó không có hai máy chủ nào có cùng địa chỉ. Tính duy nhất toàn cục là thuộc tính đầu tiên mà một sơ đồ địa chỉ phải cung cấp.
 
-Ethernet addresses are globally unique, but that alone does not
-suffice for an addressing scheme in a large internetwork. Ethernet
-addresses are also *flat*, which means that they have no structure and
-provide very few clues to routing protocols. (In fact, Ethernet
-addresses do have a structure for the purposes of *assignment*—the
-first 24 bits identify the manufacturer—but this provides no useful
-information to routing protocols since this structure has nothing to
-do with network topology.)  In contrast, IP addresses are
-*hierarchical*, by which we mean that they are made up of several
-parts that correspond to some sort of hierarchy in the
-internetwork. Specifically, IP addresses consist of two parts, usually
-referred to as a *network* part and a *host* part. This is a fairly
-logical structure for an internetwork, which is made up of many
-interconnected networks. The network part of an IP address identifies
-the network to which the host is attached; all hosts attached to the
-same network have the same network part in their IP address. The host
-part then identifies each host uniquely on that particular network.
-Thus, in the simple internetwork of :numref:`Figure %s <fig-inet>`,
-the addresses of the hosts on network 1, for example, would all have
-the same network part and different host parts.
+Địa chỉ Ethernet là duy nhất toàn cục, nhưng chỉ điều đó thôi là chưa đủ cho một sơ đồ địa chỉ trong một liên mạng lớn. Địa chỉ Ethernet cũng là *phẳng*, nghĩa là chúng không có cấu trúc và cung cấp rất ít thông tin cho các giao thức định tuyến. (Thực tế, địa chỉ Ethernet có cấu trúc cho mục đích *cấp phát*—24 bit đầu nhận diện nhà sản xuất—nhưng điều này không giúp ích gì cho định tuyến vì cấu trúc này không liên quan tới cấu trúc mạng.) Ngược lại, địa chỉ IP là *phân cấp*, nghĩa là chúng gồm nhiều phần tương ứng với một dạng phân cấp nào đó trong liên mạng. Cụ thể, địa chỉ IP gồm hai phần, thường gọi là phần *mạng* và phần *máy chủ*. Đây là một cấu trúc khá hợp lý cho một liên mạng, vốn được tạo thành từ nhiều mạng liên kết với nhau. Phần mạng của địa chỉ IP nhận diện mạng mà máy chủ kết nối; tất cả các máy chủ kết nối cùng một mạng có cùng phần mạng trong địa chỉ IP. Phần máy chủ sau đó nhận diện từng máy chủ duy nhất trên mạng đó. Do đó, trong liên mạng đơn giản ở :numref:`Hình %s <fig-inet>`, các địa chỉ của các máy chủ trên mạng 1, ví dụ, đều có cùng phần mạng và phần máy chủ khác nhau.
 
-Note that the routers in :numref:`Figure %s <fig-inet>` are attached to two
-networks. They need to have an address on each network, one for each
-interface. For example, router R1, which sits between the wireless
-network and an Ethernet, has an IP address on the interface to the
-wireless network whose network part is the same as all the hosts on that
-network. It also has an IP address on the interface to the Ethernet that
-has the same network part as the hosts on that Ethernet. Thus, bearing
-in mind that a router might be implemented as a host with two network
-interfaces, it is more precise to think of IP addresses as belonging to
-interfaces than to hosts.
+Lưu ý rằng các bộ định tuyến trong :numref:`Hình %s <fig-inet>` kết nối tới hai mạng. Chúng cần có một địa chỉ trên mỗi mạng, một cho mỗi giao diện. Ví dụ, bộ định tuyến R1, nằm giữa mạng không dây và một Ethernet, có một địa chỉ IP trên giao diện tới mạng không dây với phần mạng giống tất cả các máy chủ trên mạng đó. Nó cũng có một địa chỉ IP trên giao diện tới Ethernet có phần mạng giống các máy chủ trên Ethernet đó. Do đó, lưu ý rằng một bộ định tuyến có thể được triển khai như một máy chủ với hai giao diện mạng, nên chính xác hơn là coi địa chỉ IP thuộc về giao diện hơn là thuộc về máy chủ.
 
-Now, what do these hierarchical addresses look like? Unlike some other
-forms of hierarchical address, the sizes of the two parts are not the
-same for all addresses. Originally, IP addresses were divided into
-three different classes, as shown in :numref:`Figure %s <fig-class>`,
-each of which defines different-sized network and host parts. (There
-are also class D addresses that specify a multicast group and class E
-addresses that are currently unused.) In all cases, the address is
-32 bits long.
+Vậy các địa chỉ phân cấp này trông như thế nào? Không giống một số dạng địa chỉ phân cấp khác, kích thước của hai phần không giống nhau cho mọi địa chỉ. Ban đầu, địa chỉ IP được chia thành ba lớp khác nhau, như minh họa trong :numref:`Hình %s <fig-class>`, mỗi lớp định nghĩa kích thước phần mạng và phần máy chủ khác nhau. (Cũng có địa chỉ lớp D dùng cho nhóm multicast và lớp E hiện chưa dùng.) Trong mọi trường hợp, địa chỉ dài 32 bit.
 
-The class of an IP address is identified in the most significant few
-bits. If the first bit is 0, it is a class A address. If the first bit
-is 1 and the second is 0, it is a class B address. If the first two
-bits are 1 and the third is 0, it is a class C address. Thus, of the
-approximately 4 billion possible IP addresses, half are class A,
-one-quarter are class B, and one-eighth are class C. Each class
-allocates a certain number of bits for the network part of the address
-and the rest for the host part. Class A networks have 7 bits for the
-network part and 24 bits for the host part, meaning that there can be
-only 126 class A networks (the values 0 and 127 are reserved), but
-each of them can accommodate up to :math:`2^{24} - 2` (about
-16 million) hosts (again, there are two reserved values).  Class B
-addresses allocate 14 bits for the network and 16 bits for the host,
-meaning that each class B network has room for 65,534 hosts.  Finally,
-class C addresses have only 8 bits for the host and 21 for the network
-part. Therefore, a class C network can have only 256 unique host
-identifiers, which means only 254 attached hosts (one host identifier,
-255, is reserved for broadcast, and 0 is not a valid host number).
-However, the addressing scheme supports 2\ :sup:`21` class C networks.
+Lớp của một địa chỉ IP được xác định ở một vài bit quan trọng nhất. Nếu bit đầu là 0, đó là địa chỉ lớp A. Nếu bit đầu là 1 và bit thứ hai là 0, đó là lớp B. Nếu hai bit đầu là 1 và bit thứ ba là 0, đó là lớp C. Do đó, trong khoảng 4 tỷ địa chỉ IP có thể có, một nửa là lớp A, một phần tư là lớp B, và một phần tám là lớp C. Mỗi lớp cấp phát một số bit nhất định cho phần mạng và phần còn lại cho phần máy chủ. Mạng lớp A có 7 bit cho phần mạng và 24 bit cho phần máy chủ, nghĩa là chỉ có 126 mạng lớp A (giá trị 0 và 127 được dành riêng), nhưng mỗi mạng có thể chứa tới :math:`2^{24} - 2` (khoảng 16 triệu) máy chủ (lại có hai giá trị dành riêng). Địa chỉ lớp B cấp phát 14 bit cho mạng và 16 bit cho máy chủ, nghĩa là mỗi mạng lớp B chứa tối đa 65.534 máy chủ. Cuối cùng, địa chỉ lớp C chỉ có 8 bit cho máy chủ và 21 bit cho phần mạng. Do đó, một mạng lớp C chỉ có thể có 256 định danh máy chủ duy nhất, tức là chỉ 254 máy chủ kết nối (một định danh máy chủ, 255, dành cho broadcast, và 0 không hợp lệ). Tuy nhiên, sơ đồ địa chỉ này hỗ trợ 2\ :sup:`21` mạng lớp C.
 
 .. _fig-class:
 .. figure:: figures/f03-19-9780123850591.png
    :width: 350px
    :align: center
 
-   IP addresses: (a) class A; (b) class B; (c) class C.
+   Địa chỉ IP: (a) lớp A; (b) lớp B; (c) lớp C.
 
-On the face of it, this addressing scheme has a lot of flexibility,
-allowing networks of vastly different sizes to be accommodated fairly
-efficiently. The original idea was that the Internet would consist of a
-small number of wide area networks (these would be class A networks), a
-modest number of site- (campus-) sized networks (these would be class B
-networks), and a large number of LANs (these would be class C networks).
-However, it turned out not to be flexible enough, as we will see in a
-moment. Today, IP addresses are normally “classless”; the details of
-this are explained below.
+Nhìn bề ngoài, sơ đồ địa chỉ này có nhiều linh hoạt, cho phép các mạng có kích thước rất khác nhau được hỗ trợ khá hiệu quả. Ý tưởng ban đầu là Internet sẽ gồm một số ít mạng diện rộng (là mạng lớp A), một số vừa phải các mạng quy mô site (campus) (là mạng lớp B), và rất nhiều LAN (là mạng lớp C). Tuy nhiên, hóa ra nó không đủ linh hoạt, như chúng ta sẽ thấy ngay sau đây. Ngày nay, địa chỉ IP thường là “không phân lớp”; chi tiết sẽ được giải thích bên dưới.
 
-Before we look at how IP addresses get used, it is helpful to look at
-some practical matters, such as how you write them down. By convention,
-IP addresses are written as four *decimal* integers separated by dots.
-Each integer represents the decimal value contained in 1 byte of the
-address, starting at the most significant. For example, the address of
-the computer on which this sentence was typed is ``171.69.210.245``.
+Trước khi xem cách địa chỉ IP được sử dụng, sẽ hữu ích khi xem một số vấn đề thực tế, như cách ghi lại chúng. Theo quy ước, địa chỉ IP được viết dưới dạng bốn số nguyên *thập phân* cách nhau bằng dấu chấm. Mỗi số nguyên biểu diễn giá trị thập phân chứa trong 1 byte của địa chỉ, bắt đầu từ byte quan trọng nhất. Ví dụ, địa chỉ của máy tính mà câu này được gõ là ``171.69.210.245``.
 
-It is important not to confuse IP addresses with Internet domain names,
-which are also hierarchical. Domain names tend to be ASCII strings
-separated by dots, such as ``cs.princeton.edu``. The important thing
-about IP addresses is that they are what is carried in the headers of IP
-packets, and it is those addresses that are used in IP routers to make
-forwarding decisions.
+Điều quan trọng là không nhầm lẫn địa chỉ IP với tên miền Internet, vốn cũng là phân cấp. Tên miền thường là chuỗi ASCII cách nhau bằng dấu chấm, như ``cs.princeton.edu``. Điều quan trọng về địa chỉ IP là chúng được mang trong tiêu đề các gói tin IP, và chính các địa chỉ này được dùng trong các bộ định tuyến IP để quyết định chuyển tiếp.
 
-3.3.4 Datagram Forwarding in IP
--------------------------------
+3.3.4 Chuyển tiếp datagram trong IP
+-----------------------------------
 
-We are now ready to look at the basic mechanism by which IP routers
-forward datagrams in an internetwork. Recall from an earlier section
-that *forwarding* is the process of taking a packet from an input and
-sending it out on the appropriate output, while *routing* is the process
-of building up the tables that allow the correct output for a packet to
-be determined. The discussion here focuses on forwarding; we take up
-routing in a later section.
+Giờ chúng ta đã sẵn sàng xem xét cơ chế cơ bản mà các bộ định tuyến IP dùng để chuyển tiếp datagram trong một liên mạng. Nhớ lại từ phần trước rằng *chuyển tiếp* là quá trình lấy một gói tin từ đầu vào và gửi nó ra đầu ra phù hợp, trong khi *định tuyến* là quá trình xây dựng các bảng cho phép xác định đầu ra đúng cho một gói tin. Phần thảo luận ở đây tập trung vào chuyển tiếp; chúng ta sẽ bàn về định tuyến ở phần sau.
 
-The main points to bear in mind as we discuss the forwarding of IP
-datagrams are the following:
+Các điểm chính cần nhớ khi thảo luận về chuyển tiếp datagram IP là:
 
--  Every IP datagram contains the IP address of the destination host.
+-  Mỗi datagram IP chứa địa chỉ IP của máy chủ đích.
 
--  The network part of an IP address uniquely identifies a single
-   physical network that is part of the larger Internet.
+-  Phần mạng của một địa chỉ IP nhận diện duy nhất một mạng vật lý là một phần của Internet lớn hơn.
 
--  All hosts and routers that share the same network part of their
-   address are connected to the same physical network and can thus
-   communicate with each other by sending frames over that network.
+-  Tất cả các máy chủ và bộ định tuyến có cùng phần mạng trong địa chỉ đều kết nối tới cùng một mạng vật lý và do đó có thể giao tiếp với nhau bằng cách gửi frame qua mạng đó.
 
--  Every physical network that is part of the Internet has at least one
-   router that, by definition, is also connected to at least one other
-   physical network; this router can exchange packets with hosts or
-   routers on either network.
+-  Mỗi mạng vật lý là một phần của Internet đều có ít nhất một bộ định tuyến, theo định nghĩa, cũng kết nối tới ít nhất một mạng vật lý khác; bộ định tuyến này có thể trao đổi gói tin với các máy chủ hoặc bộ định tuyến trên cả hai mạng.
 
-Forwarding IP datagrams can therefore be handled in the following way. A
-datagram is sent from a source host to a destination host, possibly
-passing through several routers along the way. Any node, whether it is a
-host or a router, first tries to establish whether it is connected to
-the same physical network as the destination. To do this, it compares
-the network part of the destination address with the network part of the
-address of each of its network interfaces. (Hosts normally have only one
-interface, while routers normally have two or more, since they are
-typically connected to two or more networks.) If a match occurs, then
-that means that the destination lies on the same physical network as the
-interface, and the packet can be directly delivered over that network. A
-later section explains some of the details of this process.
+Do đó, chuyển tiếp datagram IP có thể được xử lý như sau. Một datagram được gửi từ máy chủ nguồn tới máy chủ đích, có thể đi qua nhiều bộ định tuyến trên đường. Bất kỳ nút nào, dù là máy chủ hay bộ định tuyến, trước tiên cố gắng xác định xem nó có kết nối tới cùng mạng vật lý với đích không. Để làm điều này, nó so sánh phần mạng của địa chỉ đích với phần mạng của địa chỉ trên từng giao diện mạng của nó. (Máy chủ thường chỉ có một giao diện, trong khi bộ định tuyến thường có hai hoặc nhiều hơn, vì chúng thường kết nối tới hai hoặc nhiều mạng.) Nếu có trùng khớp, nghĩa là đích nằm trên cùng mạng vật lý với giao diện đó, và gói tin có thể được chuyển trực tiếp qua mạng đó. Một phần sau sẽ giải thích chi tiết quá trình này.
 
-If the node is not connected to the same physical network as the
-destination node, then it needs to send the datagram to a router. In
-general, each node will have a choice of several routers, and so it
-needs to pick the best one, or at least one that has a reasonable chance
-of getting the datagram closer to its destination. The router that it
-chooses is known as the *next hop* router. The router finds the correct
-next hop by consulting its forwarding table. The forwarding table is
-conceptually just a list of ``(NetworkNum, NextHop)``\ pairs. (As we
-will see below, forwarding tables in practice often contain some
-additional information related to the next hop.) Normally, there is also
-a default router that is used if none of the entries in the table
-matches the destination’s network number. For a host, it may be quite
-acceptable to have a default router and nothing else—this means that all
-datagrams destined for hosts not on the physical network to which the
-sending host is attached will be sent out through the default router.
+Nếu nút không kết nối tới cùng mạng vật lý với nút đích, nó cần gửi datagram tới một bộ định tuyến. Thông thường, mỗi nút sẽ có nhiều lựa chọn bộ định tuyến, nên nó cần chọn bộ định tuyến tốt nhất, hoặc ít nhất là một bộ định tuyến có khả năng đưa datagram tới gần đích hơn. Bộ định tuyến mà nó chọn gọi là *bước nhảy tiếp theo* (*next hop*). Bộ định tuyến tìm bước nhảy tiếp theo đúng bằng cách tra cứu bảng chuyển tiếp của nó. Bảng chuyển tiếp về mặt khái niệm chỉ là một danh sách các cặp ``(NetworkNum, NextHop)``. (Như sẽ thấy bên dưới, bảng chuyển tiếp thực tế thường chứa thêm một số thông tin liên quan tới bước nhảy tiếp theo.) Thông thường, cũng có một bộ định tuyến mặc định được dùng nếu không có mục nào trong bảng khớp với số mạng đích. Đối với một máy chủ, hoàn toàn chấp nhận được nếu chỉ có một bộ định tuyến mặc định và không có gì khác—nghĩa là tất cả các datagram gửi tới các máy chủ không nằm trên mạng vật lý mà máy chủ gửi kết nối sẽ được gửi qua bộ định tuyến mặc định.
 
-We can describe the datagram forwarding algorithm in the following way:
+Chúng ta có thể mô tả thuật toán chuyển tiếp datagram như sau:
 
 ::
 
@@ -582,8 +182,7 @@ We can describe the datagram forwarding algorithm in the following way:
        else
            deliver packet to default router
 
-For a host with only one interface and only a default router in its
-forwarding table, this simplifies to
+Đối với một máy chủ chỉ có một giao diện và chỉ có một bộ định tuyến mặc định trong bảng chuyển tiếp, điều này đơn giản thành
 
 ::
 
@@ -592,30 +191,12 @@ forwarding table, this simplifies to
    else
        deliver packet to default router
 
-Let’s see how this works in the example internetwork of :numref:`Figure
-%s <fig-inet>`. First, suppose that H1 wants to send a datagram to H2.
-Since they are on the same physical network, H1 and H2 have the same
-network number in their IP address. Thus, H1 deduces that it can deliver
-the datagram directly to H2 over the Ethernet. The one issue that needs
-to be resolved is how H1 finds out the correct Ethernet address for
-H2—the resolution mechanism described in a later section addresses this
-issue.
+Hãy xem cách hoạt động này trong ví dụ liên mạng ở :numref:`Hình %s <fig-inet>`. Đầu tiên, giả sử H1 muốn gửi một datagram tới H2. Vì chúng nằm trên cùng mạng vật lý, H1 và H2 có cùng số mạng trong địa chỉ IP. Do đó, H1 suy ra rằng nó có thể chuyển datagram trực tiếp tới H2 qua Ethernet. Vấn đề duy nhất cần giải quyết là làm sao H1 biết địa chỉ Ethernet đúng của H2—cơ chế giải quyết sẽ được mô tả ở phần sau.
 
-Now suppose H5 wants to send a datagram to H8. Since these hosts are
-on different physical networks, they have different network numbers,
-so H5 deduces that it needs to send the datagram to a router. R1 is
-the only choice—the default router—so H1 sends the datagram over the
-wireless network to R1. Similarly, R1 knows that it cannot deliver a
-datagram directly to H8 because neither of R1’s interfaces are on the
-same network as H8. Suppose R1’s default router is R2; R1 then sends
-the datagram to R2 over the Ethernet. Assuming R2 has the forwarding
-table shown in :numref:`Table %s <tab-ipfwdtab>`, it looks up H8’s
-network number (network 4) and forwards the datagram over the
-point-to-point network to R3. Finally, R3, since it is on the same
-network as H8, forwards the datagram directly to H8.
+Giờ giả sử H5 muốn gửi một datagram tới H8. Vì hai máy chủ này nằm trên các mạng vật lý khác nhau, chúng có số mạng khác nhau, nên H5 suy ra rằng nó cần gửi datagram tới một bộ định tuyến. R1 là lựa chọn duy nhất—bộ định tuyến mặc định—nên H1 gửi datagram qua mạng không dây tới R1. Tương tự, R1 biết rằng nó không thể chuyển datagram trực tiếp tới H8 vì không giao diện nào của R1 nằm trên cùng mạng với H8. Giả sử bộ định tuyến mặc định của R1 là R2; R1 khi đó gửi datagram tới R2 qua Ethernet. Giả sử R2 có bảng chuyển tiếp như trong :numref:`Bảng %s <tab-ipfwdtab>`, nó tra cứu số mạng của H8 (mạng 4) và chuyển tiếp datagram qua mạng điểm-điểm tới R3. Cuối cùng, R3, vì nằm trên cùng mạng với H8, chuyển tiếp datagram trực tiếp tới H8.
 
 .. _tab-ipfwdtab:
-.. table:: Forwarding table for Router R2.
+.. table:: Bảng chuyển tiếp cho Bộ định tuyến R2.
    :align: center
    :widths: auto
 
@@ -627,15 +208,10 @@ network as H8, forwards the datagram directly to H8.
    | 4          | R3      |
    +------------+---------+
 
-Note that it is possible to include the information about directly
-connected networks in the forwarding table. For example, we could label
-the network interfaces of router R2 as interface 0 for the
-point-to-point link (network 3) and interface 1 for the Ethernet
-(network 2). Then R2 would have the forwarding table shown
-in :numref:`Table %s <tab-ipfwdtab2>`.
+Lưu ý rằng có thể đưa thông tin về các mạng kết nối trực tiếp vào bảng chuyển tiếp. Ví dụ, ta có thể gán nhãn các giao diện mạng của bộ định tuyến R2 là giao diện 0 cho liên kết điểm-điểm (mạng 3) và giao diện 1 cho Ethernet (mạng 2). Khi đó R2 sẽ có bảng chuyển tiếp như trong :numref:`Bảng %s <tab-ipfwdtab2>`.
 
 .. _tab-ipfwdtab2:
-.. table:: Complete Forwarding table for Router R2.
+.. table:: Bảng chuyển tiếp đầy đủ cho Bộ định tuyến R2.
    :align: center
    :widths: auto
 
@@ -651,164 +227,52 @@ in :numref:`Table %s <tab-ipfwdtab2>`.
    | 4          | R3          |
    +------------+-------------+
 
-Thus, for any network number that R2 encounters in a packet, it knows
-what to do. Either that network is directly connected to R2, in which
-case the packet can be delivered to its destination over that network,
-or the network is reachable via some next hop router that R2 can reach
-over a network to which it is connected. In either case, R2 will use
-ARP, described below, to find the MAC address of the node to which the
-packet is to be sent next.
+Như vậy, với bất kỳ số mạng nào mà R2 gặp trong một gói tin, nó đều biết phải làm gì. Hoặc mạng đó kết nối trực tiếp với R2, khi đó gói tin có thể được chuyển trực tiếp tới đích qua mạng đó, hoặc mạng đó có thể tới được qua một bộ định tuyến bước nhảy tiếp theo mà R2 có thể tới qua một mạng mà nó kết nối. Trong cả hai trường hợp, R2 sẽ dùng ARP, mô tả bên dưới, để tìm địa chỉ MAC của nút mà gói tin sẽ được gửi tới tiếp theo.
 
-The forwarding table used by R2 is simple enough that it could be
-manually configured. Usually, however, these tables are more complex and
-would be built up by running a routing protocol such as one of those
-described in a later section. Also note that, in practice, the network
-numbers are usually longer (e.g., 128.96).
+Bảng chuyển tiếp mà R2 dùng đủ đơn giản để có thể cấu hình thủ công. Tuy nhiên, thường thì các bảng này phức tạp hơn và sẽ được xây dựng bằng cách chạy một giao thức định tuyến như một trong các giao thức sẽ mô tả ở phần sau. Cũng lưu ý rằng, trên thực tế, các số mạng thường dài hơn (ví dụ, 128.96).
 
-We can now see how hierarchical addressing—splitting the address into
-network and host parts—has improved the scalability of a large network.
-Routers now contain forwarding tables that list only a set of network
-numbers rather than all the nodes in the network. In our simple example,
-that meant that R2 could store the information needed to reach all the
-hosts in the network (of which there were eight) in a four-entry table.
-Even if there were 100 hosts on each physical network, R2 would still
-only need those same four entries. This is a good first step (although
-by no means the last) in achieving scalability.
+Giờ ta có thể thấy cách địa chỉ phân cấp—chia địa chỉ thành phần mạng và phần máy chủ—đã cải thiện khả năng mở rộng của một mạng lớn. Các bộ định tuyến giờ chỉ cần bảng chuyển tiếp liệt kê một tập số mạng thay vì tất cả các nút trong mạng. Trong ví dụ đơn giản của chúng ta, điều đó nghĩa là R2 có thể lưu thông tin cần thiết để tới tất cả các máy chủ trong mạng (có tám máy chủ) chỉ trong một bảng bốn mục. Ngay cả khi có 100 máy chủ trên mỗi mạng vật lý, R2 vẫn chỉ cần bốn mục đó. Đây là một bước đầu tốt (dù chưa phải cuối cùng) để đạt được khả năng mở rộng.
 
 .. _key-aggregation:
-.. admonition:: Key Takeaway
+.. admonition:: Bài học then chốt
 
-   This illustrates one of the most important principles of building
-   scalable networks: To achieve scalability, you need to reduce the
-   amount of information that is stored in each node and that is
-   exchanged between nodes. The most common way to do that is
-   *hierarchical aggregation*. IP introduces a two-level hierarchy, with
-   networks at the top level and nodes at the bottom level. We have
-   aggregated information by letting routers deal only with reaching the
-   right network; the information that a router needs to deliver a
-   datagram to any node on a given network is represented by a single
-   aggregated piece of information. :ref:`[Next] <key-best-effort>`
+   Điều này minh họa một trong những nguyên lý quan trọng nhất khi xây dựng mạng khả mở: Để đạt được khả năng mở rộng, bạn cần giảm lượng thông tin lưu trữ ở mỗi nút và trao đổi giữa các nút. Cách phổ biến nhất để làm điều đó là *kết tụ phân cấp* (hierarchical aggregation). IP giới thiệu một phân cấp hai tầng, với mạng ở tầng trên và nút ở tầng dưới. Ta đã kết tụ thông tin bằng cách để bộ định tuyến chỉ xử lý việc tới đúng mạng; thông tin mà bộ định tuyến cần để chuyển một datagram tới bất kỳ nút nào trên một mạng nhất định được đại diện bởi một mẩu thông tin kết tụ duy nhất. :ref:`[Tiếp theo] <key-best-effort>`
 
-3.3.5 Subnetting and Classless Addressing
------------------------------------------
+3.3.5 Địa chỉ con và địa chỉ không phân lớp
+-------------------------------------------
 
-The original intent of IP addresses was that the network part would
-uniquely identify exactly one physical network. It turns out that this
-approach has a couple of drawbacks. Imagine a large campus that has lots
-of internal networks and decides to connect to the Internet. For every
-network, no matter how small, the site needs at least a class C network
-address. Even worse, for any network with more than 255 hosts, they need
-a class B address. This may not seem like a big deal, and indeed it
-wasn’t when the Internet was first envisioned, but there are only a
-finite number of network numbers, and there are far fewer class B
-addresses than class Cs. Class B addresses tend to be in particularly
-high demand because you never know if your network might expand beyond
-255 nodes, so it is easier to use a class B address from the start than
-to have to renumber every host when you run out of room on a class C
-network. The problem we observe here is address assignment inefficiency:
-A network with two nodes uses an entire class C network address, thereby
-wasting 253 perfectly useful addresses; a class B network with slightly
-more than 255 hosts wastes over 64,000 addresses.
+Ý định ban đầu của địa chỉ IP là phần mạng sẽ nhận diện duy nhất đúng một mạng vật lý. Hóa ra cách tiếp cận này có một số nhược điểm. Hãy tưởng tượng một campus lớn có nhiều mạng nội bộ và quyết định kết nối Internet. Với mỗi mạng, dù nhỏ đến đâu, site cần ít nhất một địa chỉ mạng lớp C. Tệ hơn, với bất kỳ mạng nào có hơn 255 máy chủ, họ cần một địa chỉ lớp B. Điều này có vẻ không lớn, và thực tế không phải khi Internet mới hình thành, nhưng chỉ có một số lượng hữu hạn số mạng, và số địa chỉ lớp B còn ít hơn lớp C nhiều. Địa chỉ lớp B đặc biệt được ưa chuộng vì bạn không bao giờ biết mạng của mình có thể mở rộng vượt quá 255 nút hay không, nên tốt hơn là dùng địa chỉ lớp B ngay từ đầu hơn là phải đánh lại địa chỉ khi hết chỗ trên mạng lớp C. Vấn đề ở đây là sự kém hiệu quả trong cấp phát địa chỉ: Một mạng chỉ có hai nút dùng hết một địa chỉ mạng lớp C, lãng phí 253 địa chỉ hữu ích; một mạng lớp B có hơn 255 máy chủ một chút lãng phí hơn 64.000 địa chỉ.
 
-Assigning one network number per physical network, therefore, uses up
-the IP address space potentially much faster than we would like. While
-we would need to connect over 4 billion hosts to use up all the valid
-addresses, we only need to connect 2\ :sup:`14` (about 16,000) class B
-networks before that part of the address space
-runs out. Therefore, we would like to find some way to use the network
-numbers more efficiently.
+Việc cấp phát một số mạng cho mỗi mạng vật lý, do đó, làm tiêu tốn không gian địa chỉ IP nhanh hơn mong muốn. Dù cần kết nối hơn 4 tỷ máy chủ để dùng hết tất cả địa chỉ hợp lệ, chỉ cần kết nối 2\ :sup:`14` (khoảng 16.000) mạng lớp B là hết phần không gian địa chỉ này. Do đó, ta muốn tìm cách sử dụng số mạng hiệu quả hơn.
 
-Assigning many network numbers has another drawback that becomes
-apparent when you think about routing. Recall that the amount of state
-that is stored in a node participating in a routing protocol is
-proportional to the number of other nodes, and that routing in an
-internet consists of building up forwarding tables that tell a router
-how to reach different networks. Thus, the more network numbers there
-are in use, the bigger the forwarding tables get. Big forwarding tables
-add costs to routers, and they are potentially slower to search than
-smaller tables for a given technology, so they degrade router
-performance. This provides another motivation for assigning network
-numbers carefully.
+Việc cấp phát nhiều số mạng còn có một nhược điểm khác khi nghĩ về định tuyến. Nhớ rằng lượng trạng thái lưu trữ ở một nút tham gia giao thức định tuyến tỷ lệ thuận với số nút khác, và định tuyến trong một liên mạng gồm việc xây dựng các bảng chuyển tiếp cho biết bộ định tuyến phải làm gì để tới các mạng khác nhau. Do đó, càng có nhiều số mạng được dùng, bảng chuyển tiếp càng lớn. Bảng lớn làm tăng chi phí cho bộ định tuyến, và có thể chậm hơn khi tìm kiếm, làm giảm hiệu năng bộ định tuyến. Điều này là một động lực khác để cấp phát số mạng cẩn thận.
 
-*Subnetting* provides a first step to reducing total number of network
-numbers that are assigned. The idea is to take a single IP network
-number and allocate the IP addresses with that network number to several
-physical networks, which are now referred to as *subnets*. Several
-things need to be done to make this work. First, the subnets should be
-close to each other. This is because from a distant point in the
-Internet, they will all look like a single network, having only one
-network number between them. This means that a router will only be able
-to select one route to reach any of the subnets, so they had better all
-be in the same general direction. A perfect situation in which to use
-subnetting is a large campus or corporation that has many physical
-networks. From outside the campus, all you need to know to reach any
-subnet inside the campus is where the campus connects to the rest of the
-Internet. This is often at a single point, so one entry in your
-forwarding table will suffice. Even if there are multiple points at
-which the campus is connected to the rest of the Internet, knowing how
-to get to one point in the campus network is still a good start.
+*Địa chỉ con* (subnetting) là bước đầu tiên để giảm tổng số số mạng được cấp phát. Ý tưởng là lấy một số mạng IP duy nhất và cấp phát các địa chỉ IP với số mạng đó cho nhiều mạng vật lý, giờ gọi là *mạng con* (subnets). Có một số việc cần làm để điều này hoạt động. Đầu tiên, các mạng con nên gần nhau. Vì từ một điểm xa trên Internet, chúng sẽ đều trông như một mạng duy nhất, chỉ có một số mạng giữa chúng. Điều này nghĩa là một bộ định tuyến chỉ có thể chọn một đường để tới bất kỳ mạng con nào, nên tốt nhất là chúng đều cùng hướng. Một tình huống lý tưởng để dùng subnetting là một campus hoặc công ty lớn có nhiều mạng vật lý. Từ ngoài campus, tất cả những gì bạn cần biết để tới bất kỳ mạng con nào bên trong là nơi campus kết nối với phần còn lại của Internet. Điều này thường chỉ ở một điểm, nên một mục trong bảng chuyển tiếp là đủ. Ngay cả khi có nhiều điểm kết nối, biết cách tới một điểm trong mạng campus vẫn là một khởi đầu tốt.
 
-The mechanism by which a single network number can be shared among
-multiple networks involves configuring all the nodes on each subnet with
-a *subnet mask*. With simple IP addresses, all hosts on the same network
-must have the same network number. The subnet mask enables us to
-introduce a *subnet number*; all hosts on the same physical network will
-have the same subnet number, which means that hosts may be on different
-physical networks but share a single network number. This concept is
-illustrated in :numref:`Figure %s <fig-subaddr>`.
+Cơ chế cho phép một số mạng duy nhất được chia sẻ giữa nhiều mạng con là cấu hình tất cả các nút trên mỗi mạng con với một *mặt nạ mạng con* (subnet mask). Với địa chỉ IP đơn giản, tất cả các máy chủ trên cùng một mạng phải có cùng số mạng. Mặt nạ mạng con cho phép ta đưa vào một *số mạng con*; tất cả các máy chủ trên cùng một mạng vật lý sẽ có cùng số mạng con, nghĩa là các máy chủ có thể ở các mạng vật lý khác nhau nhưng chia sẻ một số mạng duy nhất. Khái niệm này được minh họa trong :numref:`Hình %s <fig-subaddr>`.
 
 .. _fig-subaddr:
 .. figure:: figures/f03-20-9780123850591.png
    :width: 350px
    :align: center
 
-   Subnet addressing.
+   Địa chỉ mạng con.
 
-What subnetting means to a host is that it is now configured with both
-an IP address and a subnet mask for the subnet to which it is
-attached.  For example, host H1 in :numref:`Figure %s <fig-subnet>` is
-configured with an address of 128.96.34.15 and a subnet mask of
-255.255.255.128. (All hosts on a given subnet are configured with the
-same mask; that is, there is exactly one subnet mask per subnet.) The
-bitwise AND of these two numbers defines the subnet number of the host
-and of all other hosts on the same subnet. In this case, 128.96.34.15
-AND 255.255.255.128 equals 128.96.34.0, so this is the subnet number
-for the topmost subnet in the figure.
+Ý nghĩa của subnetting với một máy chủ là nó giờ được cấu hình với cả địa chỉ IP và mặt nạ mạng con cho mạng con mà nó kết nối. Ví dụ, máy chủ H1 trong :numref:`Hình %s <fig-subnet>` được cấu hình với địa chỉ 128.96.34.15 và mặt nạ mạng con 255.255.255.128. (Tất cả các máy chủ trên một mạng con được cấu hình cùng mặt nạ; tức là mỗi mạng con chỉ có một mặt nạ.) Phép AND bit giữa hai số này xác định số mạng con của máy chủ và tất cả các máy chủ khác trên cùng mạng con. Trong trường hợp này, 128.96.34.15 AND 255.255.255.128 bằng 128.96.34.0, nên đây là số mạng con cho mạng con trên cùng trong hình.
 
 .. _fig-subnet:
 .. figure:: figures/f03-21-9780123850591.png
    :width: 500px
    :align: center
 
-   An example of subnetting.
+   Ví dụ về subnetting.
 
-When the host wants to send a packet to a certain IP address, the first
-thing it does is to perform a bitwise AND between its own subnet mask
-and the destination IP address. If the result equals the subnet number
-of the sending host, then it knows that the destination host is on the
-same subnet and the packet can be delivered directly over the subnet. If
-the results are not equal, the packet needs to be sent to a router to be
-forwarded to another subnet. For example, if H1 is sending to H2, then
-H1 ANDs its subnet mask (255.255.255.128) with the address for H2
-(128.96.34.139) to obtain 128.96.34.128. This does not match the subnet
-number for H1 (128.96.34.0) so H1 knows that H2 is on a different
-subnet. Since H1 cannot deliver the packet to H2 directly over the
-subnet, it sends the packet to its default router R1.
+Khi máy chủ muốn gửi một gói tin tới một địa chỉ IP nào đó, việc đầu tiên nó làm là thực hiện phép AND bit giữa mặt nạ mạng con của nó và địa chỉ IP đích. Nếu kết quả bằng số mạng con của máy chủ gửi, nó biết rằng máy chủ đích nằm trên cùng mạng con và gói tin có thể được chuyển trực tiếp qua mạng con. Nếu kết quả không bằng, gói tin cần được gửi tới một bộ định tuyến để chuyển tiếp tới mạng con khác. Ví dụ, nếu H1 gửi tới H2, H1 AND mặt nạ mạng con của nó (255.255.255.128) với địa chỉ của H2 (128.96.34.139) để được 128.96.34.128. Điều này không khớp với số mạng con của H1 (128.96.34.0) nên H1 biết H2 nằm trên mạng con khác. Vì H1 không thể chuyển gói tin trực tiếp tới H2 qua mạng con, nó gửi gói tin tới bộ định tuyến mặc định R1.
 
-The forwarding table of a router also changes slightly when we introduce
-subnetting. Recall that we previously had a forwarding table that
-consisted of entries of the form ``(NetworkNum, NextHop)``. To support
-subnetting, the table must now hold entries of the form
-``(SubnetNumber, SubnetMask, NextHop)``. To find the right entry in the
-table, the router ANDs the packet’s destination address with the
-``SubnetMask``\ for each entry in turn; if the result matches the
-``SubnetNumber`` of the entry, then this is the right entry to use, and
-it forwards the packet to the next hop router indicated. In the example
-network of :numref:`Figure %s <fig-subnet>`, router R1 would have the entries
-shown in :numref:`Table %s <tab-subnettab>`.
+Bảng chuyển tiếp của một bộ định tuyến cũng thay đổi một chút khi ta đưa vào subnetting. Nhớ rằng trước đây ta có bảng chuyển tiếp gồm các mục dạng ``(NetworkNum, NextHop)``. Để hỗ trợ subnetting, bảng giờ phải chứa các mục dạng ``(SubnetNumber, SubnetMask, NextHop)``. Để tìm mục đúng trong bảng, bộ định tuyến AND địa chỉ đích của gói tin với ``SubnetMask`` của từng mục; nếu kết quả khớp với ``SubnetNumber`` của mục, đây là mục đúng để dùng, và nó chuyển tiếp gói tin tới bộ định tuyến bước nhảy tiếp theo chỉ định. Trong mạng ví dụ ở :numref:`Hình %s <fig-subnet>`, bộ định tuyến R1 sẽ có các mục như trong :numref:`Bảng %s <tab-subnettab>`.
 
 .. _tab-subnettab:
-.. table:: Example Forwarding Table with Subnetting.
+.. table:: Ví dụ bảng chuyển tiếp với subnetting.
    :align: center
    :widths: auto
 
@@ -822,20 +286,13 @@ shown in :numref:`Table %s <tab-subnettab>`.
    | 128.96.33.0   | 255.255.255.0   | R2          |
    +---------------+-----------------+-------------+
 
-Continuing with the example of a datagram from H1 being sent to H2, R1
-would AND H2’s address (128.96.34.139) with the subnet mask of the first
-entry (255.255.255.128) and compare the result (128.96.34.128) with the
-network number for that entry (128.96.34.0). Since this is not a match,
-it proceeds to the next entry. This time a match does occur, so R1
-delivers the datagram to H2 using interface 1, which is the interface
-connected to the same network as H2.
+Tiếp tục ví dụ gửi datagram từ H1 tới H2, R1 sẽ AND địa chỉ của H2 (128.96.34.139) với mặt nạ mạng con của mục đầu tiên (255.255.255.128) và so sánh kết quả (128.96.34.128) với số mạng của mục đó (128.96.34.0). Vì không khớp, nó chuyển sang mục tiếp theo. Lần này có khớp, nên R1 chuyển datagram tới H2 qua interface 1, là giao diện kết nối tới cùng mạng với H2.
 
-We can now describe the datagram forwarding algorithm in the following
-way:
+Giờ ta có thể mô tả thuật toán chuyển tiếp datagram như sau:
 
 ::
 
-   D = destination IP address
+   D = địa chỉ IP đích
    for each forwarding table entry (SubnetNumber, SubnetMask, NextHop)
        D1 = SubnetMask & D
        if D1 = SubnetNumber
@@ -844,552 +301,573 @@ way:
            else
                deliver datagram to NextHop (a router)
 
-Although not shown in this example, a default route would usually be
-included in the table and would be used if no explicit matches were
-found. Note that a naive implementation of this algorithm—one involving
-repeated ANDing of the destination address with a subnet mask that may
-not be different every time, and a linear table search—would be very
-inefficient.
+Dù không minh họa trong ví dụ này, thường sẽ có một đường mặc định trong bảng và sẽ được dùng nếu không tìm thấy khớp rõ ràng nào. Lưu ý rằng một triển khai ngây thơ của thuật toán này—lặp lại phép AND địa chỉ đích với mặt nạ mạng con có thể không khác nhau mỗi lần, và tìm kiếm tuyến tính bảng—sẽ rất kém hiệu quả.
 
-An important consequence of subnetting is that different parts of the
-internet see the world differently. From outside our hypothetical
-campus, routers see a single network. In the example above, routers
-outside the campus see the collection of networks in :numref:`Figure
-%s <fig-subnet>` as just the network 128.96, and they keep one entry in
-their forwarding tables to tell them how to reach it. Routers within the
-campus, however, need to be able to route packets to the right subnet.
-Thus, not all parts of the internet see exactly the same routing
-information. This is an example of an *aggregation* of routing
-information, which is fundamental to scaling of the routing system. The
-next section shows how aggregation can be taken to another level.
+Một hệ quả quan trọng của subnetting là các phần khác nhau của internet nhìn thế giới khác nhau. Từ ngoài campus giả định của chúng ta, các bộ định tuyến nhìn thấy một mạng duy nhất. Trong ví dụ trên, các bộ định tuyến ngoài campus nhìn tập hợp các mạng trong :numref:`Hình %s <fig-subnet>` chỉ là mạng 128.96, và họ giữ một mục trong bảng chuyển tiếp để biết cách tới đó. Các bộ định tuyến trong campus, tuy nhiên, cần có khả năng định tuyến gói tin tới đúng mạng con. Do đó, không phải tất cả các phần của internet đều nhìn thấy cùng một thông tin định tuyến. Đây là một ví dụ về *kết tụ* thông tin định tuyến, điều cơ bản để mở rộng hệ thống định tuyến. Phần tiếp theo sẽ cho thấy cách kết tụ có thể được nâng lên một mức nữa.
 
-Classless Addressing
-~~~~~~~~~~~~~~~~~~~~
+Địa chỉ không phân lớp
+~~~~~~~~~~~~~~~~~~~~~~
 
-Subnetting has a counterpart, sometimes called *supernetting*, but more
-often called *Classless Interdomain Routing* or CIDR, pronounced
-“cider.” CIDR takes the subnetting idea to its logical conclusion by
-essentially doing away with address classes altogether. Why isn’t
-subnetting alone sufficient? In essence, subnetting only allows us to
-split a classful address among multiple subnets, while CIDR allows us to
-coalesce several classful addresses into a single “supernet.” This
-further tackles the address space inefficiency noted above, and does so
-in a way that keeps the routing system from being overloaded.
+Subnetting có một đối ứng, đôi khi gọi là *supernetting*, nhưng thường gọi là *Định tuyến liên miền không phân lớp* (Classless Interdomain Routing, CIDR, phát âm là “cider”). CIDR đưa ý tưởng subnetting tới kết luận logic của nó bằng cách loại bỏ hoàn toàn các lớp địa chỉ. Tại sao chỉ subnetting thôi là chưa đủ? Về bản chất, subnetting chỉ cho phép ta chia một địa chỉ phân lớp thành nhiều mạng con, trong khi CIDR cho phép ta gộp nhiều địa chỉ phân lớp thành một “siêu mạng”. Điều này giải quyết thêm vấn đề kém hiệu quả về không gian địa chỉ đã nói ở trên, và làm như vậy mà không làm hệ thống định tuyến bị quá tải.
 
-To see how the issues of address space efficiency and scalability of the
-routing system are coupled, consider the hypothetical case of a company
-whose network has 256 hosts on it. That is slightly too many for a Class
-C address, so you would be tempted to assign a class B. However, using
-up a chunk of address space that could address 65535 to address 256
-hosts has an efficiency of only 256/65,535 = 0.39%. Even though
-subnetting can help us to assign addresses carefully, it does not get
-around the fact that any organization with more than 255 hosts, or an
-expectation of eventually having that many, wants a class B address.
+Để thấy vấn đề hiệu quả không gian địa chỉ và khả năng mở rộng của hệ thống định tuyến liên quan với nhau thế nào, hãy xét trường hợp giả định một công ty có mạng với 256 máy chủ. Đó là hơi nhiều cho một địa chỉ lớp C, nên bạn sẽ muốn cấp một địa chỉ lớp B. Tuy nhiên, dùng một phần không gian địa chỉ có thể chứa 65.535 máy chủ để chỉ chứa 256 máy chủ có hiệu quả chỉ 256/65.535 = 0,39%. Dù subnetting có thể giúp ta cấp phát địa chỉ cẩn thận, nó không giải quyết được thực tế là bất kỳ tổ chức nào có hơn 255 máy chủ, hoặc dự kiến sẽ có, đều muốn một địa chỉ lớp B.
 
-The first way you might deal with this issue would be to refuse to give
-a class B address to any organization that requests one unless they can
-show a need for something close to 64K addresses, and instead giving
-them an appropriate number of class C addresses to cover the expected
-number of hosts. Since we would now be handing out address space in
-chunks of 256 addresses at a time, we could more accurately match the
-amount of address space consumed to the size of the organization. For
-any organization with at least 256 hosts, we can guarantee an address
-utilization of at least 50%, and typically much more. (Sadly, even if
-you can justify a request of a class B network number, don’t bother,
-because they were all spoken for long ago.)
+Cách đầu tiên bạn có thể xử lý vấn đề này là từ chối cấp địa chỉ lớp B cho bất kỳ tổ chức nào trừ khi họ chứng minh cần gần 64K địa chỉ, và thay vào đó cấp cho họ số lượng địa chỉ lớp C phù hợp với số máy chủ dự kiến. Vì giờ ta cấp phát không gian địa chỉ theo từng khối 256 địa chỉ một, ta có thể khớp chính xác hơn lượng không gian địa chỉ tiêu thụ với quy mô tổ chức. Với bất kỳ tổ chức nào có ít nhất 256 máy chủ, ta có thể đảm bảo hiệu quả sử dụng địa chỉ ít nhất 50%, và thường cao hơn. (Đáng buồn là, ngay cả khi bạn có thể chứng minh cần một số mạng lớp B, cũng đừng bận tâm, vì chúng đã được cấp hết từ lâu.)
 
-This solution, however, raises a problem that is at least as serious:
-excessive storage requirements at the routers. If a single site has,
-say, 16 class C network numbers assigned to it, that means every
-Internet backbone router needs 16 entries in its routing tables to
-direct packets to that site. This is true even if the path to every one
-of those networks is the same. If we had assigned a class B address to
-the site, the same routing information could be stored in one table
-entry. However, our address assignment efficiency would then be only 16 x
-255 / 65,536 = 6.2%.
+Tuy nhiên, giải pháp này lại gây ra một vấn đề nghiêm trọng không kém: yêu cầu lưu trữ quá lớn ở các bộ định tuyến. Nếu một site có, ví dụ, 16 số mạng lớp C được cấp, nghĩa là mỗi bộ định tuyến xương sống Internet cần 16 mục trong bảng định tuyến để chuyển gói tin tới site đó. Điều này đúng ngay cả khi đường đi tới tất cả các mạng đó là như nhau. Nếu ta cấp một địa chỉ lớp B cho site, cùng thông tin định tuyến đó có thể lưu trong một mục bảng. Tuy nhiên, hiệu quả sử dụng địa chỉ khi đó chỉ là 16 x 255 / 65.536 = 6,2%.
 
-CIDR, therefore, tries to balance the desire to minimize the number of
-routes that a router needs to know against the need to hand out
-addresses efficiently. To do this, CIDR helps us to *aggregate* routes.
-That is, it lets us use a single entry in a forwarding table to tell us
-how to reach a lot of different networks. As noted above it does this by
-breaking the rigid boundaries between address classes. To understand how
-this works, consider our hypothetical organization with 16 class C
-network numbers. Instead of handing out 16 addresses at random, we can
-hand out a block of *contiguous* class C addresses. Suppose we assign
-the class C network numbers from 192.4.16 through 192.4.31. Observe that
-the top 20 bits of all the addresses in this range are the same
-(``11000000 00000100 0001``). Thus, what we have effectively created is
-a 20-bit network number—something that is between a class B network
-number and a class C number in terms of the number of hosts that it can
-support. In other words, we get both the high address efficiency of
-handing out addresses in chunks smaller than a class B network, and a
-single network prefix that can be used in forwarding tables. Observe
-that, for this scheme to work, we need to hand out blocks of class C
-addresses that share a common prefix, which means that each block must
-contain a number of class C networks that is a power of two.
+Do đó, CIDR cố gắng cân bằng mong muốn giảm số đường mà bộ định tuyến cần biết với nhu cầu cấp phát địa chỉ hiệu quả. Để làm điều này, CIDR giúp ta *kết tụ* các đường. Tức là, nó cho phép ta dùng một mục duy nhất trong bảng chuyển tiếp để biết cách tới rất nhiều mạng khác nhau. Như đã nói ở trên, nó làm điều này bằng cách phá vỡ ranh giới cứng giữa các lớp địa chỉ. Để hiểu cách hoạt động, hãy xét tổ chức giả định với 16 số mạng lớp C. Thay vì cấp phát 16 địa chỉ ngẫu nhiên, ta có thể cấp một khối các địa chỉ lớp C *liền kề*. Giả sử ta cấp các số mạng lớp C từ 192.4.16 đến 192.4.31. Lưu ý rằng 20 bit đầu của tất cả các địa chỉ trong dải này giống nhau (``11000000 00000100 0001``). Do đó, về thực chất, ta đã tạo ra một số mạng 20 bit—một cái gì đó nằm giữa số mạng lớp B và lớp C về số máy chủ có thể hỗ trợ. Nói cách khác, ta vừa có hiệu quả địa chỉ cao khi cấp phát địa chỉ theo khối nhỏ hơn mạng lớp B, vừa có một tiền tố mạng duy nhất có thể dùng trong bảng chuyển tiếp. Lưu ý rằng, để cách này hoạt động, ta cần cấp phát các khối địa chỉ lớp C có cùng tiền tố, nghĩa là mỗi khối phải chứa số mạng lớp C là lũy thừa của hai.
 
-CIDR requires a new type of notation to represent network numbers, or
-*prefixes* as they are known, because the prefixes can be of any length.
-The convention is to place a ``/X`` after the prefix, where ``X`` is the
-prefix length in bits. So, for the example above, the 20-bit prefix for
-all the networks 192.4.16 through 192.4.31 is represented as
-192.4.16/20. By contrast, if we wanted to represent a single class C
-network number, which is 24 bits long, we would write it 192.4.16/24.
-Today, with CIDR being the norm, it is more common to hear people talk
-about “slash 24” prefixes than class C networks. Note that representing
-a network address in this way is similar to the\ ``(mask, value)``
-approach used in subnetting, as long as ``masks`` consist of contiguous
-bits starting from the most significant bit (which in practice is almost
-always the case).
+CIDR yêu cầu một kiểu ký hiệu mới để biểu diễn số mạng, hay còn gọi là *tiền tố* (prefix), vì tiền tố có thể có bất kỳ độ dài nào. Quy ước là đặt ``/X`` sau tiền tố, trong đó ``X`` là độ dài tiền tố tính theo bit. Vậy, trong ví dụ trên, tiền tố 20 bit cho tất cả các mạng 192.4.16 đến 192.4.31 được biểu diễn là 192.4.16/20. Ngược lại, nếu muốn biểu diễn một số mạng lớp C duy nhất, dài 24 bit, ta viết 192.4.16/24. Ngày nay, với CIDR là chuẩn, người ta thường nói về “slash 24” hơn là mạng lớp C. Lưu ý rằng biểu diễn địa chỉ mạng theo cách này giống với cách ``(mask, value)`` dùng trong subnetting, miễn là ``mask`` gồm các bit liên tục từ bit quan trọng nhất (trên thực tế hầu như luôn như vậy).
 
 .. _fig-cidreg:
 .. figure:: figures/f03-22-9780123850591.png
    :width: 500px
    :align: center
 
-   Route aggregation with CIDR.
+   Kết tụ đường với CIDR.
 
-The ability to aggregate routes at the edge of the network as we have
-just seen is only the first step. Imagine an Internet service provider
-network, whose primary job is to provide Internet connectivity to a
-large number of corporations and campuses (customers). If we assign
-prefixes to the customers in such a way that many different customer
-networks connected to the provider network share a common, shorter
-address prefix, then we can get even greater aggregation of routes.
-Consider the example in :numref:`Figure %s <fig-cidreg>`. Assume that eight
-customers served by the provider network have each been assigned
-adjacent 24-bit network prefixes. Those prefixes all start with the same
-21 bits. Since all of the customers are reachable through the same
-provider network, it can advertise a single route to all of them by just
-advertising the common 21-bit prefix they share. And it can do this even
-if not all the 24-bit prefixes have been handed out, as long as the
-provider ultimately *will* have the right to hand out those prefixes to
-a customer. One way to accomplish that is to assign a portion of address
-space to the provider in advance and then to let the network provider
-assign addresses from that space to its customers as needed. Note that,
-in contrast to this simple example, there is no need for all customer
-prefixes to be the same length.
+Khả năng kết tụ đường ở biên mạng như vừa thấy chỉ là bước đầu. Hãy tưởng tượng một mạng nhà cung cấp dịch vụ Internet, nhiệm vụ chính là cung cấp kết nối Internet cho nhiều công ty và campus (khách hàng). Nếu ta cấp phát tiền tố cho khách hàng sao cho nhiều mạng khách hàng kết nối tới mạng nhà cung cấp chia sẻ một tiền tố địa chỉ ngắn hơn, ta có thể kết tụ đường lớn hơn nữa. Xét ví dụ trong :numref:`Hình %s <fig-cidreg>`. Giả sử tám khách hàng được mạng nhà cung cấp phục vụ, mỗi khách hàng được cấp một tiền tố mạng 24 bit liền kề. Các tiền tố này đều bắt đầu bằng cùng 21 bit. Vì tất cả khách hàng đều tới được qua cùng một mạng nhà cung cấp, nó có thể quảng bá một đường duy nhất tới tất cả bằng cách chỉ quảng bá tiền tố 21 bit chung. Và nó có thể làm điều này ngay cả khi chưa cấp hết các tiền tố 24 bit, miễn là cuối cùng nhà cung cấp sẽ có quyền cấp các tiền tố đó cho khách hàng. Một cách để làm điều này là cấp trước một phần không gian địa chỉ cho nhà cung cấp và để nhà cung cấp cấp phát địa chỉ từ không gian đó cho khách hàng khi cần. Lưu ý rằng, khác với ví dụ đơn giản này, không cần tất cả tiền tố khách hàng phải cùng độ dài.
 
-IP Forwarding Revisited
-~~~~~~~~~~~~~~~~~~~~~~~
+Xét lại chuyển tiếp IP
+~~~~~~~~~~~~~~~~~~~~~
 
-In all our discussion of IP forwarding so far, we have assumed that we
-could find the network number in a packet and then look up that number
-in a forwarding table. However, now that we have introduced CIDR, we
-need to reexamine this assumption. CIDR means that prefixes may be of
-any length, from 2 to 32 bits. Furthermore, it is sometimes possible to
-have prefixes in the forwarding table that “overlap,” in the sense that
-some addresses may match more than one prefix. For example, we might
-find both 171.69 (a 16-bit prefix) and 171.69.10 (a 24-bit prefix) in
-the forwarding table of a single router. In this case, a packet destined
-to, say, 171.69.10.5 clearly matches both prefixes. The rule in this
-case is based on the principle of “longest match”; that is, the packet
-matches the longest prefix, which would be 171.69.10 in this example. On
-the other hand, a packet destined to 171.69.20.5 would match 171.69 and
-*not* 171.69.10, and in the absence of any other matching entry in the
-routing table 171.69 would be the longest match.
+Trong tất cả các thảo luận về chuyển tiếp IP tới giờ, ta đã giả định rằng có thể tìm số mạng trong một gói tin rồi tra cứu số đó trong bảng chuyển tiếp. Tuy nhiên, giờ đã có CIDR, ta cần xem lại giả định này. CIDR nghĩa là tiền tố có thể có bất kỳ độ dài nào, từ 2 đến 32 bit. Hơn nữa, đôi khi có thể có các tiền tố trong bảng chuyển tiếp “chồng lấn”, nghĩa là một số địa chỉ có thể khớp với nhiều tiền tố. Ví dụ, ta có thể thấy cả 171.69 (tiền tố 16 bit) và 171.69.10 (tiền tố 24 bit) trong bảng chuyển tiếp của một bộ định tuyến. Khi đó, một gói tin gửi tới, ví dụ, 171.69.10.5 rõ ràng khớp cả hai tiền tố. Quy tắc trong trường hợp này dựa trên nguyên lý “khớp dài nhất”; tức là, gói tin khớp với tiền tố dài nhất, ở đây là 171.69.10. Ngược lại, một gói gửi tới 171.69.20.5 sẽ khớp với 171.69 và *không* khớp với 171.69.10, và nếu không có mục nào khác khớp trong bảng định tuyến thì 171.69 là khớp dài nhất.
 
-The task of efficiently finding the longest match between an IP address
-and the variable-length prefixes in a forwarding table has been a
-fruitful field of research for many years. The most well-known algorithm
-uses an approach known as a *PATRICIA tree*, which was actually
-developed well in advance of CIDR.
+Nhiệm vụ tìm khớp dài nhất giữa một địa chỉ IP và các tiền tố độ dài biến đổi trong bảng chuyển tiếp là một lĩnh vực nghiên cứu phong phú nhiều năm qua. Thuật toán nổi tiếng nhất dùng cách tiếp cận gọi là *cây PATRICIA*, thực ra được phát triển trước cả CIDR.
 
-3.3.6 Address Translation (ARP)
--------------------------------
+3.3.6 Biên dịch địa chỉ (ARP)
+-----------------------------
 
-In the previous section we talked about how to get IP datagrams to the
-right physical network but glossed over the issue of how to get a
-datagram to a particular host or router on that network. The main issue
-is that IP datagrams contain IP addresses, but the physical interface
-hardware on the host or router to which you want to send the datagram
-only understands the addressing scheme of that particular network. Thus,
-we need to translate the IP address to a link-level address that makes
-sense on this network (e.g., a 48-bit Ethernet address). We can then
-encapsulate the IP datagram inside a frame that contains that link-level
-address and send it either to the ultimate destination or to a router
-that promises to forward the datagram toward the ultimate destination.
+Ở phần trước, chúng ta đã nói về cách đưa datagram IP tới đúng mạng vật lý nhưng chưa đề cập tới việc làm sao đưa datagram tới đúng máy chủ hoặc bộ định tuyến trên mạng đó. Vấn đề chính là datagram IP chứa địa chỉ IP, nhưng phần cứng giao diện vật lý trên máy chủ hoặc bộ định tuyến mà bạn muốn gửi datagram chỉ hiểu sơ đồ địa chỉ của mạng cụ thể đó. Do đó, ta cần biên dịch địa chỉ IP sang địa chỉ tầng liên kết phù hợp với mạng này (ví dụ, địa chỉ Ethernet 48 bit). Khi đó, ta có thể đóng gói datagram IP vào trong một frame chứa địa chỉ tầng liên kết đó và gửi tới đích cuối cùng hoặc tới một bộ định tuyến hứa sẽ chuyển tiếp datagram tới đích cuối cùng.
 
-One simple way to map an IP address into a physical network address is
-to encode a host’s physical address in the host part of its IP address.
-For example, a host with physical address ``00100001 01010001`` (which
-has the decimal value 33 in the upper byte and 81 in the lower byte)
-might be given the IP address ``128.96.33.81``. While this solution has
-been used on some networks, it is limited in that the network’s physical
-addresses can be no more than 16 bits long in this example; they can be
-only 8 bits long on a class C network. This clearly will not work for
-48-bit Ethernet addresses.
+Một cách đơn giản để ánh xạ địa chỉ IP sang địa chỉ mạng vật lý là mã hóa địa chỉ vật lý của máy chủ vào phần máy chủ của địa chỉ IP. Ví dụ, một máy chủ có địa chỉ vật lý ``00100001 01010001`` (giá trị thập phân 33 ở byte cao và 81 ở byte thấp) có thể được cấp địa chỉ IP ``128.96.33.81``. Dù giải pháp này đã được dùng trên một số mạng, nó bị giới hạn ở chỗ địa chỉ vật lý mạng chỉ có thể dài tối đa 16 bit trong ví dụ này; chỉ 8 bit trên mạng lớp C. Rõ ràng điều này không phù hợp với địa chỉ Ethernet 48 bit.
 
-A more general solution would be for each host to maintain a table of
-address pairs; that is, the table would map IP addresses into physical
-addresses. While this table could be centrally managed by a system
-administrator and then copied to each host on the network, a better
-approach would be for each host to dynamically learn the contents of the
-table using the network. This can be accomplished using the Address
-Resolution Protocol (ARP). The goal of ARP is to enable each host on a
-network to build up a table of mappings between IP addresses and
-link-level addresses. Since these mappings may change over time (e.g.,
-because an Ethernet card in a host breaks and is replaced by a new one
-with a new address), the entries are timed out periodically and removed.
-This happens on the order of every 15 minutes. The set of mappings
-currently stored in a host is known as the ARP cache or ARP table.
+Một giải pháp tổng quát hơn là mỗi máy chủ duy trì một bảng các cặp địa chỉ; tức là, bảng ánh xạ địa chỉ IP sang địa chỉ vật lý. Dù bảng này có thể được quản trị viên hệ thống quản lý tập trung rồi sao chép tới từng máy chủ trên mạng, một cách tốt hơn là mỗi máy chủ tự động học nội dung bảng này qua mạng. Điều này có thể thực hiện bằng Giao thức phân giải địa chỉ (ARP). Mục tiêu của ARP là cho phép mỗi máy chủ trên mạng xây dựng một bảng ánh xạ giữa địa chỉ IP và địa chỉ tầng liên kết. Vì các ánh xạ này có thể thay đổi theo thời gian (ví dụ, vì card Ethernet của một máy bị hỏng và thay bằng card mới có địa chỉ mới), các mục sẽ hết hạn định kỳ và bị loại bỏ. Điều này diễn ra khoảng 15 phút một lần. Tập hợp các ánh xạ hiện có trên một máy chủ gọi là bộ nhớ đệm ARP hoặc bảng ARP.
 
-ARP takes advantage of the fact that many link-level network
-technologies, such as Ethernet, support broadcast. If a host wants to
-send an IP datagram to a host (or router) that it knows to be on the
-same network (i.e., the sending and receiving nodes have the same IP
-network number), it first checks for a mapping in the cache. If no
-mapping is found, it needs to invoke the Address Resolution Protocol
-over the network. It does this by broadcasting an ARP query onto the
-network. This query contains the IP address in question (the target IP
-address). Each host receives the query and checks to see if it matches
-its IP address. If it does match, the host sends a response message that
-contains its link-layer address back to the originator of the query. The
-originator adds the information contained in this response to its ARP
-table.
+ARP tận dụng thực tế là nhiều công nghệ mạng tầng liên kết, như Ethernet, hỗ trợ broadcast. Nếu một máy chủ muốn gửi một datagram IP tới một máy chủ (hoặc bộ định tuyến) mà nó biết nằm trên cùng mạng (tức là các nút gửi và nhận có cùng số mạng IP), nó trước tiên kiểm tra ánh xạ trong bộ nhớ đệm. Nếu không tìm thấy, nó cần gọi ARP qua mạng. Nó làm điều này bằng cách broadcast một truy vấn ARP lên mạng. Truy vấn này chứa địa chỉ IP cần tìm (địa chỉ IP đích). Mỗi máy chủ nhận truy vấn và kiểm tra xem nó có khớp với địa chỉ IP của mình không. Nếu có, máy chủ gửi một thông điệp phản hồi chứa địa chỉ tầng liên kết của nó về cho máy gửi truy vấn. Máy gửi thêm thông tin này vào bảng ARP của mình.
 
-The query message also includes the IP address and link-layer address of
-the sending host. Thus, when a host broadcasts a query message, each
-host on the network can learn the sender’s link-level and IP addresses
-and place that information in its ARP table. However, not every host
-adds this information to its ARP table. If the host already has an entry
-for that host in its table, it “refreshes” this entry; that is, it
-resets the length of time until it discards the entry. If that host is
-the target of the query, then it adds the information about the sender
-to its table, even if it did not already have an entry for that host.
-This is because there is a good chance that the source host is about to
-send it an application-level message, and it may eventually have to send
-a response or ACK back to the source; it will need the source’s physical
-address to do this. If a host is not the target and does not already
-have an entry for the source in its ARP table, then it does not add an
-entry for the source. This is because there is no reason to believe that
-this host will ever need the source’s link-level address; there is no
-need to clutter its ARP table with this information.
+Thông điệp truy vấn cũng bao gồm địa chỉ IP và địa chỉ tầng liên kết của máy gửi. Do đó, khi một máy chủ broadcast một truy vấn, mỗi máy chủ trên mạng có thể học địa chỉ tầng liên kết và địa chỉ IP của máy gửi và lưu thông tin đó vào bảng ARP của mình. Tuy nhiên, không phải mọi máy chủ đều thêm thông tin này vào bảng ARP. Nếu máy chủ đã có một mục cho máy gửi trong bảng, nó “làm mới” mục này; tức là, đặt lại thời gian sống của mục. Nếu máy chủ là đích của truy vấn, nó thêm thông tin về máy gửi vào bảng, ngay cả khi chưa có mục cho máy gửi. Điều này vì có khả năng máy chủ nguồn sắp gửi một thông điệp ứng dụng tới nó, và nó có thể cần gửi phản hồi hoặc ACK lại cho nguồn; nó sẽ cần địa chỉ vật lý của nguồn để làm điều này. Nếu một máy chủ không phải là đích và chưa có mục cho nguồn trong bảng ARP, nó không thêm mục cho nguồn. Vì không có lý do gì để tin rằng máy chủ này sẽ cần địa chỉ tầng liên kết của nguồn; không cần làm bảng ARP lộn xộn với thông tin này.
 
 .. _fig-arp:
 .. figure:: figures/f03-23-9780123850591.png
    :width: 500px
    :align: center
 
-   ARP packet format for mapping IP addresses into Ethernet addresses.
+   Định dạng gói ARP để ánh xạ địa chỉ IP sang địa chỉ Ethernet.
 
-:numref:`Figure %s <fig-arp>` shows the ARP packet format for
-IP-to-Ethernet address mappings. In fact, ARP can be used for lots of
-other kinds of mappings—the major differences are in the address
-sizes. In addition to the IP and link-layer addresses of both sender
-and target, the packet contains
+:numref:`Hình %s <fig-arp>` cho thấy định dạng gói ARP cho ánh xạ địa chỉ IP sang Ethernet. Thực tế, ARP có thể dùng cho nhiều loại ánh xạ khác—khác biệt chính là ở kích thước địa chỉ. Ngoài địa chỉ IP và địa chỉ tầng liên kết của cả máy gửi và đích, gói tin còn chứa
 
--  A ``HardwareType`` field, which specifies the type of physical
-   network (e.g., Ethernet)
+-  Trường ``HardwareType``, chỉ loại mạng vật lý (ví dụ, Ethernet)
 
--  A ``ProtocolType`` field, which specifies the higher-layer protocol
-   (e.g., IP)
+-  Trường ``ProtocolType``, chỉ giao thức tầng cao hơn (ví dụ, IP)
 
--  ``HLen`` (“hardware” address length) and ``PLen`` (“protocol” address
-   length) fields, which specify the length of the link-layer address
-   and higher-layer protocol address, respectively
+-  Trường ``HLen`` (độ dài địa chỉ phần cứng) và ``PLen`` (độ dài địa chỉ giao thức), chỉ độ dài địa chỉ tầng liên kết và địa chỉ giao thức tầng cao hơn
 
--  An ``Operation`` field, which specifies whether this is a request or
-   a response
+-  Trường ``Operation``, chỉ đây là yêu cầu hay phản hồi
 
--  The source and target hardware (Ethernet) and protocol (IP) addresses
+-  Địa chỉ phần cứng (Ethernet) và giao thức (IP) của nguồn và đích
 
-Note that the results of the ARP process can be added as an extra column
-in a forwarding table like the one in :numref:`Table %s <tab-ipfwdtab>`.
-Thus, for example, when R2 needs to forward a packet to network 2, it
-not only finds that the next hop is R1, but also finds the MAC address
-to place on the packet to send it to R1.
+Lưu ý rằng kết quả của quá trình ARP có thể được thêm vào như một cột bổ sung trong bảng chuyển tiếp như trong :numref:`Bảng %s <tab-ipfwdtab>`. Do đó, ví dụ, khi R2 cần chuyển tiếp một gói tin tới mạng 2, nó không chỉ tìm thấy bước nhảy tiếp theo là R1, mà còn tìm được địa chỉ MAC để đặt vào gói tin gửi tới R1.
 
 .. _key-best-effort:
-.. admonition:: Key Takeaway
+.. admonition:: Bài học then chốt
 
-   We have now seen the basic mechanisms that IP provides for dealing
-   with both heterogeneity and scale. On the issue of heterogeneity, IP
-   begins by defining a best-effort service model that makes minimal
-   assumptions about the underlying networks; most notably, this service
-   model is based on unreliable datagrams. IP then makes two important
-   additions to this starting point: (1) a common packet format
-   (fragmentation/reassembly is the mechanism that makes this format
-   work over networks with different MTUs) and (2) a global address
-   space for identifying all hosts (ARP is the mechanism that makes this
-   global address space work over networks with different physical
-   addressing schemes). On the issue of scale, IP uses hierarchical
-   aggregation to reduce the amount of information needed to forward
-   packets. Specifically, IP addresses are partitioned into network and
-   host components, with packets first routed toward the destination
-   network and then delivered to the correct host on that network.
-   :ref:`[Next] <key-dhcp>`
+   Chúng ta đã thấy các cơ chế cơ bản mà IP cung cấp để xử lý cả dị chủng và khả mở. Về dị chủng, IP bắt đầu bằng cách định nghĩa một mô hình dịch vụ nỗ lực tối đa với giả định tối thiểu về các mạng bên dưới; đáng chú ý nhất, mô hình này dựa trên datagram không tin cậy. IP sau đó bổ sung hai điểm quan trọng: (1) định dạng gói tin chung (phân mảnh/lắp ráp là cơ chế giúp định dạng này hoạt động trên các mạng có MTU khác nhau) và (2) không gian địa chỉ toàn cục để nhận diện tất cả máy chủ (ARP là cơ chế giúp không gian địa chỉ này hoạt động trên các mạng có sơ đồ địa chỉ vật lý khác nhau). Về khả mở, IP dùng kết tụ phân cấp để giảm lượng thông tin cần thiết để chuyển tiếp gói tin. Cụ thể, địa chỉ IP được chia thành phần mạng và phần máy chủ, với gói tin trước tiên được định tuyến tới mạng đích rồi chuyển tới đúng máy chủ trên mạng đó. :ref:`[Tiếp theo] <key-dhcp>`
 
-3.3.7 Host Configuration (DHCP)
--------------------------------
+3.3.7 Cấu hình máy chủ (DHCP)
+-----------------------------
 
-Ethernet addresses are configured into the network adaptor by the
-manufacturer, and this process is managed in such a way to ensure that
-these addresses are globally unique. This is clearly a sufficient
-condition to ensure that any collection of hosts connected to a single
-Ethernet (including an extended LAN) will have unique addresses.
-Furthermore, uniqueness is all we ask of Ethernet addresses.
+Địa chỉ Ethernet được cấu hình vào card mạng bởi nhà sản xuất, và quá trình này được quản lý để đảm bảo các địa chỉ này là duy nhất toàn cục. Điều này đủ để đảm bảo bất kỳ tập hợp máy chủ nào kết nối tới một Ethernet (kể cả LAN mở rộng) đều có địa chỉ duy nhất. Hơn nữa, điều duy nhất ta yêu cầu ở địa chỉ Ethernet là tính duy nhất.
 
-IP addresses, by contrast, not only must be unique on a given
-internetwork but also must reflect the structure of the internetwork. As
-noted above, they contain a network part and a host part, and the
-network part must be the same for all hosts on the same network. Thus,
-it is not possible for the IP address to be configured once into a host
-when it is manufactured, since that would imply that the manufacturer
-knew which hosts were going to end up on which networks, and it would
-mean that a host, once connected to one network, could never move to
-another. For this reason, IP addresses need to be reconfigurable.
+Địa chỉ IP, ngược lại, không chỉ phải duy nhất trên một liên mạng nhất định mà còn phải phản ánh cấu trúc của liên mạng. Như đã nói ở trên, chúng chứa phần mạng và phần máy chủ, và phần mạng phải giống nhau cho tất cả các máy chủ trên cùng mạng. Do đó, không thể cấu hình địa chỉ IP một lần vào máy chủ khi sản xuất, vì điều đó ngụ ý nhà sản xuất biết máy chủ nào sẽ kết nối tới mạng nào, và máy chủ, một khi đã kết nối tới một mạng, sẽ không bao giờ chuyển sang mạng khác. Vì lý do này, địa chỉ IP cần có khả năng cấu hình lại.
 
-In addition to an IP address, there are some other pieces of information
-a host needs to have before it can start sending packets. The most
-notable of these is the address of a default router—the place to which
-it can send packets whose destination address is not on the same network
-as the sending host.
+Ngoài địa chỉ IP, còn một số thông tin khác mà máy chủ cần có trước khi bắt đầu gửi gói tin. Đáng chú ý nhất là địa chỉ của bộ định tuyến mặc định—nơi nó có thể gửi các gói tin có địa chỉ đích không nằm trên cùng mạng với máy chủ gửi.
 
-Most host operating systems provide a way for a system administrator, or
-even a user, to manually configure the IP information needed by a host;
-however, there are some obvious drawbacks to such manual configuration.
-One is that it is simply a lot of work to configure all the hosts in a
-large network directly, especially when you consider that such hosts are
-not reachable over a network until they are configured. Even more
-importantly, the configuration process is very error prone, since it is
-necessary to ensure that every host gets the correct network number and
-that no two hosts receive the same IP address. For these reasons,
-automated configuration methods are required. The primary method uses a
-protocol known as the *Dynamic Host Configuration Protocol* (DHCP).
+Hầu hết các hệ điều hành máy chủ cung cấp cách để quản trị viên hệ thống, hoặc thậm chí người dùng, cấu hình thủ công thông tin IP cần thiết cho máy chủ; tuy nhiên, có một số nhược điểm rõ ràng với cấu hình thủ công như vậy. Một là rất tốn công để cấu hình tất cả các máy chủ trong một mạng lớn, đặc biệt khi bạn cân nhắc rằng các máy chủ đó không thể truy cập qua mạng cho tới khi được cấu hình. Quan trọng hơn, quá trình cấu hình rất dễ sai, vì cần đảm bảo mọi máy chủ nhận đúng số mạng và không có hai máy chủ nhận cùng địa chỉ IP. Vì những lý do này, các phương pháp cấu hình tự động là cần thiết. Phương pháp chính dùng một giao thức gọi là *Giao thức cấu hình máy chủ động* (DHCP).
 
-DHCP relies on the existence of a DHCP server that is responsible for
-providing configuration information to hosts. There is at least one DHCP
-server for an administrative domain. At the simplest level, the DHCP
-server can function just as a centralized repository for host
-configuration information. Consider, for example, the problem of
-administering addresses in the internetwork of a large company. DHCP
-saves the network administrators from having to walk around to every
-host in the company with a list of addresses and network map in hand and
-configuring each host manually. Instead, the configuration information
-for each host could be stored in the DHCP server and automatically
-retrieved by each host when it is booted or connected to the network.
-However, the administrator would still pick the address that each host
-is to receive; he would just store that in the server. In this model,
-the configuration information for each host is stored in a table that is
-indexed by some form of unique client identifier, typically the hardware
-address (e.g., the Ethernet address of its network adaptor).
+DHCP dựa vào sự tồn tại của một máy chủ DHCP chịu trách nhiệm cung cấp thông tin cấu hình cho các máy chủ. Có ít nhất một máy chủ DHCP cho mỗi miền quản trị. Ở mức đơn giản nhất, máy chủ DHCP có thể hoạt động như một kho lưu trữ tập trung thông tin cấu hình máy chủ. Xét ví dụ, vấn đề quản trị địa chỉ trong liên mạng của một công ty lớn. DHCP giúp quản trị viên mạng không phải đi tới từng máy chủ trong công ty với danh sách địa chỉ và sơ đồ mạng để cấu hình từng máy chủ thủ công. Thay vào đó, thông tin cấu hình cho mỗi máy chủ có thể lưu trong máy chủ DHCP và được tự động lấy về khi máy chủ khởi động hoặc kết nối mạng. Tuy nhiên, quản trị viên vẫn chọn địa chỉ mà mỗi máy chủ sẽ nhận; chỉ là lưu nó trong máy chủ. Trong mô hình này, thông tin cấu hình cho mỗi máy chủ được lưu trong một bảng được đánh chỉ mục bằng một định danh khách hàng duy nhất, thường là địa chỉ phần cứng (ví dụ, địa chỉ Ethernet của card mạng).
 
-A more sophisticated use of DHCP saves the network administrator from
-even having to assign addresses to individual hosts. In this model, the
-DHCP server maintains a pool of available addresses that it hands out to
-hosts on demand. This considerably reduces the amount of configuration
-an administrator must do, since now it is only necessary to allocate a
-range of IP addresses (all with the same network number) to each
-network.
+Một cách dùng DHCP tinh vi hơn giúp quản trị viên mạng không phải gán địa chỉ cho từng máy chủ. Trong mô hình này, máy chủ DHCP duy trì một vùng địa chỉ có sẵn để cấp phát cho các máy chủ khi cần. Điều này giảm đáng kể lượng cấu hình mà quản trị viên phải làm, vì giờ chỉ cần cấp phát một dải địa chỉ IP (tất cả cùng số mạng) cho mỗi mạng.
 
-Since the goal of DHCP is to minimize the amount of manual configuration
-required for a host to function, it would rather defeat the purpose if
-each host had to be configured with the address of a DHCP server. Thus,
-the first problem faced by DHCP is that of server discovery.
+Vì mục tiêu của DHCP là giảm thiểu cấu hình thủ công cần thiết để máy chủ hoạt động, sẽ vô nghĩa nếu mỗi máy chủ phải được cấu hình với địa chỉ của máy chủ DHCP. Do đó, vấn đề đầu tiên DHCP phải giải quyết là phát hiện máy chủ.
 
-To contact a DHCP server, a newly booted or attached host sends a
-``DHCPDISCOVER`` message to a special IP address (255.255.255.255) that
-is an IP broadcast address. This means it will be received by all hosts
-and routers on that network. (Routers do not forward such packets onto
-other networks, preventing broadcast to the entire Internet.) In the
-simplest case, one of these nodes is the DHCP server for the network.
-The server would then reply to the host that generated the discovery
-message (all the other nodes would ignore it). However, it is not really
-desirable to require one DHCP server on every network, because this
-still creates a potentially large number of servers that need to be
-correctly and consistently configured. Thus, DHCP uses the concept of a
-*relay agent*. There is at least one relay agent on each network, and it
-is configured with just one piece of information: the IP address of the
-DHCP server. When a relay agent receives a ``DHCPDISCOVER`` message, it
-unicasts it to the DHCP server and awaits the response, which it will
-then send back to the requesting client. The process of relaying a
-message from a host to a remote DHCP server is shown in :numref:`Figure
-%s <fig-dhcp-relay>`.
+Để liên lạc với máy chủ DHCP, một máy chủ vừa khởi động hoặc vừa kết nối gửi một thông điệp ``DHCPDISCOVER`` tới một địa chỉ IP đặc biệt (255.255.255.255) là địa chỉ broadcast IP. Điều này nghĩa là nó sẽ được tất cả các máy chủ và bộ định tuyến trên mạng nhận. (Bộ định tuyến không chuyển tiếp các gói này sang mạng khác, ngăn broadcast tới toàn Internet.) Trong trường hợp đơn giản nhất, một trong các nút này là máy chủ DHCP cho mạng. Máy chủ sẽ trả lời máy chủ gửi thông điệp khám phá (các nút khác sẽ bỏ qua). Tuy nhiên, không thực tế khi yêu cầu một máy chủ DHCP trên mỗi mạng, vì điều này vẫn tạo ra số lượng lớn máy chủ cần cấu hình đúng và nhất quán. Do đó, DHCP dùng khái niệm *relay agent* (đại lý chuyển tiếp). Có ít nhất một relay agent trên mỗi mạng, và nó chỉ cần cấu hình một thông tin: địa chỉ IP của máy chủ DHCP. Khi một relay agent nhận được thông điệp ``DHCPDISCOVER``, nó gửi đơn lẻ tới máy chủ DHCP và chờ phản hồi, rồi gửi lại cho máy chủ yêu cầu. Quá trình chuyển tiếp thông điệp từ máy chủ tới máy chủ DHCP từ xa được minh họa trong :numref:`Hình %s <fig-dhcp-relay>`.
 
 .. _fig-dhcp-relay:
 .. figure:: figures/f03-24-9780123850591.png
    :width: 500px
    :align: center
 
-   A DHCP relay agent receives a broadcast DHCPDISCOVER
-   message from a host and sends a unicast DHCPDISCOVER to the DHCP
-   server.
+   Một relay agent DHCP nhận thông điệp broadcast DHCPDISCOVER từ máy chủ và gửi DHCPDISCOVER đơn lẻ tới máy chủ DHCP.
 
-:numref:`Figure %s <fig-dhcp>` below shows the format of a DHCP
-message. The message is actually sent using a protocol called the
-*User Datagram Protocol* (UDP) that runs over IP. UDP is discussed in
-detail in the next chapter, but the only interesting thing it does in
-this context is to provide a demultiplexing key that says, “This is a
-DHCP packet.”
+:numref:`Hình %s <fig-dhcp>` dưới đây cho thấy định dạng thông điệp DHCP. Thông điệp thực tế được gửi bằng một giao thức gọi là *User Datagram Protocol* (UDP) chạy trên IP. UDP sẽ được thảo luận chi tiết ở chương sau, nhưng điều duy nhất nó làm ở đây là cung cấp một khóa phân kênh nói rằng, “Đây là một gói DHCP.”
+
+.. _3.3 Internet (IP)
+=================
+
+Trong phần trước, chúng ta đã thấy rằng có thể xây dựng các LAN khá lớn bằng cách sử dụng bridge và switch LAN, nhưng các phương pháp này bị giới hạn về khả năng mở rộng và xử lý dị chủng. Trong phần này, chúng ta sẽ khám phá một số cách để vượt qua các giới hạn của mạng bridge, cho phép xây dựng các mạng lớn, dị chủng cao với khả năng định tuyến hợp lý. Chúng ta gọi các mạng như vậy là *liên mạng* (*internetworks*). Chúng ta sẽ tiếp tục thảo luận về cách xây dựng một liên mạng toàn cầu thực sự ở chương tiếp theo, nhưng trước mắt sẽ tìm hiểu các khái niệm cơ bản. Chúng ta bắt đầu bằng cách xem xét kỹ hơn ý nghĩa của từ *internetwork*.
+
+3.3.1 Liên mạng là gì?
+----------------------
+
+Chúng ta sử dụng thuật ngữ *liên mạng* (*internetwork*), hoặc đôi khi chỉ là *internet* với chữ *i* thường, để chỉ một tập hợp bất kỳ các mạng được liên kết với nhau nhằm cung cấp một dịch vụ truyền gói tin từ máy chủ tới máy chủ. Ví dụ, một công ty có nhiều chi nhánh có thể xây dựng một liên mạng riêng bằng cách kết nối các LAN tại các địa điểm khác nhau bằng các liên kết điểm-điểm thuê từ công ty điện thoại. Khi nói về liên mạng toàn cầu được sử dụng rộng rãi mà phần lớn các mạng hiện nay đều kết nối tới, chúng ta gọi nó là *Internet* với chữ *I* hoa. Theo cách tiếp cận nguyên lý đầu tiên của cuốn sách này, chúng tôi chủ yếu muốn bạn học về các nguyên lý của liên mạng “chữ *i* thường”, nhưng sẽ minh họa các ý tưởng này bằng các ví dụ thực tế từ Internet “chữ *I* lớn”.
+
+Một thuật ngữ khác cũng dễ gây nhầm lẫn là sự khác biệt giữa mạng, mạng con (subnetworks), và liên mạng. Chúng ta sẽ tránh đề cập đến mạng con (hoặc subnet) cho đến phần sau. Hiện tại, chúng ta dùng *mạng* để chỉ một mạng kết nối trực tiếp hoặc một mạng chuyển mạch như đã mô tả ở phần trước và chương trước. Một mạng như vậy sử dụng một công nghệ, ví dụ như 802.11 hoặc Ethernet. Một *liên mạng* là một tập hợp các mạng như vậy được liên kết với nhau. Đôi khi, để tránh nhầm lẫn, chúng ta gọi các mạng cơ sở mà chúng ta đang liên kết là *mạng vật lý*. Một internet là một *mạng logic* được xây dựng từ một tập hợp các mạng vật lý. Trong bối cảnh này, một tập hợp các đoạn Ethernet được kết nối bằng bridge hoặc switch vẫn được coi là một mạng duy nhất.
+
+.. _fig-inet:
+.. figure:: figures/f03-14-9780123850591.png
+   :width: 500px
+   :align: center
+
+   Một liên mạng đơn giản. H là máy chủ, R là bộ định tuyến.
+
+:numref:`Hình %s <fig-inet>` minh họa một ví dụ về liên mạng. Một liên mạng thường được gọi là “mạng của các mạng” vì nó được tạo thành từ nhiều mạng nhỏ hơn. Trong hình này, ta thấy các mạng Ethernet, một mạng không dây, và một liên kết điểm-điểm. Mỗi cái là một mạng đơn công nghệ. Các nút kết nối các mạng này được gọi là *bộ định tuyến* (*routers*). Chúng đôi khi cũng được gọi là *gateway*, nhưng vì thuật ngữ này có nhiều nghĩa khác, chúng ta sẽ chỉ dùng từ router.
+
+.. _fig-ip-graph:
+.. figure:: figures/f03-15-9780123850591.png
+   :width: 600px
+   :align: center
+
+   Một liên mạng đơn giản, minh họa các tầng giao thức dùng để kết nối H5 tới H8 trong hình trên. ETH là giao thức chạy trên Ethernet.
+
+*Giao thức Internet* là công cụ chủ chốt được sử dụng ngày nay để xây dựng các liên mạng dị chủng, khả mở. Ban đầu nó được gọi là giao thức Kahn-Cerf theo tên các nhà phát minh. Một cách để hình dung IP là nó chạy trên tất cả các nút (cả máy chủ và bộ định tuyến) trong một tập hợp các mạng và định nghĩa hạ tầng cho phép các nút và mạng này hoạt động như một liên mạng logic duy nhất. Ví dụ, :numref:`Hình %s <fig-ip-graph>` cho thấy cách các máy chủ H5 và H8 được kết nối logic bởi internet trong :numref:`Hình %s <fig-inet>`, bao gồm đồ thị giao thức chạy trên mỗi nút. Lưu ý rằng các giao thức tầng cao hơn, như TCP và UDP, thường chạy trên IP ở các máy chủ.
+
+Phần còn lại của chương này và chương tiếp theo sẽ nói về các khía cạnh khác nhau của IP. Dù chắc chắn có thể xây dựng một liên mạng mà không dùng IP—và thực tế, trong những ngày đầu của Internet đã có các giải pháp thay thế—IP là trường hợp thú vị nhất để nghiên cứu đơn giản vì quy mô của Internet. Nói cách khác, chỉ có Internet dựa trên IP mới thực sự đối mặt với vấn đề về khả mở. Do đó, nó cung cấp ví dụ điển hình nhất về một giao thức liên mạng khả mở.
+
+.. sidebar:: Mạng tầng 2 vs tầng 3 (L2 vs L3)
+
+   Như đã thấy ở phần trước, một Ethernet có thể được coi là một *liên kết* điểm-điểm kết nối một cặp switch, với một mạng lưới các switch kết nối tạo thành một *Ethernet chuyển mạch*. Cấu hình này còn gọi là *mạng tầng 2* (*L2 Network*).
+
+   Nhưng như chúng ta sẽ thấy ở phần này, một Ethernet (ngay cả khi được cấu hình điểm-điểm thay vì mạng chia sẻ CSMA/CD) có thể được coi là một *mạng* kết nối một cặp bộ định tuyến, với một mạng lưới các bộ định tuyến như vậy tạo thành một Internet. Cấu hình này còn gọi là *mạng tầng 3* (*L3 Network*).
+
+   Điều gây nhầm lẫn là vì một Ethernet điểm-điểm vừa là một liên kết vừa là một mạng (dù là mạng hai nút tầm thường trong trường hợp thứ hai), tùy thuộc vào việc nó kết nối một cặp switch tầng 2 chạy thuật toán cây bao phủ, hay một cặp bộ định tuyến tầng 3 chạy IP (cộng với các giao thức định tuyến sẽ được mô tả sau trong chương này). Tại sao chọn cấu hình này thay vì cấu hình kia? Một phần phụ thuộc vào việc bạn muốn mạng là một miền quảng bá duy nhất (nếu có, chọn L2), và liệu bạn muốn các máy chủ kết nối tới mạng thuộc các mạng khác nhau (nếu có, chọn L3).
+
+   Tin tốt là khi bạn hiểu rõ ý nghĩa của sự song hành này, bạn đã vượt qua một rào cản lớn trong việc làm chủ các mạng chuyển mạch gói hiện đại.
+
+3.3.2 Mô hình dịch vụ
+---------------------
+
+Một điểm khởi đầu tốt khi xây dựng một liên mạng là xác định *mô hình dịch vụ* của nó, tức là các dịch vụ từ máy chủ tới máy chủ mà bạn muốn cung cấp. Mối quan tâm chính khi xác định mô hình dịch vụ cho một liên mạng là chúng ta chỉ có thể cung cấp dịch vụ máy chủ tới máy chủ nếu dịch vụ này có thể được cung cấp trên mỗi mạng vật lý bên dưới. Ví dụ, sẽ không có ý nghĩa gì nếu quyết định rằng mô hình dịch vụ liên mạng sẽ đảm bảo chuyển phát mọi gói tin trong 1 ms hoặc ít hơn nếu có các công nghệ mạng bên dưới có thể trì hoãn gói tin tùy ý. Triết lý khi xác định mô hình dịch vụ IP, do đó, là làm cho nó đủ đơn giản để hầu như bất kỳ công nghệ mạng nào có thể xuất hiện trong một liên mạng đều có thể cung cấp dịch vụ cần thiết.
+
+Mô hình dịch vụ IP có thể được coi là gồm hai phần: một sơ đồ địa chỉ, cung cấp cách nhận diện tất cả các máy chủ trong liên mạng, và một mô hình truyền dữ liệu kiểu datagram (không kết nối). Mô hình dịch vụ này đôi khi được gọi là *best effort* (nỗ lực tối đa) vì, dù IP cố gắng hết sức để chuyển phát datagram, nó không đưa ra bất kỳ đảm bảo nào. Chúng ta sẽ hoãn thảo luận về sơ đồ địa chỉ và trước tiên xem xét mô hình truyền dữ liệu.
+
+Truyền datagram
+~~~~~~~~~~~~~~~
+
+Datagram IP là nền tảng của Giao thức Internet. Nhớ lại từ phần trước rằng một datagram là một gói tin được gửi theo kiểu không kết nối qua mạng. Mỗi datagram mang đủ thông tin để mạng có thể chuyển tiếp gói tin tới đích đúng; không cần bất kỳ cơ chế thiết lập trước nào để báo cho mạng biết phải làm gì khi gói tin đến. Bạn chỉ cần gửi nó đi, và mạng sẽ cố gắng hết sức để chuyển nó tới đích mong muốn. Phần “nỗ lực tối đa” nghĩa là nếu có sự cố và gói tin bị mất, bị lỗi, bị chuyển nhầm, hoặc bằng cách nào đó không đến được đích, mạng sẽ không làm gì cả—nó đã cố gắng hết sức, và đó là tất cả những gì nó phải làm. Nó không cố gắng phục hồi từ lỗi. Điều này đôi khi được gọi là dịch vụ *không tin cậy*.
+
+Dịch vụ không kết nối, nỗ lực tối đa là dịch vụ đơn giản nhất mà bạn có thể yêu cầu từ một liên mạng, và đó cũng là điểm mạnh lớn nhất của nó. Ví dụ, nếu bạn cung cấp dịch vụ nỗ lực tối đa trên một mạng cung cấp dịch vụ tin cậy, thì cũng tốt—bạn sẽ có một dịch vụ nỗ lực tối đa mà tình cờ luôn chuyển phát gói tin. Ngược lại, nếu bạn có một mô hình dịch vụ tin cậy trên một mạng không tin cậy, bạn sẽ phải bổ sung rất nhiều chức năng vào các bộ định tuyến để bù đắp cho các thiếu sót của mạng bên dưới. Giữ cho các bộ định tuyến càng đơn giản càng tốt là một trong những mục tiêu thiết kế ban đầu của IP.
+
+Khả năng “chạy trên bất cứ thứ gì” của IP thường được coi là một trong những đặc điểm quan trọng nhất của nó. Đáng chú ý là nhiều công nghệ mà IP chạy trên ngày nay chưa tồn tại khi IP được phát minh. Cho đến nay, chưa có công nghệ mạng nào được phát minh mà IP không thể chạy được. Về nguyên tắc, IP có thể chạy trên một mạng truyền thông bằng chim bồ câu.
+
+Dịch vụ nỗ lực tối đa không chỉ có nghĩa là gói tin có thể bị mất. Đôi khi chúng có thể được chuyển phát không theo thứ tự, và đôi khi cùng một gói tin có thể được chuyển phát nhiều lần. Các giao thức tầng cao hơn hoặc ứng dụng chạy trên IP cần nhận thức được tất cả các kiểu lỗi có thể xảy ra này.
+
+Định dạng gói tin
+~~~~~~~~~~~~~~~~~
+
+Rõ ràng, một phần quan trọng của mô hình dịch vụ IP là kiểu gói tin có thể được mang. Datagram IP, giống như hầu hết các gói tin, gồm một tiêu đề (header) theo sau là một số byte dữ liệu. Định dạng của tiêu đề được minh họa trong :numref:`Hình %s <fig-iphead>`. Lưu ý rằng chúng tôi đã áp dụng một kiểu biểu diễn gói tin khác với các chương trước. Đó là vì các định dạng gói tin ở tầng liên mạng và cao hơn, nơi chúng ta sẽ tập trung trong các chương tới, gần như luôn được thiết kế để căn chỉnh theo biên 32 bit để đơn giản hóa xử lý trong phần mềm. Do đó, cách biểu diễn phổ biến (dùng trong các RFC của Internet, chẳng hạn) là vẽ chúng như một chuỗi các từ 32 bit. Từ trên cùng là từ được truyền trước, và byte ngoài cùng bên trái của mỗi từ là byte được truyền trước. Trong biểu diễn này, bạn có thể dễ dàng nhận ra các trường có độ dài là bội số của 8 bit. Khi có trường không phải là bội số của 8 bit, bạn có thể xác định độ dài trường bằng cách nhìn vào vị trí bit ở đầu gói tin.
+
+.. _fig-iphead:
+.. figure:: figures/f03-16-9780123850591.png
+   :width: 450px
+   :align: center
+
+   Tiêu đề gói tin IPv4.
+
+Khi xem xét từng trường trong tiêu đề IP, ta thấy rằng mô hình đơn giản về truyền datagram nỗ lực tối đa vẫn có một số tính năng tinh vi. Trường ``Version`` chỉ định phiên bản của IP. Phiên bản IP vẫn được giả định hiện nay là 4, thường gọi là *IPv4*. Lưu ý rằng đặt trường này ngay đầu datagram giúp dễ dàng định nghĩa lại mọi thứ khác trong định dạng gói tin ở các phiên bản sau; phần mềm xử lý tiêu đề bắt đầu bằng cách nhìn vào phiên bản rồi xử lý phần còn lại của gói tin theo định dạng phù hợp. Trường tiếp theo, ``HLen``, chỉ độ dài tiêu đề tính theo từ 32 bit. Khi không có tùy chọn, điều này thường là 5 từ (20 byte). Trường ``TOS`` (type of service) 8 bit đã có nhiều định nghĩa khác nhau qua các năm, nhưng chức năng cơ bản là cho phép các gói tin được xử lý khác nhau tùy theo nhu cầu ứng dụng. Ví dụ, giá trị ``TOS`` có thể quyết định liệu một gói tin có nên được đặt vào hàng đợi đặc biệt nhận độ trễ thấp hay không.
+
+16 bit tiếp theo của tiêu đề chứa trường ``Length`` của datagram, bao gồm cả tiêu đề. Không giống trường ``HLen``, trường ``Length`` tính theo byte chứ không phải từ. Do đó, kích thước tối đa của một datagram IP là 65.535 byte. Tuy nhiên, mạng vật lý mà IP chạy trên đó có thể không hỗ trợ các gói tin dài như vậy. Vì lý do này, IP hỗ trợ quá trình phân mảnh và lắp ráp lại. Từ thứ hai của tiêu đề chứa thông tin về phân mảnh, chi tiết sẽ được trình bày ở phần sau “Phân mảnh và lắp ráp lại”.
+
+Tiếp theo, byte đầu tiên của từ thứ ba trong tiêu đề là trường ``TTL`` (time to live). Tên trường này phản ánh ý nghĩa lịch sử hơn là cách sử dụng hiện nay. Ý định của trường này là bắt các gói tin bị lặp trong các vòng lặp định tuyến và loại bỏ chúng, thay vì để chúng tiêu tốn tài nguyên vô hạn. Ban đầu, ``TTL`` được đặt thành một số giây cụ thể mà gói tin được phép tồn tại, và các bộ định tuyến trên đường đi sẽ giảm trường này cho đến khi nó về 0. Tuy nhiên, vì hiếm khi một gói tin phải chờ tới 1 giây trong một bộ định tuyến, và các bộ định tuyến không có đồng hồ chung, hầu hết các bộ định tuyến chỉ giảm ``TTL`` đi 1 mỗi khi chuyển tiếp gói tin. Do đó, nó trở thành bộ đếm số bước nhảy hơn là bộ đếm thời gian, nhưng vẫn là cách tốt để bắt các gói tin bị kẹt trong vòng lặp định tuyến. Một điểm tinh tế là giá trị khởi tạo trường này do máy gửi đặt: Nếu đặt quá cao, gói tin có thể lặp lại nhiều lần trước khi bị loại bỏ; nếu đặt quá thấp, có thể không đến được đích. Giá trị mặc định hiện nay là 64.
+
+Trường ``Protocol`` đơn giản là một khóa phân kênh xác định giao thức tầng cao hơn mà gói tin IP này nên chuyển tới. Có các giá trị xác định cho TCP (Transmission Control Protocol—6), UDP (User Datagram Protocol—17), và nhiều giao thức khác có thể nằm trên IP trong đồ thị giao thức.
+
+Trường ``Checksum`` được tính bằng cách coi toàn bộ tiêu đề IP là một chuỗi các từ 16 bit, cộng chúng lại bằng toán học bù một, và lấy bù một của kết quả. Do đó, nếu bất kỳ bit nào trong tiêu đề bị lỗi khi truyền, checksum sẽ không đúng khi nhận gói tin. Vì một tiêu đề bị lỗi có thể chứa lỗi ở địa chỉ đích—và do đó có thể đã bị chuyển nhầm—nên hợp lý khi loại bỏ bất kỳ gói tin nào không vượt qua kiểm tra checksum. Lưu ý rằng loại checksum này không có khả năng phát hiện lỗi mạnh như CRC, nhưng dễ tính toán hơn nhiều trong phần mềm.
+
+Hai trường bắt buộc cuối cùng trong tiêu đề là ``SourceAddr`` và ``DestinationAddr`` của gói tin. Trường sau là chìa khóa cho truyền datagram: Mỗi gói tin chứa địa chỉ đầy đủ của đích để các quyết định chuyển tiếp có thể được thực hiện tại mỗi bộ định tuyến. Địa chỉ nguồn là cần thiết để người nhận quyết định có nhận gói tin không và để trả lời. Địa chỉ IP sẽ được thảo luận ở phần sau—hiện tại, điều quan trọng là IP định nghĩa không gian địa chỉ toàn cục riêng, độc lập với bất kỳ mạng vật lý nào mà nó chạy trên đó. Như chúng ta sẽ thấy, đây là một trong những chìa khóa để hỗ trợ dị chủng.
+
+Cuối cùng, có thể có một số tùy chọn ở cuối tiêu đề. Có hay không các tùy chọn này có thể xác định bằng cách kiểm tra trường độ dài tiêu đề (``HLen``). Dù các tùy chọn này khá hiếm khi dùng, một triển khai IP đầy đủ phải xử lý được tất cả.
+
+Phân mảnh và lắp ráp lại
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Một trong những vấn đề khi cung cấp mô hình dịch vụ máy chủ tới máy chủ thống nhất trên một tập hợp dị chủng các mạng là mỗi công nghệ mạng thường có ý tưởng riêng về kích thước gói tin tối đa. Ví dụ, Ethernet cổ điển có thể nhận các gói tin dài tới 1500 byte, nhưng các biến thể hiện đại có thể truyền các gói lớn hơn (jumbo) mang tới 9000 byte dữ liệu. Điều này để lại hai lựa chọn cho mô hình dịch vụ IP: Đảm bảo rằng mọi datagram IP đều đủ nhỏ để vừa trong một gói tin trên bất kỳ công nghệ mạng nào, hoặc cung cấp một cơ chế để các gói tin có thể bị phân mảnh và lắp ráp lại khi chúng quá lớn để truyền qua một công nghệ mạng nhất định. Lựa chọn thứ hai hóa ra là tốt, đặc biệt khi bạn cân nhắc rằng các công nghệ mạng mới luôn xuất hiện, và IP cần chạy trên tất cả; điều này sẽ khiến việc chọn một giới hạn nhỏ phù hợp cho kích thước datagram trở nên khó khăn. Điều này cũng có nghĩa là máy chủ sẽ không gửi các gói tin nhỏ không cần thiết, gây lãng phí băng thông và tiêu tốn tài nguyên xử lý do phải có nhiều tiêu đề hơn cho mỗi byte dữ liệu gửi đi.
+
+Ý tưởng trung tâm ở đây là mỗi loại mạng đều có một *đơn vị truyền tối đa* (MTU), là datagram IP lớn nhất mà nó có thể mang trong một frame. Lưu ý rằng giá trị này nhỏ hơn kích thước gói tin lớn nhất trên mạng vì datagram IP cần vừa trong *payload* của frame tầng liên kết.
+
+.. [#] Trong mạng ATM, MTU may mắn là lớn hơn nhiều so với một cell, vì ATM có cơ chế phân mảnh và lắp ráp riêng. Frame tầng liên kết trong ATM gọi là *convergence-sublayer protocol data unit* (CS-PDU).
+
+Khi một máy chủ gửi một datagram IP, nó có thể chọn bất kỳ kích thước nào nó muốn. Một lựa chọn hợp lý là MTU của mạng mà máy chủ kết nối trực tiếp. Khi đó, phân mảnh chỉ cần thiết nếu đường đi tới đích có mạng với MTU nhỏ hơn. Nếu giao thức tầng vận chuyển trên IP đưa cho IP một gói lớn hơn MTU cục bộ, máy chủ nguồn phải phân mảnh nó.
+
+Phân mảnh thường xảy ra ở một bộ định tuyến khi nó nhận một datagram mà nó muốn chuyển tiếp qua một mạng có MTU nhỏ hơn datagram nhận được. Để các mảnh này có thể được lắp ráp lại ở máy chủ nhận, tất cả đều mang cùng một định danh trong trường ``Ident``. Định danh này do máy chủ gửi chọn và phải là duy nhất trong số các datagram có thể đến đích từ nguồn này trong một khoảng thời gian hợp lý. Vì tất cả các mảnh của datagram gốc đều chứa định danh này, máy chủ lắp ráp sẽ nhận ra các mảnh thuộc về nhau. Nếu không phải tất cả các mảnh đều đến được máy chủ nhận, máy chủ sẽ từ bỏ quá trình lắp ráp và loại bỏ các mảnh đã nhận. IP không cố gắng phục hồi các mảnh bị mất.
+
+.. _fig-frag:
+.. figure:: figures/f03-17-9780123850591.png
+   :width: 600px
+   :align: center
+
+   Các datagram IP đi qua chuỗi các mạng vật lý như trong hình trước.
+
+Để hiểu ý nghĩa của điều này, hãy xem điều gì xảy ra khi máy chủ H5 gửi một datagram tới H8 trong ví dụ internet ở :numref:`Hình %s <fig-inet>`. Giả sử MTU là 1500 byte cho hai mạng Ethernet và mạng 802.11, và 532 byte cho mạng điểm-điểm, thì một datagram 1420 byte (20 byte tiêu đề IP cộng 1400 byte dữ liệu) gửi từ H5 sẽ đi qua mạng 802.11 và Ethernet đầu tiên mà không bị phân mảnh nhưng phải bị phân mảnh thành ba datagram tại bộ định tuyến R2. Ba mảnh này sau đó được R3 chuyển tiếp qua Ethernet thứ hai tới máy chủ đích. Tình huống này được minh họa trong :numref:`Hình %s <fig-frag>`. Hình này cũng củng cố hai điểm quan trọng:
+
+1. Mỗi mảnh là một datagram IP độc lập được truyền qua một chuỗi các mạng vật lý, độc lập với các mảnh khác.
+
+2. Mỗi datagram IP được đóng gói lại cho mỗi mạng vật lý mà nó đi qua.
+
+.. _fig-fragment:
+.. figure:: figures/f03-18-9780123850591.png
+   :align: center
+   :width: 350px
+
+   Các trường tiêu đề dùng trong phân mảnh IP: (a) gói chưa phân mảnh; (b) các gói đã phân mảnh.
+
+Quá trình phân mảnh có thể hiểu chi tiết bằng cách xem các trường tiêu đề của từng datagram, như minh họa trong :numref:`Hình %s <fig-fragment>`. Gói chưa phân mảnh ở trên cùng có 1400 byte dữ liệu và 20 byte tiêu đề IP. Khi gói đến bộ định tuyến R2, có MTU là 532 byte, nó phải bị phân mảnh. MTU 532 byte để lại 512 byte cho dữ liệu sau khi trừ 20 byte tiêu đề IP, nên mảnh đầu tiên chứa 512 byte dữ liệu. Bộ định tuyến đặt bit M trong trường ``Flags`` (xem :numref:`Hình %s <fig-iphead>`), nghĩa là còn các mảnh tiếp theo, và đặt ``Offset`` là 0, vì mảnh này chứa phần đầu của datagram gốc. Dữ liệu trong mảnh thứ hai bắt đầu từ byte thứ 513 của dữ liệu gốc, nên trường ``Offset`` trong tiêu đề này được đặt là 64, tức là 512/8. Tại sao chia cho 8? Vì các nhà thiết kế IP quyết định rằng phân mảnh luôn xảy ra trên biên 8 byte, nghĩa là trường ``Offset`` đếm theo đơn vị 8 byte, không phải byte. (Bạn có thể tự tìm hiểu lý do thiết kế này.) Mảnh thứ ba chứa 376 byte dữ liệu cuối cùng, và offset là 2 × 512/8 = 128. Vì đây là mảnh cuối cùng, bit M không được đặt.
+
+Lưu ý rằng quá trình phân mảnh được thực hiện sao cho nó có thể lặp lại nếu một mảnh đến một mạng khác có MTU còn nhỏ hơn. Phân mảnh tạo ra các datagram IP nhỏ hơn, hợp lệ, có thể dễ dàng lắp ráp lại thành datagram gốc khi nhận, bất kể thứ tự các mảnh đến. Việc lắp ráp lại được thực hiện tại máy chủ nhận, không phải tại mỗi bộ định tuyến.
+
+Việc lắp ráp lại IP không hề đơn giản. Ví dụ, nếu một mảnh bị mất, máy nhận vẫn cố gắng lắp ráp datagram, và cuối cùng sẽ từ bỏ và phải giải phóng tài nguyên đã dùng cho quá trình lắp ráp thất bại. Việc một máy chủ giữ tài nguyên vô ích có thể là cơ sở cho một cuộc tấn công từ chối dịch vụ.
+
+Vì lý do này và các lý do khác, phân mảnh IP thường được coi là điều nên tránh. Hiện nay, các máy chủ được khuyến khích mạnh mẽ thực hiện “khám phá MTU đường đi” (path MTU discovery), một quá trình giúp tránh phân mảnh bằng cách gửi các gói đủ nhỏ để đi qua liên kết có MTU nhỏ nhất trên đường từ nguồn tới đích.
+
+3.3.3 Địa chỉ toàn cục
+----------------------
+
+Trong phần thảo luận về mô hình dịch vụ IP ở trên, chúng ta đã đề cập rằng một trong những điều mà nó cung cấp là một sơ đồ địa chỉ. Rốt cuộc, nếu bạn muốn gửi dữ liệu tới bất kỳ máy chủ nào trên bất kỳ mạng nào, cần có cách nhận diện tất cả các máy chủ. Do đó, chúng ta cần một sơ đồ địa chỉ toàn cục—trong đó không có hai máy chủ nào có cùng địa chỉ. Tính duy nhất toàn cục là thuộc tính đầu tiên mà một sơ đồ địa chỉ phải cung cấp.
+
+Địa chỉ Ethernet là duy nhất toàn cục, nhưng chỉ điều đó thôi là chưa đủ cho một sơ đồ địa chỉ trong một liên mạng lớn. Địa chỉ Ethernet cũng là *phẳng*, nghĩa là chúng không có cấu trúc và cung cấp rất ít thông tin cho các giao thức định tuyến. (Thực tế, địa chỉ Ethernet có cấu trúc cho mục đích *cấp phát*—24 bit đầu nhận diện nhà sản xuất—nhưng điều này không giúp ích gì cho định tuyến vì cấu trúc này không liên quan tới cấu trúc mạng.) Ngược lại, địa chỉ IP là *phân cấp*, nghĩa là chúng gồm nhiều phần tương ứng với một dạng phân cấp nào đó trong liên mạng. Cụ thể, địa chỉ IP gồm hai phần, thường gọi là phần *mạng* và phần *máy chủ*. Đây là một cấu trúc khá hợp lý cho một liên mạng, vốn được tạo thành từ nhiều mạng liên kết với nhau. Phần mạng của địa chỉ IP nhận diện mạng mà máy chủ kết nối; tất cả các máy chủ kết nối cùng một mạng có cùng phần mạng trong địa chỉ IP. Phần máy chủ sau đó nhận diện từng máy chủ duy nhất trên mạng đó. Do đó, trong liên mạng đơn giản ở :numref:`Hình %s <fig-inet>`, các địa chỉ của các máy chủ trên mạng 1, ví dụ, đều có cùng phần mạng và phần máy chủ khác nhau.
+
+Lưu ý rằng các bộ định tuyến trong :numref:`Hình %s <fig-inet>` kết nối tới hai mạng. Chúng cần có một địa chỉ trên mỗi mạng, một cho mỗi giao diện. Ví dụ, bộ định tuyến R1, nằm giữa mạng không dây và một Ethernet, có một địa chỉ IP trên giao diện tới mạng không dây với phần mạng giống tất cả các máy chủ trên mạng đó. Nó cũng có một địa chỉ IP trên giao diện tới Ethernet có phần mạng giống các máy chủ trên Ethernet đó. Do đó, lưu ý rằng một bộ định tuyến có thể được triển khai như một máy chủ với hai giao diện mạng, nên chính xác hơn là coi địa chỉ IP thuộc về giao diện hơn là thuộc về máy chủ.
+
+Vậy các địa chỉ phân cấp này trông như thế nào? Không giống một số dạng địa chỉ phân cấp khác, kích thước của hai phần không giống nhau cho mọi địa chỉ. Ban đầu, địa chỉ IP được chia thành ba lớp khác nhau, như minh họa trong :numref:`Hình %s <fig-class>`, mỗi lớp định nghĩa kích thước phần mạng và phần máy chủ khác nhau. (Cũng có địa chỉ lớp D dùng cho nhóm multicast và lớp E hiện chưa dùng.) Trong mọi trường hợp, địa chỉ dài 32 bit.
+
+Lớp của một địa chỉ IP được xác định ở một vài bit quan trọng nhất. Nếu bit đầu là 0, đó là địa chỉ lớp A. Nếu bit đầu là 1 và bit thứ hai là 0, đó là lớp B. Nếu hai bit đầu là 1 và bit thứ ba là 0, đó là lớp C. Do đó, trong khoảng 4 tỷ địa chỉ IP có thể có, một nửa là lớp A, một phần tư là lớp B, và một phần tám là lớp C. Mỗi lớp cấp phát một số bit nhất định cho phần mạng và phần còn lại cho phần máy chủ. Mạng lớp A có 7 bit cho phần mạng và 24 bit cho phần máy chủ, nghĩa là chỉ có 126 mạng lớp A (giá trị 0 và 127 được dành riêng), nhưng mỗi mạng có thể chứa tới :math:`2^{24} - 2` (khoảng 16 triệu) máy chủ (lại có hai giá trị dành riêng). Địa chỉ lớp B cấp phát 14 bit cho mạng và 16 bit cho máy chủ, nghĩa là mỗi mạng lớp B chứa tối đa 65.534 máy chủ. Cuối cùng, địa chỉ lớp C chỉ có 8 bit cho máy chủ và 21 bit cho phần mạng. Do đó, một mạng lớp C chỉ có thể có 256 định danh máy chủ duy nhất, tức là chỉ 254 máy chủ kết nối (một định danh máy chủ, 255, dành cho broadcast, và 0 không hợp lệ). Tuy nhiên, sơ đồ địa chỉ này hỗ trợ 2\ :sup:`21` mạng lớp C.
+
+.. _fig-class:
+.. figure:: figures/f03-19-9780123850591.png
+   :width: 350px
+   :align: center
+
+   Địa chỉ IP: (a) lớp A; (b) lớp B; (c) lớp C.
+
+Nhìn bề ngoài, sơ đồ địa chỉ này có nhiều linh hoạt, cho phép các mạng có kích thước rất khác nhau được hỗ trợ khá hiệu quả. Ý tưởng ban đầu là Internet sẽ gồm một số ít mạng diện rộng (là mạng lớp A), một số vừa phải các mạng quy mô site (campus) (là mạng lớp B), và rất nhiều LAN (là mạng lớp C). Tuy nhiên, hóa ra nó không đủ linh hoạt, như chúng ta sẽ thấy ngay sau đây. Ngày nay, địa chỉ IP thường là “không phân lớp”; chi tiết sẽ được giải thích bên dưới.
+
+Trước khi xem cách địa chỉ IP được sử dụng, sẽ hữu ích khi xem một số vấn đề thực tế, như cách ghi lại chúng. Theo quy ước, địa chỉ IP được viết dưới dạng bốn số nguyên *thập phân* cách nhau bằng dấu chấm. Mỗi số nguyên biểu diễn giá trị thập phân chứa trong 1 byte của địa chỉ, bắt đầu từ byte quan trọng nhất. Ví dụ, địa chỉ của máy tính mà câu này được gõ là ``171.69.210.245``.
+
+Điều quan trọng là không nhầm lẫn địa chỉ IP với tên miền Internet, vốn cũng là phân cấp. Tên miền thường là chuỗi ASCII cách nhau bằng dấu chấm, như ``cs.princeton.edu``. Điều quan trọng về địa chỉ IP là chúng được mang trong tiêu đề các gói tin IP, và chính các địa chỉ này được dùng trong các bộ định tuyến IP để quyết định chuyển tiếp.
+
+3.3.4 Chuyển tiếp datagram trong IP
+-----------------------------------
+
+Giờ chúng ta đã sẵn sàng xem xét cơ chế cơ bản mà các bộ định tuyến IP dùng để chuyển tiếp datagram trong một liên mạng. Nhớ lại từ phần trước rằng *chuyển tiếp* là quá trình lấy một gói tin từ đầu vào và gửi nó ra đầu ra phù hợp, trong khi *định tuyến* là quá trình xây dựng các bảng cho phép xác định đầu ra đúng cho một gói tin. Phần thảo luận ở đây tập trung vào chuyển tiếp; chúng ta sẽ bàn về định tuyến ở phần sau.
+
+Các điểm chính cần nhớ khi thảo luận về chuyển tiếp datagram IP là:
+
+-  Mỗi datagram IP chứa địa chỉ IP của máy chủ đích.
+
+-  Phần mạng của một địa chỉ IP nhận diện duy nhất một mạng vật lý là một phần của Internet lớn hơn.
+
+-  Tất cả các máy chủ và bộ định tuyến có cùng phần mạng trong địa chỉ đều kết nối tới cùng một mạng vật lý và do đó có thể giao tiếp với nhau bằng cách gửi frame qua mạng đó.
+
+-  Mỗi mạng vật lý là một phần của Internet đều có ít nhất một bộ định tuyến, theo định nghĩa, cũng kết nối tới ít nhất một mạng vật lý khác; bộ định tuyến này có thể trao đổi gói tin với các máy chủ hoặc bộ định tuyến trên cả hai mạng.
+
+Do đó, chuyển tiếp datagram IP có thể được xử lý như sau. Một datagram được gửi từ máy chủ nguồn tới máy chủ đích, có thể đi qua nhiều bộ định tuyến trên đường. Bất kỳ nút nào, dù là máy chủ hay bộ định tuyến, trước tiên cố gắng xác định xem nó có kết nối tới cùng mạng vật lý với đích không. Để làm điều này, nó so sánh phần mạng của địa chỉ đích với phần mạng của địa chỉ trên từng giao diện mạng của nó. (Máy chủ thường chỉ có một giao diện, trong khi bộ định tuyến thường có hai hoặc nhiều hơn, vì chúng thường kết nối tới hai hoặc nhiều mạng.) Nếu có trùng khớp, nghĩa là đích nằm trên cùng mạng vật lý với giao diện đó, và gói tin có thể được chuyển trực tiếp qua mạng đó. Một phần sau sẽ giải thích chi tiết quá trình này.
+
+Nếu nút không kết nối tới cùng mạng vật lý với nút đích, nó cần gửi datagram tới một bộ định tuyến. Thông thường, mỗi nút sẽ có nhiều lựa chọn bộ định tuyến, nên nó cần chọn bộ định tuyến tốt nhất, hoặc ít nhất là một bộ định tuyến có khả năng đưa datagram tới gần đích hơn. Bộ định tuyến mà nó chọn gọi là *bước nhảy tiếp theo* (*next hop*). Bộ định tuyến tìm bước nhảy tiếp theo đúng bằng cách tra cứu bảng chuyển tiếp của nó. Bảng chuyển tiếp về mặt khái niệm chỉ là một danh sách các cặp ``(NetworkNum, NextHop)``. (Như sẽ thấy bên dưới, bảng chuyển tiếp thực tế thường chứa thêm một số thông tin liên quan tới bước nhảy tiếp theo.) Thông thường, cũng có một bộ định tuyến mặc định được dùng nếu không có mục nào trong bảng khớp với số mạng đích. Đối với một máy chủ, hoàn toàn chấp nhận được nếu chỉ có một bộ định tuyến mặc định và không có gì khác—nghĩa là tất cả các datagram gửi tới các máy chủ không nằm trên mạng vật lý mà máy chủ gửi kết nối sẽ được gửi qua bộ định tuyến mặc định.
+
+Chúng ta có thể mô tả thuật toán chuyển tiếp datagram như sau:
+
+::
+
+   if (NetworkNum of destination = NetworkNum of one of my interfaces) then
+       deliver packet to destination over that interface
+   else
+       if (NetworkNum of destination is in my forwarding table) then
+           deliver packet to NextHop router
+       else
+           deliver packet to default router
+
+Đối với một máy chủ chỉ có một giao diện và chỉ có một bộ định tuyến mặc định trong bảng chuyển tiếp, điều này đơn giản thành
+
+::
+
+   if (NetworkNum of destination = my NetworkNum) then
+       deliver packet to destination directly
+   else
+       deliver packet to default router
+
+Hãy xem cách hoạt động này trong ví dụ liên mạng ở :numref:`Hình %s <fig-inet>`. Đầu tiên, giả sử H1 muốn gửi một datagram tới H2. Vì chúng nằm trên cùng mạng vật lý, H1 và H2 có cùng số mạng trong địa chỉ IP. Do đó, H1 suy ra rằng nó có thể chuyển datagram trực tiếp tới H2 qua Ethernet. Vấn đề duy nhất cần giải quyết là làm sao H1 biết địa chỉ Ethernet đúng của H2—cơ chế giải quyết sẽ được mô tả ở phần sau.
+
+Giờ giả sử H5 muốn gửi một datagram tới H8. Vì hai máy chủ này nằm trên các mạng vật lý khác nhau, chúng có số mạng khác nhau, nên H5 suy ra rằng nó cần gửi datagram tới một bộ định tuyến. R1 là lựa chọn duy nhất—bộ định tuyến mặc định—nên H1 gửi datagram qua mạng không dây tới R1. Tương tự, R1 biết rằng nó không thể chuyển datagram trực tiếp tới H8 vì không giao diện nào của R1 nằm trên cùng mạng với H8. Giả sử bộ định tuyến mặc định của R1 là R2; R1 khi đó gửi datagram tới R2 qua Ethernet. Giả sử R2 có bảng chuyển tiếp như trong :numref:`Bảng %s <tab-ipfwdtab>`, nó tra cứu số mạng của H8 (mạng 4) và chuyển tiếp datagram qua mạng điểm-điểm tới R3. Cuối cùng, R3, vì nằm trên cùng mạng với H8, chuyển tiếp datagram trực tiếp tới H8.
+
+.. _tab-ipfwdtab:
+.. table:: Bảng chuyển tiếp cho Bộ định tuyến R2.
+   :align: center
+   :widths: auto
+
+   +------------+---------+
+   | NetworkNum | NextHop |
+   +============+=========+
+   | 1          | R1      |
+   +------------+---------+
+   | 4          | R3      |
+   +------------+---------+
+
+Lưu ý rằng có thể đưa thông tin về các mạng kết nối trực tiếp vào bảng chuyển tiếp. Ví dụ, ta có thể gán nhãn các giao diện mạng của bộ định tuyến R2 là giao diện 0 cho liên kết điểm-điểm (mạng 3) và giao diện 1 cho Ethernet (mạng 2). Khi đó R2 sẽ có bảng chuyển tiếp như trong :numref:`Bảng %s <tab-ipfwdtab2>`.
+
+.. _tab-ipfwdtab2:
+.. table:: Bảng chuyển tiếp đầy đủ cho Bộ định tuyến R2.
+   :align: center
+   :widths: auto
+
+   +------------+-------------+
+   | NetworkNum | NextHop     |
+   +============+=============+
+   | 1          | R1          |
+   +------------+-------------+
+   | 2          | Interface 1 |
+   +------------+-------------+
+   | 3          | Interface 0 |
+   +------------+-------------+
+   | 4          | R3          |
+   +------------+-------------+
+
+Như vậy, với bất kỳ số mạng nào mà R2 gặp trong một gói tin, nó đều biết phải làm gì. Hoặc mạng đó kết nối trực tiếp với R2, khi đó gói tin có thể được chuyển trực tiếp tới đích qua mạng đó, hoặc mạng đó có thể tới được qua một bộ định tuyến bước nhảy tiếp theo mà R2 có thể tới qua một mạng mà nó kết nối. Trong cả hai trường hợp, R2 sẽ dùng ARP, mô tả bên dưới, để tìm địa chỉ MAC của nút mà gói tin sẽ được gửi tới tiếp theo.
+
+Bảng chuyển tiếp mà R2 dùng đủ đơn giản để có thể cấu hình thủ công. Tuy nhiên, thường thì các bảng này phức tạp hơn và sẽ được xây dựng bằng cách chạy một giao thức định tuyến như một trong các giao thức sẽ mô tả ở phần sau. Cũng lưu ý rằng, trên thực tế, các số mạng thường dài hơn (ví dụ, 128.96).
+
+Giờ ta có thể thấy cách địa chỉ phân cấp—chia địa chỉ thành phần mạng và phần máy chủ—đã cải thiện khả năng mở rộng của một mạng lớn. Các bộ định tuyến giờ chỉ cần bảng chuyển tiếp liệt kê một tập số mạng thay vì tất cả các nút trong mạng. Trong ví dụ đơn giản của chúng ta, điều đó nghĩa là R2 có thể lưu thông tin cần thiết để tới tất cả các máy chủ trong mạng (có tám máy chủ) chỉ trong một bảng bốn mục. Ngay cả khi có 100 máy chủ trên mỗi mạng vật lý, R2 vẫn chỉ cần bốn mục đó. Đây là một bước đầu tốt (dù chưa phải cuối cùng) để đạt được khả năng mở rộng.
+
+.. _key-aggregation:
+.. admonition:: Bài học then chốt
+
+   Điều này minh họa một trong những nguyên lý quan trọng nhất khi xây dựng mạng khả mở: Để đạt được khả năng mở rộng, bạn cần giảm lượng thông tin lưu trữ ở mỗi nút và trao đổi giữa các nút. Cách phổ biến nhất để làm điều đó là *kết tụ phân cấp* (hierarchical aggregation). IP giới thiệu một phân cấp hai tầng, với mạng ở tầng trên và nút ở tầng dưới. Ta đã kết tụ thông tin bằng cách để bộ định tuyến chỉ xử lý việc tới đúng mạng; thông tin mà bộ định tuyến cần để chuyển một datagram tới bất kỳ nút nào trên một mạng nhất định được đại diện bởi một mẩu thông tin kết tụ duy nhất. :ref:`[Tiếp theo] <key-best-effort>`
+
+3.3.5 Địa chỉ con và địa chỉ không phân lớp
+-------------------------------------------
+
+Ý định ban đầu của địa chỉ IP là phần mạng sẽ nhận diện duy nhất đúng một mạng vật lý. Hóa ra cách tiếp cận này có một số nhược điểm. Hãy tưởng tượng một campus lớn có nhiều mạng nội bộ và quyết định kết nối Internet. Với mỗi mạng, dù nhỏ đến đâu, site cần ít nhất một địa chỉ mạng lớp C. Tệ hơn, với bất kỳ mạng nào có hơn 255 máy chủ, họ cần một địa chỉ lớp B. Điều này có vẻ không lớn, và thực tế không phải khi Internet mới hình thành, nhưng chỉ có một số lượng hữu hạn số mạng, và số địa chỉ lớp B còn ít hơn lớp C nhiều. Địa chỉ lớp B đặc biệt được ưa chuộng vì bạn không bao giờ biết mạng của mình có thể mở rộng vượt quá 255 nút hay không, nên tốt hơn là dùng địa chỉ lớp B ngay từ đầu hơn là phải đánh lại địa chỉ khi hết chỗ trên mạng lớp C. Vấn đề ở đây là sự kém hiệu quả trong cấp phát địa chỉ: Một mạng chỉ có hai nút dùng hết một địa chỉ mạng lớp C, lãng phí 253 địa chỉ hữu ích; một mạng lớp B có hơn 255 máy chủ một chút lãng phí hơn 64.000 địa chỉ.
+
+Việc cấp phát một số mạng cho mỗi mạng vật lý, do đó, làm tiêu tốn không gian địa chỉ IP nhanh hơn mong muốn. Dù cần kết nối hơn 4 tỷ máy chủ để dùng hết tất cả địa chỉ hợp lệ, chỉ cần kết nối 2\ :sup:`14` (khoảng 16.000) mạng lớp B là hết phần không gian địa chỉ này. Do đó, ta muốn tìm cách sử dụng số mạng hiệu quả hơn.
+
+Việc cấp phát nhiều số mạng còn có một nhược điểm khác khi nghĩ về định tuyến. Nhớ rằng lượng trạng thái lưu trữ ở một nút tham gia giao thức định tuyến tỷ lệ thuận với số nút khác, và định tuyến trong một liên mạng gồm việc xây dựng các bảng chuyển tiếp cho biết bộ định tuyến phải làm gì để tới các mạng khác nhau. Do đó, càng có nhiều số mạng được dùng, bảng chuyển tiếp càng lớn. Bảng lớn làm tăng chi phí cho bộ định tuyến, và có thể chậm hơn khi tìm kiếm, làm giảm hiệu năng bộ định tuyến. Điều này là một động lực khác để cấp phát số mạng cẩn thận.
+
+*Địa chỉ con* (subnetting) là bước đầu tiên để giảm tổng số số mạng được cấp phát. Ý tưởng là lấy một số mạng IP duy nhất và cấp phát các địa chỉ IP với số mạng đó cho nhiều mạng vật lý, giờ gọi là *mạng con* (subnets). Có một số việc cần làm để điều này hoạt động. Đầu tiên, các mạng con nên gần nhau. Vì từ một điểm xa trên Internet, chúng sẽ đều trông như một mạng duy nhất, chỉ có một số mạng giữa chúng. Điều này nghĩa là một bộ định tuyến chỉ có thể chọn một đường để tới bất kỳ mạng con nào, nên tốt nhất là chúng đều cùng hướng. Một tình huống lý tưởng để dùng subnetting là một campus hoặc công ty lớn có nhiều mạng vật lý. Từ ngoài campus, tất cả những gì bạn cần biết để tới bất kỳ mạng con nào bên trong là nơi campus kết nối với phần còn lại của Internet. Điều này thường chỉ ở một điểm, nên một mục trong bảng chuyển tiếp là đủ. Ngay cả khi có nhiều điểm kết nối, biết cách tới một điểm trong mạng campus vẫn là một khởi đầu tốt.
+
+Cơ chế cho phép một số mạng duy nhất được chia sẻ giữa nhiều mạng con là cấu hình tất cả các nút trên mỗi mạng con với một *mặt nạ mạng con* (subnet mask). Với địa chỉ IP đơn giản, tất cả các máy chủ trên cùng một mạng phải có cùng số mạng. Mặt nạ mạng con cho phép ta đưa vào một *số mạng con*; tất cả các máy chủ trên cùng một mạng vật lý sẽ có cùng số mạng con, nghĩa là các máy chủ có thể ở các mạng vật lý khác nhau nhưng chia sẻ một số mạng duy nhất. Khái niệm này được minh họa trong :numref:`Hình %s <fig-subaddr>`.
+
+.. _fig-subaddr:
+.. figure:: figures/f03-20-9780123850591.png
+   :width: 350px
+   :align: center
+
+   Địa chỉ mạng con.
+
+Ý nghĩa của subnetting với một máy chủ là nó giờ được cấu hình với cả địa chỉ IP và mặt nạ mạng con cho mạng con mà nó kết nối. Ví dụ, máy chủ H1 trong :numref:`Hình %s <fig-subnet>` được cấu hình với địa chỉ 128.96.34.15 và mặt nạ mạng con 255.255.255.128. (Tất cả các máy chủ trên một mạng con được cấu hình cùng mặt nạ; tức là mỗi mạng con chỉ có một mặt nạ.) Phép AND bit giữa hai số này xác định số mạng con của máy chủ và tất cả các máy chủ khác trên cùng mạng con. Trong trường hợp này, 128.96.34.15 AND 255.255.255.128 bằng 128.96.34.0, nên đây là số mạng con cho mạng con trên cùng trong hình.
+
+.. _fig-subnet:
+.. figure:: figures/f03-21-9780123850591.png
+   :width: 500px
+   :align: center
+
+   Ví dụ về subnetting.
+
+Khi máy chủ muốn gửi một gói tin tới một địa chỉ IP nào đó, việc đầu tiên nó làm là thực hiện phép AND bit giữa mặt nạ mạng con của nó và địa chỉ IP đích. Nếu kết quả bằng số mạng con của máy chủ gửi, nó biết rằng máy chủ đích nằm trên cùng mạng con và gói tin có thể được chuyển trực tiếp qua mạng con. Nếu kết quả không bằng, gói tin cần được gửi tới một bộ định tuyến để chuyển tiếp tới mạng con khác. Ví dụ, nếu H1 gửi tới H2, H1 AND mặt nạ mạng con của nó (255.255.255.128) với địa chỉ của H2 (128.96.34.139) để được 128.96.34.128. Điều này không khớp với số mạng con của H1 (128.96.34.0) nên H1 biết H2 nằm trên mạng con khác. Vì H1 không thể chuyển gói tin trực tiếp tới H2 qua mạng con, nó gửi gói tin tới bộ định tuyến mặc định R1.
+
+Bảng chuyển tiếp của một bộ định tuyến cũng thay đổi một chút khi ta đưa vào subnetting. Nhớ rằng trước đây ta có bảng chuyển tiếp gồm các mục dạng ``(NetworkNum, NextHop)``. Để hỗ trợ subnetting, bảng giờ phải chứa các mục dạng ``(SubnetNumber, SubnetMask, NextHop)``. Để tìm mục đúng trong bảng, bộ định tuyến AND địa chỉ đích của gói tin với ``SubnetMask`` của từng mục; nếu kết quả khớp với ``SubnetNumber`` của mục, đây là mục đúng để dùng, và nó chuyển tiếp gói tin tới bộ định tuyến bước nhảy tiếp theo chỉ định. Trong mạng ví dụ ở :numref:`Hình %s <fig-subnet>`, bộ định tuyến R1 sẽ có các mục như trong :numref:`Bảng %s <tab-subnettab>`.
+
+.. _tab-subnettab:
+.. table:: Ví dụ bảng chuyển tiếp với subnetting.
+   :align: center
+   :widths: auto
+
+   +---------------+-----------------+-------------+
+   | SubnetNumber  | SubnetMask      | NextHop     |
+   +===============+=================+=============+
+   | 128.96.34.0   | 255.255.255.128 | Interface 0 |
+   +---------------+-----------------+-------------+
+   | 128.96.34.128 | 255.255.255.128 | Interface 1 |
+   +---------------+-----------------+-------------+
+   | 128.96.33.0   | 255.255.255.0   | R2          |
+   +---------------+-----------------+-------------+
+
+Tiếp tục ví dụ gửi datagram từ H1 tới H2, R1 sẽ AND địa chỉ của H2 (128.96.34.139) với mặt nạ mạng con của mục đầu tiên (255.255.255.128) và so sánh kết quả (128.96.34.128) với số mạng của mục đó (128.96.34.0). Vì không khớp, nó chuyển sang mục tiếp theo. Lần này có khớp, nên R1 chuyển datagram tới H2 qua interface 1, là giao diện kết nối tới cùng mạng với H2.
+
+Giờ ta có thể mô tả thuật toán chuyển tiếp datagram như sau:
+
+::
+
+   D = địa chỉ IP đích
+   for each forwarding table entry (SubnetNumber, SubnetMask, NextHop)
+       D1 = SubnetMask & D
+       if D1 = SubnetNumber
+           if NextHop is an interface
+               deliver datagram directly to destination
+           else
+               deliver datagram to NextHop (a router)
+
+Dù không minh họa trong ví dụ này, thường sẽ có một đường mặc định trong bảng và sẽ được dùng nếu không tìm thấy khớp rõ ràng nào. Lưu ý rằng một triển khai ngây thơ của thuật toán này—lặp lại phép AND địa chỉ đích với mặt nạ mạng con có thể không khác nhau mỗi lần, và tìm kiếm tuyến tính bảng—sẽ rất kém hiệu quả.
+
+Một hệ quả quan trọng của subnetting là các phần khác nhau của internet nhìn thế giới khác nhau. Từ ngoài campus giả định của chúng ta, các bộ định tuyến nhìn thấy một mạng duy nhất. Trong ví dụ trên, các bộ định tuyến ngoài campus nhìn tập hợp các mạng trong :numref:`Hình %s <fig-subnet>` chỉ là mạng 128.96, và họ giữ một mục trong bảng chuyển tiếp để biết cách tới đó. Các bộ định tuyến trong campus, tuy nhiên, cần có khả năng định tuyến gói tin tới đúng mạng con. Do đó, không phải tất cả các phần của internet đều nhìn thấy cùng một thông tin định tuyến. Đây là một ví dụ về *kết tụ* thông tin định tuyến, điều cơ bản để mở rộng hệ thống định tuyến. Phần tiếp theo sẽ cho thấy cách kết tụ có thể được nâng lên một mức nữa.
+
+Địa chỉ không phân lớp
+~~~~~~~~~~~~~~~~~~~~~~
+
+Subnetting có một đối ứng, đôi khi gọi là *supernetting*, nhưng thường gọi là *Định tuyến liên miền không phân lớp* (Classless Interdomain Routing, CIDR, phát âm là “cider”). CIDR đưa ý tưởng subnetting tới kết luận logic của nó bằng cách loại bỏ hoàn toàn các lớp địa chỉ. Tại sao chỉ subnetting thôi là chưa đủ? Về bản chất, subnetting chỉ cho phép ta chia một địa chỉ phân lớp thành nhiều mạng con, trong khi CIDR cho phép ta gộp nhiều địa chỉ phân lớp thành một “siêu mạng”. Điều này giải quyết thêm vấn đề kém hiệu quả về không gian địa chỉ đã nói ở trên, và làm như vậy mà không làm hệ thống định tuyến bị quá tải.
+
+Để thấy vấn đề hiệu quả không gian địa chỉ và khả năng mở rộng của hệ thống định tuyến liên quan với nhau thế nào, hãy xét trường hợp giả định một công ty có mạng với 256 máy chủ. Đó là hơi nhiều cho một địa chỉ lớp C, nên bạn sẽ muốn cấp một địa chỉ lớp B. Tuy nhiên, dùng một phần không gian địa chỉ có thể chứa 65.535 máy chủ để chỉ chứa 256 máy chủ có hiệu quả chỉ 256/65.535 = 0,39%. Dù subnetting có thể giúp ta cấp phát địa chỉ cẩn thận, nó không giải quyết được thực tế là bất kỳ tổ chức nào có hơn 255 máy chủ, hoặc dự kiến sẽ có, đều muốn một địa chỉ lớp B.
+
+Cách đầu tiên bạn có thể xử lý vấn đề này là từ chối cấp địa chỉ lớp B cho bất kỳ tổ chức nào yêu cầu trừ khi họ có thể chứng minh cần gần 64K địa chỉ, và thay vào đó cấp cho họ số lượng địa chỉ lớp C phù hợp để đáp ứng số host dự kiến. Vì bây giờ chúng ta sẽ cấp phát không gian địa chỉ theo từng khối 256 địa chỉ một lần, chúng ta có thể khớp chính xác hơn lượng không gian địa chỉ tiêu thụ với quy mô tổ chức. Với bất kỳ tổ chức nào có ít nhất 256 host, chúng ta có thể đảm bảo mức sử dụng địa chỉ ít nhất là 50%, và thường là nhiều hơn. (Đáng buồn thay, ngay cả khi bạn có thể biện minh cho việc xin một số mạng lớp B, cũng đừng bận tâm, vì chúng đã được cấp hết từ lâu.)
+
+Tuy nhiên, giải pháp này lại nảy sinh một vấn đề cũng nghiêm trọng không kém: yêu cầu lưu trữ quá lớn ở các router. Nếu một site có, ví dụ, 16 số mạng lớp C được cấp, điều đó có nghĩa là mỗi router backbone của Internet cần 16 mục trong bảng định tuyến để chuyển tiếp gói đến site đó. Điều này đúng ngay cả khi đường đi đến tất cả các mạng đó là giống nhau. Nếu chúng ta cấp một địa chỉ lớp B cho site đó, cùng thông tin định tuyến có thể được lưu chỉ trong một mục bảng. Tuy nhiên, hiệu quả sử dụng địa chỉ khi đó chỉ là 16 x 255 / 65.536 = 6,2%.
+
+Do đó, CIDR cố gắng cân bằng mong muốn giảm số lượng tuyến mà một router cần biết với nhu cầu cấp phát địa chỉ hiệu quả. Để làm điều này, CIDR giúp chúng ta *tổng hợp* các tuyến. Tức là, nó cho phép chúng ta sử dụng một mục duy nhất trong bảng chuyển tiếp để chỉ cách đến rất nhiều mạng khác nhau. Như đã nói ở trên, nó làm điều này bằng cách phá vỡ ranh giới cứng nhắc giữa các lớp địa chỉ. Để hiểu cách hoạt động, hãy xem xét tổ chức giả định của chúng ta với 16 số mạng lớp C. Thay vì cấp phát 16 địa chỉ ngẫu nhiên, chúng ta có thể cấp một khối các địa chỉ lớp C *liền kề*. Giả sử chúng ta cấp các số mạng lớp C từ 192.4.16 đến 192.4.31. Hãy chú ý rằng 20 bit đầu tiên của tất cả các địa chỉ trong dải này là giống nhau (``11000000 00000100 0001``). Như vậy, về thực chất, chúng ta đã tạo ra một số mạng 20 bit—một thứ nằm giữa số mạng lớp B và lớp C về số host mà nó có thể hỗ trợ. Nói cách khác, chúng ta vừa đạt được hiệu quả cấp phát địa chỉ cao khi cấp phát các khối nhỏ hơn mạng lớp B, vừa có một tiền tố mạng duy nhất có thể dùng trong bảng chuyển tiếp. Lưu ý rằng, để sơ đồ này hoạt động, chúng ta cần cấp phát các khối địa chỉ lớp C có chung một tiền tố, nghĩa là mỗi khối phải chứa số mạng lớp C là lũy thừa của hai.
+
+CIDR yêu cầu một kiểu ký hiệu mới để biểu diễn số mạng, hay còn gọi là *tiền tố* (prefix), vì các tiền tố có thể có độ dài bất kỳ. Quy ước là đặt ``/X`` sau tiền tố, trong đó ``X`` là độ dài tiền tố tính bằng bit. Vậy, với ví dụ trên, tiền tố 20 bit cho tất cả các mạng từ 192.4.16 đến 192.4.31 được biểu diễn là 192.4.16/20. Ngược lại, nếu muốn biểu diễn một số mạng lớp C đơn lẻ, dài 24 bit, ta sẽ viết là 192.4.16/24. Ngày nay, khi CIDR đã trở thành chuẩn, người ta thường nói về “slash 24” hơn là mạng lớp C. Lưu ý rằng biểu diễn địa chỉ mạng theo cách này tương tự với cách ``(mask, value)`` dùng trong subnetting, miễn là ``mask`` gồm các bit liên tiếp bắt đầu từ bit quan trọng nhất (trên thực tế gần như luôn là như vậy).
+
+.. _fig-cidreg:
+.. figure:: figures/f03-22-9780123850591.png
+   :width: 500px
+   :align: center
+
+   Tổng hợp tuyến với CIDR.
+
+Khả năng tổng hợp tuyến ở rìa mạng như vừa thấy chỉ là bước đầu tiên. Hãy tưởng tượng một mạng nhà cung cấp dịch vụ Internet, với nhiệm vụ chính là cung cấp kết nối Internet cho nhiều công ty và trường đại học (khách hàng). Nếu chúng ta cấp phát các tiền tố cho khách hàng sao cho nhiều mạng khách hàng khác nhau kết nối vào mạng nhà cung cấp cùng chia sẻ một tiền tố địa chỉ ngắn hơn, thì chúng ta có thể tổng hợp tuyến ở mức cao hơn nữa. Xem ví dụ trong :numref:`Hình %s <fig-cidreg>`. Giả sử tám khách hàng do nhà cung cấp phục vụ mỗi người được cấp một tiền tố mạng 24 bit liền kề. Các tiền tố này đều bắt đầu bằng cùng 21 bit. Vì tất cả khách hàng đều có thể truy cập qua cùng một mạng nhà cung cấp, nó có thể quảng bá một tuyến duy nhất cho tất cả bằng cách chỉ quảng bá tiền tố chung 21 bit mà họ chia sẻ. Và nó có thể làm điều này ngay cả khi chưa cấp phát hết tất cả các tiền tố 24 bit, miễn là nhà cung cấp cuối cùng *sẽ* có quyền cấp các tiền tố đó cho khách hàng. Một cách để thực hiện là cấp trước một phần không gian địa chỉ cho nhà cung cấp và sau đó để nhà cung cấp cấp phát địa chỉ từ không gian đó cho khách hàng khi cần. Lưu ý rằng, khác với ví dụ đơn giản này, không cần tất cả các tiền tố khách hàng phải cùng độ dài.
+
+IP Forwarding Revisited
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Trong tất cả các thảo luận về chuyển tiếp IP trước đây, chúng ta đã giả định rằng có thể tìm số mạng trong một gói tin rồi tra số đó trong bảng chuyển tiếp. Tuy nhiên, giờ đây khi đã giới thiệu CIDR, chúng ta cần xem xét lại giả định này. CIDR có nghĩa là các tiền tố có thể có độ dài bất kỳ, từ 2 đến 32 bit. Hơn nữa, đôi khi có thể có các tiền tố trong bảng chuyển tiếp “chồng lấn” nhau, theo nghĩa là một số địa chỉ có thể khớp với nhiều tiền tố. Ví dụ, chúng ta có thể thấy cả 171.69 (tiền tố 16 bit) và 171.69.10 (tiền tố 24 bit) trong bảng chuyển tiếp của một router. Trong trường hợp này, một gói tin gửi đến, ví dụ, 171.69.10.5 rõ ràng khớp với cả hai tiền tố. Quy tắc trong trường hợp này dựa trên nguyên tắc “khớp dài nhất”; tức là, gói tin sẽ khớp với tiền tố dài nhất, ở đây là 171.69.10. Ngược lại, một gói tin gửi đến 171.69.20.5 sẽ khớp với 171.69 và *không* khớp với 171.69.10, và nếu không có mục nào khác khớp trong bảng định tuyến thì 171.69 sẽ là khớp dài nhất.
+
+Nhiệm vụ tìm kiếm hiệu quả khớp dài nhất giữa một địa chỉ IP và các tiền tố độ dài biến đổi trong bảng chuyển tiếp là một lĩnh vực nghiên cứu phong phú trong nhiều năm. Thuật toán nổi tiếng nhất sử dụng một phương pháp gọi là *PATRICIA tree*, thực ra đã được phát triển từ trước khi có CIDR.
+
+3.3.6 Address Translation (ARP)
+-------------------------------
+
+Trong phần trước chúng ta đã nói về cách đưa datagram IP đến đúng mạng vật lý nhưng chưa bàn kỹ về cách đưa một datagram đến đúng host hoặc router trên mạng đó. Vấn đề chính là các datagram IP chứa địa chỉ IP, nhưng phần cứng giao tiếp vật lý trên host hoặc router mà bạn muốn gửi datagram đến chỉ hiểu sơ đồ địa chỉ của mạng cụ thể đó. Do đó, chúng ta cần chuyển đổi địa chỉ IP sang địa chỉ tầng liên kết phù hợp với mạng này (ví dụ, địa chỉ Ethernet 48 bit). Khi đó, chúng ta có thể đóng gói datagram IP vào trong một frame chứa địa chỉ tầng liên kết đó và gửi nó đến đích cuối cùng hoặc đến một router hứa sẽ chuyển tiếp datagram về phía đích cuối cùng.
+
+Một cách đơn giản để ánh xạ địa chỉ IP thành địa chỉ mạng vật lý là mã hóa địa chỉ vật lý của host vào phần host của địa chỉ IP. Ví dụ, một host có địa chỉ vật lý ``00100001 01010001`` (có giá trị thập phân là 33 ở byte cao và 81 ở byte thấp) có thể được cấp địa chỉ IP ``128.96.33.81``. Dù giải pháp này đã được dùng trên một số mạng, nó bị giới hạn ở chỗ địa chỉ vật lý của mạng không thể dài quá 16 bit trong ví dụ này; trên mạng lớp C chỉ có thể dài 8 bit. Rõ ràng điều này sẽ không phù hợp với địa chỉ Ethernet 48 bit.
+
+Một giải pháp tổng quát hơn là mỗi host duy trì một bảng ánh xạ địa chỉ; tức là, bảng này sẽ ánh xạ địa chỉ IP thành địa chỉ vật lý. Dù bảng này có thể được quản trị viên hệ thống quản lý tập trung rồi sao chép đến từng host trên mạng, một cách tốt hơn là để mỗi host tự động học nội dung bảng này qua mạng. Điều này có thể thực hiện bằng giao thức Address Resolution Protocol (ARP). Mục tiêu của ARP là cho phép mỗi host trên mạng xây dựng một bảng ánh xạ giữa địa chỉ IP và địa chỉ tầng liên kết. Vì các ánh xạ này có thể thay đổi theo thời gian (ví dụ, do card Ethernet trên một host bị hỏng và được thay bằng card mới với địa chỉ mới), các mục sẽ hết hạn định kỳ và bị loại bỏ. Việc này diễn ra khoảng mỗi 15 phút. Tập hợp các ánh xạ hiện có trên một host gọi là ARP cache hoặc ARP table.
+
+ARP tận dụng thực tế là nhiều công nghệ mạng tầng liên kết, như Ethernet, hỗ trợ broadcast. Nếu một host muốn gửi một datagram IP đến một host (hoặc router) mà nó biết là nằm trên cùng mạng (tức là, node gửi và nhận có cùng số mạng IP), nó sẽ kiểm tra ánh xạ trong cache. Nếu không tìm thấy, nó cần kích hoạt giao thức ARP trên mạng. Nó làm điều này bằng cách broadcast một truy vấn ARP lên mạng. Truy vấn này chứa địa chỉ IP cần hỏi (địa chỉ IP đích). Mỗi host nhận được truy vấn và kiểm tra xem nó có khớp với địa chỉ IP của mình không. Nếu khớp, host sẽ gửi một thông điệp phản hồi chứa địa chỉ tầng liên kết của nó về cho host gửi truy vấn. Host gửi truy vấn sẽ thêm thông tin này vào bảng ARP của mình.
+
+Thông điệp truy vấn cũng bao gồm địa chỉ IP và địa chỉ tầng liên kết của host gửi. Do đó, khi một host broadcast một truy vấn, mỗi host trên mạng đều có thể học được địa chỉ tầng liên kết và địa chỉ IP của host gửi và lưu thông tin đó vào bảng ARP của mình. Tuy nhiên, không phải host nào cũng thêm thông tin này vào bảng ARP. Nếu host đã có một mục cho host đó trong bảng, nó sẽ “làm mới” mục này; tức là, đặt lại thời gian hết hạn của mục. Nếu host đó là đích của truy vấn, nó sẽ thêm thông tin về host gửi vào bảng, ngay cả khi chưa có mục cho host đó. Điều này vì có khả năng host nguồn sắp gửi một thông điệp ứng dụng cho nó, và nó có thể cần gửi phản hồi hoặc ACK lại cho nguồn; nó sẽ cần địa chỉ vật lý của nguồn để làm điều này. Nếu một host không phải là đích và cũng chưa có mục cho nguồn trong bảng ARP, nó sẽ không thêm mục cho nguồn. Vì không có lý do gì để tin rằng host này sẽ cần địa chỉ tầng liên kết của nguồn; không cần làm rối bảng ARP với thông tin này.
+
+.. _fig-arp:
+.. figure:: figures/f03-23-9780123850591.png
+   :width: 500px
+   :align: center
+
+   Định dạng gói ARP để ánh xạ địa chỉ IP sang địa chỉ Ethernet.
+
+:numref:`Hình %s <fig-arp>` cho thấy định dạng gói ARP cho ánh xạ địa chỉ IP sang địa chỉ Ethernet. Thực tế, ARP có thể dùng cho nhiều loại ánh xạ khác—khác biệt chính là ở kích thước địa chỉ. Ngoài địa chỉ IP và địa chỉ tầng liên kết của cả nguồn và đích, gói tin còn chứa
+
+-  Trường ``HardwareType``, xác định loại mạng vật lý (ví dụ, Ethernet)
+
+-  Trường ``ProtocolType``, xác định giao thức tầng cao hơn (ví dụ, IP)
+
+-  Trường ``HLen`` (độ dài địa chỉ “hardware”) và ``PLen`` (độ dài địa chỉ “protocol”), xác định độ dài địa chỉ tầng liên kết và địa chỉ giao thức tầng cao hơn tương ứng
+
+-  Trường ``Operation``, xác định đây là yêu cầu hay phản hồi
+
+-  Địa chỉ hardware (Ethernet) và protocol (IP) của nguồn và đích
+
+Lưu ý rằng kết quả của quá trình ARP có thể được thêm vào một cột bổ sung trong bảng chuyển tiếp như trong :numref:`Bảng %s <tab-ipfwdtab>`. Ví dụ, khi R2 cần chuyển tiếp một gói đến mạng 2, nó không chỉ tìm được next hop là R1, mà còn tìm được địa chỉ MAC để gán cho gói tin gửi đến R1.
+
+.. _key-best-effort:
+.. admonition:: Key Takeaway
+
+   Chúng ta đã thấy các cơ chế cơ bản mà IP cung cấp để xử lý cả dị chủng và khả năng mở rộng. Về vấn đề dị chủng, IP bắt đầu bằng việc định nghĩa một mô hình dịch vụ best-effort với giả định tối thiểu về các mạng nền tảng; đáng chú ý nhất, mô hình này dựa trên datagram không tin cậy. IP sau đó bổ sung hai điểm quan trọng: (1) một định dạng gói tin chung (cơ chế phân mảnh/lắp ráp lại giúp định dạng này hoạt động trên các mạng có MTU khác nhau) và (2) một không gian địa chỉ toàn cầu để nhận diện tất cả các host (ARP là cơ chế giúp không gian địa chỉ toàn cầu này hoạt động trên các mạng có sơ đồ địa chỉ vật lý khác nhau). Về vấn đề mở rộng, IP sử dụng tổng hợp phân cấp để giảm lượng thông tin cần thiết cho việc chuyển tiếp gói tin. Cụ thể, địa chỉ IP được chia thành phần mạng và phần host, với các gói tin được định tuyến trước tiên đến mạng đích rồi mới chuyển đến đúng host trên mạng đó.
+   :ref:`[Next] <key-dhcp>`
+
+3.3.7 Cấu hình Host (DHCP)
+--------------------------
+
+Địa chỉ Ethernet được cấu hình vào card mạng bởi nhà sản xuất, và quá trình này được quản lý sao cho đảm bảo các địa chỉ này là duy nhất toàn cầu. Đây rõ ràng là điều kiện đủ để đảm bảo bất kỳ tập hợp host nào kết nối vào một Ethernet (kể cả LAN mở rộng) đều có địa chỉ duy nhất. Hơn nữa, điều duy nhất chúng ta yêu cầu ở địa chỉ Ethernet là tính duy nhất.
+
+Địa chỉ IP, ngược lại, không chỉ phải duy nhất trên một liên mạng nhất định mà còn phải phản ánh cấu trúc của liên mạng. Như đã nói ở trên, chúng chứa phần mạng và phần host, và phần mạng phải giống nhau cho tất cả các host trên cùng một mạng. Do đó, không thể cấu hình địa chỉ IP một lần vào host khi sản xuất, vì điều đó ngụ ý nhà sản xuất biết host nào sẽ kết nối vào mạng nào, và cũng có nghĩa là một host, một khi đã kết nối vào một mạng, sẽ không bao giờ chuyển sang mạng khác. Vì lý do này, địa chỉ IP cần có khả năng cấu hình lại.
+
+Ngoài địa chỉ IP, còn một số thông tin khác mà host cần có trước khi có thể bắt đầu gửi gói tin. Đáng chú ý nhất là địa chỉ của router mặc định—nơi mà nó có thể gửi các gói tin có địa chỉ đích không nằm trên cùng mạng với host gửi.
+
+Hầu hết các hệ điều hành host đều cung cấp cách để quản trị viên hệ thống, hoặc thậm chí người dùng, cấu hình thủ công thông tin IP cần thiết cho host; tuy nhiên, có một số nhược điểm rõ ràng với cấu hình thủ công như vậy. Một là việc cấu hình tất cả các host trong một mạng lớn trực tiếp là rất tốn công, đặc biệt khi bạn xem xét rằng các host đó không thể truy cập qua mạng cho đến khi được cấu hình. Quan trọng hơn, quá trình cấu hình rất dễ xảy ra lỗi, vì cần đảm bảo mỗi host nhận đúng số mạng và không có hai host nhận cùng một địa chỉ IP. Vì những lý do này, các phương pháp cấu hình tự động là cần thiết. Phương pháp chính sử dụng một giao thức gọi là *Dynamic Host Configuration Protocol* (DHCP).
+
+DHCP dựa vào sự tồn tại của một máy chủ DHCP chịu trách nhiệm cung cấp thông tin cấu hình cho các host. Có ít nhất một máy chủ DHCP cho mỗi miền quản trị. Ở mức đơn giản nhất, máy chủ DHCP có thể hoạt động như một kho lưu trữ tập trung cho thông tin cấu hình host. Xét ví dụ về việc quản trị địa chỉ trong liên mạng của một công ty lớn. DHCP giúp quản trị viên mạng không phải đi đến từng host trong công ty với danh sách địa chỉ và sơ đồ mạng để cấu hình từng host thủ công. Thay vào đó, thông tin cấu hình cho mỗi host có thể được lưu trên máy chủ DHCP và tự động truy xuất bởi mỗi host khi nó khởi động hoặc kết nối vào mạng. Tuy nhiên, quản trị viên vẫn sẽ chọn địa chỉ mà mỗi host nhận; chỉ là lưu nó trên máy chủ. Trong mô hình này, thông tin cấu hình cho mỗi host được lưu trong một bảng được đánh chỉ mục bởi một dạng nhận diện client duy nhất, thường là địa chỉ phần cứng (ví dụ, địa chỉ Ethernet của card mạng).
+
+Một cách sử dụng DHCP tinh vi hơn giúp quản trị viên mạng không cần phải gán địa chỉ cho từng host. Trong mô hình này, máy chủ DHCP duy trì một pool các địa chỉ khả dụng để cấp phát cho host khi có yêu cầu. Điều này giảm đáng kể lượng cấu hình mà quản trị viên phải làm, vì giờ chỉ cần cấp phát một dải địa chỉ IP (tất cả cùng số mạng) cho mỗi mạng.
+
+Vì mục tiêu của DHCP là giảm thiểu cấu hình thủ công cần thiết để một host hoạt động, sẽ thật vô nghĩa nếu mỗi host lại phải được cấu hình với địa chỉ của máy chủ DHCP. Do đó, vấn đề đầu tiên mà DHCP phải giải quyết là phát hiện máy chủ.
+
+Để liên hệ với máy chủ DHCP, một host vừa khởi động hoặc vừa kết nối sẽ gửi một thông điệp ``DHCPDISCOVER`` đến một địa chỉ IP đặc biệt (255.255.255.255) là địa chỉ broadcast IP. Điều này có nghĩa là tất cả các host và router trên mạng đó sẽ nhận được. (Router không chuyển tiếp các gói này sang mạng khác, ngăn việc broadcast ra toàn Internet.) Trong trường hợp đơn giản nhất, một trong các node này là máy chủ DHCP cho mạng. Máy chủ sẽ trả lời host đã gửi thông điệp khám phá (các node khác sẽ bỏ qua). Tuy nhiên, không thực tế khi yêu cầu một máy chủ DHCP trên mỗi mạng, vì điều này vẫn tạo ra số lượng lớn máy chủ cần cấu hình đúng và nhất quán. Do đó, DHCP sử dụng khái niệm *relay agent*. Có ít nhất một relay agent trên mỗi mạng, và nó chỉ cần cấu hình một thông tin: địa chỉ IP của máy chủ DHCP. Khi một relay agent nhận được thông điệp ``DHCPDISCOVER``, nó sẽ gửi unicast đến máy chủ DHCP và chờ phản hồi, sau đó gửi lại cho client yêu cầu. Quá trình chuyển tiếp thông điệp từ host đến máy chủ DHCP từ xa được minh họa trong :numref:`Hình %s <fig-dhcp-relay>`.
+
+.. _fig-dhcp-relay:
+.. figure:: figures/f03-24-9780123850591.png
+   :width: 500px
+   :align: center
+
+   Một DHCP relay agent nhận thông điệp broadcast DHCPDISCOVER từ một host và gửi unicast DHCPDISCOVER đến máy chủ DHCP.
+
+:numref:`Hình %s <fig-dhcp>` bên dưới cho thấy định dạng một thông điệp DHCP. Thông điệp này thực ra được gửi bằng một giao thức gọi là *User Datagram Protocol* (UDP) chạy trên IP. UDP sẽ được thảo luận chi tiết ở chương sau, nhưng điều duy nhất đáng chú ý ở đây là nó cung cấp một khóa phân kênh nói rằng, “Đây là một gói DHCP.”
 
 .. _fig-dhcp:
 .. figure:: figures/f03-25-9780123850591.png
    :width: 400px
    :align: center
 
-   DHCP packet format.
+   Định dạng gói DHCP.
 
-DHCP is derived from an earlier protocol called BOOTP, and some of the
-packet fields are thus not strictly relevant to host configuration. When
-trying to obtain configuration information, the client puts its hardware
-address (e.g., its Ethernet address) in the ``chaddr`` field. The DHCP
-server replies by filling in the ``yiaddr`` (“your” IP address) field
-and sending it to the client. Other information such as the default
-router to be used by this client can be included in the ``options``
-field.
+DHCP được phát triển từ một giao thức trước đó gọi là BOOTP, nên một số trường trong gói tin thực ra không liên quan trực tiếp đến cấu hình host. Khi cần lấy thông tin cấu hình, client sẽ điền địa chỉ phần cứng của mình (ví dụ, địa chỉ Ethernet) vào trường ``chaddr``. Máy chủ DHCP trả lời bằng cách điền trường ``yiaddr`` (“your” IP address) và gửi lại cho client. Các thông tin khác như router mặc định cho client này có thể được đưa vào trường ``options``.
 
-In the case where DHCP dynamically assigns IP addresses to hosts, it is
-clear that hosts cannot keep addresses indefinitely, as this would
-eventually cause the server to exhaust its address pool. At the same
-time, a host cannot be depended upon to give back its address, since it
-might have crashed, been unplugged from the network, or been turned off.
-Thus, DHCP allows addresses to be leased for some period of time. Once
-the lease expires, the server is free to return that address to its
-pool. A host with a leased address clearly needs to renew the lease
-periodically if in fact it is still connected to the network and
-functioning correctly.
+Trong trường hợp DHCP cấp phát động địa chỉ IP cho host, rõ ràng host không thể giữ địa chỉ mãi mãi, vì điều này cuối cùng sẽ làm máy chủ cạn pool địa chỉ. Đồng thời, không thể trông chờ host sẽ trả lại địa chỉ, vì nó có thể bị treo, rút khỏi mạng, hoặc tắt máy. Do đó, DHCP cho phép địa chỉ được cấp phát theo dạng thuê (lease) trong một khoảng thời gian. Khi lease hết hạn, máy chủ có thể trả lại địa chỉ đó vào pool. Một host với địa chỉ thuê rõ ràng cần gia hạn lease định kỳ nếu nó vẫn còn kết nối và hoạt động bình thường.
 
 .. _key-dhcp:
 .. admonition:: Key Takeaway
 
-   DHCP illustrates an important aspect of scaling: the scaling of
-   network management. While discussions of scaling often focus on
-   keeping the state in network devices from growing too fast, it is
-   important to pay attention to the growth of network management
-   complexity. By allowing network managers to configure a range of IP
-   addresses per network rather than one IP address per host, DHCP
-   improves the manageability of a network. :ref:`[Next] <key-forwarding>`
+   DHCP minh họa một khía cạnh quan trọng của mở rộng: mở rộng quản lý mạng. Dù các thảo luận về mở rộng thường tập trung vào việc giữ cho trạng thái trong thiết bị mạng không tăng quá nhanh, cũng cần chú ý đến sự phức tạp của quản lý mạng. Bằng cách cho phép quản trị viên cấu hình một dải địa chỉ IP cho mỗi mạng thay vì từng địa chỉ cho từng host, DHCP cải thiện khả năng quản lý mạng.
+   :ref:`[Next] <key-forwarding>`
 
-Note that DHCP may also introduce some more complexity into network
-management, since it makes the binding between physical hosts and IP
-addresses much more dynamic. This may make the network manager’s job
-more difficult if, for example, it becomes necessary to locate a
-malfunctioning host.
+Lưu ý rằng DHCP cũng có thể làm tăng độ phức tạp trong quản lý mạng, vì nó làm cho việc gán giữa host vật lý và địa chỉ IP trở nên động hơn nhiều. Điều này có thể khiến công việc của quản trị viên mạng khó khăn hơn nếu, ví dụ, cần xác định vị trí một host bị lỗi.
 
-3.3.8 Error Reporting (ICMP)
-----------------------------
+3.3.8 Báo cáo lỗi (ICMP)
+------------------------
 
-The next issue is how the Internet treats errors. While IP is perfectly
-willing to drop datagrams when the going gets tough—for example, when a
-router does not know how to forward the datagram or when one fragment of
-a datagram fails to arrive at the destination—it does not necessarily
-fail silently. IP is always configured with a companion protocol, known
-as the *Internet Control Message Protocol* (ICMP), that defines a
-collection of error messages that are sent back to the source host
-whenever a router or host is unable to process an IP datagram
-successfully. For example, ICMP defines error messages indicating that
-the destination host is unreachable (perhaps due to a link failure),
-that the reassembly process failed, that the TTL had reached 0, that the
-IP header checksum failed, and so on.
+Vấn đề tiếp theo là Internet xử lý lỗi như thế nào. Dù IP sẵn sàng loại bỏ datagram khi gặp khó khăn—ví dụ, khi một router không biết cách chuyển tiếp datagram hoặc khi một mảnh của datagram không đến được đích—nó không nhất thiết im lặng thất bại. IP luôn được cấu hình với một giao thức đi kèm, gọi là *Internet Control Message Protocol* (ICMP), định nghĩa một tập hợp các thông điệp lỗi được gửi về host nguồn bất cứ khi nào một router hoặc host không thể xử lý thành công một datagram IP. Ví dụ, ICMP định nghĩa các thông điệp lỗi báo rằng host đích không thể truy cập (có thể do lỗi liên kết), quá trình lắp ráp lại thất bại, TTL đã về 0, checksum header IP bị lỗi, v.v.
 
-ICMP also defines a handful of control messages that a router can send
-back to a source host. One of the most useful control messages, called
-an *ICMP-Redirect*, tells the source host that there is a better route
-to the destination. ICMP-Redirects are used in the following situation.
-Suppose a host is connected to a network that has two routers attached
-to it, called *R1* and *R2*, where the host uses R1 as its default
-router. Should R1 ever receive a datagram from the host, where based on
-its forwarding table it knows that R2 would have been a better choice
-for a particular destination address, it sends an ICMP-Redirect back to
-the host, instructing it to use R2 for all future datagrams addressed to
-that destination. The host then adds this new route to its forwarding
-table.
+ICMP cũng định nghĩa một số thông điệp điều khiển mà router có thể gửi về host nguồn. Một trong những thông điệp điều khiển hữu ích nhất, gọi là *ICMP-Redirect*, báo cho host nguồn biết rằng có một tuyến tốt hơn đến đích. ICMP-Redirect được dùng trong tình huống sau. Giả sử một host kết nối vào một mạng có hai router, gọi là *R1* và *R2*, trong đó host dùng R1 làm router mặc định. Nếu R1 nhận được một datagram từ host, mà dựa trên bảng chuyển tiếp nó biết rằng R2 sẽ là lựa chọn tốt hơn cho một địa chỉ đích cụ thể, nó sẽ gửi một ICMP-Redirect về host, hướng dẫn nó dùng R2 cho các datagram sau này gửi đến đích đó. Host sau đó sẽ thêm tuyến mới này vào bảng chuyển tiếp của mình.
 
-ICMP also provides the basis for two widely used debugging tools,
-``ping`` and ``traceroute``. ``ping`` uses ICMP echo messages to
-determine if a node is reachable and alive. ``traceroute`` uses a
-slightly non-intuitive technique to determine the set of routers along
-the path to a destination, which is the topic for one of the exercises
-at the end of this chapter.
+ICMP cũng cung cấp nền tảng cho hai công cụ gỡ lỗi phổ biến, ``ping`` và ``traceroute``. ``ping`` dùng thông điệp echo của ICMP để xác định một node có thể truy cập và còn hoạt động không. ``traceroute`` sử dụng một kỹ thuật hơi khó hiểu để xác định tập hợp các router trên đường đi đến đích, là chủ đề của một bài tập ở cuối chương này.
 
-3.3.9 Virtual Networks and Tunnels
-----------------------------------
+3.3.9 Mạng ảo và Tunnel
+-----------------------
 
-We conclude our introduction to IP by considering an issue you might
-not have anticipated, but one that is increasingly important. Our
-discussion up to this point has focused on making it possible for
-nodes on different networks to communicate with each other in an
-unrestricted way. This is usually the goal in the Internet—everybody
-wants to be able to send email to everybody, and the creator of a new
-website wants to reach the widest possible audience. However, there are
-many situations where more controlled connectivity is required. An
-important example of such a situation is the *virtual private network*
-(VPN).
+Chúng ta kết thúc phần giới thiệu về IP bằng cách xem xét một vấn đề mà bạn có thể không lường trước, nhưng ngày càng quan trọng. Các thảo luận đến giờ tập trung vào việc làm thế nào để các node trên các mạng khác nhau có thể giao tiếp với nhau một cách không hạn chế. Đây thường là mục tiêu trên Internet—mọi người đều muốn gửi email cho mọi người, và người tạo website mới muốn tiếp cận đông đảo người dùng nhất có thể. Tuy nhiên, có nhiều tình huống cần kết nối có kiểm soát hơn. Một ví dụ quan trọng là *mạng riêng ảo* (VPN).
 
-The term *VPN* is heavily overused and definitions vary, but intuitively
-we can define a VPN by considering first the idea of a private network.
-Corporations with many sites often build private networks by leasing
-circuits from the phone companies and using those lines to
-interconnect sites. In such a network, communication is restricted to
-take place only among the sites of that corporation, which is often
-desirable for security reasons. To make a private network *virtual*, the
-leased transmission lines—which are not shared with any other
-corporations—would be replaced by some sort of shared network. A virtual
-circuit (VC) is a very reasonable replacement for a leased line because
-it still provides a logical point-to-point connection between the
-corporation’s sites. For example, if corporation X has a VC from site A
-to site B, then clearly it can send packets between sites A and B. But
-there is no way that corporation Y can get its packets delivered to
-site B without first establishing its own virtual circuit to site B, and
-the establishment of such a VC can be administratively prevented, thus
-preventing unwanted connectivity between corporation X and
-corporation Y.
+Thuật ngữ *VPN* bị lạm dụng rất nhiều và định nghĩa cũng khác nhau, nhưng trực giác ta có thể định nghĩa VPN bằng cách xét trước ý tưởng về mạng riêng. Các công ty có nhiều site thường xây dựng mạng riêng bằng cách thuê kênh từ công ty điện thoại và dùng các đường này để kết nối các site. Trong mạng như vậy, liên lạc chỉ diễn ra giữa các site của công ty, điều này thường mong muốn vì lý do bảo mật. Để làm mạng riêng thành *ảo*, các đường truyền thuê riêng—không chia sẻ với công ty khác—sẽ được thay thế bằng một loại mạng chia sẻ nào đó. Một mạch ảo (VC) là sự thay thế hợp lý cho đường thuê riêng vì nó vẫn cung cấp kết nối logic điểm-điểm giữa các site của công ty. Ví dụ, nếu công ty X có một VC từ site A đến site B, thì rõ ràng nó có thể gửi gói giữa A và B. Nhưng không có cách nào để công ty Y gửi gói đến site B mà không thiết lập VC riêng đến B, và việc thiết lập VC như vậy có thể bị ngăn chặn về mặt quản trị, do đó ngăn kết nối không mong muốn giữa công ty X và Y.
 
-:numref:`Figure %s(a) <fig-vpn>` shows two private networks for two
-separate corporations. In :numref:`Figure %s(b) <fig-vpn>` they are
-both migrated to a virtual circuit network. The limited connectivity
-of a real private network is maintained, but since the private
-networks now share the same transmission facilities and switches we
-say that two virtual private networks have been created.
+:numref:`Hình %s(a) <fig-vpn>` cho thấy hai mạng riêng cho hai công ty khác nhau. Trong :numref:`Hình %s(b) <fig-vpn>`, cả hai được chuyển sang một mạng mạch ảo. Tính giới hạn kết nối của mạng riêng thực được giữ nguyên, nhưng vì các mạng riêng giờ chia sẻ cùng đường truyền và switch nên ta nói rằng đã tạo ra hai mạng riêng ảo.
 
 .. _fig-vpn:
 .. figure:: figures/f03-26-9780123850591.png
    :width: 500px
    :align: center
 
-   An example of virtual private networks: (a) two
-   separate private networks; (b) two virtual private networks
-   sharing common switches.
+   Ví dụ về mạng riêng ảo: (a) hai mạng riêng biệt; (b) hai mạng riêng ảo chia sẻ switch chung.
 
-In :numref:`Figure %s <fig-vpn>`, a virtual circuit network (using ATM, for
-example) is used to provide the controlled connectivity among sites. It
-is also possible to provide a similar function using an IP network to
-provide the connectivity. However, we cannot just connect the various
-corporations’ sites to a single internetwork because that would provide
-connectivity between corporation X and corporation Y, which we wish to
-avoid. To solve this problem, we need to introduce a new concept, the
-*IP tunnel*.
+Trong :numref:`Hình %s <fig-vpn>`, một mạng mạch ảo (ví dụ dùng ATM) được dùng để cung cấp kết nối kiểm soát giữa các site. Cũng có thể cung cấp chức năng tương tự bằng cách dùng mạng IP để kết nối. Tuy nhiên, ta không thể chỉ đơn giản kết nối các site của các công ty vào một liên mạng duy nhất vì điều đó sẽ tạo ra kết nối giữa công ty X và Y, điều ta muốn tránh. Để giải quyết vấn đề này, cần giới thiệu một khái niệm mới, *IP tunnel*.
 
-We can think of an IP tunnel as a virtual point-to-point link between a
-pair of nodes that are actually separated by an arbitrary number of
-networks. The virtual link is created within the router at the entrance
-to the tunnel by providing it with the IP address of the router at the
-far end of the tunnel. Whenever the router at the entrance of the tunnel
-wants to send a packet over this virtual link, it encapsulates the
-packet inside an IP datagram. The destination address in the IP header
-is the address of the router at the far end of the tunnel, while the
-source address is that of the encapsulating router.
+Ta có thể coi một IP tunnel như một liên kết logic điểm-điểm giữa một cặp node thực ra bị ngăn cách bởi một số lượng mạng bất kỳ. Liên kết logic này được tạo ra trong router ở đầu vào tunnel bằng cách cung cấp cho nó địa chỉ IP của router ở đầu kia tunnel. Bất cứ khi nào router ở đầu vào tunnel muốn gửi một gói qua liên kết logic này, nó sẽ đóng gói gói tin bên trong một datagram IP. Địa chỉ đích trong header IP là địa chỉ của router ở đầu kia tunnel, còn địa chỉ nguồn là của router đóng gói.
 
 .. _fig-tunnel:
 .. figure:: figures/f03-27-9780123850591.png
    :width: 600px
    :align: center
 
-   A tunnel through an internetwork. 18.5.0.1 is the
-   address of R2 that can be reached from R1 across the
-   internetwork.
+   Một tunnel qua liên mạng. 18.5.0.1 là địa chỉ của R2 có thể truy cập từ R1 qua liên mạng.
 
-In the forwarding table of the router at the entrance to the tunnel,
-this virtual link looks much like a normal link. Consider, for
-example, the network in :numref:`Figure %s <fig-tunnel>`. A tunnel has
-been configured from R1 to R2 and assigned a virtual interface number
-of 0. The forwarding table in R1 might therefore look like
-:numref:`Table %s <tab-tunneltab>`.
+Trong bảng chuyển tiếp của router ở đầu vào tunnel, liên kết logic này trông giống như một liên kết bình thường. Xem ví dụ mạng trong :numref:`Hình %s <fig-tunnel>`. Một tunnel đã được cấu hình từ R1 đến R2 và gán số hiệu interface ảo là 0. Bảng chuyển tiếp ở R1 có thể như trong :numref:`Bảng %s <tab-tunneltab>`.
 
 .. _tab-tunneltab:
-.. table:: Forwarding Table for Router R1.
+.. table:: Bảng chuyển tiếp cho Router R1.
    :align: center
    :widths: auto
 
@@ -1403,64 +881,12 @@ of 0. The forwarding table in R1 might therefore look like
    | Default    | Interface 1         |
    +------------+---------------------+
 
-R1 has two physical interfaces. Interface 0 connects to network 1;
-interface 1 connects to a large internetwork and is thus the default for
-all traffic that does not match something more specific in the
-forwarding table. In addition, R1 has a virtual interface, which is the
-interface to the tunnel. Suppose R1 receives a packet from network 1
-that contains an address in network 2. The forwarding table says this
-packet should be sent out virtual interface 0. In order to send a packet
-out this interface, the router takes the packet, adds an IP header
-addressed to R2, and then proceeds to forward the packet as if it had
-just been received. R2’s address is 18.5.0.1; since the network number
-of this address is 18, not 1 or 2, a packet destined for R2 will be
-forwarded out the default interface into the internetwork.
+R1 có hai interface vật lý. Interface 0 kết nối với mạng 1; interface 1 kết nối với một liên mạng lớn và do đó là mặc định cho mọi lưu lượng không khớp với mục cụ thể nào trong bảng chuyển tiếp. Ngoài ra, R1 có một interface ảo, là interface đến tunnel. Giả sử R1 nhận được một gói từ mạng 1 chứa địa chỉ thuộc mạng 2. Bảng chuyển tiếp nói rằng gói này nên được gửi qua interface ảo 0. Để gửi gói qua interface này, router sẽ lấy gói tin, thêm header IP địa chỉ đến R2, rồi tiếp tục chuyển tiếp gói như thể nó vừa nhận được. Địa chỉ của R2 là 18.5.0.1; vì số mạng của địa chỉ này là 18, không phải 1 hay 2, nên một gói gửi đến R2 sẽ được chuyển tiếp qua interface mặc định vào liên mạng.
 
-Once the packet leaves R1, it looks to the rest of the world like a
-normal IP packet destined to R2, and it is forwarded accordingly. All
-the routers in the internetwork forward it using normal means, until
-it arrives at R2. When R2 receives the packet, it finds that it
-carries its own address, so it removes the IP header and looks at the
-payload of the packet. What it finds is an inner IP packet whose
-destination address is in network 2. R2 now processes this packet like
-any other IP packet it receives. Since R2 is directly connected to
-network 2, it forwards the packet on to that network. :numref:`Figure
-%s <fig-tunnel>` shows the change in encapsulation of the packet as it
-moves across the network.
+Khi gói rời khỏi R1, nó trông với phần còn lại của thế giới như một gói IP bình thường gửi đến R2, và được chuyển tiếp như vậy. Tất cả các router trong liên mạng sẽ chuyển tiếp nó bằng cách thông thường, cho đến khi nó đến R2. Khi R2 nhận được gói, nó thấy rằng gói mang địa chỉ của chính nó, nên nó sẽ gỡ bỏ header IP và xem payload của gói. Nó sẽ thấy một gói IP bên trong có địa chỉ đích thuộc mạng 2. R2 sẽ xử lý gói này như bất kỳ gói IP nào khác nó nhận được. Vì R2 kết nối trực tiếp với mạng 2, nó sẽ chuyển tiếp gói đó lên mạng. :numref:`Hình %s <fig-tunnel>` cho thấy sự thay đổi đóng gói của gói khi nó di chuyển qua mạng.
 
-While R2 is acting as the endpoint of the tunnel, there is nothing to
-prevent it from performing the normal functions of a router. For
-example, it might receive some packets that are not tunneled, but that
-are addressed to networks that it knows how to reach, and it would
-forward them in the normal way.
+Dù R2 đóng vai trò là điểm cuối của tunnel, không có gì ngăn nó thực hiện các chức năng bình thường của một router. Ví dụ, nó có thể nhận một số gói không đi qua tunnel, nhưng có địa chỉ đến các mạng mà nó biết cách truy cập, và nó sẽ chuyển tiếp chúng như bình thường.
 
-You might wonder why anyone would want to go to all the trouble of
-creating a tunnel and changing the encapsulation of a packet as it goes
-across an internetwork. One reason is security. Supplemented with
-encryption, a tunnel can become a very private sort of link across a
-public network. Another reason may be that R1 and R2 have some
-capabilities that are not widely available in the intervening networks,
-such as multicast routing. By connecting these routers with a tunnel, we
-can build a virtual network in which all the routers with this
-capability appear to be directly connected. A third reason to build
-tunnels is to carry packets from protocols other than IP across an IP
-network. As long as the routers at either end of the tunnel know how to
-handle these other protocols, the IP tunnel looks to them like a
-point-to-point link over which they can send non-IP packets. Tunnels
-also provide a mechanism by which we can force a packet to be delivered
-to a particular place even if its original header—the one that gets
-encapsulated inside the tunnel header—might suggest that it should go
-somewhere else. Thus, we see that tunneling is a powerful and quite
-general technique for building virtual links across internetworks. So
-general, in fact, that the technique recurses, with the most common use
-case being to tunnel IP over IP.
+Bạn có thể tự hỏi tại sao lại phải tạo tunnel và thay đổi đóng gói của gói khi nó đi qua liên mạng. Một lý do là bảo mật. Khi kết hợp với mã hóa, tunnel có thể trở thành một loại liên kết rất riêng tư qua mạng công cộng. Một lý do khác có thể là R1 và R2 có một số khả năng không phổ biến ở các mạng trung gian, như định tuyến multicast. Bằng cách kết nối các router này bằng tunnel, ta có thể xây dựng một mạng ảo trong đó tất cả các router có khả năng này trông như được kết nối trực tiếp. Lý do thứ ba để xây dựng tunnel là để truyền các gói từ các giao thức khác ngoài IP qua một mạng IP. Miễn là các router ở hai đầu tunnel biết cách xử lý các giao thức khác này, tunnel IP sẽ giống như một liên kết điểm-điểm mà qua đó họ có thể gửi các gói không phải IP. Tunnel cũng cung cấp một cơ chế để ta có thể buộc một gói được chuyển đến một nơi cụ thể ngay cả khi header gốc của nó—cái sẽ được đóng gói bên trong header tunnel—có thể gợi ý rằng nó nên đi nơi khác. Như vậy, ta thấy tunneling là một kỹ thuật mạnh mẽ và khá tổng quát để xây dựng các liên kết ảo qua liên mạng. Thực tế, kỹ thuật này còn đệ quy, với trường hợp phổ biến nhất là tunnel IP qua IP.
 
-Tunneling does have its downsides. One is that it increases the length
-of packets; this might represent a significant waste of bandwidth for
-short packets. Longer packets might be subject to fragmentation, which
-has its own set of drawbacks. There may also be performance implications
-for the routers at either end of the tunnel, since they need to do more
-work than normal forwarding as they add and remove the tunnel header.
-Finally, there is a management cost for the administrative entity that
-is responsible for setting up the tunnels and making sure they are
-correctly handled by the routing protocols.
+Tunneling cũng có nhược điểm. Một là nó làm tăng độ dài gói tin; điều này có thể gây lãng phí băng thông đáng kể với các gói ngắn. Các gói dài hơn có thể bị phân mảnh, vốn có những bất lợi riêng. Ngoài ra, có thể có ảnh hưởng hiệu năng cho các router ở hai đầu tunnel, vì chúng phải làm nhiều việc hơn so với chuyển tiếp thông thường khi thêm và gỡ bỏ header tunnel. Cuối cùng, còn có chi phí quản lý cho đơn vị quản trị chịu trách nhiệm thiết lập tunnel và đảm bảo chúng được xử lý đúng bởi các giao thức định tuyến.
