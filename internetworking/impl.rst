@@ -1,82 +1,29 @@
-3.5 Implementation
-==================
+3.5 Hiện thực hóa (Implementation)
+==================================
 
-So far, we have talked about what switches and routers must do without
-describing how they do it. There is a straightforward way to build a
-switch or router: Buy a general-purpose processor and equip it with
-multiple network interfaces. Such a device, running suitable software,
-can receive packets on one of its interfaces, perform any of the
-switching or forwarding functions described in this chapter, and send
-packets out another of its interfaces. This so called *software
-switch* is not too far removed from the architecture of many
-commercial mid- to low-end network devices.\ [#]_ Implementations that
-deliver high-end performance typically take advantage of additional
-hardware acceleration. We refer to these as *hardware switches*,
-although both approaches obviously include a combination of hardware
-and software.
+Cho đến nay, chúng ta đã nói về những gì switch và router phải làm mà chưa mô tả cách chúng thực hiện điều đó. Có một cách đơn giản để xây dựng một switch hoặc router: Mua một bộ xử lý đa dụng và trang bị cho nó nhiều giao diện mạng. Một thiết bị như vậy, chạy phần mềm phù hợp, có thể nhận các gói tin trên một trong các giao diện của nó, thực hiện bất kỳ chức năng chuyển mạch hoặc chuyển tiếp nào được mô tả trong chương này, và gửi các gói tin ra một giao diện khác. Cái gọi là *switch phần mềm* này không quá khác biệt so với kiến trúc của nhiều thiết bị mạng thương mại tầm trung đến thấp hiện nay.\ [#]_ Các hiện thực cung cấp hiệu năng cao thường tận dụng thêm phần tăng tốc phần cứng. Chúng tôi gọi chúng là *switch phần cứng*, mặc dù cả hai cách tiếp cận rõ ràng đều bao gồm sự kết hợp giữa phần cứng và phần mềm.
 
-.. [#] This is also how the very first Internet routers, often called
-       *gateways* at the time, were implemented in the early days of
-       the Internet.
+.. [#] Đây cũng là cách các router Internet đầu tiên, thường được gọi là *gateway* vào thời điểm đó, được hiện thực trong những ngày đầu của Internet.
 
-This section gives an overview of both software-centric and
-hardware-centric designs, but it is worth noting that on the question of
-switches versus routers, the distinction isn’t such a big deal. It turns
-out that the implementation of switches and routers have so much in
-common that a network administrator typically buys a single forwarding
-box and then configures it to be an L2 switch, an L3 router, or some
-combination of the two. Since their internal designs are so similar,
-we’ll use the word *switch* to cover both variants throughout this
-section, avoiding the tedium of saying “switch or router” all the time.
-We’ll call out the differences between the two when appropriate.
+Phần này cung cấp cái nhìn tổng quan về cả thiết kế thiên về phần mềm và thiên về phần cứng, nhưng đáng chú ý là về câu hỏi phân biệt giữa switch và router, sự khác biệt không quá lớn. Hóa ra, hiện thực của switch và router có quá nhiều điểm chung đến mức một quản trị viên mạng thường chỉ mua một hộp chuyển tiếp duy nhất rồi cấu hình nó thành switch tầng 2 (L2), router tầng 3 (L3), hoặc kết hợp cả hai. Vì thiết kế bên trong của chúng rất giống nhau, chúng tôi sẽ dùng từ *switch* để chỉ cả hai biến thể trong suốt phần này, tránh sự nhàm chán khi phải nói “switch hoặc router” mọi lúc. Chúng tôi sẽ chỉ ra sự khác biệt giữa hai loại khi thích hợp.
 
-3.5.1 Software Switch
----------------------
+3.5.1 Switch phần mềm (Software Switch)
+---------------------------------------
 
-:numref:`Figure %s <fig-softswitch>` shows a software switch built
-using a general-purpose processor with four network interface cards
-(NICs). The path for a typical packet that arrives on, say, NIC 1 and
-is forwarded out on NIC 2 is straightforward: as NIC 1 receives the
-packet it copies its bytes directly into the main memory over the I/O
-bus (PCIe in this example) using a technique called *direct memory
-access* (DMA). Once the packet is in memory, the CPU examines its
-header to determine which interface the packet should be sent out on,
-and instructs NIC 2 to transmit the packet, again directly out of main
-memory using DMA. The important take-away is that the packet is
-buffered in main memory (this is the “store” half of
-store-and-forward), with the CPU reading only the necessary header
-fields into its internal registers for processing.
+:numref:`Hình %s <fig-softswitch>` minh họa một switch phần mềm được xây dựng bằng bộ xử lý đa dụng với bốn card giao diện mạng (NIC). Đường đi của một gói tin điển hình đến, ví dụ, NIC 1 và được chuyển tiếp ra NIC 2 là khá đơn giản: khi NIC 1 nhận gói tin, nó sao chép các byte trực tiếp vào bộ nhớ chính qua bus I/O (PCIe trong ví dụ này) bằng một kỹ thuật gọi là *truy cập bộ nhớ trực tiếp* (DMA). Khi gói tin đã nằm trong bộ nhớ, CPU kiểm tra header của nó để xác định gói nên được gửi ra giao diện nào, và chỉ thị cho NIC 2 truyền gói tin, một lần nữa trực tiếp từ bộ nhớ chính bằng DMA. Điều quan trọng cần lưu ý là gói tin được lưu trữ trong bộ nhớ chính (đây là phần “store” trong store-and-forward), với CPU chỉ đọc các trường header cần thiết vào các thanh ghi nội bộ để xử lý.
 
 .. _fig-softswitch:
 .. figure:: figures/impl/Slide1.png
    :width: 300px
    :align: center
 
-   A general-purpose processor used as a software
-   switch.
+   Một bộ xử lý đa dụng được dùng làm switch phần mềm.
 
-There are two potential bottlenecks with this approach, one or both of
-which limits the aggregate packet forwarding capacity of the software
-switch.
+Có hai điểm nghẽn tiềm năng với cách tiếp cận này, một hoặc cả hai có thể giới hạn tổng năng lực chuyển tiếp gói tin của switch phần mềm.
 
-The first problem is that performance is limited by the fact that all
-packets must pass into and out of main memory. Your mileage will vary
-based on how much you are willing to pay for hardware, but as an
-example, a machine limited by a 1333-MHz, 64-bit-wide memory bus can
-transmit data at a peak rate of a little over 100 Gbps—enough to build a
-switch with a handful of 10-Gbps Ethernet ports, but hardly enough for a
-high-end router in the core of the Internet.
+Vấn đề đầu tiên là hiệu năng bị giới hạn bởi thực tế là tất cả các gói tin phải đi vào và ra khỏi bộ nhớ chính. Hiệu quả thực tế sẽ thay đổi tùy vào bạn sẵn sàng chi bao nhiêu cho phần cứng, nhưng ví dụ, một máy bị giới hạn bởi bus bộ nhớ 1333-MHz, 64-bit có thể truyền dữ liệu ở tốc độ đỉnh chỉ hơn 100 Gbps—đủ để xây dựng một switch với vài cổng Ethernet 10-Gbps, nhưng khó có thể đủ cho một router cao cấp ở lõi Internet.
 
-Moreover, this upper bound assumes that moving data is the only problem.
-This is a fair approximation for long packets but a bad one when packets
-are short, which is the worst-case situation switch designers have to
-plan for. With minimum-sized packets, the cost of processing each
-packet—parsing its header and deciding which output link to transmit it
-on—is likely to dominate, and potentially become a bottleneck. Suppose,
-for example, that a processor can perform all the necessary processing
-to switch 40 million packets each second. This is sometimes called the
-packet per second (pps) rate. If the average packet is 64 bytes, this
-would imply
+Hơn nữa, giới hạn trên này giả định rằng việc di chuyển dữ liệu là vấn đề duy nhất. Điều này khá đúng với các gói dài nhưng lại không đúng với các gói ngắn, vốn là trường hợp xấu nhất mà các nhà thiết kế switch phải tính đến. Với các gói kích thước tối thiểu, chi phí xử lý mỗi gói—phân tích header và quyết định cổng ra—có thể chiếm ưu thế và trở thành điểm nghẽn. Giả sử, ví dụ, một bộ xử lý có thể thực hiện tất cả xử lý cần thiết để chuyển tiếp 40 triệu gói mỗi giây. Điều này đôi khi được gọi là tốc độ packet per second (pps). Nếu gói trung bình là 64 byte, điều này sẽ dẫn đến
 
 .. centered:: Throughput = pps x BitsPerPacket
 
@@ -84,277 +31,72 @@ would imply
 
 .. centered:: = 2048 × 10\ :sup:`7`
 
-that is, a throughput of about 20 Gbps—fast, but substantially below the
-range users are demanding from their switches today. Bear in mind that
-this 20 Gbps would be shared by all users connected to the switch, just
-as the bandwidth of a single (unswitched) Ethernet segment is shared
-among all users connected to the shared medium. Thus, for example, a
-16-port switch with this aggregate throughput would only be able to cope
-with an average data rate of about 1 Gbps on each port.\ [#]_
+tức là, thông lượng khoảng 20 Gbps—nhanh, nhưng vẫn thấp hơn đáng kể so với nhu cầu hiện nay. Lưu ý rằng 20 Gbps này sẽ được chia sẻ cho tất cả người dùng kết nối vào switch, giống như băng thông của một đoạn Ethernet (không switch) được chia sẻ cho tất cả người dùng trên môi trường chung. Ví dụ, một switch 16 cổng với tổng thông lượng này chỉ có thể đáp ứng tốc độ trung bình khoảng 1 Gbps trên mỗi cổng.\ [#]_
 
-.. [#] These example performance numbers do not represent the absolute
-       maximum throughput rate that highly tuned software running on a
-       high-end server could achieve, but they are indicative of
-       limits one ultimately faces in pursuing this approach.
+.. [#] Các con số hiệu năng ví dụ này không đại diện cho tốc độ thông lượng tối đa tuyệt đối mà phần mềm được tối ưu hóa cao trên một máy chủ cao cấp có thể đạt được, nhưng chúng phản ánh giới hạn cuối cùng mà bạn sẽ gặp phải với cách tiếp cận này.
 
-One final consideration is important to understand when evaluating
-switch implementations. The non-trivial algorithms discussed in this
-chapter—the spanning tree algorithm used by learning bridges, the
-distance-vector algorithm used by RIP, and the link-state algorithm used
-by OSPF—are *not* directly part of the per-packet forwarding decision.
-They run periodically in the background, but switches do not have to
-execute, say, OSPF code for every packet it forwards. The most costly
-routine the CPU is likely to execute on a per-packet basis is a table
-lookup, for example, looking up a VCI number in a VC table, an IP
-address in an L3 forwarding table, or an Ethernet address in an L2
-forwarding table.
+Một điểm cần lưu ý cuối cùng khi đánh giá các hiện thực switch. Các thuật toán không tầm thường được thảo luận trong chương này—thuật toán cây bao phủ dùng cho bridge học, thuật toán vector khoảng cách dùng cho RIP, và thuật toán trạng thái liên kết dùng cho OSPF—*không* trực tiếp là một phần của quyết định chuyển tiếp từng gói. Chúng chạy định kỳ ở chế độ nền, nhưng switch không phải thực thi, ví dụ, mã OSPF cho mỗi gói nó chuyển tiếp. Thao tác tốn kém nhất mà CPU có thể phải thực hiện trên mỗi gói là tra cứu bảng, ví dụ, tra số VCI trong bảng VC, địa chỉ IP trong bảng chuyển tiếp L3, hoặc địa chỉ Ethernet trong bảng chuyển tiếp L2.
 
 .. _key-control-data:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   The distinction between these two kinds of processing is important
-   enough to give it a name: the *control plane* corresponds to the
-   background processing required to “control” the network (e.g.,
-   running OSPF, RIP, or the BGP protocol described in the next chapter)
-   and the *data plane* corresponds to the per-packet processing
-   required to move packets from input port to output port. For
-   historical reasons, this distinction is called *control plane* and
-   *user plane* in cellular access networks, but the idea is the same,
-   and in fact, the 3GPP standard defines CUPS (Control/User Plane
-   Separation) as an architectural principle.
+   Sự phân biệt giữa hai loại xử lý này đủ quan trọng để đặt tên: *mặt phẳng điều khiển* (control plane) tương ứng với xử lý nền cần thiết để “điều khiển” mạng (ví dụ, chạy OSPF, RIP, hoặc BGP sẽ được mô tả ở chương sau) và *mặt phẳng dữ liệu* (data plane) tương ứng với xử lý từng gói để di chuyển gói từ cổng vào đến cổng ra. Vì lý do lịch sử, sự phân biệt này được gọi là *control plane* và *user plane* trong các mạng truy nhập di động, nhưng ý tưởng là như nhau, và thực tế, chuẩn 3GPP định nghĩa CUPS (Control/User Plane Separation) như một nguyên lý kiến trúc.
 
-   These two kinds of processing are easy to conflate when both run on
-   the same CPU, as is the case in software switch depicted in :numref:`Figure
-   %s <fig-softswitch>`, but performance can be dramatically improved by
-   optimizing how the data plane is implemented, and correspondingly,
-   specifying a well-defined interface between the control and data
-   planes. :ref:`[Next] <key-sdn>`
+   Hai loại xử lý này rất dễ bị nhầm lẫn khi cả hai cùng chạy trên một CPU, như trong switch phần mềm ở :numref:`Hình %s <fig-softswitch>`, nhưng hiệu năng có thể được cải thiện đáng kể bằng cách tối ưu hóa cách hiện thực mặt phẳng dữ liệu, và tương ứng, xác định rõ ràng giao diện giữa mặt phẳng điều khiển và mặt phẳng dữ liệu. :ref:`[Tiếp theo] <key-sdn>`
 
-3.5.2 Hardware Switch
----------------------
+3.5.2 Switch phần cứng (Hardware Switch)
+----------------------------------------
 
-Throughout much of the Internet’s history, high-performance switches and
-routers have been specialized devices, built with Application-Specific
-Integrated Circuits (ASICs). While it was possible to build low-end
-routers and switches using commodity servers running C programs, ASICs
-were required to achieve the required throughput rates.
+Trong phần lớn lịch sử Internet, các switch và router hiệu năng cao là các thiết bị chuyên dụng, được xây dựng bằng các mạch tích hợp chuyên dụng (ASIC). Dù có thể xây dựng các router và switch giá rẻ bằng máy chủ phổ thông chạy chương trình C, ASIC là cần thiết để đạt tốc độ chuyển tiếp yêu cầu.
 
-The problem with ASICs is that hardware takes a long time to design and
-fabricate, meaning the delay for adding new features to a switch is
-usually measured in years, not the days or weeks today’s software
-industry is accustomed to. Ideally, we’d like to benefit from the
-performance of ASICs and the agility of software.
+Vấn đề với ASIC là phần cứng mất nhiều thời gian để thiết kế và chế tạo, nghĩa là thời gian thêm tính năng mới cho switch thường được tính bằng năm, chứ không phải ngày hay tuần như ngành phần mềm hiện nay. Lý tưởng nhất, chúng ta muốn hưởng lợi từ hiệu năng của ASIC và sự linh hoạt của phần mềm.
 
-Fortunately, recent advances in domain specific processors (and other
-commodity components) have made this possible. Just as importantly, the
-full architectural specification for switches that take advantage of
-these new processors is now available online—the hardware equivalent of
-*open source software*. This means anyone can build a high-performance
-switch by pulling the blueprint off the web (see the Open Compute
-Project, OCP, for examples) in the same way it is possible to build your
-own PC. In both cases you still need software to run on the hardware,
-but just as Linux is available to run on your home-built PC, there are
-now open source L2 and L3 stacks available on GitHub to run on your
-home-built switch. Alternatively, you can simply buy a pre-built switch
-from a commodity switch manufacturer and then load your own software
-onto it. The following describes these open *bare-metal switches*, so
-called to contrast them with closed devices, in which hardware and
-software are tightly bundled, that have
-historically dominated the industry.
+May mắn thay, những tiến bộ gần đây trong bộ xử lý chuyên biệt theo miền (và các linh kiện phổ thông khác) đã làm điều này trở nên khả thi. Quan trọng không kém, toàn bộ đặc tả kiến trúc cho các switch tận dụng các bộ xử lý mới này hiện đã có sẵn trực tuyến—tương đương phần cứng của *phần mềm mã nguồn mở*. Điều này nghĩa là bất kỳ ai cũng có thể xây dựng một switch hiệu năng cao bằng cách tải bản thiết kế từ web (xem dự án Open Compute Project, OCP, làm ví dụ) giống như bạn có thể tự lắp ráp PC. Trong cả hai trường hợp, bạn vẫn cần phần mềm để chạy trên phần cứng, nhưng cũng như Linux có sẵn để chạy trên PC tự lắp ráp, hiện đã có các stack L2 và L3 mã nguồn mở trên GitHub để chạy trên switch tự lắp ráp. Ngoài ra, bạn có thể đơn giản mua một switch dựng sẵn từ nhà sản xuất switch phổ thông rồi nạp phần mềm của riêng mình lên đó. Phần sau mô tả các *switch bare-metal* mở này, gọi như vậy để phân biệt với các thiết bị đóng, trong đó phần cứng và phần mềm được gắn chặt với nhau, vốn từng thống trị ngành công nghiệp.
 
 .. _fig-baremetal:
 .. figure:: figures/impl/Slide2.png
    :width: 500px
    :align: center
 
-   Bare-metal switch using a Network Processing
-   Unit.
+   Switch bare-metal sử dụng Network Processing Unit.
 
-:numref:`Figure %s <fig-baremetal>` is a simplified depiction of a
-bare-metal switch. The key difference from the earlier implementation
-on a general-purpose processor is the addition of a Network Processor
-Unit (NPU), a domain-specific processor with an architecture and
-instruction set that has been optimized for processing packet headers
-(i.e., for implementing the data plane). NPUs are similar in spirit to
-GPUs that have an architecture optimized for rendering computer
-graphics, but in this case, the NPU is optimized for parsing packet
-headers and making a forwarding decision. NPUs are able to process
-packets (input, make a forwarding decision, and output) at rates
-measured in Terabits per second (Tbps), easily fast enough to keep up
-with 32x100-Gbps ports, or the 48x40-Gbps ports shown in the diagram.
+:numref:`Hình %s <fig-baremetal>` là mô tả đơn giản hóa của một switch bare-metal. Khác biệt chính so với hiện thực trước đó trên bộ xử lý đa dụng là bổ sung Network Processor Unit (NPU), một bộ xử lý chuyên biệt theo miền với kiến trúc và tập lệnh được tối ưu hóa cho xử lý header gói tin (tức là, để hiện thực mặt phẳng dữ liệu). NPU tương tự về ý tưởng với GPU có kiến trúc tối ưu cho đồ họa máy tính, nhưng trong trường hợp này, NPU được tối ưu cho việc phân tích header gói và quyết định chuyển tiếp. NPU có thể xử lý gói tin (nhận, quyết định chuyển tiếp, và xuất ra) ở tốc độ đo bằng Terabit mỗi giây (Tbps), dễ dàng đáp ứng 32 cổng 100-Gbps, hoặc 48 cổng 40-Gbps như trong hình.
 
 .. sidebar:: Network Processing Units
 
-          Our use of the term NPU is a bit
-          non-standard. Historically, NPU was the name given more
-          narrowly-defined network processing chips used, for
-          example, to implement intelligent firewalls or deep
-          packet inspection. They were not as general-purpose as
-          the NPUs we’re discussing here; nor were they as
-          high-performance. It seems likely that the current
-          approach will make purpose-built network processors
-          obsolete, but in any case, we prefer the NPU nomenclature
-          because it is consistent with the trend to build
-          programmable domain-specific processors, including GPUs
-          for graphics and TPUs (Tensor Processing Units) for AI.
+          Việc chúng tôi dùng thuật ngữ NPU là hơi không chuẩn. Lịch sử, NPU là tên gọi các chip xử lý mạng được định nghĩa hẹp hơn, ví dụ, dùng để hiện thực firewall thông minh hoặc kiểm tra gói sâu. Chúng không đa dụng như các NPU mà chúng tôi đang nói đến ở đây; cũng không hiệu năng cao như vậy. Có vẻ như cách tiếp cận hiện tại sẽ khiến các bộ xử lý mạng chuyên dụng trở nên lỗi thời, nhưng dù sao, chúng tôi thích dùng thuật ngữ NPU vì nó phù hợp với xu hướng xây dựng bộ xử lý chuyên biệt có thể lập trình, bao gồm GPU cho đồ họa và TPU (Tensor Processing Unit) cho AI.
 
-The beauty of this new switch design is that a given bare-metal switch
-can now
-be programmed to be an L2 switch, an L3 router, or a combination of
-both, just by a matter of programming. The exact same control plane
-software stack used in a software switch still runs on the control CPU,
-but in addition, data plane “programs” are loaded onto the NPU to
-reflect the forwarding decisions made by the control plane software.
-Exactly how one “programs” the NPU depends on the chip vendor, of which
-there are currently several. In some cases, the forwarding pipeline is
-fixed and the control processor merely loads the forwarding table into
-the NPU (by fixed we mean the NPU only knows how to process certain
-headers, like Ethernet and IP), but in other cases, the forwarding
-pipeline is itself programmable. P4 is a new programming language that
-can be used to program such NPU-based forwarding pipelines. Among other
-things, P4 tries to hide many of the differences in the underlying NPU
-instruction sets.
+Điểm hay của thiết kế switch mới này là một switch bare-metal bất kỳ giờ đây có thể được lập trình thành switch L2, router L3, hoặc kết hợp cả hai, chỉ bằng phần mềm. Stack phần mềm mặt phẳng điều khiển dùng trong switch phần mềm vẫn chạy trên CPU điều khiển, nhưng ngoài ra, các “chương trình” mặt phẳng dữ liệu được nạp lên NPU để phản ánh các quyết định chuyển tiếp do phần mềm mặt phẳng điều khiển đưa ra. Cách “lập trình” NPU phụ thuộc vào nhà sản xuất chip, hiện có nhiều hãng khác nhau. Trong một số trường hợp, pipeline chuyển tiếp là cố định và bộ xử lý điều khiển chỉ cần nạp bảng chuyển tiếp vào NPU (ý là NPU chỉ biết xử lý một số header nhất định, như Ethernet và IP), nhưng trong các trường hợp khác, pipeline chuyển tiếp cũng có thể lập trình được. P4 là một ngôn ngữ lập trình mới có thể dùng để lập trình các pipeline chuyển tiếp dựa trên NPU như vậy. Ngoài ra, P4 cố gắng che giấu nhiều khác biệt trong tập lệnh NPU bên dưới.
 
-Internally, an NPU takes advantage of three technologies. First, a fast
-SRAM-based memory buffers packets while they are being processed. SRAM
-(Static Random Access Memory), is roughly an order of magnitude faster
-than the DRAM (Dynamic Random Access Memory) that is used by main
-memory. Second, a TCAM-based memory stores bit patterns to be matched in
-the packets being processed. The “CAM” in TCAM stands for “Content
-Addressable Memory,” which means that the key you want to look up in a
-table can effectively be used as the address into the memory that
-implements the table. The “T” stands for “Ternary” which is a fancy way
-to say the key you want to look up can have wildcards in it (e.g, key
-``10*1`` matches both ``1001`` and ``1011``). Finally, the processing
-involved to forward each packet is implemented by a forwarding pipeline.
-This pipeline is implemented by an ASIC, but when well-designed, the
-pipeline’s forwarding behavior can be modified by changing the program
-it runs. At a high level, this program is expressed as a collection of
-*(Match, Action)* pairs: if you match such-and-such field in the header,
-then execute this-or-that action.
+Bên trong, một NPU tận dụng ba công nghệ. Đầu tiên, bộ nhớ SRAM tốc độ cao dùng để buffer các gói khi đang xử lý. SRAM (Static Random Access Memory) nhanh hơn khoảng một bậc so với DRAM (Dynamic Random Access Memory) dùng cho bộ nhớ chính. Thứ hai, bộ nhớ dựa trên TCAM lưu trữ các mẫu bit để so khớp trong các gói đang xử lý. “CAM” trong TCAM là viết tắt của “Content Addressable Memory”, nghĩa là khóa bạn muốn tra cứu trong bảng có thể được dùng như địa chỉ vào bộ nhớ hiện thực bảng đó. “T” là “Ternary”, nghĩa là khóa bạn muốn tra cứu có thể có ký tự đại diện (wildcard), ví dụ, khóa ``10*1`` khớp cả ``1001`` và ``1011``. Cuối cùng, quá trình xử lý để chuyển tiếp mỗi gói được hiện thực bằng một pipeline chuyển tiếp. Pipeline này được hiện thực bằng ASIC, nhưng khi thiết kế tốt, hành vi chuyển tiếp của pipeline có thể thay đổi bằng cách thay đổi chương trình nó chạy. Ở mức cao, chương trình này được biểu diễn như một tập hợp các cặp *(Match, Action)*: nếu bạn khớp trường nào đó trong header, thì thực hiện hành động tương ứng.
 
-The relevance of packet processing being implemented by a multi-stage
-pipeline rather than a single-stage processor is that forwarding a
-single packet likely involves looking at multiple header fields. Each
-stage can be programmed to look at a different combination of fields. A
-multi-stage pipeline adds a little end-to-end latency to each packet
-(measured in nanoseconds), but also means that multiple packets can be
-processed at the same time. For example, Stage 2 can be making a second
-lookup on packet A while Stage 1 is doing an initial lookup on packet B,
-and so on. This means the NPU as a whole is able to keep up with line
-speeds. As of this writing, the state of the art is 25.6 Tbps.
+Ý nghĩa của việc xử lý gói được hiện thực bằng pipeline nhiều tầng thay vì bộ xử lý một tầng là chuyển tiếp một gói thường liên quan đến việc xem nhiều trường header. Mỗi tầng có thể được lập trình để xem một tổ hợp trường khác nhau. Pipeline nhiều tầng làm tăng một chút độ trễ đầu-cuối cho mỗi gói (tính bằng nano giây), nhưng cũng nghĩa là nhiều gói có thể được xử lý cùng lúc. Ví dụ, Tầng 2 có thể thực hiện tra cứu thứ hai trên gói A trong khi Tầng 1 đang tra cứu ban đầu trên gói B, v.v. Điều này giúp NPU có thể đáp ứng tốc độ đường truyền. Tính đến thời điểm viết sách, mức cao nhất là 25,6 Tbps.
 
-Finally, :numref:`Figure %s <fig-baremetal>` includes other commodity
-components that make this all practical. In particular, it is now
-possible to buy pluggable *transceiver* modules that take care of all
-the media access details—be it Gigabit Ethernet, 10-Gigabit Ethernet,
-or SONET—as well as the optics. These transceivers all conform to
-standardized form factors, such as SFP+, that can in turn be connected
-to other components over a standardized bus (e.g., SFI). Again, the
-key takeaway is that the networking industry is just now entering into
-the same commoditized world that the computing industry has enjoyed
-for the last two decades.
+Cuối cùng, :numref:`Hình %s <fig-baremetal>` còn có các linh kiện phổ thông khác giúp mọi thứ trở nên thực tế. Đặc biệt, hiện đã có thể mua các module *transceiver* cắm rời xử lý tất cả chi tiết truy nhập môi trường—dù là Gigabit Ethernet, 10-Gigabit Ethernet, hay SONET—cũng như quang học. Các transceiver này đều tuân theo các chuẩn hình thức như SFP+, có thể kết nối với các linh kiện khác qua bus chuẩn hóa (ví dụ, SFI). Một lần nữa, điều quan trọng là ngành mạng hiện đang bước vào thế giới phổ thông hóa giống như ngành máy tính đã tận hưởng hai thập kỷ qua.
 
-3.5.3 Software Defined Networks
--------------------------------
+3.5.3 Mạng Định nghĩa Bằng Phần Mềm (Software Defined Networks)
+---------------------------------------------------------------
 
-With switches becoming increasingly commoditized, attention is
-rightfully shifting to the software that controls them. This puts us
-squarely in the middle of a trend to build *Software Defined Networks*
-(SDN), an idea that started to germinate about ten years ago. In fact,
-it was the early stages of SDN that triggered the networking industry to
-move towards bare-metal switches.
+Khi switch ngày càng trở thành hàng hóa phổ thông, sự chú ý hợp lý chuyển sang phần mềm điều khiển chúng. Điều này đặt chúng ta vào trung tâm của xu hướng xây dựng *Mạng Định nghĩa Bằng Phần Mềm* (SDN), một ý tưởng bắt đầu nảy mầm khoảng mười năm trước. Thực tế, chính giai đoạn đầu của SDN đã thúc đẩy ngành mạng chuyển sang các switch bare-metal.
 
-The fundamental idea of SDN is one we’ve already discussed: to
-decouple the network control plane (i.e., where routing algorithms
-like RIP, OSPF, and BGP run) from the network data plane (i.e., where
-packet forwarding decisions get made), with the former moved into
-software running on commodity servers and the latter implemented by
-bare-metal switches. The key enabling idea behind SDN was to take this
-decoupling a step further, and to define a standard interface between
-the control plane and the data plane. Doing so allows any
-implementation of the control plane to talk to any implementation of
-the data plane; this breaks the dependency on any one vendor’s bundled
-solution. The original interface is called *OpenFlow*, and this idea
-of decoupling the control and data planes came to be known as
-disaggregation. (The P4 language mentioned in the previous subsection
-is a second-generation attempt to define this interface by
-generalizing OpenFlow.)
+Ý tưởng cơ bản của SDN là điều mà chúng ta đã thảo luận: tách biệt mặt phẳng điều khiển mạng (tức là nơi các thuật toán định tuyến như RIP, OSPF, và BGP chạy) khỏi mặt phẳng dữ liệu mạng (tức là nơi các quyết định chuyển tiếp gói được thực hiện), với phần trước được chuyển thành phần mềm chạy trên máy chủ phổ thông và phần sau được hiện thực bởi các switch bare-metal. Ý tưởng then chốt giúp SDN khả thi là đưa sự tách biệt này đi xa hơn, và định nghĩa một giao diện chuẩn giữa mặt phẳng điều khiển và mặt phẳng dữ liệu. Làm như vậy cho phép bất kỳ hiện thực nào của mặt phẳng điều khiển có thể nói chuyện với bất kỳ hiện thực nào của mặt phẳng dữ liệu; điều này phá vỡ sự phụ thuộc vào giải pháp đóng gói của một nhà cung cấp. Giao diện ban đầu gọi là *OpenFlow*, và ý tưởng tách biệt mặt phẳng điều khiển và dữ liệu này được gọi là disaggregation (phân rã). (Ngôn ngữ P4 đề cập ở phần trước là nỗ lực thế hệ thứ hai nhằm định nghĩa giao diện này bằng cách tổng quát hóa OpenFlow.)
 
-Another important aspect of disaggregation is that a logically
-centralized control plane can be used to control a distributed network
-data plane. We say logically centralized because while the state
-collected by the control plane is maintained in a global data structure,
-such as a Network Map, the implementation of this data structure could
-still be distributed over multiple servers. For example, it could run in
-a cloud. This is important for both scalability and availability, where
-the key is that the two planes are configured and scaled independent of
-each other. This idea took off quickly in the cloud, where today’s cloud
-providers run SDN-based solutions both within their datacenters and
-across the backbone networks that interconnect their datacenters.
+Một khía cạnh quan trọng khác của disaggregation là mặt phẳng điều khiển tập trung về mặt logic có thể được dùng để điều khiển một mặt phẳng dữ liệu mạng phân tán. Chúng ta nói là tập trung về mặt logic vì trạng thái do mặt phẳng điều khiển thu thập được duy trì trong một cấu trúc dữ liệu toàn cục, như Network Map, nhưng hiện thực của cấu trúc này vẫn có thể được phân tán trên nhiều máy chủ. Ví dụ, nó có thể chạy trên đám mây. Điều này quan trọng cho cả khả năng mở rộng và sẵn sàng cao, trong đó điểm mấu chốt là hai mặt phẳng này được cấu hình và mở rộng độc lập với nhau. Ý tưởng này nhanh chóng được áp dụng trong môi trường đám mây, nơi các nhà cung cấp đám mây hiện nay vận hành các giải pháp dựa trên SDN cả trong các trung tâm dữ liệu và trên các mạng backbone kết nối các trung tâm dữ liệu.
 
-One consequence of this design that isn’t immediately obvious is that a
-logically centralized control plane doesn’t just manage a network of
-physical (hardware) switches that interconnects physical servers, but it
-also manages a network of virtual (software) switches that interconnect
-virtual servers (e.g., Virtual Machines and containers). If you’re
-counting “switch ports” (a good measure of all the devices connected to
-your network) then the number of virtual ports in the Internet rocketed
-past the number of physical ports in 2012.
+Một hệ quả của thiết kế này mà không phải ai cũng nhận ra ngay là mặt phẳng điều khiển tập trung về mặt logic không chỉ quản lý một mạng các switch vật lý (phần cứng) kết nối các máy chủ vật lý, mà còn quản lý một mạng các switch ảo (phần mềm) kết nối các máy chủ ảo (ví dụ, Máy ảo và container). Nếu bạn đếm “cổng switch” (một thước đo tốt cho tất cả thiết bị kết nối vào mạng), thì số lượng cổng ảo trên Internet đã vượt xa số cổng vật lý từ năm 2012.
 
 .. _fig-sdn:
 .. figure:: figures/impl/Slide3.png
    :width: 500px
    :align: center
 
-   Network Operating System (NOS) hosting a set of
-   control applications and providing a logically centralized point
-   of control for an underlying network data plane.
+   Hệ điều hành mạng (Network Operating System - NOS) lưu trữ một tập các ứng dụng điều khiển và cung cấp một điểm điều khiển tập trung về mặt logic cho mặt phẳng dữ liệu mạng bên dưới.
 
-One of other key enablers for SDN’s success, as depicted in
-:numref:`Figure %s <fig-sdn>`, is the Network Operating System
-(NOS). Like a server operating system (e.g., Linux, iOS, Android,
-Windows) that provides a set of high-level abstractions that make it
-easier to implement applications (e.g., you can read and write files
-instead of directly accessing disk drives), a NOS makes it easier to
-implement network control functionality, otherwise known as *Control
-Apps*. A good NOS abstracts the details of the network switches and
-provides a *Network Map* abstraction to the application developer. The
-NOS detects changes in the underlying network (e.g., switches, ports,
-and links going up-and-down) and the control application simply
-implements the behavior it wants on this abstract graph. This means
-the NOS takes on the burden of collecting network state (the hard part
-of distributed algorithms like Link-State and Distance-Vector
-algorithms) and the app is free to simply implement the shortest path
-algorithm and load the forwarding rules into the underlying
-switches. By centralizing this logic, the goal is to come up with a
-globally optimized solution. The published evidence from cloud
-providers that have embraced this approach confirms this advantage.
+Một trong những yếu tố then chốt giúp SDN thành công, như minh họa trong :numref:`Hình %s <fig-sdn>`, là Hệ điều hành mạng (Network Operating System - NOS). Giống như hệ điều hành máy chủ (ví dụ, Linux, iOS, Android, Windows) cung cấp một tập các trừu tượng cấp cao giúp hiện thực ứng dụng dễ dàng hơn (ví dụ, bạn có thể đọc và ghi file thay vì truy cập trực tiếp ổ đĩa), một NOS giúp hiện thực chức năng điều khiển mạng dễ dàng hơn, còn gọi là *Ứng dụng điều khiển* (Control Apps). Một NOS tốt trừu tượng hóa chi tiết của các switch mạng và cung cấp trừu tượng *Network Map* cho lập trình viên ứng dụng. NOS phát hiện các thay đổi trong mạng bên dưới (ví dụ, switch, cổng, và liên kết lên/xuống) và ứng dụng điều khiển chỉ cần hiện thực hành vi mong muốn trên đồ thị trừu tượng này. Điều này nghĩa là NOS đảm nhận việc thu thập trạng thái mạng (phần khó của các thuật toán phân tán như Link-State và Distance-Vector), còn ứng dụng chỉ cần hiện thực thuật toán đường đi ngắn nhất và nạp các luật chuyển tiếp vào các switch bên dưới. Bằng cách tập trung hóa logic này, mục tiêu là tìm ra giải pháp tối ưu toàn cục. Các bằng chứng công bố từ các nhà cung cấp đám mây đã áp dụng cách tiếp cận này xác nhận lợi thế này.
 
 .. _key-sdn:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   It is important to understand that SDN is an implementation
-   strategy. It does not magically make fundamental problems like
-   needing to compute a forwarding table go away. But instead of
-   burdening the switches with having to exchange messages with each
-   other as part of a distributed routing algorithm, the logically
-   centralized SDN controller is charged with collecting link and port
-   status information from the individual switches, constructing a
-   global view of the network graph, and making that graph available
-   to the control apps.  From the control application's perspective,
-   all the information it needs to compute the forwarding table is
-   locally available.  Keeping in mind that the SDN Controller is
-   logically centralized but physically replicated on multiple
-   servers—for both scalable performance and high availability—it is
-   still a hotly contested question whether the centralized or
-   distributed approach is best. :ref:`[Next] <key-tradeoffs>`
+   Điều quan trọng cần hiểu là SDN là một chiến lược hiện thực. Nó không thần kỳ làm biến mất các vấn đề cơ bản như việc cần tính toán bảng chuyển tiếp. Nhưng thay vì bắt các switch phải trao đổi thông điệp với nhau như một phần của thuật toán định tuyến phân tán, bộ điều khiển SDN tập trung về mặt logic sẽ thu thập thông tin trạng thái liên kết và cổng từ từng switch, xây dựng một cái nhìn toàn cục về đồ thị mạng, và cung cấp đồ thị đó cho các ứng dụng điều khiển. Từ góc nhìn của ứng dụng điều khiển, tất cả thông tin cần thiết để tính bảng chuyển tiếp đều có sẵn cục bộ. Hãy nhớ rằng bộ điều khiển SDN tập trung về mặt logic nhưng được nhân bản vật lý trên nhiều máy chủ—để đạt hiệu năng mở rộng và sẵn sàng cao—và vẫn còn là câu hỏi gây tranh cãi liệu cách tiếp cận tập trung hay phân tán là tốt nhất. :ref:`[Tiếp theo] <key-tradeoffs>`
 
-As much of an advantage as the cloud providers have been able to get out
-of SDN, its adoption in enterprises and Telcos has been much slower.
-This is partly about the ability of different markets to manage their
-networks. The Googles, Microsofts, and Amazons of the world have the
-engineers and DevOps skills needed to take advantage of this technology,
-whereas others still prefer pre-packaged and integrated solutions that
-support the management and command line interfaces they are familiar
-with.
+Dù các nhà cung cấp đám mây đã tận dụng SDN rất hiệu quả, việc áp dụng nó trong doanh nghiệp và nhà mạng viễn thông vẫn chậm hơn nhiều. Một phần là do khả năng của các thị trường khác nhau trong việc quản lý mạng của họ. Các công ty như Google, Microsoft, Amazon có đội ngũ kỹ sư và DevOps đủ năng lực để tận dụng công nghệ này, trong khi các tổ chức khác vẫn thích các giải pháp đóng gói sẵn và tích hợp hỗ trợ các giao diện quản lý và dòng lệnh mà họ quen thuộc.
