@@ -1,61 +1,21 @@
-3.4 Routing
-===========
+3.4 Định tuyến (Routing)
+========================
 
-So far in this chapter we have assumed that the switches and routers
-have enough knowledge of the network topology so they can choose the
-right port onto which each packet should be output. In the case of
-virtual circuits, routing is an issue only for the connection request
-packet; all subsequent packets follow the same path as the request. In
-datagram networks, including IP networks, routing is an issue for every
-packet. In either case, a switch or router needs to be able to look at a
-destination address and then to determine which of the output ports is
-the best choice to get a packet to that address. As we saw in an earlier
-section, the switch makes this decision by consulting a forwarding
-table. The fundamental problem of routing is how switches and routers
-acquire the information in their forwarding tables.
+Cho đến nay trong chương này, chúng ta đã giả định rằng các switch và router có đủ thông tin về cấu trúc liên kết mạng để có thể chọn đúng cổng để gửi mỗi gói tin ra ngoài. Trong trường hợp mạch ảo, định tuyến chỉ là vấn đề đối với gói yêu cầu thiết lập kết nối; tất cả các gói tiếp theo sẽ đi theo cùng một đường với gói yêu cầu. Trong các mạng datagram, bao gồm cả mạng IP, định tuyến là vấn đề đối với mọi gói tin. Trong cả hai trường hợp, một switch hoặc router cần phải xem địa chỉ đích và xác định cổng ra nào là lựa chọn tốt nhất để chuyển gói tin đến địa chỉ đó. Như chúng ta đã thấy ở phần trước, switch thực hiện quyết định này bằng cách tham khảo bảng chuyển tiếp (forwarding table). Vấn đề cơ bản của định tuyến là làm thế nào các switch và router có được thông tin trong bảng chuyển tiếp của mình.
 
 .. _key-forwarding:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   We restate an important distinction, which is often neglected,
-   between *forwarding* and *routing*. Forwarding consists of
-   receiving a packet, looking up its destination address in a table,
-   and sending the packet in a direction determined by that table. We
-   saw several examples of forwarding in the preceding section. It is
-   a simple and well-defined process performed locally at each node,
-   and is often referred to as the network's *data plane.* Routing is
-   the process by which forwarding tables are built. It depends on
-   complex distributed algorithms, and is often referred to as the
-   network's *control plane.*  :ref:`[Next] <key-routing-alg>`
+   Chúng tôi nhấn mạnh lại một sự phân biệt quan trọng, thường bị bỏ qua, giữa *chuyển tiếp* (forwarding) và *định tuyến* (routing). Chuyển tiếp là quá trình nhận một gói tin, tra cứu địa chỉ đích của nó trong bảng, và gửi gói tin theo hướng được xác định bởi bảng đó. Chúng ta đã thấy nhiều ví dụ về chuyển tiếp ở phần trước. Đây là một quá trình đơn giản, được xác định rõ ràng và thực hiện cục bộ tại mỗi nút, và thường được gọi là *mặt phẳng dữ liệu* (data plane) của mạng. Định tuyến là quá trình xây dựng các bảng chuyển tiếp. Nó phụ thuộc vào các thuật toán phân tán phức tạp, và thường được gọi là *mặt phẳng điều khiển* (control plane) của mạng.  :ref:`[Tiếp theo] <key-routing-alg>`
 
-While the terms *forwarding table* and *routing table* are sometimes
-used interchangeably, we will make a distinction between them here. The
-forwarding table is used when a packet is being forwarded and so must
-contain enough information to accomplish the forwarding function. This
-means that a row in the forwarding table contains the mapping from a
-network prefix to an outgoing interface and some MAC information, such
-as the Ethernet address of the next hop. The routing table, on the other
-hand, is the table that is built up by the routing algorithms as a
-precursor to building the forwarding table. It generally contains
-mappings from network prefixes to next hops. It may also contain
-information about how this information was learned, so that the router
-will be able to decide when it should discard some information.
+Mặc dù các thuật ngữ *bảng chuyển tiếp* (forwarding table) và *bảng định tuyến* (routing table) đôi khi được dùng thay thế cho nhau, ở đây chúng tôi sẽ phân biệt chúng. Bảng chuyển tiếp được sử dụng khi một gói tin đang được chuyển tiếp và do đó phải chứa đủ thông tin để thực hiện chức năng chuyển tiếp. Điều này có nghĩa là một dòng trong bảng chuyển tiếp chứa ánh xạ từ một tiền tố mạng đến một giao diện ra và một số thông tin MAC, như địa chỉ Ethernet của next hop. Ngược lại, bảng định tuyến là bảng được xây dựng bởi các thuật toán định tuyến như một bước chuẩn bị để xây dựng bảng chuyển tiếp. Nó thường chứa ánh xạ từ các tiền tố mạng đến các next hop. Nó cũng có thể chứa thông tin về cách thông tin này được học, để router có thể quyết định khi nào nên loại bỏ một số thông tin.
 
-Whether the routing table and forwarding table are actually separate
-data structures is something of an implementation choice, but there are
-numerous reasons to keep them separate. For example, the forwarding
-table needs to be structured to optimize the process of looking up an
-address when forwarding a packet, while the routing table needs to be
-optimized for the purpose of calculating changes in topology. In many
-cases, the forwarding table may even be implemented in specialized
-hardware, whereas this is rarely if ever done for the routing table.
+Việc bảng định tuyến và bảng chuyển tiếp thực sự là hai cấu trúc dữ liệu riêng biệt hay không là một lựa chọn hiện thực, nhưng có nhiều lý do để giữ chúng tách biệt. Ví dụ, bảng chuyển tiếp cần được cấu trúc để tối ưu hóa quá trình tra cứu địa chỉ khi chuyển tiếp gói tin, trong khi bảng định tuyến cần được tối ưu hóa cho mục đích tính toán các thay đổi trong cấu trúc liên kết. Trong nhiều trường hợp, bảng chuyển tiếp thậm chí có thể được hiện thực bằng phần cứng chuyên dụng, trong khi điều này hiếm khi, nếu có, được áp dụng cho bảng định tuyến.
 
-:numref:`Table %s <tab-rtab>` gives an example of a row from a routing
-table, which tells us that network prefix 18/8 is to be reached by a
-next hop router with the IP address 171.69.245.10
+:numref:`Bảng %s <tab-rtab>` đưa ra ví dụ về một dòng trong bảng định tuyến, cho biết rằng tiền tố mạng 18/8 sẽ được chuyển đến next hop router có địa chỉ IP 171.69.245.10
 
 .. _tab-rtab:
-.. table:: Example row from a routing table.
+.. table:: Ví dụ một dòng trong bảng định tuyến.
    :align: center
    :widths: auto
 
@@ -65,14 +25,10 @@ next hop router with the IP address 171.69.245.10
    | 18/8          | 171.69.245.10 |
    +---------------+---------------+
 
-In contrast, :numref:`Table %s <tab-ftab>` gives an example of a row from a
-forwarding table, which contains the information about exactly how to
-forward a packet to that next hop: Send it out interface number 0 with
-a MAC address of 8:0:2b:e4:b:1:2. Note that the last piece
-of information is provided by the Address Resolution Protocol.
+Ngược lại, :numref:`Bảng %s <tab-ftab>` đưa ra ví dụ về một dòng trong bảng chuyển tiếp, chứa thông tin về cách chính xác để chuyển tiếp một gói tin đến next hop đó: Gửi nó qua interface số 0 với địa chỉ MAC 8:0:2b:e4:b:1:2. Lưu ý rằng thông tin cuối cùng này được cung cấp bởi Giao thức phân giải địa chỉ (ARP).
 
 .. _tab-ftab:
-.. table:: Example row from a forwarding table.
+.. table:: Ví dụ một dòng trong bảng chuyển tiếp.
    :align: center
    :widths: auto
 
@@ -82,114 +38,50 @@ of information is provided by the Address Resolution Protocol.
    | 18/8          | if0       | 8:0:2b:e4:b:1:2 |
    +---------------+-----------+-----------------+
 
-Before getting into the details of routing, we need to remind ourselves
-of the key question we should be asking anytime we try to build a
-mechanism for the Internet: “Does this solution scale?” The answer for
-the algorithms and protocols described in this section is “not so much.”
-They are designed for networks of fairly modest size—up to a few hundred
-nodes, in practice. However, the solutions we describe do serve as a
-building block for a hierarchical routing infrastructure that is used in
-the Internet today. Specifically, the protocols described in this
-section are collectively known as *intradomain* routing protocols, or
-*interior gateway protocols* (IGPs). To understand these terms, we need
-to define a routing *domain*. A good working definition is an
-internetwork in which all the routers are under the same administrative
-control (e.g., a single university campus, or the network of a single
-Internet Service Provider). The relevance of this definition will become
-apparent in the next chapter when we look at *interdomain* routing
-protocols. For now, the important thing to keep in mind is that we are
-considering the problem of routing in the context of small to midsized
-networks, not for a network the size of the Internet.
+Trước khi đi vào chi tiết về định tuyến, chúng ta cần tự nhắc lại câu hỏi then chốt nên đặt ra bất cứ khi nào cố gắng xây dựng một cơ chế cho Internet: “Giải pháp này có khả mở không?” Câu trả lời cho các thuật toán và giao thức được mô tả trong phần này là “không nhiều lắm.” Chúng được thiết kế cho các mạng có quy mô vừa phải—tối đa vài trăm nút, trên thực tế. Tuy nhiên, các giải pháp mà chúng tôi mô tả đóng vai trò là nền tảng cho hạ tầng định tuyến phân cấp được sử dụng trong Internet ngày nay. Cụ thể, các giao thức được mô tả trong phần này được gọi chung là các giao thức định tuyến *nội miền* (intradomain), hay *giao thức cổng nội bộ* (Interior Gateway Protocols - IGPs). Để hiểu các thuật ngữ này, chúng ta cần định nghĩa một *miền định tuyến* (routing domain). Một định nghĩa thực tế là một liên mạng trong đó tất cả các router đều dưới cùng một sự kiểm soát quản trị (ví dụ, một khuôn viên trường đại học, hoặc mạng của một nhà cung cấp dịch vụ Internet). Ý nghĩa của định nghĩa này sẽ rõ ràng hơn ở chương sau khi chúng ta xem xét các giao thức định tuyến *liên miền* (interdomain). Hiện tại, điều quan trọng cần nhớ là chúng ta đang xét vấn đề định tuyến trong bối cảnh các mạng nhỏ đến vừa, không phải một mạng có quy mô như Internet.
 
-3.4.1 Network as a Graph
-------------------------
+3.4.1 Mạng dưới dạng đồ thị
+--------------------------
 
-Routing is, in essence, a problem of graph theory. :numref:`Figure %s
-<fig-graph-route>` shows a graph representing a network. The nodes of
-the graph, labeled A through F, may be hosts, switches, routers, or
-networks. For our initial discussion, we will focus on the case where
-the nodes are routers. The edges of the graph correspond to the
-network links. Each edge has an associated *cost*, which gives some
-indication of the desirability of sending traffic over that link. A
-discussion of how edge costs are assigned is given in a later section.
+Về bản chất, định tuyến là một bài toán lý thuyết đồ thị. :numref:`Hình %s <fig-graph-route>` cho thấy một đồ thị biểu diễn một mạng. Các nút của đồ thị, được gán nhãn từ A đến F, có thể là host, switch, router hoặc mạng. Trong phần thảo luận ban đầu, chúng ta sẽ tập trung vào trường hợp các nút là router. Các cạnh của đồ thị tương ứng với các liên kết mạng. Mỗi cạnh có một *chi phí* (cost) liên kết, cho biết mức độ mong muốn khi gửi lưu lượng qua liên kết đó. Việc gán chi phí cho các cạnh sẽ được thảo luận ở phần sau.
 
-Note that the example networks (graphs) used throughout this chapter
-have undirected edges that are assigned a single cost. This is actually
-a slight simplification. It is more accurate to make the edges
-directed, which typically means that there would be a pair of edges
-between each node—one flowing in each direction, and each with its
-own edge cost.
+Lưu ý rằng các mạng (đồ thị) ví dụ được sử dụng xuyên suốt chương này có các cạnh vô hướng được gán một chi phí duy nhất. Đây thực ra là một sự đơn giản hóa nhẹ. Chính xác hơn là nên coi các cạnh là có hướng, nghĩa là sẽ có một cặp cạnh giữa mỗi nút—một cạnh theo mỗi hướng, và mỗi cạnh có chi phí riêng.
 
 .. _fig-graph-route:
 .. figure:: figures/f03-28-9780123850591.png
    :width: 400px
    :align: center
 
-   Network represented as a graph.
+   Mạng được biểu diễn dưới dạng đồ thị.
 
-The basic problem of routing is to find the lowest-cost path between
-any two nodes, where the cost of a path equals the sum of the costs of
-all the edges that make up the path. For a simple network like the one
-in :numref:`Figure %s <fig-graph-route>`, you could imagine just
-calculating all the shortest paths and loading them into some
-nonvolatile storage on each node. Such a static approach has several
-shortcomings:
+Vấn đề cơ bản của định tuyến là tìm đường đi có chi phí thấp nhất giữa bất kỳ hai nút nào, trong đó chi phí của một đường đi bằng tổng chi phí của tất cả các cạnh tạo nên đường đi đó. Đối với một mạng đơn giản như trong :numref:`Hình %s <fig-graph-route>`, bạn có thể tưởng tượng chỉ cần tính tất cả các đường đi ngắn nhất và nạp chúng vào bộ nhớ không bay hơi trên mỗi nút. Cách tiếp cận tĩnh như vậy có một số hạn chế:
 
--  It does not deal with node or link failures.
+-  Nó không xử lý được khi nút hoặc liên kết bị lỗi.
 
--  It does not consider the addition of new nodes or links.
+-  Nó không tính đến việc thêm các nút hoặc liên kết mới.
 
--  It implies that edge costs cannot change, even though we might
-   reasonably wish to have link costs change over time (e.g., assigning
-   high cost to a link that is heavily loaded).
+-  Nó ngụ ý rằng chi phí cạnh không thể thay đổi, mặc dù chúng ta có thể muốn chi phí liên kết thay đổi theo thời gian (ví dụ, gán chi phí cao cho liên kết đang bị tải nặng).
 
-For these reasons, routing is achieved in most practical networks by
-running routing protocols among the nodes. These protocols provide a
-distributed, dynamic way to solve the problem of finding the lowest-cost
-path in the presence of link and node failures and changing edge costs.
-Note the word *distributed* in the previous sentence; it is difficult to
-make centralized solutions scalable, so all the widely used routing
-protocols use distributed algorithms.
+Vì những lý do này, định tuyến trong hầu hết các mạng thực tế được thực hiện bằng cách chạy các giao thức định tuyến giữa các nút. Các giao thức này cung cấp một cách phân tán, động để giải quyết bài toán tìm đường đi chi phí thấp nhất trong điều kiện có thể xảy ra lỗi liên kết, lỗi nút và thay đổi chi phí cạnh. Lưu ý từ *phân tán* trong câu trước; rất khó để làm cho các giải pháp tập trung có khả năng mở rộng, nên tất cả các giao thức định tuyến được sử dụng rộng rãi đều dùng thuật toán phân tán.
 
-The distributed nature of routing algorithms is one of the main reasons
-why this has been such a rich field of research and development—there
-are a lot of challenges in making distributed algorithms work well. For
-example, distributed algorithms raise the possibility that two routers
-will at one instant have different ideas about the shortest path to some
-destination. In fact, each one may think that the other one is closer to
-the destination and decide to send packets to the other one. Clearly,
-such packets will be stuck in a loop until the discrepancy between the
-two routers is resolved, and it would be good to resolve it as soon as
-possible. This is just one example of the type of problem routing
-protocols must address.
+Tính chất phân tán của các thuật toán định tuyến là một trong những lý do chính khiến lĩnh vực này trở thành một chủ đề nghiên cứu và phát triển phong phú—có rất nhiều thách thức trong việc làm cho các thuật toán phân tán hoạt động tốt. Ví dụ, các thuật toán phân tán làm nảy sinh khả năng hai router tại một thời điểm có thể có ý tưởng khác nhau về đường đi ngắn nhất đến một đích nào đó. Thực tế, mỗi router có thể nghĩ rằng router kia gần đích hơn và quyết định gửi gói tin cho router kia. Rõ ràng, các gói tin như vậy sẽ bị kẹt trong một vòng lặp cho đến khi sự khác biệt giữa hai router được giải quyết, và tốt nhất là nên giải quyết càng sớm càng tốt. Đây chỉ là một ví dụ về loại vấn đề mà các giao thức định tuyến phải xử lý.
 
-To begin our analysis, we assume that the edge costs in the network are
-known. We will examine the two main classes of routing protocols:
-*distance vector* and *link state*. In a later section, we return to the
-problem of calculating edge costs in a meaningful way.
+Để bắt đầu phân tích, chúng ta giả định rằng chi phí cạnh trong mạng đã biết. Chúng ta sẽ xem xét hai lớp giao thức định tuyến chính: *vector khoảng cách* (distance vector) và *trạng thái liên kết* (link state). Ở phần sau, chúng ta sẽ quay lại vấn đề tính toán chi phí cạnh một cách hợp lý.
 
-3.4 2 Distance-Vector (RIP)
----------------------------
+3.4.2 Vector khoảng cách (RIP)
+------------------------------
 
-The idea behind the distance-vector algorithm is suggested by its name.
-(The other common name for this class of algorithm is Bellman-Ford,
-after its inventors.) Each node constructs a one-dimensional array (a
-vector) containing the “distances” (costs) to all other nodes and
-distributes that vector to its immediate neighbors. The starting
-assumption for distance-vector routing is that each node knows the cost
-of the link to each of its directly connected neighbors. These costs may
-be provided when the router is configured by a network manager. A link
-that is down is assigned an infinite cost.
+Ý tưởng đằng sau thuật toán vector khoảng cách được gợi ý ngay từ tên gọi. (Tên gọi phổ biến khác cho lớp thuật toán này là Bellman-Ford, theo tên các nhà phát minh.) Mỗi nút xây dựng một mảng một chiều (vector) chứa “khoảng cách” (chi phí) đến tất cả các nút khác và phân phối vector đó cho các láng giềng trực tiếp của mình. Giả định ban đầu cho định tuyến vector khoảng cách là mỗi nút biết chi phí của liên kết đến từng láng giềng trực tiếp. Các chi phí này có thể được cung cấp khi router được cấu hình bởi quản trị viên mạng. Một liên kết bị hỏng sẽ được gán chi phí vô cực.
 
 .. _fig-dvroute:
 .. figure:: figures/f03-29-9780123850591.png
    :width: 400px
    :align: center
 
-   Distance-vector routing: an example network.
+   Định tuyến vector khoảng cách: một mạng ví dụ.
 
 .. _tab-dvtab1:
-.. table:: Initial Distances Stored at Each Node (Global View).
+.. table:: Khoảng cách ban đầu lưu tại mỗi nút (Toàn cục).
    :align: center
    :widths: auto
 
@@ -211,29 +103,12 @@ that is down is assigned an infinite cost.
    | G | ∞ | ∞ | ∞ | 1 | ∞ | 1 | 0 |
    +---+---+---+---+---+---+---+---+
 
-To see how a distance-vector routing algorithm works, it is easiest to
-consider an example like the one depicted in :numref:`Figure %s
-<fig-dvroute>`. In this example, the cost of each link is set to 1, so
-that a least-cost path is simply the one with the fewest hops. (Since
-all edges have the same cost, we do not show the costs in the graph.)
-We can represent each node’s knowledge about the distances to all
-other nodes as a table like :numref:`Table %s <tab-dvtab1>`. Note that
-each node knows only the information in one row of the table (the one
-that bears its name in the left column).  The global view that is
-presented here is not available at any single point in the network.
+Để thấy cách thuật toán định tuyến vector khoảng cách hoạt động, dễ nhất là xét một ví dụ như trong :numref:`Hình %s <fig-dvroute>`. Trong ví dụ này, chi phí của mỗi liên kết được đặt là 1, nên đường đi chi phí thấp nhất đơn giản là đường đi có ít bước nhảy nhất. (Vì tất cả các cạnh đều có cùng chi phí, chúng tôi không hiển thị chi phí trên đồ thị.) Chúng ta có thể biểu diễn kiến thức của mỗi nút về khoảng cách đến tất cả các nút khác dưới dạng bảng như :numref:`Bảng %s <tab-dvtab1>`. Lưu ý rằng mỗi nút chỉ biết thông tin trong một hàng của bảng (hàng mang tên nó ở cột bên trái). Cái nhìn toàn cục được trình bày ở đây không có tại bất kỳ điểm đơn lẻ nào trong mạng.
 
-We may consider each row in :numref:`Table %s <tab-dvtab1>` as a list
-of distances from one node to all other nodes, representing the
-current beliefs of that node. Initially, each node sets a cost of 1 to
-its directly connected neighbors and ∞ to all other nodes. Thus, A
-initially believes that it can reach B in one hop and that D is
-unreachable. The routing table stored at A reflects this set of
-beliefs and includes the name of the next hop that A would use to
-reach any reachable node. Initially, then, A’s routing table would
-look like :numref:`Table %s <tab-dvtab2>`.
+Chúng ta có thể coi mỗi hàng trong :numref:`Bảng %s <tab-dvtab1>` là danh sách khoảng cách từ một nút đến tất cả các nút khác, đại diện cho niềm tin hiện tại của nút đó. Ban đầu, mỗi nút đặt chi phí là 1 cho các láng giềng trực tiếp và vô cực cho tất cả các nút khác. Do đó, A ban đầu tin rằng nó có thể đến B trong một bước nhảy và D là không thể đến được. Bảng định tuyến lưu tại A phản ánh tập hợp niềm tin này và bao gồm tên của next hop mà A sẽ dùng để đến bất kỳ nút nào có thể đến được. Ban đầu, bảng định tuyến của A sẽ như :numref:`Bảng %s <tab-dvtab2>`.
 
 .. _tab-dvtab2:
-.. table::  Initial Routing Table at Node A.
+.. table::  Bảng định tuyến ban đầu tại nút A.
    :align: center
    :widths: auto
 
@@ -253,25 +128,10 @@ look like :numref:`Table %s <tab-dvtab2>`.
    | G           | ∞    | —       |
    +-------------+------+---------+
 
-The next step in distance-vector routing is that every node sends a
-message to its directly connected neighbors containing its personal list
-of distances. For example, node F tells node A that it can reach node G
-at a cost of 1; A also knows it can reach F at a cost of 1, so it adds
-these costs to get the cost of reaching G by means of F. This total cost
-of 2 is less than the current cost of infinity, so A records that it can
-reach G at a cost of 2 by going through F. Similarly, A learns from C
-that D can be reached from C at a cost of 1; it adds this to the cost of
-reaching C (1) and decides that D can be reached via C at a cost of 2,
-which is better than the old cost of infinity. At the same time, A
-learns from C that B can be reached from C at a cost of 1, so it
-concludes that the cost of reaching B via C is 2. Since this is worse
-than the current cost of reaching B (1), this new information is
-ignored. At this point, A can update its routing table with costs and
-next hops for all nodes in the network. The result is shown in
-:numref:`Table %s <tab-dvtab3>`.
+Bước tiếp theo trong định tuyến vector khoảng cách là mỗi nút gửi một thông điệp đến các láng giềng trực tiếp, chứa danh sách khoảng cách cá nhân của nó. Ví dụ, nút F nói với nút A rằng nó có thể đến nút G với chi phí 1; A cũng biết nó có thể đến F với chi phí 1, nên nó cộng các chi phí này để được chi phí đến G qua F. Tổng chi phí này là 2, nhỏ hơn chi phí hiện tại là vô cực, nên A ghi nhận rằng nó có thể đến G với chi phí 2 qua F. Tương tự, A học từ C rằng D có thể đến từ C với chi phí 1; nó cộng với chi phí đến C (1) và quyết định rằng D có thể đến qua C với chi phí 2, tốt hơn chi phí cũ là vô cực. Đồng thời, A học từ C rằng B có thể đến từ C với chi phí 1, nên nó kết luận rằng chi phí đến B qua C là 2. Vì điều này tệ hơn chi phí hiện tại đến B (1), thông tin mới này bị bỏ qua. Lúc này, A có thể cập nhật bảng định tuyến với chi phí và next hop cho tất cả các nút trong mạng. Kết quả được thể hiện trong :numref:`Bảng %s <tab-dvtab3>`.
 
 .. _tab-dvtab3:
-.. table:: Final Routing Table at Node A.
+.. table:: Bảng định tuyến cuối cùng tại nút A.
    :align: center
    :widths: auto
 
@@ -291,20 +151,10 @@ next hops for all nodes in the network. The result is shown in
    | G           | 2    | F       |
    +-------------+------+---------+
 
-In the absence of any topology changes, it takes only a few exchanges
-of information between neighbors before each node has a complete
-routing table. The process of getting consistent routing information
-to all the nodes is called *convergence*. :numref:`Table %s
-<tab-dvtab4>` shows the final set of costs from each node to all other
-nodes when routing has converged.  We must stress that there is no one
-node in the network that has all the information in this table—each
-node only knows about the contents of its own routing table. The
-beauty of a distributed algorithm like this is that it enables all
-nodes to achieve a consistent view of the network in the absence of
-any centralized authority.
+Khi không có thay đổi về cấu trúc liên kết, chỉ cần một vài lần trao đổi thông tin giữa các láng giềng là mỗi nút đã có bảng định tuyến hoàn chỉnh. Quá trình đạt được thông tin định tuyến nhất quán cho tất cả các nút gọi là *hội tụ* (convergence). :numref:`Bảng %s <tab-dvtab4>` cho thấy tập hợp cuối cùng các chi phí từ mỗi nút đến tất cả các nút khác khi định tuyến đã hội tụ. Chúng tôi nhấn mạnh rằng không có nút nào trong mạng có tất cả thông tin trong bảng này—mỗi nút chỉ biết nội dung bảng định tuyến của riêng nó. Vẻ đẹp của một thuật toán phân tán như thế này là nó cho phép tất cả các nút đạt được cái nhìn nhất quán về mạng mà không cần một cơ quan trung tâm.
 
 .. _tab-dvtab4:
-.. table:: Final Distances Stored at Each Node (Global View).
+.. table:: Khoảng cách cuối cùng lưu tại mỗi nút (Toàn cục).
    :align: center
    :widths: auto
 
@@ -326,94 +176,22 @@ any centralized authority.
    | G | 2 | 3 | 2 | 1 | 3 | 1 | 0 |
    +---+---+---+---+---+---+---+---+
 
-There are a few details to fill in before our discussion of
-distance-vector routing is complete. First we note that there are two
-different circumstances under which a given node decides to send a
-routing update to its neighbors. One of these circumstances is the
-*periodic* update. In this case, each node automatically sends an update
-message every so often, even if nothing has changed. This serves to let
-the other nodes know that this node is still running. It also makes sure
-that they keep getting information that they may need if their current
-routes become unviable. The frequency of these periodic updates varies
-from protocol to protocol, but it is typically on the order of several
-seconds to several minutes. The second mechanism, sometimes called a
-*triggered* update, happens whenever a node notices a link failure or
-receives an update from one of its neighbors that causes it to change
-one of the routes in its routing table. Whenever a node’s routing table
-changes, it sends an update to its neighbors, which may lead to a change
-in their tables, causing them to send an update to their neighbors.
+Có một vài chi tiết cần bổ sung trước khi kết thúc thảo luận về định tuyến vector khoảng cách. Đầu tiên, lưu ý rằng có hai trường hợp khác nhau khi một nút quyết định gửi bản cập nhật định tuyến cho các láng giềng. Một là cập nhật *định kỳ*. Trong trường hợp này, mỗi nút tự động gửi một bản cập nhật sau một khoảng thời gian nhất định, ngay cả khi không có gì thay đổi. Điều này giúp các nút khác biết rằng nút này vẫn đang hoạt động. Nó cũng đảm bảo rằng họ tiếp tục nhận được thông tin mà họ có thể cần nếu các tuyến hiện tại trở nên không khả thi. Tần suất cập nhật định kỳ này thay đổi tùy theo giao thức, nhưng thường là vài giây đến vài phút. Cơ chế thứ hai, đôi khi gọi là cập nhật *kích hoạt* (triggered), xảy ra bất cứ khi nào một nút phát hiện lỗi liên kết hoặc nhận được cập nhật từ một láng giềng khiến nó phải thay đổi một trong các tuyến trong bảng định tuyến. Bất cứ khi nào bảng định tuyến của một nút thay đổi, nó gửi cập nhật cho các láng giềng, điều này có thể dẫn đến thay đổi trong bảng của họ, khiến họ gửi cập nhật cho các láng giềng của mình.
 
-Now consider what happens when a link or node fails. The nodes that
-notice first send new lists of distances to their neighbors, and
-normally the system settles down fairly quickly to a new state. As to
-the question of how a node detects a failure, there are a couple of
-different answers. In one approach, a node continually tests the link to
-another node by sending a control packet and seeing if it receives an
-acknowledgment. In another approach, a node determines that the link (or
-the node at the other end of the link) is down if it does not receive
-the expected periodic routing update for the last few update cycles.
+Bây giờ hãy xem điều gì xảy ra khi một liên kết hoặc nút bị lỗi. Các nút phát hiện đầu tiên sẽ gửi danh sách khoảng cách mới cho các láng giềng, và thông thường hệ thống sẽ nhanh chóng ổn định về trạng thái mới. Về câu hỏi làm thế nào một nút phát hiện lỗi, có một vài cách khác nhau. Một cách là một nút liên tục kiểm tra liên kết đến nút khác bằng cách gửi một gói điều khiển và xem có nhận được xác nhận không. Một cách khác là một nút xác định rằng liên kết (hoặc nút ở đầu kia liên kết) đã chết nếu nó không nhận được bản cập nhật định tuyến định kỳ như mong đợi trong một vài chu kỳ cập nhật gần nhất.
 
-To understand what happens when a node detects a link failure, consider
-what happens when F detects that its link to G has failed. First, F sets
-its new distance to G to infinity and passes that information along
-to A. Since A knows that its 2-hop path to G is through F, A would also
-set its distance to G to infinity. However, with the next update from C,
-A would learn that C has a 2-hop path to G. Thus, A would know that it
-could reach G in 3 hops through C, which is less than infinity, and so A
-would update its table accordingly. When it advertises this to F, node F
-would learn that it can reach G at a cost of 4 through A, which is less
-than infinity, and the system would again become stable.
+Để hiểu điều gì xảy ra khi một nút phát hiện lỗi liên kết, hãy xét trường hợp F phát hiện liên kết đến G bị lỗi. Đầu tiên, F đặt khoảng cách mới đến G là vô cực và truyền thông tin đó cho A. Vì A biết rằng đường đi 2 bước đến G là qua F, A cũng sẽ đặt khoảng cách đến G là vô cực. Tuy nhiên, với bản cập nhật tiếp theo từ C, A sẽ biết rằng C có đường đi 2 bước đến G. Như vậy, A sẽ biết rằng nó có thể đến G trong 3 bước qua C, nhỏ hơn vô cực, nên A sẽ cập nhật bảng của mình. Khi nó quảng bá điều này cho F, F sẽ biết rằng nó có thể đến G với chi phí 4 qua A, nhỏ hơn vô cực, và hệ thống lại trở nên ổn định.
 
-Unfortunately, slightly different circumstances can prevent the network
-from stabilizing. Suppose, for example, that the link from A to E goes
-down. In the next round of updates, A advertises a distance of infinity
-to E, but B and C advertise a distance of 2 to E. Depending on the exact
-timing of events, the following might happen: Node B, upon hearing that
-E can be reached in 2 hops from C, concludes that it can reach E in
-3 hops and advertises this to A; node A concludes that it can reach E in
-4 hops and advertises this to C; node C concludes that it can reach E in
-5 hops; and so on. This cycle stops only when the distances reach some
-number that is large enough to be considered infinite. In the meantime,
-none of the nodes actually knows that E is unreachable, and the routing
-tables for the network do not stabilize. This situation is known as the
-*count to infinity* problem.
+Đáng tiếc, những trường hợp hơi khác có thể khiến mạng không ổn định. Giả sử, ví dụ, liên kết từ A đến E bị hỏng. Ở vòng cập nhật tiếp theo, A quảng bá khoảng cách vô cực đến E, nhưng B và C quảng bá khoảng cách 2 đến E. Tùy vào thời điểm, có thể xảy ra như sau: B, khi nghe rằng E có thể đến trong 2 bước từ C, kết luận rằng nó có thể đến E trong 3 bước và quảng bá điều này cho A; A kết luận rằng nó có thể đến E trong 4 bước và quảng bá điều này cho C; C kết luận rằng nó có thể đến E trong 5 bước; và cứ thế. Chu trình này chỉ dừng lại khi khoảng cách đạt đến một giá trị đủ lớn để được coi là vô cực. Trong thời gian đó, không nút nào thực sự biết rằng E không thể đến được, và các bảng định tuyến của mạng không ổn định. Tình huống này gọi là vấn đề *đếm đến vô cực* (count to infinity).
 
-There are several partial solutions to this problem. The first one is to
-use some relatively small number as an approximation of infinity. For
-example, we might decide that the maximum number of hops to get across a
-certain network is never going to be more than 15, and so we could pick
-16 as the value that represents infinity. This at least bounds the
-amount of time that it takes to count to infinity. Of course, it could
-also present a problem if our network grew to a point where some nodes
-were separated by more than 15 hops.
+Có một số giải pháp một phần cho vấn đề này. Đầu tiên là sử dụng một số nhỏ tương đối để xấp xỉ vô cực. Ví dụ, ta có thể quyết định rằng số bước nhảy tối đa để đi qua một mạng nhất định sẽ không bao giờ vượt quá 15, nên ta có thể chọn 16 làm giá trị đại diện cho vô cực. Điều này ít nhất giới hạn thời gian cần để đếm đến vô cực. Tất nhiên, nó cũng có thể gây vấn đề nếu mạng phát triển đến mức một số nút cách nhau hơn 15 bước.
 
-One technique to improve the time to stabilize routing is called *split
-horizon*. The idea is that when a node sends a routing update to its
-neighbors, it does not send those routes it learned from each neighbor
-back to that neighbor. For example, if B has the route (E, 2, A) in its
-table, then it knows it must have learned this route from A, and so
-whenever B sends a routing update to A, it does not include the route
-(E, 2) in that update. In a stronger variation of split horizon, called
-*split horizon with poison reverse*, B actually sends that route back to
-A, but it puts negative information in the route to ensure that A will
-not eventually use B to get to E. For example, B sends the route (E, ∞)
-to A. The problem with both of these techniques is that they only work
-for routing loops that involve two nodes. For larger routing loops, more
-drastic measures are called for. Continuing the above example, if B and
-C had waited for a while after hearing of the link failure from A before
-advertising routes to E, they would have found that neither of them
-really had a route to E. Unfortunately, this approach delays the
-convergence of the protocol; speed of convergence is one of the key
-advantages of its competitor, link-state routing, the subject of a later
-section.
+Một kỹ thuật để cải thiện thời gian hội tụ định tuyến gọi là *split horizon*. Ý tưởng là khi một nút gửi bản cập nhật định tuyến cho các láng giềng, nó không gửi lại các tuyến mà nó học được từ mỗi láng giềng cho chính láng giềng đó. Ví dụ, nếu B có tuyến (E, 2, A) trong bảng, thì nó biết chắc đã học tuyến này từ A, nên bất cứ khi nào B gửi cập nhật định tuyến cho A, nó không bao gồm tuyến (E, 2) trong cập nhật đó. Trong một biến thể mạnh hơn gọi là *split horizon with poison reverse*, B thực sự gửi tuyến đó lại cho A, nhưng gán thông tin âm cho tuyến để đảm bảo rằng A sẽ không sử dụng B để đến E. Ví dụ, B gửi tuyến (E, ∞) cho A. Vấn đề với cả hai kỹ thuật này là chúng chỉ hiệu quả với các vòng lặp định tuyến liên quan đến hai nút. Với các vòng lặp lớn hơn, cần các biện pháp mạnh hơn. Tiếp tục ví dụ trên, nếu B và C chờ một thời gian sau khi nghe về lỗi liên kết từ A trước khi quảng bá các tuyến đến E, họ sẽ phát hiện ra rằng không ai thực sự có tuyến đến E. Đáng tiếc, cách tiếp cận này làm chậm quá trình hội tụ của giao thức; tốc độ hội tụ là một trong những ưu điểm chính của đối thủ, định tuyến trạng thái liên kết, sẽ được thảo luận ở phần sau.
 
-Implementation
-~~~~~~~~~~~~~~
+Hiện thực hóa
+~~~~~~~~~~~~
 
-The code that implements this algorithm is very straightforward; we give
-only some of the basics here. Structure ``Route`` defines each entry in
-the routing table, and constant ``MAX_TTL`` specifies how long an entry
-is kept in the table before it is discarded.
+Mã hiện thực thuật toán này rất đơn giản; chúng tôi chỉ trình bày một số phần cơ bản ở đây. Cấu trúc ``Route`` định nghĩa mỗi mục trong bảng định tuyến, và hằng số ``MAX_TTL`` xác định thời gian một mục được giữ trong bảng trước khi bị loại bỏ.
 
 .. code-block:: c
 
@@ -430,13 +208,7 @@ is kept in the table before it is discarded.
    int      numRoutes = 0;
    Route    routingTable[MAX_ROUTES];
 
-The routine that updates the local node’s routing table based on a new
-route is given by ``mergeRoute``. Although not shown, a timer function
-periodically scans the list of routes in the node’s routing table,
-decrements the ``TTL`` (time to live) field of each route, and discards
-any routes that have a time to live of 0. Notice, however, that the
-``TTL`` field is reset to ``MAX_TTL`` any time the route is reconfirmed
-by an update message from a neighboring node.
+Hàm cập nhật bảng định tuyến của nút cục bộ dựa trên một tuyến mới được đưa ra bởi ``mergeRoute``. Mặc dù không được hiển thị, một hàm timer sẽ định kỳ quét danh sách các tuyến trong bảng định tuyến của nút, giảm trường ``TTL`` (thời gian sống) của mỗi tuyến, và loại bỏ bất kỳ tuyến nào có TTL bằng 0. Lưu ý rằng trường ``TTL`` được đặt lại thành ``MAX_TTL`` bất cứ khi nào tuyến được xác nhận lại bởi một thông điệp cập nhật từ một nút láng giềng.
 
 .. code-block:: c
 
@@ -480,9 +252,7 @@ by an update message from a neighboring node.
        ++routingTable[i].Cost;
    }
 
-Finally, the procedure ``updateRoutingTable`` is the main routine that
-calls ``mergeRoute`` to incorporate all the routes contained in a
-routing update that is received from a neighboring node.
+Cuối cùng, thủ tục ``updateRoutingTable`` là hàm chính gọi ``mergeRoute`` để tích hợp tất cả các tuyến chứa trong một bản cập nhật định tuyến nhận được từ một nút láng giềng.
 
 .. code-block:: c
 
@@ -497,233 +267,84 @@ routing update that is received from a neighboring node.
        }
    }
 
-Routing Information Protocol (RIP)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Giao thức Routing Information Protocol (RIP)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One of the more widely used routing protocols in IP networks is the
-Routing Information Protocol (RIP). Its widespread use in the early days
-of IP was due in no small part to the fact that it was distributed along
-with the popular Berkeley Software Distribution (BSD) version of Unix,
-from which many commercial versions of Unix were derived. It is also
-extremely simple. RIP is the canonical example of a routing protocol
-built on the distance-vector algorithm just described.
+Một trong những giao thức định tuyến được sử dụng rộng rãi nhất trong các mạng IP là Routing Information Protocol (RIP). Việc nó được sử dụng rộng rãi trong những ngày đầu của IP phần lớn là do nó được phân phối cùng với phiên bản Unix Berkeley Software Distribution (BSD) phổ biến, từ đó nhiều phiên bản thương mại của Unix được phát triển. Nó cũng cực kỳ đơn giản. RIP là ví dụ kinh điển của một giao thức định tuyến xây dựng trên thuật toán vector khoảng cách vừa mô tả.
 
-Routing protocols in internetworks differ very slightly from the
-idealized graph model described above. In an internetwork, the goal of
-the routers is to learn how to forward packets to various *networks*.
-Thus, rather than advertising the cost of reaching other routers, the
-routers advertise the cost of reaching networks. For example, in
-:numref:`Figure %s <fig-rip-eg>`, router C would advertise to router A
-the fact that it can reach networks 2 and 3 (to which it is directly
-connected) at a cost of 0, networks 5 and 6 at cost 1, and network 4
-at cost 2.
+Các giao thức định tuyến trong liên mạng khác biệt rất ít so với mô hình đồ thị lý tưởng hóa ở trên. Trong một liên mạng, mục tiêu của các router là học cách chuyển tiếp gói tin đến các *mạng* khác nhau. Do đó, thay vì quảng bá chi phí đến các router khác, các router quảng bá chi phí đến các mạng. Ví dụ, trong :numref:`Hình %s <fig-rip-eg>`, router C sẽ quảng bá cho router A rằng nó có thể đến các mạng 2 và 3 (mà nó kết nối trực tiếp) với chi phí 0, các mạng 5 và 6 với chi phí 1, và mạng 4 với chi phí 2.
 
 .. _fig-rip-eg:
 .. figure:: figures/f03-30-9780123850591.png
    :width: 300px
    :align: center
 
-   Example network running RIP.
+   Mạng ví dụ chạy RIP.
 
 .. _fig-rip:
 .. figure:: figures/f03-31-9780123850591.png
    :width: 300px
    :align: center
 
-   RIPv2 packet format.
+   Định dạng gói RIPv2.
 
-We can see evidence of this in the RIP (version 2) packet format in
-:numref:`Figure %s <fig-rip>`. The majority of the packet is taken up
-with ``(address, mask, distance)`` triples. However, the principles of
-the routing algorithm are just the same. For example, if router A
-learns from router B that network X can be reached at a lower cost via
-B than via the existing next hop in the routing table, A updates the
-cost and next hop information for the network number accordingly.
+Chúng ta có thể thấy điều này trong định dạng gói RIP (phiên bản 2) ở :numref:`Hình %s <fig-rip>`. Phần lớn của gói tin là các bộ ba ``(address, mask, distance)``. Tuy nhiên, nguyên lý của thuật toán định tuyến vẫn giống nhau. Ví dụ, nếu router A học được từ router B rằng mạng X có thể đến với chi phí thấp hơn qua B so với next hop hiện tại trong bảng định tuyến, A sẽ cập nhật chi phí và thông tin next hop cho số mạng đó tương ứng.
 
-RIP is in fact a fairly straightforward implementation of
-distance-vector routing. Routers running RIP send their advertisements
-every 30 seconds; a router also sends an update message whenever an
-update from another router causes it to change its routing table. One
-point of interest is that it supports multiple address families, not
-just IP—that is the reason for the ``Family`` part of the
-advertisements. RIP version 2 (RIPv2) also introduced the subnet masks
-described in an earlier section, whereas RIP version 1 worked with the
-old classful addresses of IP.
+RIP thực chất là một hiện thực khá đơn giản của định tuyến vector khoảng cách. Các router chạy RIP gửi quảng bá của mình mỗi 30 giây; một router cũng gửi thông điệp cập nhật bất cứ khi nào một cập nhật từ router khác khiến nó phải thay đổi bảng định tuyến. Một điểm đáng chú ý là nó hỗ trợ nhiều họ địa chỉ, không chỉ IP—đó là lý do có trường ``Family`` trong các quảng bá. RIP phiên bản 2 (RIPv2) cũng giới thiệu các subnet mask như đã mô tả ở phần trước, trong khi RIP phiên bản 1 làm việc với địa chỉ IP phân lớp cũ.
 
-As we will see below, it is possible to use a range of different metrics
-or costs for the links in a routing protocol. RIP takes the simplest
-approach, with all link costs being equal to 1, just as in our example
-above. Thus, it always tries to find the minimum hop route. Valid
-distances are 1 through 15, with 16 representing infinity. This also
-limits RIP to running on fairly small networks—those with no paths
-longer than 15 hops.
+Như sẽ thấy bên dưới, có thể sử dụng nhiều loại metric hoặc chi phí khác nhau cho các liên kết trong một giao thức định tuyến. RIP chọn cách đơn giản nhất, với tất cả chi phí liên kết đều bằng 1, giống như ví dụ ở trên. Do đó, nó luôn cố gắng tìm đường đi ít bước nhảy nhất. Các giá trị hợp lệ cho khoảng cách là từ 1 đến 15, với 16 đại diện cho vô cực. Điều này cũng giới hạn RIP chỉ chạy trên các mạng khá nhỏ—những mạng không có đường đi dài hơn 15 bước.
 
-3.4.3 Link State (OSPF)
------------------------
+3.4.3 Trạng thái liên kết (OSPF)
+--------------------------------
 
-Link-state routing is the second major class of intradomain routing
-protocol. The starting assumptions for link-state routing are rather
-similar to those for distance-vector routing. Each node is assumed to be
-capable of finding out the state of the link to its neighbors (up or
-down) and the cost of each link. Again, we want to provide each node
-with enough information to enable it to find the least-cost path to any
-destination. The basic idea behind link-state protocols is very simple:
-Every node knows how to reach its directly connected neighbors, and if
-we make sure that the totality of this knowledge is disseminated to
-every node, then every node will have enough knowledge of the network to
-build a complete map of the network. This is clearly a sufficient
-condition (although not a necessary one) for finding the shortest path
-to any point in the network. Thus, link-state routing protocols rely on
-two mechanisms: reliable dissemination of link-state information, and
-the calculation of routes from the sum of all the accumulated link-state
-knowledge.
+Định tuyến trạng thái liên kết là lớp giao thức định tuyến nội miền lớn thứ hai. Các giả định ban đầu cho định tuyến trạng thái liên kết khá giống với định tuyến vector khoảng cách. Mỗi nút được giả định có khả năng xác định trạng thái của liên kết đến các láng giềng (hoạt động hay không) và chi phí của mỗi liên kết. Một lần nữa, chúng ta muốn cung cấp cho mỗi nút đủ thông tin để nó có thể tìm đường đi chi phí thấp nhất đến bất kỳ đích nào. Ý tưởng cơ bản của các giao thức trạng thái liên kết rất đơn giản: Mỗi nút biết cách đến các láng giềng trực tiếp, và nếu chúng ta đảm bảo rằng tổng thể kiến thức này được phổ biến đến mọi nút, thì mỗi nút sẽ có đủ thông tin về mạng để xây dựng bản đồ hoàn chỉnh của mạng. Đây rõ ràng là điều kiện đủ (dù không phải điều kiện cần) để tìm đường đi ngắn nhất đến bất kỳ điểm nào trong mạng. Do đó, các giao thức định tuyến trạng thái liên kết dựa vào hai cơ chế: phổ biến tin cậy thông tin trạng thái liên kết, và tính toán các tuyến từ tổng hợp tất cả kiến thức trạng thái liên kết đã thu thập.
 
-Reliable Flooding
-~~~~~~~~~~~~~~~~~
+Phổ biến tin cậy (Reliable Flooding)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Reliable flooding* is the process of making sure that all the nodes
-participating in the routing protocol get a copy of the link-state
-information from all the other nodes. As the term *flooding* suggests,
-the basic idea is for a node to send its link-state information out on
-all of its directly connected links; each node that receives this
-information then forwards it out on all of *its* links. This process
-continues until the information has reached all the nodes in the
-network.
+*Phổ biến tin cậy* là quá trình đảm bảo rằng tất cả các nút tham gia giao thức định tuyến đều nhận được một bản sao thông tin trạng thái liên kết từ tất cả các nút khác. Như tên gọi *flooding* gợi ý, ý tưởng cơ bản là một nút gửi thông tin trạng thái liên kết của mình ra tất cả các liên kết trực tiếp; mỗi nút nhận được thông tin này sau đó chuyển tiếp nó ra tất cả các liên kết của chính nó. Quá trình này tiếp tục cho đến khi thông tin đã đến tất cả các nút trong mạng.
 
-More precisely, each node creates an update packet, also called a
-*link-state packet* (LSP), which contains the following information:
+Cụ thể hơn, mỗi nút tạo ra một gói cập nhật, còn gọi là *gói trạng thái liên kết* (link-state packet - LSP), chứa các thông tin sau:
 
--  The ID of the node that created the LSP
+-  ID của nút tạo ra LSP
 
--  A list of directly connected neighbors of that node, with the cost of
-   the link to each one
+-  Danh sách các láng giềng trực tiếp của nút đó, cùng với chi phí liên kết đến từng láng giềng
 
--  A sequence number
+-  Số thứ tự (sequence number)
 
--  A time to live for this packet
+-  Thời gian sống (time to live) cho gói này
 
-The first two items are needed to enable route calculation; the last two
-are used to make the process of flooding the packet to all nodes
-reliable. Reliability includes making sure that you have the most recent
-copy of the information, since there may be multiple, contradictory LSPs
-from one node traversing the network. Making the flooding reliable has
-proven to be quite difficult. (For example, an early version of
-link-state routing used in the ARPANET caused that network to fail in
-1981.)
+Hai mục đầu tiên cần thiết để tính toán tuyến; hai mục sau dùng để làm cho quá trình flooding đến tất cả các nút trở nên tin cậy. Đảm bảo tin cậy bao gồm việc đảm bảo bạn có bản sao mới nhất của thông tin, vì có thể có nhiều LSP mâu thuẫn từ một nút đi qua mạng. Làm cho flooding tin cậy đã chứng tỏ là khá khó khăn. (Ví dụ, một phiên bản sớm của định tuyến trạng thái liên kết dùng trong ARPANET đã khiến mạng này bị lỗi năm 1981.)
 
-Flooding works in the following way. First, the transmission of LSPs
-between adjacent routers is made reliable using acknowledgments and
-retransmissions just as in the reliable link-layer protocol. However,
-several more steps are necessary to reliably flood an LSP to all nodes
-in a network.
+Flooding hoạt động như sau. Đầu tiên, việc truyền LSP giữa các router liền kề được đảm bảo tin cậy bằng cách sử dụng xác nhận và truyền lại giống như trong giao thức tầng liên kết tin cậy. Tuy nhiên, cần thêm một số bước nữa để flooding một LSP đến tất cả các nút trong mạng một cách tin cậy.
 
-Consider a node X that receives a copy of an LSP that originated at some
-other node Y. Note that Y may be any other router in the same routing
-domain as X. X checks to see if it has already stored a copy of an LSP
-from Y. If not, it stores the LSP. If it already has a copy, it compares
-the sequence numbers; if the new LSP has a larger sequence number, it is
-assumed to be the more recent, and that LSP is stored, replacing the old
-one. A smaller (or equal) sequence number would imply an LSP older (or
-not newer) than the one stored, so it would be discarded and no further
-action would be needed. If the received LSP was the newer one, X then
-sends a copy of that LSP to all of its neighbors except the neighbor
-from which the LSP was just received. The fact that the LSP is not sent
-back to the node from which it was received helps to bring an end to the
-flooding of an LSP. Since X passes the LSP on to all its neighbors, who
-then turn around and do the same thing, the most recent copy of the LSP
-eventually reaches all nodes.
+Xét một nút X nhận được một bản sao LSP bắt nguồn từ một nút khác Y. Lưu ý rằng Y có thể là bất kỳ router nào khác trong cùng miền định tuyến với X. X kiểm tra xem nó đã lưu một bản sao LSP từ Y chưa. Nếu chưa, nó lưu LSP. Nếu đã có, nó so sánh số thứ tự; nếu LSP mới có số thứ tự lớn hơn, nó được coi là mới hơn và LSP đó được lưu, thay thế bản cũ. Số thứ tự nhỏ hơn (hoặc bằng) ngụ ý LSP cũ hơn (hoặc không mới hơn) bản đã lưu, nên sẽ bị loại bỏ và không cần hành động gì thêm. Nếu LSP nhận được là bản mới hơn, X sẽ gửi một bản sao LSP đó cho tất cả các láng giềng ngoại trừ láng giềng vừa gửi LSP đến. Việc không gửi lại cho nút vừa gửi giúp kết thúc quá trình flooding một LSP. Vì X chuyển tiếp LSP cho tất cả các láng giềng, những nút này lại làm tương tự, bản sao mới nhất của LSP cuối cùng sẽ đến tất cả các nút.
 
 .. _fig-flood:
 .. figure:: figures/f03-32-9780123850591.png
    :width: 500px
    :align: center
 
-   Flooding of link-state packets: (a) LSP arrives at
-   node X; (b) X floods LSP to A and C; (c) A and C flood LSP to B
-   (but not X); (d) flooding is complete.
+   Flooding các gói trạng thái liên kết: (a) LSP đến nút X; (b) X flooding LSP đến A và C; (c) A và C flooding LSP đến B (nhưng không gửi lại X); (d) flooding hoàn tất.
 
-:numref:`Figure %s <fig-flood>` shows an LSP being flooded in a small
-network.  Each node becomes shaded as it stores the new LSP. In
-:numref:`Figure %s(a) <fig-flood>` the LSP arrives at node X, which
-sends it to neighbors A and C in :numref:`Figure %s(b) <fig-flood>`. A
-and C do not send it back to X, but send it on to B. Since B receives
-two identical copies of the LSP, it will accept whichever arrived
-first and ignore the second as a duplicate. It then passes the LSP
-onto D, which has no neighbors to flood it to, and the process is
-complete.
+:numref:`Hình %s <fig-flood>` cho thấy một LSP được flooding trong một mạng nhỏ. Mỗi nút được tô bóng khi nó lưu LSP mới. Ở :numref:`Hình %s(a) <fig-flood>`, LSP đến nút X, X gửi nó cho các láng giềng A và C ở :numref:`Hình %s(b) <fig-flood>`. A và C không gửi lại cho X, mà gửi tiếp cho B. Vì B nhận được hai bản sao giống hệt nhau của LSP, nó sẽ nhận bản đến trước và bỏ qua bản thứ hai như là bản trùng lặp. Sau đó, nó chuyển tiếp LSP cho D, nút không còn láng giềng nào để flooding, và quá trình hoàn tất.
 
-Just as in RIP, each node generates LSPs under two circumstances. Either
-the expiry of a periodic timer or a change in topology can cause a node
-to generate a new LSP. However, the only topology-based reason for a
-node to generate an LSP is if one of its directly connected links or
-immediate neighbors has gone down. The failure of a link can be detected
-in some cases by the link-layer protocol. The demise of a neighbor or
-loss of connectivity to that neighbor can be detected using periodic
-“hello” packets. Each node sends these to its immediate neighbors at
-defined intervals. If a sufficiently long time passes without receipt of
-a “hello” from a neighbor, the link to that neighbor will be declared
-down, and a new LSP will be generated to reflect this fact.
+Cũng giống như RIP, mỗi nút tạo ra LSP trong hai trường hợp. Hoặc là bộ đếm thời gian định kỳ hết hạn, hoặc có thay đổi về cấu trúc liên kết khiến nút phải tạo LSP mới. Tuy nhiên, lý do dựa trên cấu trúc liên kết duy nhất để một nút tạo LSP là nếu một trong các liên kết trực tiếp hoặc láng giềng trực tiếp của nó bị hỏng. Việc phát hiện lỗi liên kết đôi khi có thể được thực hiện bởi giao thức tầng liên kết. Việc mất láng giềng hoặc mất kết nối đến láng giềng có thể được phát hiện bằng các gói “hello” định kỳ. Mỗi nút gửi các gói này cho các láng giềng trực tiếp theo khoảng thời gian xác định. Nếu một khoảng thời gian đủ dài trôi qua mà không nhận được “hello” từ láng giềng, liên kết đến láng giềng đó sẽ bị coi là hỏng, và một LSP mới sẽ được tạo ra để phản ánh thực tế này.
 
-One of the important design goals of a link-state protocol’s flooding
-mechanism is that the newest information must be flooded to all nodes as
-quickly as possible, while old information must be removed from the
-network and not allowed to circulate. In addition, it is clearly
-desirable to minimize the total amount of routing traffic that is sent
-around the network; after all, this is just overhead from the
-perspective of those who actually use the network for their
-applications. The next few paragraphs describe some of the ways that
-these goals are accomplished.
+Một trong những mục tiêu thiết kế quan trọng của cơ chế flooding trong giao thức trạng thái liên kết là thông tin mới nhất phải được flooding đến tất cả các nút càng nhanh càng tốt, trong khi thông tin cũ phải bị loại bỏ khỏi mạng và không được phép lưu hành. Ngoài ra, rõ ràng là nên giảm thiểu tổng lượng lưu lượng định tuyến được gửi quanh mạng; dù sao thì đây chỉ là overhead từ góc nhìn của người dùng thực sự sử dụng mạng cho ứng dụng của họ. Một số đoạn sau đây mô tả một số cách để đạt được các mục tiêu này.
 
-One easy way to reduce overhead is to avoid generating LSPs unless
-absolutely necessary. This can be done by using very long timers—often
-on the order of hours—for the periodic generation of LSPs. Given that
-the flooding protocol is truly reliable when topology changes, it is
-safe to assume that messages saying “nothing has changed” do not need to
-be sent very often.
+Một cách đơn giản để giảm overhead là tránh tạo LSP trừ khi thực sự cần thiết. Điều này có thể thực hiện bằng cách dùng bộ đếm thời gian rất dài—thường là hàng giờ—cho việc tạo LSP định kỳ. Vì giao thức flooding thực sự tin cậy khi có thay đổi cấu trúc liên kết, có thể giả định rằng các thông điệp “không có gì thay đổi” không cần gửi thường xuyên.
 
-To make sure that old information is replaced by newer information, LSPs
-carry sequence numbers. Each time a node generates a new LSP, it
-increments the sequence number by 1. Unlike most sequence numbers used
-in protocols, these sequence numbers are not expected to wrap, so the
-field needs to be quite large (say, 64 bits). If a node goes down and
-then comes back up, it starts with a sequence number of 0. If the node
-was down for a long time, all the old LSPs for that node will have timed
-out (as described below); otherwise, this node will eventually receive a
-copy of its own LSP with a higher sequence number, which it can then
-increment and use as its own sequence number. This will ensure that its
-new LSP replaces any of its old LSPs left over from before the node went
-down.
+Để đảm bảo thông tin cũ được thay thế bằng thông tin mới hơn, các LSP mang số thứ tự. Mỗi lần một nút tạo LSP mới, nó tăng số thứ tự lên 1. Không giống hầu hết các số thứ tự dùng trong giao thức, các số thứ tự này không được kỳ vọng sẽ quay vòng, nên trường này cần khá lớn (ví dụ, 64 bit). Nếu một nút bị tắt rồi bật lại, nó bắt đầu với số thứ tự 0. Nếu nút bị tắt lâu, tất cả các LSP cũ cho nút đó sẽ hết hạn (như mô tả bên dưới); nếu không, nút này cuối cùng sẽ nhận được bản sao LSP của chính nó với số thứ tự lớn hơn, nó có thể tăng lên và dùng làm số thứ tự của mình. Điều này đảm bảo LSP mới của nó thay thế bất kỳ LSP cũ nào còn sót lại từ trước khi nút bị tắt.
 
-LSPs also carry a time to live. This is used to ensure that old
-link-state information is eventually removed from the network. A node
-always decrements the TTL of a newly received LSP before flooding it to
-its neighbors. It also “ages” the LSP over time while it is stored in the node.
-When the TTL reaches 0, the node refloods the LSP (with the TTL of 0), which
-is interpreted by all the nodes in the network as a signal to delete
-that LSP.
+Các LSP cũng mang một trường thời gian sống (TTL). Trường này dùng để đảm bảo thông tin trạng thái liên kết cũ cuối cùng sẽ bị loại bỏ khỏi mạng. Một nút luôn giảm TTL của LSP mới nhận được trước khi flooding nó cho các láng giềng. Nó cũng “làm già” LSP khi lưu trữ trong nút. Khi TTL về 0, nút sẽ flooding lại LSP (với TTL bằng 0), điều này được tất cả các nút trong mạng hiểu là tín hiệu để xóa LSP đó.
 
-Route Calculation
-~~~~~~~~~~~~~~~~~
+Tính toán tuyến (Route Calculation)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once a given node has a copy of the LSP from every other node, it is
-able to compute a complete map for the topology of the network, and from
-this map it is able to decide the best route to each destination. The
-question, then, is exactly how it calculates routes from this
-information. The solution is based on a well-known algorithm from graph
-theory—Dijkstra’s shortest-path algorithm.
+Khi một nút đã có bản sao LSP từ tất cả các nút khác, nó có thể tính toán bản đồ hoàn chỉnh cho cấu trúc liên kết mạng, và từ bản đồ này nó có thể quyết định tuyến tốt nhất đến từng đích. Vậy, câu hỏi là chính xác làm thế nào nó tính toán các tuyến từ thông tin này. Giải pháp dựa trên một thuật toán nổi tiếng trong lý thuyết đồ thị—thuật toán đường đi ngắn nhất của Dijkstra.
 
-We first define Dijkstra’s algorithm in graph-theoretic terms. Imagine
-that a node takes all the LSPs it has received and constructs a
-graphical representation of the network, in which N denotes the set of
-nodes in the graph, l(i,j) denotes the nonnegative cost (weight)
-associated with the edge between nodes i, j in N and l(i, j) = ∞ if no
-edge connects i and j. In the following description, we let s in N
-denote this node, that is, the node executing the algorithm to find the
-shortest path to all the other nodes in N. Also, the algorithm maintains
-the following two variables: M denotes the set of nodes incorporated so
-far by the algorithm, and C(n) denotes the cost of the path from s to
-each node n. Given these definitions, the algorithm is defined as
-follows:
+Trước tiên, chúng ta định nghĩa thuật toán Dijkstra theo lý thuyết đồ thị. Hãy tưởng tượng một nút lấy tất cả các LSP mà nó nhận được và xây dựng một biểu diễn đồ thị của mạng, trong đó N là tập các nút trong đồ thị, l(i,j) là chi phí (trọng số) không âm gán cho cạnh giữa các nút i, j trong N và l(i, j) = ∞ nếu không có cạnh nối i và j. Trong mô tả sau, s thuộc N là nút đang thực hiện thuật toán để tìm đường đi ngắn nhất đến tất cả các nút khác trong N. Thuật toán duy trì hai biến: M là tập các nút đã được đưa vào bởi thuật toán, và C(n) là chi phí đường đi từ s đến mỗi nút n. Với các định nghĩa này, thuật toán được định nghĩa như sau:
 
 ::
 
@@ -735,447 +356,180 @@ follows:
        for each n in (N-M)
        C(n) = MIN(C(n), C(w)+l(w,n))
 
-Basically, the algorithm works as follows. We start with M containing
-this node s and then initialize the table of costs (the array ``C(n)``)
-to other nodes using the known costs to directly connected nodes. We
-then look for the node that is reachable at the lowest cost (w) and add
-it to M. Finally, we update the table of costs by considering the cost
-of reaching nodes through w. In the last line of the algorithm, we
-choose a new route to node n that goes through node w if the total cost
-of going from the source to w and then following the link from w to n is
-less than the old route we had to n. This procedure is repeated until
-all nodes are incorporated in M.
+Về cơ bản, thuật toán hoạt động như sau. Ta bắt đầu với M chứa nút s này và khởi tạo bảng chi phí (mảng ``C(n)``) đến các nút khác bằng chi phí đã biết đến các nút kết nối trực tiếp. Sau đó, ta tìm nút có thể đến với chi phí thấp nhất (w) và thêm nó vào M. Cuối cùng, ta cập nhật bảng chi phí bằng cách xét chi phí đến các nút qua w. Ở dòng cuối của thuật toán, ta chọn tuyến mới đến nút n đi qua w nếu tổng chi phí từ nguồn đến w rồi theo liên kết từ w đến n nhỏ hơn tuyến cũ đến n. Quá trình này lặp lại cho đến khi tất cả các nút được đưa vào M.
 
-In practice, each switch computes its routing table directly from the
-LSPs it has collected using a realization of Dijkstra’s algorithm called
-the *forward search* algorithm. Specifically, each switch maintains two
-lists, known as ``Tentative`` and ``Confirmed``. Each of these lists
-contains a set of entries of the form ``(Destination, Cost, NextHop)``.
-The algorithm works as follows:
+Trong thực tế, mỗi switch tính bảng định tuyến của mình trực tiếp từ các LSP mà nó thu thập được bằng một hiện thực của thuật toán Dijkstra gọi là thuật toán *forward search*. Cụ thể, mỗi switch duy trì hai danh sách, gọi là ``Tentative`` và ``Confirmed``. Mỗi danh sách này chứa một tập các mục dạng ``(Destination, Cost, NextHop)``. Thuật toán hoạt động như sau:
 
-1. Initialize the ``Confirmed`` list with an entry for myself; this
-   entry has a cost of 0.
+1. Khởi tạo danh sách ``Confirmed`` với một mục cho chính mình; mục này có chi phí 0.
 
-2. For the node just added to the ``Confirmed`` list in the previous
-   step, call it node ``Next`` and select its LSP.
+2. Với nút vừa được thêm vào danh sách ``Confirmed`` ở bước trước, gọi là ``Next`` và chọn LSP của nó.
 
-3. For each neighbor (``Neighbor``) of ``Next``, calculate the cost
-   (``Cost``) to reach this ``Neighbor`` as the sum of the cost from
-   myself to ``Next`` and from ``Next`` to ``Neighbor``.
+3. Với mỗi láng giềng (``Neighbor``) của ``Next``, tính chi phí (``Cost``) để đến ``Neighbor`` bằng tổng chi phí từ chính mình đến ``Next`` và từ ``Next`` đến ``Neighbor``.
 
-   1. If ``Neighbor`` is currently on neither the ``Confirmed`` nor the
-      ``Tentative`` list, then add ``(Neighbor, Cost, NextHop)`` to the
-      ``Tentative`` list, where ``NextHop`` is the direction I go to
-      reach ``Next``.
+   1. Nếu ``Neighbor`` hiện không có trong ``Confirmed`` hoặc ``Tentative``, thêm ``(Neighbor, Cost, NextHop)`` vào ``Tentative``, trong đó ``NextHop`` là hướng đi để đến ``Next``.
 
-   2. If ``Neighbor`` is currently on the ``Tentative`` list, and the
-      ``Cost`` is less than the currently listed cost for ``Neighbor``,
-      then replace the current entry with ``(Neighbor, Cost, NextHop)``,
-      where ``NextHop`` is the direction I go to reach ``Next``.
+   2. Nếu ``Neighbor`` hiện có trong ``Tentative``, và ``Cost`` nhỏ hơn chi phí hiện tại cho ``Neighbor``, thay thế mục hiện tại bằng ``(Neighbor, Cost, NextHop)``, trong đó ``NextHop`` là hướng đi để đến ``Next``.
 
-4. If the ``Tentative`` list is empty, stop. Otherwise, pick the entry
-   from the ``Tentative`` list with the lowest cost, move it to the
-   ``Confirmed`` list, and return to step 2.
+4. Nếu danh sách ``Tentative`` rỗng, dừng lại. Nếu không, chọn mục có chi phí thấp nhất từ ``Tentative``, chuyển nó sang ``Confirmed``, và quay lại bước 2.
 
 .. _fig-lsroute:
 .. figure:: figures/f03-33-9780123850591.png
    :width: 350px
    :align: center
 
-   Link-state routing: an example network.
+   Định tuyến trạng thái liên kết: một mạng ví dụ.
 
-This will become a lot easier to understand when we look at an
-example.  Consider the network depicted in :numref:`Figure %s
-<fig-lsroute>`. Note that, unlike our previous example, this network
-has a range of different edge costs. :numref:`Table %s <tab-ls-trace>`
-traces the steps for building the routing table for node D. We denote
-the two outputs of D by using the names of the nodes to which they
-connect, B and C. Note the way the algorithm seems to head off on
-false leads (like the 11-unit cost path to B that was the first
-addition to the ``Tentative`` list) but ends up with the least-cost
-paths to all nodes.
+Điều này sẽ dễ hiểu hơn nhiều khi chúng ta xem một ví dụ. Xét mạng trong :numref:`Hình %s <fig-lsroute>`. Lưu ý rằng, không giống ví dụ trước, mạng này có nhiều chi phí cạnh khác nhau. :numref:`Bảng %s <tab-ls-trace>` theo dõi các bước xây dựng bảng định tuyến cho nút D. Chúng tôi ký hiệu hai cổng ra của D bằng tên các nút mà chúng kết nối, B và C. Lưu ý cách thuật toán dường như đi theo hướng sai (như đường đi chi phí 11 đến B là mục đầu tiên được thêm vào ``Tentative``), nhưng cuối cùng vẫn tìm được đường đi chi phí thấp nhất đến tất cả các nút.
 
 .. _tab-ls-trace:
-.. table:: Steps for Building Routing Table for Node D.
-
+.. table:: Các bước xây dựng bảng định tuyến cho nút D.
 
   +---------+-------------------+-------------------+-------------------+
   | Step    | Confirmed         | Tentative         | Comments          |
   +=========+===================+===================+===================+
-  | 1       | (D,0,–)           |                   | Since D is the    |
-  |         |                   |                   | only new member   |
-  |         |                   |                   | of the confirmed  |
-  |         |                   |                   | list, look at its |
-  |         |                   |                   | LSP.              |
+  | 1       | (D,0,–)           |                   | Vì D là thành     |
+  |         |                   |                   | viên mới duy nhất |
+  |         |                   |                   | của danh sách     |
+  |         |                   |                   | Confirmed, xem    |
+  |         |                   |                   | LSP của nó.       |
   +---------+-------------------+-------------------+-------------------+
-  | 2       | (D,0,–)           | (B,11,B) (C,2,C)  | D’s LSP says we   |
-  |         |                   |                   | can reach B       |
-  |         |                   |                   | through B at cost |
-  |         |                   |                   | 11, which is      |
-  |         |                   |                   | better than       |
-  |         |                   |                   | anything else on  |
-  |         |                   |                   | either list, so   |
-  |         |                   |                   | put it on         |
-  |         |                   |                   | ``Tentative``     |
-  |         |                   |                   | list; same for C. |
+  | 2       | (D,0,–)           | (B,11,B) (C,2,C)  | LSP của D cho     |
+  |         |                   |                   | biết có thể đến B |
+  |         |                   |                   | qua B với chi phí |
+  |         |                   |                   | 11, tốt nhất nên  |
+  |         |                   |                   | đưa vào           |
+  |         |                   |                   | ``Tentative``;    |
+  |         |                   |                   | tương tự cho C.   |
   +---------+-------------------+-------------------+-------------------+
-  | 3       | (D,0,–) (C,2,C)   | (B,11,B)          | Put lowest-cost   |
-  |         |                   |                   | member of         |
+  | 3       | (D,0,–) (C,2,C)   | (B,11,B)          | Đưa mục chi phí   |
+  |         |                   |                   | thấp nhất trong   |
   |         |                   |                   | ``Tentative`` (C) |
-  |         |                   |                   | onto              |
-  |         |                   |                   | ``Confirmed``     |
-  |         |                   |                   | list. Next,       |
-  |         |                   |                   | examine LSP of    |
-  |         |                   |                   | newly confirmed   |
-  |         |                   |                   | member (C).       |
+  |         |                   |                   | vào ``Confirmed`` |
+  |         |                   |                   | rồi xem LSP của   |
+  |         |                   |                   | thành viên mới    |
+  |         |                   |                   | (C).              |
   +---------+-------------------+-------------------+-------------------+
-  | 4       | (D,0,–) (C,2,C)   | (B,5,C) (A,12,C)  | Cost to reach B   |
-  |         |                   |                   | through C is 5,   |
-  |         |                   |                   | so replace        |
-  |         |                   |                   | (B,11,B). C’s LSP |
-  |         |                   |                   | tells us that we  |
-  |         |                   |                   | can reach A at    |
-  |         |                   |                   | cost 12.          |
+  | 4       | (D,0,–) (C,2,C)   | (B,5,C) (A,12,C)  | Đến B qua C chi   |
+  |         |                   |                   | phí 5, thay thế   |
+  |         |                   |                   | (B,11,B). LSP của |
+  |         |                   |                   | C cho biết có thể |
+  |         |                   |                   | đến A với chi phí |
+  |         |                   |                   | 12.               |
   +---------+-------------------+-------------------+-------------------+
-  | 5       | (D,0,–) (C,2,C)   | (A,12,C)          | Move lowest-cost  |
-  |         | (B,5,C)           |                   | member of         |
+  | 5       | (D,0,–) (C,2,C)   | (A,12,C)          | Đưa mục chi phí   |
+  |         | (B,5,C)           |                   | thấp nhất trong   |
   |         |                   |                   | ``Tentative`` (B) |
-  |         |                   |                   | to ``Confirmed``, |
-  |         |                   |                   | then look at its  |
-  |         |                   |                   | LSP.              |
+  |         |                   |                   | vào ``Confirmed``,|
+  |         |                   |                   | rồi xem LSP của   |
+  |         |                   |                   | nó.               |
   +---------+-------------------+-------------------+-------------------+
-  | 6       | (D,0,–) (C,2,C)   | (A,10,C)          | Since we can      |
-  |         | (B,5,C)           |                   | reach A at cost 5 |
-  |         |                   |                   | through B,        |
-  |         |                   |                   | replace the       |
-  |         |                   |                   | ``Tentative``     |
-  |         |                   |                   | entry.            |
+  | 6       | (D,0,–) (C,2,C)   | (A,10,C)          | Đến A qua B chi   |
+  |         | (B,5,C)           |                   | phí 5, thay thế   |
+  |         |                   |                   | mục ``Tentative`` |
+  |         |                   |                   | hiện tại.         |
   +---------+-------------------+-------------------+-------------------+
-  | 7       | (D,0,–) (C,2,C)   |                   | Move lowest-cost  |
-  |         | (B,5,C) (A,10,C)  |                   | member of         |
+  | 7       | (D,0,–) (C,2,C)   |                   | Đưa mục chi phí   |
+  |         | (B,5,C) (A,10,C)  |                   | thấp nhất trong   |
   |         |                   |                   | ``Tentative`` (A) |
-  |         |                   |                   | to ``Confirmed``, |
-  |         |                   |                   | and we are all    |
-  |         |                   |                   | done.             |
+  |         |                   |                   | vào ``Confirmed``,|
+  |         |                   |                   | và hoàn tất.      |
   +---------+-------------------+-------------------+-------------------+
 
-The link-state routing algorithm has many nice properties: It has been
-proven to stabilize quickly, it does not generate much traffic, and it
-responds rapidly to topology changes or node failures. On the downside,
-the amount of information stored at each node (one LSP for every other
-node in the network) can be quite large. This is one of the fundamental
-problems of routing and is an instance of the more general problem of
-scalability. Some solutions to both the specific problem (the amount of
-storage potentially required at each node) and the general problem
-(scalability) will be discussed in the next section.
+Thuật toán định tuyến trạng thái liên kết có nhiều đặc tính tốt: Nó đã được chứng minh là hội tụ nhanh, không tạo ra nhiều lưu lượng, và phản ứng nhanh với thay đổi cấu trúc liên kết hoặc lỗi nút. Nhược điểm là lượng thông tin lưu tại mỗi nút (một LSP cho mỗi nút khác trong mạng) có thể khá lớn. Đây là một trong những vấn đề cơ bản của định tuyến và là một ví dụ cho vấn đề tổng quát hơn về khả mở. Một số giải pháp cho cả vấn đề cụ thể (lượng lưu trữ tiềm năng cần thiết tại mỗi nút) và vấn đề tổng quát (khả mở) sẽ được thảo luận ở phần sau.
 
 .. _key-routing-alg:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   Distance-vector and link-state are both distributed routing
-   algorithms, but they adopt different strategies. In
-   distance-vector, each node talks only to its directly connected
-   neighbors, but it tells them everything it has learned (i.e.,
-   distance to all nodes). In link-state, each node talks to all other
-   nodes, but it tells them only what it knows for sure (i.e., only
-   the state of its directly connected links). In contrast to both of
-   these algorithms, we will consider a more centralized approach to
-   routing in :ref:`Section 3.5 <3.5 Implementation>` when we
-   introduce Software Defined Networking (SDN). :ref:`[Next] <key-kiss>`
+   Vector khoảng cách và trạng thái liên kết đều là các thuật toán định tuyến phân tán, nhưng chúng áp dụng các chiến lược khác nhau. Trong vector khoảng cách, mỗi nút chỉ nói chuyện với các láng giềng trực tiếp, nhưng nó nói cho họ biết tất cả những gì nó biết (tức là, khoảng cách đến tất cả các nút). Trong trạng thái liên kết, mỗi nút nói chuyện với tất cả các nút khác, nhưng chỉ nói cho họ biết những gì nó biết chắc chắn (tức là, chỉ trạng thái các liên kết trực tiếp). Trái ngược với cả hai thuật toán này, chúng ta sẽ xem xét một cách tiếp cận tập trung hơn cho định tuyến ở :ref:`Mục 3.5 <3.5 Implementation>` khi giới thiệu Software Defined Networking (SDN). :ref:`[Tiếp theo] <key-kiss>`
 
-The Open Shortest Path First Protocol (OSPF)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Giao thức Open Shortest Path First (OSPF)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One of the most widely used link-state routing protocols is OSPF. The
-first word, “Open,” refers to the fact that it is an open,
-nonproprietary standard, created under the auspices of the Internet
-Engineering Task Force (IETF). The “SPF” part comes from an alternative
-name for link-state routing. OSPF adds quite a number of features to the
-basic link-state algorithm described above, including the following:
+Một trong những giao thức định tuyến trạng thái liên kết được sử dụng rộng rãi nhất là OSPF. Từ “Open” nghĩa là nó là một chuẩn mở, không độc quyền, được tạo ra dưới sự bảo trợ của Internet Engineering Task Force (IETF). “SPF” là viết tắt của một tên gọi khác cho định tuyến trạng thái liên kết. OSPF bổ sung khá nhiều tính năng cho thuật toán trạng thái liên kết cơ bản vừa mô tả, bao gồm:
 
--  *Authentication of routing messages*—One feature of distributed
-   routing algorithms is that they disperse information from one node to
-   many other nodes, and the entire network can thus be impacted by bad
-   information from one node. For this reason, it’s a good idea to be
-   sure that all the nodes taking part in the protocol can be trusted.
-   Authenticating routing messages helps achieve this. Early versions of
-   OSPF used a simple 8-byte password for authentication. This is not a
-   strong enough form of authentication to prevent dedicated malicious
-   users, but it alleviates some problems caused by misconfiguration or
-   casual attacks. (A similar form of authentication was added to RIP in
-   version 2.) Strong cryptographic authentication was later added.
+-  *Xác thực thông điệp định tuyến*—Một đặc điểm của các thuật toán định tuyến phân tán là chúng phân tán thông tin từ một nút đến nhiều nút khác, và toàn bộ mạng có thể bị ảnh hưởng bởi thông tin sai từ một nút. Vì lý do này, nên đảm bảo rằng tất cả các nút tham gia giao thức đều đáng tin cậy. Xác thực thông điệp định tuyến giúp đạt được điều này. Các phiên bản đầu của OSPF dùng mật khẩu 8 byte đơn giản để xác thực. Đây không phải là hình thức xác thực đủ mạnh để ngăn chặn người dùng độc hại chuyên nghiệp, nhưng giúp giảm một số vấn đề do cấu hình sai hoặc tấn công đơn giản. (Một hình thức xác thực tương tự cũng được thêm vào RIP ở phiên bản 2.) Sau này đã bổ sung xác thực mật mã mạnh hơn.
 
--  *Additional hierarchy*—Hierarchy is one of the fundamental tools used
-   to make systems more scalable. OSPF introduces another layer of
-   hierarchy into routing by allowing a domain to be partitioned into
-   *areas*. This means that a router within a domain does not
-   necessarily need to know how to reach every network within that
-   domain—it may be able to get by knowing only how to get to the right
-   area. Thus, there is a reduction in the amount of information that
-   must be transmitted to and stored in each node.
+-  *Phân cấp bổ sung*—Phân cấp là một trong những công cụ cơ bản để làm cho hệ thống có khả năng mở rộng hơn. OSPF giới thiệu thêm một lớp phân cấp vào định tuyến bằng cách cho phép một miền được chia thành các *khu vực* (areas). Điều này có nghĩa là một router trong miền không nhất thiết phải biết cách đến mọi mạng trong miền đó—nó có thể chỉ cần biết cách đến đúng khu vực. Như vậy, giảm được lượng thông tin cần truyền và lưu trữ tại mỗi nút.
 
--  *Load balancing*—OSPF allows multiple routes to the same place to be
-   assigned the same cost and will cause traffic to be distributed
-   evenly over those routes, thus making better use of the available
-   network capacity.
+-  *Cân bằng tải*—OSPF cho phép nhiều tuyến đến cùng một nơi được gán cùng chi phí và sẽ phân phối lưu lượng đều qua các tuyến đó, giúp sử dụng tốt hơn năng lực mạng hiện có.
 
 .. _fig-ospf:
 .. figure:: figures/f03-34-9780123850591.png
    :width: 400px
    :align: center
 
-   OSPF header format.
+   Định dạng header OSPF.
 
-There are several different types of OSPF messages, but all begin with
-the same header, as shown in :numref:`Figure %s <fig-ospf>`. The
-``Version`` field is currently set to 2, and the ``Type`` field may
-take the values 1 through 5. The ``SourceAddr`` identifies the sender
-of the message, and the ``AreaId`` is a 32-bit identifier of the area
-in which the node is located. The entire packet, except the
-authentication data, is protected by a 16-bit checksum using the same
-algorithm as the IP header. The ``Authentication type`` is 0 if no
-authentication is used; otherwise, it may be 1, implying that a simple
-password is used, or 2, which indicates that a cryptographic
-authentication checksum is used. In the latter cases, the
-``Authentication`` field carries the password or cryptographic
-checksum.
+Có nhiều loại thông điệp OSPF khác nhau, nhưng tất cả đều bắt đầu với cùng một header, như trong :numref:`Hình %s <fig-ospf>`. Trường ``Version`` hiện được đặt là 2, và trường ``Type`` có thể nhận giá trị từ 1 đến 5. ``SourceAddr`` xác định người gửi thông điệp, và ``AreaId`` là định danh 32 bit của khu vực mà nút đó thuộc về. Toàn bộ gói tin, trừ dữ liệu xác thực, được bảo vệ bởi một checksum 16 bit dùng cùng thuật toán với header IP. ``Authentication type`` là 0 nếu không dùng xác thực; nếu không, có thể là 1 (dùng mật khẩu đơn giản) hoặc 2 (dùng checksum xác thực mật mã). Trong hai trường hợp sau, trường ``Authentication`` mang mật khẩu hoặc checksum mật mã.
 
-Of the five OSPF message types, type 1 is the “hello” message, which a
-router sends to its peers to notify them that it is still alive and
-connected as described above. The remaining types are used to request,
-send, and acknowledge the receipt of link-state messages. The basic
-building block of link-state messages in OSPF is the link-state
-advertisement (LSA). One message may contain many LSAs. We provide a few
-details of the LSA here.
+Trong năm loại thông điệp OSPF, loại 1 là thông điệp “hello”, router gửi cho các peer để báo rằng nó vẫn còn sống và kết nối như mô tả ở trên. Các loại còn lại dùng để yêu cầu, gửi và xác nhận nhận được thông điệp trạng thái liên kết. Khối xây dựng cơ bản của thông điệp trạng thái liên kết trong OSPF là quảng bá trạng thái liên kết (LSA). Một thông điệp có thể chứa nhiều LSA. Chúng tôi cung cấp một số chi tiết về LSA ở đây.
 
-Like any internetwork routing protocol, OSPF must provide information
-about how to reach networks. Thus, OSPF must provide a little more
-information than the simple graph-based protocol described above.
-Specifically, a router running OSPF may generate link-state packets that
-advertise one or more of the networks that are directly connected to
-that router. In addition, a router that is connected to another router
-by some link must advertise the cost of reaching that router over the
-link. These two types of advertisements are necessary to enable all the
-routers in a domain to determine the cost of reaching all networks in
-that domain and the appropriate next hop for each network.
+Như bất kỳ giao thức định tuyến liên mạng nào, OSPF phải cung cấp thông tin về cách đến các mạng. Do đó, OSPF phải cung cấp nhiều thông tin hơn so với giao thức dựa trên đồ thị đơn giản ở trên. Cụ thể, một router chạy OSPF có thể tạo các gói trạng thái liên kết quảng bá một hoặc nhiều mạng mà nó kết nối trực tiếp. Ngoài ra, một router kết nối với router khác qua một liên kết phải quảng bá chi phí đến router đó qua liên kết. Hai loại quảng bá này là cần thiết để tất cả các router trong miền xác định được chi phí đến mọi mạng trong miền và next hop phù hợp cho từng mạng.
 
 .. _fig-ospf-lsa:
 .. figure:: figures/f03-35-9780123850591.png
    :width: 450px
    :align: center
 
-   OSPF link-state advertisement.
+   Quảng bá trạng thái liên kết OSPF.
 
-:numref:`Figure %s <fig-ospf-lsa>` shows the packet format for a
-type 1 link-state advertisement. Type 1 LSAs advertise the cost of
-links between routers.  Type 2 LSAs are used to advertise networks to
-which the advertising router is connected, while other types are used
-to support additional hierarchy as described in the next section. Many
-fields in the LSA should be familiar from the preceding
-discussion. The ``LS Age`` is the equivalent of a time to live, except
-that it counts up and the LSA expires when the age reaches a defined
-maximum value. The ``Type`` field tells us that this is a type 1 LSA.
+:numref:`Hình %s <fig-ospf-lsa>` cho thấy định dạng gói cho quảng bá trạng thái liên kết loại 1. Loại 1 LSA quảng bá chi phí các liên kết giữa các router. Loại 2 LSA dùng để quảng bá các mạng mà router quảng bá kết nối, các loại khác dùng để hỗ trợ phân cấp bổ sung như mô tả ở phần sau. Nhiều trường trong LSA sẽ quen thuộc từ phần thảo luận trước. ``LS Age`` tương đương với thời gian sống, chỉ khác là nó tăng dần và LSA hết hạn khi tuổi đạt giá trị tối đa xác định. Trường ``Type`` cho biết đây là LSA loại 1.
 
-In a type 1 LSA, the ``Link state ID`` and the ``Advertising router``
-field are identical. Each carries a 32-bit identifier for the router
-that created this LSA. While a number of assignment strategies may be
-used to assign this ID, it is essential that it be unique in the routing
-domain and that a given router consistently uses the same router ID. One
-way to pick a router ID that meets these requirements would be to pick
-the lowest IP address among all the IP addresses assigned to that
-router. (Recall that a router may have a different IP address on each of
-its interfaces.)
+Trong LSA loại 1, ``Link state ID`` và ``Advertising router`` là giống nhau. Mỗi trường mang một định danh 32 bit cho router tạo ra LSA này. Có thể dùng nhiều chiến lược để gán ID này, nhưng điều quan trọng là nó phải duy nhất trong miền định tuyến và một router phải nhất quán dùng cùng một router ID. Một cách để chọn router ID đáp ứng yêu cầu này là chọn địa chỉ IP thấp nhất trong tất cả các địa chỉ IP gán cho router đó. (Nhớ rằng một router có thể có địa chỉ IP khác nhau trên mỗi interface.)
 
-The ``LS sequence number`` is used exactly as described above to detect
-old or duplicate LSAs. The ``LS checksum`` is similar to others we have
-seen in other protocols; it is, of course, used to verify that data has
-not been corrupted. It covers all fields in the packet except
-``LS Age``, so it is not necessary to recompute a checksum every time
-``LS Age`` is incremented. ``Length`` is the length in bytes of the
-complete LSA.
+``LS sequence number`` dùng đúng như mô tả ở trên để phát hiện LSA cũ hoặc trùng lặp. ``LS checksum`` tương tự như các checksum khác đã thấy ở các giao thức khác; nó dùng để kiểm tra dữ liệu không bị hỏng. Nó bao phủ tất cả các trường trong gói trừ ``LS Age``, nên không cần tính lại checksum mỗi khi ``LS Age`` tăng. ``Length`` là độ dài tính bằng byte của toàn bộ LSA.
 
-Now we get to the actual link-state information. This is made a little
-complicated by the presence of TOS (type of service) information.
-Ignoring that for a moment, each link in the LSA is represented by a
-``Link ID``, some ``Link Data``, and a ``metric``. The first two of
-these fields identify the link; a common way to do this would be to use
-the router ID of the router at the far end of the link as the
-``Link ID`` and then use the ``Link Data`` to disambiguate among
-multiple parallel links if necessary. The ``metric`` is of course the
-cost of the link. ``Type`` tells us something about the link—for
-example, if it is a point-to-point link.
+Bây giờ chúng ta đến phần thông tin trạng thái liên kết thực tế. Điều này hơi phức tạp do có thông tin TOS (type of service). Bỏ qua phần đó, mỗi liên kết trong LSA được biểu diễn bởi một ``Link ID``, một số ``Link Data``, và một ``metric``. Hai trường đầu xác định liên kết; một cách phổ biến là dùng router ID của router ở đầu kia liên kết làm ``Link ID`` và dùng ``Link Data`` để phân biệt nếu có nhiều liên kết song song. ``Metric`` tất nhiên là chi phí của liên kết. ``Type`` cho biết loại liên kết—ví dụ, liên kết điểm-điểm.
 
-The TOS information is present to allow OSPF to choose different routes
-for IP packets based on the value in their TOS field. Instead of
-assigning a single metric to a link, it is possible to assign different
-metrics depending on the TOS value of the data. For example, if we had a
-link in our network that was very good for delay-sensitive traffic, we
-could give it a low metric for the TOS value representing low delay and
-a high metric for everything else. OSPF would then pick a different
-shortest path for those packets that had their TOS field set to that
-value. It is worth noting that, at the time of writing, this capability
-has not been widely deployed.
+Thông tin TOS có mặt để cho phép OSPF chọn các tuyến khác nhau cho các gói IP dựa trên giá trị trong trường TOS của chúng. Thay vì gán một metric duy nhất cho một liên kết, có thể gán các metric khác nhau tùy vào giá trị TOS của dữ liệu. Ví dụ, nếu có một liên kết trong mạng rất tốt cho lưu lượng nhạy trễ, ta có thể gán metric thấp cho giá trị TOS đại diện cho trễ thấp và metric cao cho các giá trị khác. OSPF sau đó sẽ chọn đường đi ngắn nhất khác cho các gói có trường TOS đặt giá trị đó. Đáng chú ý là, tại thời điểm viết sách, khả năng này chưa được triển khai rộng rãi.
 
-3.4.4 Metrics
--------------
+3.4.4 Metric
+------------
 
-The preceding discussion assumes that link costs, or metrics, are known
-when we execute the routing algorithm. In this section, we look at some
-ways to calculate link costs that have proven effective in practice. One
-example that we have seen already, which is quite reasonable and very
-simple, is to assign a cost of 1 to all links—the least-cost route will
-then be the one with the fewest hops. Such an approach has several
-drawbacks, however. First, it does not distinguish between links on a
-latency basis. Thus, a satellite link with 250-ms latency looks just as
-attractive to the routing protocol as a terrestrial link with 1-ms
-latency. Second, it does not distinguish between routes on a capacity
-basis, making a 1-Mbps link look just as good as a 10-Gbps link.
-Finally, it does not distinguish between links based on their current
-load, making it impossible to route around overloaded links. It turns
-out that this last problem is the hardest because you are trying to
-capture the complex and dynamic characteristics of a link in a single
-scalar cost.
+Phần thảo luận trước giả định rằng chi phí liên kết, hay metric, đã biết khi thực hiện thuật toán định tuyến. Phần này, chúng ta xem xét một số cách tính chi phí liên kết đã chứng tỏ hiệu quả trong thực tế. Một ví dụ đã thấy, khá hợp lý và rất đơn giản, là gán chi phí 1 cho tất cả các liên kết—khi đó đường đi chi phí thấp nhất sẽ là đường đi ít bước nhảy nhất. Tuy nhiên, cách tiếp cận này có một số nhược điểm. Đầu tiên, nó không phân biệt các liên kết dựa trên độ trễ. Do đó, một liên kết vệ tinh với độ trễ 250 ms trông cũng hấp dẫn như một liên kết mặt đất với độ trễ 1 ms. Thứ hai, nó không phân biệt các tuyến dựa trên băng thông, khiến một liên kết 1 Mbps trông cũng tốt như một liên kết 10 Gbps. Cuối cùng, nó không phân biệt các liên kết dựa trên tải hiện tại, khiến không thể định tuyến tránh các liên kết quá tải. Hóa ra, vấn đề cuối cùng này là khó nhất vì bạn đang cố gắng gói gọn các đặc tính phức tạp và động của một liên kết vào một giá trị scalar duy nhất.
 
-The ARPANET was the testing ground for a number of different approaches
-to link-cost calculation. (It was also the place where the superior
-stability of link-state over distance-vector routing was demonstrated;
-the original mechanism used distance vector while the later version used
-link state.) The following discussion traces the evolution of the
-ARPANET routing metric and, in so doing, explores the subtle aspects of
-the problem.
+ARPANET là nơi thử nghiệm cho nhiều cách tiếp cận khác nhau để tính toán chi phí liên kết. (Nó cũng là nơi chứng minh sự ổn định vượt trội của định tuyến trạng thái liên kết so với vector khoảng cách; cơ chế ban đầu dùng vector khoảng cách, sau này dùng trạng thái liên kết.) Phần thảo luận sau đây theo dõi sự phát triển của metric định tuyến ARPANET và qua đó khám phá các khía cạnh tinh tế của vấn đề.
 
-The original ARPANET routing metric measured the number of packets that
-were queued waiting to be transmitted on each link, meaning that a link
-with 10 packets queued waiting to be transmitted was assigned a larger
-cost weight than a link with 5 packets queued for transmission. Using
-queue length as a routing metric did not work well, however, since queue
-length is an artificial measure of load—it moves packets toward the
-shortest queue rather than toward the destination, a situation all too
-familiar to those of us who hop from line to line at the grocery store.
-Stated more precisely, the original ARPANET routing mechanism suffered
-from the fact that it did not take either the bandwidth or the latency
-of the link into consideration.
+Metric định tuyến ARPANET ban đầu đo số lượng gói tin đang xếp hàng chờ truyền trên mỗi liên kết, nghĩa là một liên kết có 10 gói chờ truyền sẽ được gán trọng số chi phí lớn hơn một liên kết có 5 gói chờ truyền. Tuy nhiên, dùng độ dài hàng đợi làm metric định tuyến không hiệu quả, vì độ dài hàng đợi là một thước đo tải nhân tạo—nó di chuyển các gói về phía hàng đợi ngắn nhất thay vì về phía đích, một tình huống quá quen thuộc với những ai từng nhảy hàng ở siêu thị. Nói chính xác hơn, cơ chế định tuyến ARPANET ban đầu gặp vấn đề là không tính đến băng thông hoặc độ trễ của liên kết.
 
-A second version of the ARPANET routing algorithm took both link
-bandwidth and latency into consideration and used delay, rather than
-just queue length, as a measure of load. This was done as follows.
-First, each incoming packet was timestamped with its time of arrival at
-the router (``ArrivalTime``); its departure time from the router
-(``DepartTime``) was also recorded. Second, when the link-level ACK was
-received from the other side, the node computed the delay for that
-packet as
+Phiên bản thứ hai của thuật toán định tuyến ARPANET tính đến cả băng thông và độ trễ liên kết, dùng độ trễ thay vì chỉ độ dài hàng đợi làm thước đo tải. Cách làm như sau. Đầu tiên, mỗi gói đến được đóng dấu thời gian đến router (``ArrivalTime``); thời gian rời router (``DepartTime``) cũng được ghi lại. Thứ hai, khi nhận được ACK tầng liên kết từ phía bên kia, node tính độ trễ cho gói đó như sau
 
 ::
 
    Delay = (DepartTime - ArrivalTime) + TransmissionTime + Latency
 
-where ``TransmissionTime`` and ``Latency`` were statically defined for
-the link and captured the link’s bandwidth and latency, respectively.
-Notice that in this case, ``DepartTime - ArrivalTime`` represents the
-amount of time the packet was delayed (queued) in the node due to load.
-If the ACK did not arrive, but instead the packet timed out, then
-``DepartTime`` was reset to the time the packet was *retransmitted*. In
-this case, ``DepartTime - ArrivalTime`` captures the reliability of the
-link—the more frequent the retransmission of packets, the less reliable
-the link, and the more we want to avoid it. Finally, the weight assigned
-to each link was derived from the average delay experienced by the
-packets recently sent over that link.
+trong đó ``TransmissionTime`` và ``Latency`` được xác định tĩnh cho liên kết và phản ánh băng thông và độ trễ liên kết. Lưu ý rằng ``DepartTime - ArrivalTime`` là thời gian gói bị trễ (xếp hàng) trong node do tải. Nếu không nhận được ACK mà gói bị timeout, thì ``DepartTime`` được đặt lại thành thời điểm gói được *truyền lại*. Khi đó, ``DepartTime - ArrivalTime`` phản ánh độ tin cậy của liên kết—càng phải truyền lại nhiều, liên kết càng kém tin cậy và càng nên tránh. Cuối cùng, trọng số gán cho mỗi liên kết được lấy từ độ trễ trung bình của các gói vừa gửi qua liên kết đó.
 
-Although an improvement over the original mechanism, this approach also
-had a lot of problems. Under light load, it worked reasonably well,
-since the two static factors of delay dominated the cost. Under heavy
-load, however, a congested link would start to advertise a very high
-cost. This caused all the traffic to move off that link, leaving it
-idle, so then it would advertise a low cost, thereby attracting back all
-the traffic, and so on. The effect of this instability was that, under
-heavy load, many links would in fact spend a great deal of time being
-idle, which is the last thing you want under heavy load.
+Dù cải tiến hơn cơ chế ban đầu, cách tiếp cận này cũng có nhiều vấn đề. Khi tải nhẹ, nó hoạt động khá tốt vì hai yếu tố tĩnh của độ trễ chiếm ưu thế. Khi tải nặng, một liên kết bị nghẽn sẽ bắt đầu quảng bá chi phí rất cao. Điều này khiến tất cả lưu lượng chuyển khỏi liên kết đó, để nó nhàn rỗi, rồi lại quảng bá chi phí thấp, thu hút lại toàn bộ lưu lượng, và cứ thế. Hệ quả của sự bất ổn này là, khi tải nặng, nhiều liên kết thực tế sẽ dành nhiều thời gian ở trạng thái nhàn rỗi, điều hoàn toàn không mong muốn khi tải nặng.
 
-Another problem was that the range of link values was much too large.
-For example, a heavily loaded 9.6-kbps link could look 127 times more
-costly than a lightly loaded 56-kbps link. (Keep in mind, we’re talking
-about the ARPANET circa 1975.) This means that the routing algorithm
-would choose a path with 126 hops of lightly loaded 56-kbps links in
-preference to a 1-hop 9.6-kbps path. While shedding some traffic from an
-overloaded line is a good idea, making it look so unattractive that it
-loses all its traffic is excessive. Using 126 hops when 1 hop will do is
-in general a bad use of network resources. Also, satellite links were
-unduly penalized, so that an idle 56-kbps satellite link looked
-considerably more costly than an idle 9.6-kbps terrestrial link, even
-though the former would give better performance for high-bandwidth
-applications.
+Một vấn đề khác là dải giá trị metric quá lớn. Ví dụ, một liên kết 9.6 kbps tải nặng có thể trông đắt gấp 127 lần một liên kết 56 kbps tải nhẹ. (Lưu ý, đây là ARPANET khoảng năm 1975.) Điều này nghĩa là thuật toán định tuyến sẽ chọn đường đi 126 bước qua các liên kết 56 kbps tải nhẹ thay vì một bước qua liên kết 9.6 kbps. Dù chuyển bớt lưu lượng khỏi đường quá tải là ý hay, làm cho nó trở nên quá không hấp dẫn đến mức mất hết lưu lượng là quá mức. Dùng 126 bước khi chỉ cần 1 bước là lãng phí tài nguyên mạng. Ngoài ra, các liên kết vệ tinh bị phạt quá mức, nên một liên kết vệ tinh 56 kbps nhàn rỗi trông đắt hơn nhiều so với một liên kết mặt đất 9.6 kbps nhàn rỗi, dù liên kết vệ tinh sẽ cho hiệu năng tốt hơn cho ứng dụng băng thông cao.
 
-A third approach addressed these problems. The major changes were to
-compress the dynamic range of the metric considerably, to account for
-the link type, and to smooth the variation of the metric with time.
+Cách tiếp cận thứ ba giải quyết các vấn đề này. Thay đổi lớn nhất là nén dải động của metric đáng kể, tính đến loại liên kết, và làm mượt biến động metric theo thời gian.
 
-The smoothing was achieved by several mechanisms. First, the delay
-measurement was transformed to a link utilization, and this number was
-averaged with the last reported utilization to suppress sudden changes.
-Second, there was a hard limit on how much the metric could change from
-one measurement cycle to the next. By smoothing the changes in the cost,
-the likelihood that all nodes would abandon a route at once is greatly
-reduced.
+Việc làm mượt được thực hiện bằng nhiều cơ chế. Đầu tiên, đo độ trễ được chuyển thành mức sử dụng liên kết, và số này được lấy trung bình với mức sử dụng báo cáo lần trước để làm giảm thay đổi đột ngột. Thứ hai, có một giới hạn cứng về mức metric có thể thay đổi từ một chu kỳ đo đến chu kỳ tiếp theo. Bằng cách làm mượt thay đổi chi phí, khả năng tất cả các nút cùng bỏ một tuyến cùng lúc giảm đi nhiều.
 
-The compression of the dynamic range was achieved by feeding the
-measured utilization, the link type, and the link speed into a
-function that is shown graphically in :numref:`Figure %s
-<fig-metric>`. below. Observe the following:
+Việc nén dải động được thực hiện bằng cách đưa mức sử dụng đo được, loại liên kết và tốc độ liên kết vào một hàm được minh họa trong :numref:`Hình %s <fig-metric>`. Lưu ý:
 
 .. _fig-metric:
 .. figure:: figures/f03-36-9780123850591.png
    :width: 600px
    :align: center
 
-   Revised ARPANET routing metric versus link
-   utilization.
+   Metric định tuyến ARPANET sửa đổi so với mức sử dụng liên kết.
 
--  A highly loaded link never shows a cost of more than three times its
-   cost when idle.
+-  Một liên kết tải nặng không bao giờ có chi phí lớn hơn ba lần chi phí khi nhàn rỗi.
 
--  The most expensive link is only seven times the cost of the least
-   expensive.
+-  Liên kết đắt nhất chỉ đắt gấp bảy lần liên kết rẻ nhất.
 
--  A high-speed satellite link is more attractive than a low-speed
-   terrestrial link.
+-  Một liên kết vệ tinh tốc độ cao hấp dẫn hơn liên kết mặt đất tốc độ thấp.
 
--  Cost is a function of link utilization only at moderate to high
-   loads.
+-  Chi phí là hàm của mức sử dụng liên kết chỉ ở mức tải vừa đến cao.
 
-All of these factors mean that a link is much less likely to be
-universally abandoned, since a threefold increase in cost is likely to
-make the link unattractive for some paths while letting it remain the
-best choice for others. The slopes, offsets, and breakpoints for the
-curves in :numref:`Figure %s <fig-metric>` were arrived at by a great
-deal of trial and error, and they were carefully tuned to provide good
-performance.
+Tất cả các yếu tố này nghĩa là một liên kết ít có khả năng bị bỏ hoàn toàn, vì tăng chi phí gấp ba lần chỉ khiến nó kém hấp dẫn cho một số đường đi, trong khi vẫn là lựa chọn tốt nhất cho các đường khác. Độ dốc, điểm ngắt và điểm bù cho các đường cong trong :numref:`Hình %s <fig-metric>` được xác định qua rất nhiều thử nghiệm, và được tinh chỉnh cẩn thận để cho hiệu năng tốt.
 
-Despite all these improvements, it turns out that in the majority of
-real-world network deployments, metrics change rarely if at all and only
-under the control of a network administrator, not automatically as
-described above. The reason for this is partly that conventional wisdom
-now holds that dynamically changing metrics are too unstable, even
-though this probably need not be true. Perhaps more significantly, many
-networks today lack the great disparity of link speeds and latencies
-that prevailed in the ARPANET. Thus, static metrics are the norm. One
-common approach to setting metrics is to use a constant multiplied by
-(1/link_bandwidth).
+Dù có tất cả các cải tiến này, thực tế là trong phần lớn các triển khai mạng thực tế, metric thay đổi rất hiếm khi, nếu có, và chỉ dưới sự kiểm soát của quản trị viên mạng, không tự động như mô tả ở trên. Lý do một phần là vì quan điểm phổ biến hiện nay cho rằng metric thay đổi động là quá bất ổn, dù thực ra không nhất thiết phải vậy. Có lẽ quan trọng hơn, nhiều mạng ngày nay không còn sự chênh lệch lớn về tốc độ và độ trễ liên kết như từng có ở ARPANET. Do đó, metric tĩnh là chuẩn. Một cách phổ biến để đặt metric là dùng một hằng số nhân với (1/băng_thông_liên_kết).
 
 .. _key-kiss:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   Why do we still tell the story about a decades old algorithm that’s
-   no longer in use? Because it perfectly illustrates two valuable
-   lessons. The first is that computer systems are often *designed
-   iteratively based on experience.* We seldom get it right the first
-   time, so it’s important to deploy a simple solution sooner rather
-   than later, and expect to improve it over time. Staying stuck in the
-   design phase indefinitely is usually not a good plan. The second
-   is the well-know KISS principle: *Keep it Simple, Stupid.* When
-   building a complex system, less is often more. Opportunities to
-   invent sophisticated optimizations are plentiful, and it’s a tempting
-   opportunity to pursue. While such optimizations sometimes have
-   short-term value, it is shocking how often a simple approach proves
-   best over time. This is because when a system has many moving parts,
-   as the Internet most certainly does, keeping each part as simple as
-   possible is usually the best approach.  :ref:`[Next] <key-control-data>`
+   Tại sao chúng ta vẫn kể câu chuyện về một thuật toán hàng chục năm tuổi không còn dùng nữa? Vì nó minh họa hoàn hảo hai bài học giá trị. Thứ nhất là các hệ thống máy tính thường *được thiết kế lặp lại dựa trên kinh nghiệm.* Chúng ta hiếm khi làm đúng ngay lần đầu, nên quan trọng là triển khai một giải pháp đơn giản sớm hơn là cứ mãi ở giai đoạn thiết kế, và mong đợi sẽ cải tiến dần theo thời gian. Thứ hai là nguyên tắc KISS nổi tiếng: *Keep it Simple, Stupid* (Hãy giữ mọi thứ đơn giản). Khi xây dựng một hệ thống phức tạp, đơn giản thường là tốt hơn. Cơ hội để phát minh các tối ưu hóa phức tạp là rất nhiều, và rất hấp dẫn để theo đuổi. Dù đôi khi các tối ưu hóa như vậy có giá trị ngắn hạn, thật ngạc nhiên là một cách tiếp cận đơn giản lại thường chứng tỏ là tốt nhất về lâu dài. Bởi vì khi một hệ thống có nhiều thành phần chuyển động, như Internet chắc chắn là như vậy, giữ cho mỗi phần càng đơn giản càng tốt thường là cách tốt nhất.  :ref:`[Tiếp theo] <key-control-data>`
