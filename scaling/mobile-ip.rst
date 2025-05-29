@@ -1,349 +1,98 @@
-4.5 Routing Among Mobile Devices
-================================
+4.5 Định tuyến giữa các thiết bị di động
+========================================
 
-It probably should not be a great surprise to learn that mobile devices
-present some challenges for the Internet architecture. The Internet was
-designed in an era when computers were large, immobile devices, and,
-while the Internet’s designers probably had some notion that mobile
-devices might appear in the future, it’s fair to assume it was not a top
-priority to accommodate them. Today, of course, mobile computers are
-everywhere, notably in the form of laptops and smartphones, and
-increasingly in other forms, such as drones. In this section, we will
-look at some of the challenges posed by the appearance of mobile devices
-and some of the current approaches to accommodating them.
+Có lẽ sẽ không quá ngạc nhiên khi biết rằng các thiết bị di động đặt ra một số thách thức cho kiến trúc Internet. Internet được thiết kế vào thời kỳ mà máy tính là những thiết bị lớn, cố định, và mặc dù các nhà thiết kế Internet có lẽ đã hình dung rằng các thiết bị di động có thể xuất hiện trong tương lai, nhưng có thể cho rằng việc hỗ trợ chúng không phải là ưu tiên hàng đầu. Ngày nay, tất nhiên, máy tính di động xuất hiện ở khắp mọi nơi, đặc biệt dưới dạng laptop và điện thoại thông minh, và ngày càng nhiều dưới các hình thức khác như drone. Trong phần này, chúng ta sẽ xem xét một số thách thức do sự xuất hiện của thiết bị di động đặt ra và một số cách tiếp cận hiện tại để hỗ trợ chúng.
 
-4.5.1 Challenges for Mobile Networking
---------------------------------------
+4.5.1 Thách thức đối với mạng di động
+-------------------------------------
 
-It is easy enough today to turn up in a wireless hotspot, connect to the
-Internet using 802.11 or some other wireless networking protocol, and
-obtain pretty good Internet service. One key enabling technology that
-made the hotspot feasible is DHCP. You can settle in at a coffee shop,
-open your laptop, obtain an IP address for your laptop, and get your
-laptop talking to a default router and a Domain Name System (DNS)
-server, and for a broad class of applications you have everything you
-need.
+Ngày nay, việc xuất hiện tại một điểm phát sóng không dây, kết nối Internet bằng 802.11 hoặc một giao thức mạng không dây nào đó, và có được dịch vụ Internet khá tốt là điều khá dễ dàng. Một công nghệ then chốt giúp điểm phát sóng trở nên khả thi là DHCP. Bạn có thể ngồi ở quán cà phê, mở laptop, nhận địa chỉ IP cho laptop của mình, và để laptop giao tiếp với router mặc định và máy chủ Hệ thống tên miền (DNS), và với một lớp ứng dụng rộng, bạn đã có mọi thứ mình cần.
 
-If we look a little more closely, however, it’s clear that for some
-application scenarios, just getting a new IP address every time you
-move—which is what DHCP does for you—isn’t always enough. Suppose you
-are using your laptop or smartphone for a Voice over IP telephone
-call, and while talking on the phone you move from one hotspot to
-another, or even switch from Wi-Fi to the cellular network for your
-Internet connection.
+Tuy nhiên, nếu nhìn kỹ hơn, rõ ràng trong một số kịch bản ứng dụng, chỉ cần nhận một địa chỉ IP mới mỗi khi bạn di chuyển—điều mà DHCP làm cho bạn—không phải lúc nào cũng đủ. Giả sử bạn đang sử dụng laptop hoặc điện thoại thông minh để thực hiện một cuộc gọi thoại qua IP (VoIP), và trong khi đang nói chuyện, bạn di chuyển từ điểm phát sóng này sang điểm phát sóng khác, hoặc thậm chí chuyển từ Wi-Fi sang mạng di động cho kết nối Internet của mình.
 
-Clearly, when you move from one access network to another, you need to
-get a new IP address—one that corresponds to the new network. But, the
-computer or telephone at the other end of your conversation doesn’t
-immediately know where you have moved or what your new IP address is.
-Consequently, in the absence of some other mechanism, packets would
-continue to be sent to the address where you *used* to be, not where
-you are now. This problem is illustrated in :numref:`Figure %s
-<fig-mobileeg>`; as the mobile node moves from the 802.11 network in
-:numref:`Figure %s(a) <fig-mobileeg>` to the cellular network in
-:numref:`Figure %s(b) <fig-mobileeg>`, somehow packets from the
-*correspondent node* need to find their way to the new network and
-then on to the mobile node.
+Rõ ràng, khi bạn di chuyển từ một mạng truy cập này sang mạng khác, bạn cần nhận một địa chỉ IP mới—một địa chỉ tương ứng với mạng mới. Nhưng, máy tính hoặc điện thoại ở đầu bên kia cuộc gọi của bạn không ngay lập tức biết bạn đã di chuyển đến đâu hoặc địa chỉ IP mới của bạn là gì. Do đó, nếu không có một cơ chế nào khác, các gói tin sẽ tiếp tục được gửi đến địa chỉ nơi bạn *đã từng* ở, chứ không phải nơi bạn đang ở bây giờ. Vấn đề này được minh họa trong :numref:`Hình %s <fig-mobileeg>`; khi nút di động di chuyển từ mạng 802.11 trong :numref:`Hình %s(a) <fig-mobileeg>` sang mạng di động trong :numref:`Hình %s(b) <fig-mobileeg>`, bằng cách nào đó các gói tin từ *nút tương ứng* cần phải tìm đường đến mạng mới và sau đó đến nút di động.
 
 .. _fig-mobileeg:
 .. figure:: figures/f04-26-22092018.png
    :width: 500px
    :align: center
 
-   Forwarding packets from a correspondent node to a
-   mobile node.
+   Chuyển tiếp gói tin từ một nút tương ứng đến một nút di động.
 
-There are many different ways to tackle the problem just described, and
-we will look at some of them below. Assuming that there is some way to
-redirect packets so that they come to your new address rather than your
-old address, the next immediately apparent problems relate to security.
-For example, if there is a mechanism by which I can say, “My new IP
-address is X,” how do I prevent some attacker from making such a
-statement without my permission, thus enabling him to either receive my
-packets, or to redirect my packets to some unwitting third party? Thus,
-we see that security and mobility are quite closely related.
+Có rất nhiều cách khác nhau để giải quyết vấn đề vừa mô tả, và chúng ta sẽ xem xét một số cách dưới đây. Giả sử rằng có một cách nào đó để chuyển hướng các gói tin sao cho chúng đến địa chỉ mới của bạn thay vì địa chỉ cũ, thì các vấn đề tiếp theo liên quan ngay lập tức đến bảo mật. Ví dụ, nếu có một cơ chế cho phép tôi nói rằng, “Địa chỉ IP mới của tôi là X,” làm thế nào để ngăn một kẻ tấn công đưa ra tuyên bố như vậy mà không có sự cho phép của tôi, từ đó cho phép hắn nhận các gói tin của tôi, hoặc chuyển hướng các gói tin của tôi đến một bên thứ ba không hay biết? Như vậy, chúng ta thấy rằng bảo mật và di động có liên quan khá chặt chẽ với nhau.
 
-One issue that the above discussion highlights is the fact that IP
-addresses actually serve two tasks. They are used as an *identifier* of
-an endpoint, and they are also used to *locate* the endpoint. Think of
-the identifier as a long-lived name for the endpoint, and the locator as
-some possibly more temporary information about how to route packets to
-the endpoint. As long as devices do not move, or do not move often,
-using a single address for both jobs seem pretty reasonable. But once
-devices start to move, you would rather like to have an identifier that
-does not change as you move—this is sometimes called an *Endpoint
-Identifier* or *Host Identifier*—and a separate *locator*. This idea of
-separating locators from identifiers has been around for a long time,
-and most of the approaches to handling mobility described below provide
-such a separation in some form.
+Một vấn đề mà thảo luận trên làm nổi bật là thực tế địa chỉ IP thực sự phục vụ hai nhiệm vụ. Chúng được dùng như một *định danh* cho một đầu cuối, và chúng cũng được dùng để *định vị* đầu cuối đó. Hãy coi định danh như một tên tồn tại lâu dài cho đầu cuối, và định vị như một thông tin có thể tạm thời hơn về cách chuyển tiếp gói tin đến đầu cuối đó. Miễn là các thiết bị không di chuyển, hoặc không di chuyển thường xuyên, việc dùng một địa chỉ cho cả hai mục đích này có vẻ khá hợp lý. Nhưng một khi các thiết bị bắt đầu di chuyển, bạn sẽ muốn có một định danh không thay đổi khi di chuyển—đôi khi gọi là *Định danh đầu cuối* hoặc *Định danh host*—và một *định vị* riêng biệt. Ý tưởng tách biệt định vị khỏi định danh đã xuất hiện từ lâu, và hầu hết các cách tiếp cận xử lý di động mô tả dưới đây đều cung cấp sự tách biệt này dưới một hình thức nào đó.
 
-The assumption that IP addresses don’t change shows up in many different
-places. For example, transport protocols like TCP have historically made
-assumptions about the IP address staying constant for the life of a
-connection, so one approach could be to redesign transport protocols so
-they can operate with changing end-point addresses.
+Giả định rằng địa chỉ IP không thay đổi xuất hiện ở nhiều nơi khác nhau. Ví dụ, các giao thức vận chuyển như TCP trong lịch sử đã giả định rằng địa chỉ IP giữ nguyên trong suốt vòng đời của một kết nối, vì vậy một cách tiếp cận có thể là thiết kế lại các giao thức vận chuyển để chúng có thể hoạt động với địa chỉ đầu cuối thay đổi.
 
-But rather than try to change TCP, a common alternative is for the
-application to periodically re-establish the TCP connection in case the
-client’s IP address has changed. As strange as this sounds, if the
-application is HTTP-based (e.g., a web browser like Chrome or a
-streaming application like Netflix) then that is exactly what happens.
-In other words, the strategy is for the application to work around
-situations where the user’s IP address may have changed, instead of
-trying to maintain the appearance that it does not change.
+Nhưng thay vì cố gắng thay đổi TCP, một lựa chọn phổ biến là để ứng dụng định kỳ thiết lập lại kết nối TCP trong trường hợp địa chỉ IP của client đã thay đổi. Nghe có vẻ lạ, nhưng nếu ứng dụng dựa trên HTTP (ví dụ, trình duyệt web như Chrome hoặc ứng dụng streaming như Netflix) thì đó chính xác là những gì đang diễn ra. Nói cách khác, chiến lược là để ứng dụng tự xử lý các tình huống khi địa chỉ IP của người dùng có thể thay đổi, thay vì cố gắng duy trì ảo tưởng rằng nó không thay đổi.
 
-While we are all familiar with endpoints that move, it is worth noting
-that routers can also move. This is certainly less common today than
-endpoint mobility, but there are plenty of environments where a mobile
-router might make sense. One example might be an emergency response
-team trying to deploy a network after some natural disaster has
-knocked out all the fixed infrastructure. There are additional
-considerations when *all* the nodes in a network, not just the
-endpoints, are mobile, a topic we will discuss later in this section.
+Mặc dù chúng ta đều quen thuộc với các đầu cuối di chuyển, cũng cần lưu ý rằng router cũng có thể di chuyển. Điều này chắc chắn ít phổ biến hơn di động đầu cuối ngày nay, nhưng có nhiều môi trường mà một router di động có thể hợp lý. Một ví dụ có thể là một đội phản ứng khẩn cấp cố gắng triển khai một mạng sau khi một thảm họa thiên nhiên đã phá hủy toàn bộ hạ tầng cố định. Có thêm các cân nhắc khi *tất cả* các nút trong một mạng, không chỉ các đầu cuối, đều di động, chủ đề này sẽ được bàn sau trong phần này.
 
-Before we start to look at some of the approaches to supporting mobile
-devices, a couple of points of clarification. It is common to find that
-people confuse wireless networks with mobility. After all, mobility and
-wireless often are found together for obvious reasons. But wireless
-communication is really about getting data from A to B without a wire,
-while mobility is about dealing with what happens when a node moves
-around as it communicates. Certainly many nodes that use wireless
-communication channels are not mobile, and sometimes mobile nodes will
-use wired communication (although this is less common).
+Trước khi chúng ta xem xét một số cách tiếp cận hỗ trợ thiết bị di động, cần làm rõ một số điểm. Người ta thường nhầm lẫn giữa mạng không dây và di động. Rốt cuộc, di động và không dây thường đi cùng nhau vì lý do hiển nhiên. Nhưng truyền thông không dây thực chất là truyền dữ liệu từ A đến B mà không cần dây, trong khi di động là xử lý những gì xảy ra khi một nút di chuyển trong khi truyền thông. Rõ ràng, nhiều nút sử dụng kênh truyền không dây nhưng không di động, và đôi khi các nút di động sẽ sử dụng truyền thông có dây (dù điều này ít phổ biến hơn).
 
-Finally, in this chapter we are mostly interested in what we might
-call *network-layer mobility*. That is, we are interested in how to
-deal with nodes that move from one network to another. Moving from one
-access point to another in the same 802.11 network can be handled by
-mechanisms specific to 802.11, and cellular networks also have ways to
-handle mobility, of course, but in large heterogeneous systems like
-the Internet we need to support mobility more broadly across networks.
+Cuối cùng, trong chương này chúng ta chủ yếu quan tâm đến cái gọi là *di động tầng mạng*. Tức là, chúng ta quan tâm đến cách xử lý các nút di chuyển từ mạng này sang mạng khác. Việc di chuyển từ điểm truy cập này sang điểm truy cập khác trong cùng một mạng 802.11 có thể được xử lý bằng các cơ chế riêng của 802.11, và mạng di động cũng có các cách xử lý di động, nhưng trong các hệ thống dị thể lớn như Internet, chúng ta cần hỗ trợ di động rộng hơn giữa các mạng.
 
-4.5.2 Routing to Mobile Hosts (Mobile IP)
------------------------------------------
+4.5.2 Định tuyến đến các host di động (Mobile IP)
+--------------------------------------------------
 
-Mobile IP is the primary mechanism in today’s Internet architecture to
-tackle the problem of routing packets to mobile hosts. It introduces a
-few new capabilities but does not require any change from non-mobile
-hosts or most routers—thus making it incrementally deployable.
+Mobile IP là cơ chế chính trong kiến trúc Internet ngày nay để giải quyết vấn đề định tuyến các gói tin đến các host di động. Nó bổ sung một vài khả năng mới nhưng không yêu cầu thay đổi gì từ các host không di động hoặc hầu hết các router—do đó có thể triển khai từng bước.
 
-The mobile host is assumed to have a permanent IP address, called its
-*home address*, which has a network prefix equal to that of its *home
-network*. This is the address that will be used by other hosts when they
-initially send packets to the mobile host; because it does not change,
-it can be used by long-lived applications as the host roams. We can
-think of this as the long-lived identifier of the host.
+Host di động được giả định có một địa chỉ IP cố định, gọi là *địa chỉ nhà* (home address), với prefix mạng trùng với *mạng nhà* (home network) của nó. Đây là địa chỉ mà các host khác sẽ dùng khi gửi gói tin ban đầu đến host di động; vì nó không thay đổi, nó có thể được các ứng dụng lâu dài sử dụng khi host di chuyển. Ta có thể coi đây là định danh lâu dài của host.
 
-When the host moves to a new foreign network away from its home network,
-it typically acquires a new address on that network using some means
-such as DHCP. This address is going to change every time the host roams
-to a new network, so we can think of this as being more like the locator
-for the host, but it is important to note that the host does not lose
-its permanent home address when it acquires a new address on the foreign
-network. This home address is critical to its ability to sustain
-communications as it moves, as we’ll see below.
+Khi host di chuyển đến một mạng ngoài mạng nhà, nó thường nhận một địa chỉ mới trên mạng đó bằng một cách nào đó như DHCP. Địa chỉ này sẽ thay đổi mỗi khi host di chuyển sang mạng mới, nên ta có thể coi nó giống như định vị cho host, nhưng điều quan trọng là host không mất địa chỉ nhà cố định khi nhận địa chỉ mới trên mạng ngoài. Địa chỉ nhà này rất quan trọng để duy trì liên lạc khi di chuyển, như sẽ thấy dưới đây.
 
-   Because DHCP was developed around the same time as Mobile IP, the
-   original Mobile IP standards did not require DHCP, but DHCP is
-   ubiquitous today.
+   Vì DHCP được phát triển cùng thời với Mobile IP, các tiêu chuẩn Mobile IP ban đầu không yêu cầu DHCP, nhưng ngày nay DHCP đã phổ biến.
 
-While the majority of routers remain unchanged, mobility support does
-require some new functionality in at least one router, known as the
-*home agent* of the mobile node. This router is located on the home
-network of the mobile host. In some cases, a second router with enhanced
-functionality, the *foreign agent,* is also required. This router is
-located on a network to which the mobile node attaches itself when it is
-away from its home network. We will consider first the operation of
-Mobile IP when a foreign agent is used. An example network with both
-home and foreign agents is shown in :numref:`Figure %s <fig-mobile>`.
+Trong khi phần lớn các router không thay đổi, hỗ trợ di động đòi hỏi một số chức năng mới ở ít nhất một router, gọi là *đại diện nhà* (home agent) của nút di động. Router này nằm trên mạng nhà của host di động. Trong một số trường hợp, một router thứ hai với chức năng mở rộng, gọi là *đại diện ngoài* (foreign agent), cũng cần thiết. Router này nằm trên mạng mà nút di động kết nối khi rời mạng nhà. Trước tiên, chúng ta sẽ xem xét hoạt động của Mobile IP khi có sử dụng đại diện ngoài. Một mạng ví dụ với cả đại diện nhà và đại diện ngoài được minh họa trong :numref:`Hình %s <fig-mobile>`.
 
 .. _fig-mobile:
 .. figure:: figures/f04-27-9780123850591.png
    :width: 500px
    :align: center
 
-   Mobile host and mobility agents.
+   Host di động và các đại diện di động.
 
-Both home and foreign agents periodically announce their presence on the
-networks to which they are attached using agent advertisement messages.
-A mobile host may also solicit an advertisement when it attaches to a
-new network. The advertisement by the home agent enables a mobile host
-to learn the address of its home agent before it leaves its home
-network. When the mobile host attaches to a foreign network, it hears an
-advertisement from a foreign agent and registers with the agent,
-providing the address of its home agent. The foreign agent then contacts
-the home agent, providing a *care-of address*. This is usually the IP
-address of the foreign agent.
+Cả đại diện nhà và đại diện ngoài đều định kỳ thông báo sự hiện diện của mình trên các mạng mà chúng kết nối bằng các thông điệp quảng bá đại diện. Một host di động cũng có thể chủ động yêu cầu quảng bá khi nó kết nối vào một mạng mới. Quảng bá của đại diện nhà cho phép host di động biết địa chỉ của đại diện nhà trước khi rời mạng nhà. Khi host di động kết nối vào mạng ngoài, nó nhận được quảng bá từ đại diện ngoài và đăng ký với đại diện này, cung cấp địa chỉ của đại diện nhà. Đại diện ngoài sau đó liên hệ với đại diện nhà, cung cấp một *địa chỉ care-of*. Đây thường là địa chỉ IP của đại diện ngoài.
 
-At this point, we can see that any host that tries to send a packet to
-the mobile host will send it with a destination address equal to the
-home address of that node. Normal IP forwarding will cause that packet
-to arrive on the home network of the mobile node on which the home agent
-is sitting. Thus, we can divide the problem of delivering the packet to
-the mobile node into three parts:
+Tại thời điểm này, ta thấy rằng bất kỳ host nào cố gửi gói tin đến host di động sẽ gửi với địa chỉ đích là địa chỉ nhà của nút đó. Chuyển tiếp IP thông thường sẽ khiến gói tin đến mạng nhà của nút di động, nơi đại diện nhà đang ngồi. Như vậy, ta có thể chia bài toán chuyển gói tin đến nút di động thành ba phần:
 
-1. How does the home agent intercept a packet that is destined for the
-   mobile node?
+1. Làm thế nào đại diện nhà chặn được gói tin gửi đến nút di động?
 
-2. How does the home agent then deliver the packet to the foreign agent?
+2. Làm thế nào đại diện nhà chuyển tiếp gói tin đó đến đại diện ngoài?
 
-3. How does the foreign agent deliver the packet to the mobile node?
+3. Làm thế nào đại diện ngoài chuyển gói tin đến nút di động?
 
-The first problem might look easy if you just look at :numref:`Figure
-%s <fig-mobile>`, in which the home agent is clearly the only path between
-the sending host and the home network and thus must receive packets that
-are destined to the mobile node. But what if the sending (correspondent)
-node were on network 18, or what if there were another router connected
-to network 18 that tried to deliver the packet without its passing
-through the home agent? To address this problem, the home agent actually
-impersonates the mobile node, using a technique called *proxy ARP.* This
-works just like Address Resolution Protocol (ARP), except that the home
-agent inserts the IP address of the mobile node, rather than its own, in
-the ARP messages. It uses its own hardware address, so that all the
-nodes on the same network learn to associate the hardware address of the
-home agent with the IP address of the mobile node. One subtle aspect of
-this process is the fact that ARP information may be cached in other
-nodes on the network. To make sure that these caches are invalidated in
-a timely way, the home agent issues an ARP message as soon as the mobile
-node registers with a foreign agent. Because the ARP message is not a
-response to a normal ARP request, it is termed a *gratuitous ARP*.
+Vấn đề đầu tiên có vẻ dễ nếu chỉ nhìn vào :numref:`Hình %s <fig-mobile>`, trong đó đại diện nhà rõ ràng là đường duy nhất giữa host gửi và mạng nhà nên chắc chắn nhận được các gói tin gửi đến nút di động. Nhưng nếu nút gửi (nút tương ứng) nằm trên mạng 18, hoặc nếu có một router khác kết nối với mạng 18 cố chuyển gói tin mà không qua đại diện nhà thì sao? Để giải quyết vấn đề này, đại diện nhà thực sự giả mạo nút di động, sử dụng kỹ thuật gọi là *proxy ARP*. Điều này hoạt động giống như Giao thức phân giải địa chỉ (ARP), ngoại trừ việc đại diện nhà chèn địa chỉ IP của nút di động, thay vì của chính nó, vào các thông điệp ARP. Nó dùng địa chỉ phần cứng của chính mình, để tất cả các nút trên cùng mạng học cách gán địa chỉ phần cứng của đại diện nhà với địa chỉ IP của nút di động. Một điểm tinh tế của quá trình này là thông tin ARP có thể được cache ở các nút khác trên mạng. Để đảm bảo các cache này bị vô hiệu hóa kịp thời, đại diện nhà phát đi một thông điệp ARP ngay khi nút di động đăng ký với đại diện ngoài. Vì thông điệp ARP này không phải là phản hồi cho một yêu cầu ARP thông thường, nó được gọi là *gratuitous ARP*.
 
-The second problem is the delivery of the intercepted packet to the
-foreign agent. Here we use the tunneling technique described elsewhere.
-The home agent simply wraps the packet inside an IP header that is
-destined for the foreign agent and transmits it into the internetwork.
-All the intervening routers just see an IP packet destined for the IP
-address of the foreign agent. Another way of looking at this is that an
-IP tunnel is established between the home agent and the foreign agent,
-and the home agent just drops packets destined for the mobile node into
-that tunnel.
+Vấn đề thứ hai là chuyển tiếp gói tin bị chặn đến đại diện ngoài. Ở đây ta sử dụng kỹ thuật tunneling đã mô tả ở nơi khác. Đại diện nhà đơn giản là bọc gói tin bên trong một header IP mới với đích là đại diện ngoài và truyền nó vào liên mạng. Tất cả các router trung gian chỉ thấy một gói IP đích là địa chỉ IP của đại diện ngoài. Nói cách khác, một tunnel IP được thiết lập giữa đại diện nhà và đại diện ngoài, và đại diện nhà chỉ việc thả các gói tin đích là nút di động vào tunnel đó.
 
-When a packet finally arrives at the foreign agent, it strips the extra
-IP header and finds inside an IP packet destined for the home address of
-the mobile node. Clearly the foreign agent cannot treat this like any
-old IP packet because this would cause it to send it back to the home
-network. Instead, it has to recognize the address as that of a
-registered mobile node. It then delivers the packet to the *hardware*
-address of the mobile node (e.g., its Ethernet address), which was
-learned as part of the registration process.
+Khi một gói tin cuối cùng đến đại diện ngoài, nó sẽ gỡ bỏ header IP phụ và tìm thấy bên trong một gói IP đích là địa chỉ nhà của nút di động. Rõ ràng đại diện ngoài không thể xử lý như một gói IP thông thường vì như vậy nó sẽ gửi ngược về mạng nhà. Thay vào đó, nó phải nhận ra địa chỉ này là của một nút di động đã đăng ký. Nó sẽ chuyển gói tin đến *địa chỉ phần cứng* của nút di động (ví dụ, địa chỉ Ethernet), đã biết trong quá trình đăng ký.
 
-One observation that can be made about these procedures is that it is
-possible for the foreign agent and the mobile node to be in the same
-box; that is, a mobile node can perform the foreign agent function
-itself. To make this work, however, the mobile node must be able to
-dynamically acquire an IP address that is located in the address space
-of the foreign network (e.g., using DHCP). This address will then be
-used as the care-of address. In our example, this address would have a
-network number of 12. This approach has the desirable feature of
-allowing mobile nodes to attach to networks that don’t have foreign
-agents; thus, mobility can be achieved with only the addition of a
-home agent and some new software on the mobile node (assuming DHCP is
-used on the foreign network).
+Một nhận xét về các thủ tục này là đại diện ngoài và nút di động có thể nằm cùng một thiết bị; tức là, một nút di động có thể tự thực hiện chức năng đại diện ngoài. Tuy nhiên, để làm được điều này, nút di động phải có khả năng động nhận một địa chỉ IP thuộc không gian địa chỉ của mạng ngoài (ví dụ, dùng DHCP). Địa chỉ này sẽ được dùng làm địa chỉ care-of. Trong ví dụ, địa chỉ này sẽ có số mạng là 12. Cách tiếp cận này có ưu điểm là cho phép nút di động kết nối vào các mạng không có đại diện ngoài; do đó, di động có thể đạt được chỉ với việc bổ sung đại diện nhà và phần mềm mới trên nút di động (giả sử mạng ngoài có DHCP).
 
-What about traffic in the other direction (i.e., from mobile node to
-fixed node)? This turns out to be much easier. The mobile node just puts
-the IP address of the fixed node in the destination field of its IP
-packets while putting its permanent address in the source field, and the
-packets are forwarded to the fixed node using normal means. Of course,
-if both nodes in a conversation are mobile, then the procedures
-described above are used in each direction.
+Vậy còn lưu lượng theo chiều ngược lại (tức là từ nút di động đến nút cố định)? Điều này hóa ra dễ hơn nhiều. Nút di động chỉ cần đặt địa chỉ IP của nút cố định vào trường đích của các gói IP, đồng thời đặt địa chỉ nhà vào trường nguồn, và các gói tin sẽ được chuyển tiếp đến nút cố định theo cách thông thường. Tất nhiên, nếu cả hai nút trong một phiên liên lạc đều di động, thì các thủ tục mô tả ở trên sẽ được dùng cho cả hai chiều.
 
-Route Optimization in Mobile IP
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tối ưu hóa định tuyến trong Mobile IP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There is one significant drawback to the above approach: The route from
-the correspondent node to the mobile node can be significantly
-suboptimal. One of the most extreme examples is when a mobile node and
-the correspondent node are on the same network, but the home network for
-the mobile node is on the far side of the Internet. The sending
-correspondent node addresses all packets to the home network; they
-traverse the Internet to reach the home agent, which then tunnels them
-back across the Internet to reach the foreign agent. Clearly, it would
-be nice if the correspondent node could find out that the mobile node is
-actually on the same network and deliver the packet directly. In the
-more general case, the goal is to deliver packets as directly as
-possible from correspondent node to mobile node without passing through
-a home agent. This is sometimes referred to as the *triangle routing
-problem* since the path from correspondent to mobile node via home agent
-takes two sides of a triangle, rather than the third side that is the
-direct path.
+Có một nhược điểm lớn trong cách tiếp cận trên: Đường đi từ nút tương ứng đến nút di động có thể rất không tối ưu. Một ví dụ cực đoan là khi nút di động và nút tương ứng ở cùng một mạng, nhưng mạng nhà của nút di động lại ở phía bên kia Internet. Nút tương ứng gửi tất cả các gói đến mạng nhà; chúng đi qua Internet để đến đại diện nhà, rồi lại được tunnel ngược qua Internet để đến đại diện ngoài. Rõ ràng, sẽ tốt hơn nếu nút tương ứng biết rằng nút di động thực sự ở cùng mạng và chuyển gói tin trực tiếp. Trong trường hợp tổng quát hơn, mục tiêu là chuyển gói tin càng trực tiếp càng tốt từ nút tương ứng đến nút di động mà không qua đại diện nhà. Điều này đôi khi được gọi là *vấn đề định tuyến tam giác* vì đường đi từ nút tương ứng đến nút di động qua đại diện nhà đi theo hai cạnh của tam giác, thay vì cạnh thứ ba là đường đi trực tiếp.
 
-The basic idea behind the solution to triangle routing is to let the
-correspondent node know the care-of address of the mobile node. The
-correspondent node can then create its own tunnel to the foreign agent.
-This is treated as an optimization of the process just described. If the
-sender has been equipped with the necessary software to learn the
-care-of address and create its own tunnel, then the route can be
-optimized; if not, packets just follow the suboptimal route.
+Ý tưởng cơ bản để giải quyết định tuyến tam giác là cho nút tương ứng biết địa chỉ care-of của nút di động. Nút tương ứng sau đó có thể tự tạo tunnel đến đại diện ngoài. Đây được coi là một tối ưu hóa của quá trình vừa mô tả. Nếu nút gửi được trang bị phần mềm cần thiết để học địa chỉ care-of và tự tạo tunnel, thì đường đi có thể được tối ưu hóa; nếu không, các gói tin sẽ đi theo đường không tối ưu.
 
-When a home agent sees a packet destined for one of the mobile nodes
-that it supports, it can deduce that the sender is not using the optimal
-route. Therefore, it sends a “binding update” message back to the
-source, in addition to forwarding the data packet to the foreign agent.
-The source, if capable, uses this binding update to create an entry in a
-*binding cache,* which consists of a list of mappings from mobile node
-addresses to care-of addresses. The next time this source has a data
-packet to send to that mobile node, it will find the binding in the
-cache and can tunnel the packet directly to the foreign agent.
+Khi đại diện nhà thấy một gói tin gửi đến một trong các nút di động mà nó hỗ trợ, nó có thể suy ra rằng nút gửi không dùng đường đi tối ưu. Do đó, nó gửi một thông điệp “cập nhật binding” ngược lại cho nguồn gửi, đồng thời chuyển tiếp gói dữ liệu đến đại diện ngoài. Nguồn gửi, nếu có khả năng, sẽ dùng cập nhật binding này để tạo một mục trong *binding cache*, gồm danh sách ánh xạ từ địa chỉ nút di động đến địa chỉ care-of. Lần tới khi nguồn gửi có gói dữ liệu gửi đến nút di động đó, nó sẽ tìm thấy binding trong cache và có thể tunnel gói tin trực tiếp đến đại diện ngoài.
 
-There is an obvious problem with this scheme, which is that the binding
-cache may become out-of-date if the mobile host moves to a new network.
-If an out-of-date cache entry is used, the foreign agent will receive
-tunneled packets for a mobile node that is no longer registered on its
-network. In this case, it sends a *binding warning* message back to the
-sender to tell it to stop using this cache entry. This scheme works only
-in the case where the foreign agent is not the mobile node itself,
-however. For this reason, cache entries need to be deleted after some
-period of time; the exact amount is specified in the binding update
-message.
+Có một vấn đề rõ ràng với sơ đồ này, đó là binding cache có thể bị lỗi thời nếu host di động chuyển sang mạng mới. Nếu một mục cache lỗi thời được dùng, đại diện ngoài sẽ nhận các gói tunnel cho một nút di động không còn đăng ký trên mạng của nó. Trong trường hợp này, nó gửi một thông điệp *cảnh báo binding* ngược lại cho nguồn gửi để yêu cầu ngừng dùng mục cache này. Sơ đồ này chỉ hoạt động khi đại diện ngoài không phải là chính nút di động. Vì lý do này, các mục cache cần bị xóa sau một khoảng thời gian; thời gian cụ thể được chỉ định trong thông điệp cập nhật binding.
 
-As noted above, mobile routing provides some interesting security
-challenges, which are clearer now that we have seen how Mobile IP works.
-For example, an attacker wishing to intercept the packets destined to
-some other node in an internetwork could contact the home agent for that
-node and announce itself as the new foreign agent for the node. Thus, it
-is clear that some authentication mechanisms are required.
+Như đã nói ở trên, định tuyến di động đặt ra một số thách thức bảo mật thú vị, điều này càng rõ ràng hơn khi ta thấy cách Mobile IP hoạt động. Ví dụ, một kẻ tấn công muốn chặn các gói tin gửi đến một nút khác trong liên mạng có thể liên hệ với đại diện nhà của nút đó và tự nhận mình là đại diện ngoài mới cho nút đó. Do đó, rõ ràng là cần có các cơ chế xác thực.
 
-Mobility in IPv6
-~~~~~~~~~~~~~~~~
+Di động trong IPv6
+~~~~~~~~~~~~~~~~~~
 
-There are a handful of significant differences between mobility support
-in IPv4 and IPv6. Most importantly, it was possible to build mobility
-support into the standards for IPv6 pretty much from the beginning, thus
-alleviating a number of incremental deployment problems. (It may be more
-correct to say that IPv6 is one big incremental deployment problem,
-which, once solved, will deliver mobility support as part of the
-package.)
+Có một số khác biệt đáng kể giữa hỗ trợ di động trong IPv4 và IPv6. Quan trọng nhất, có thể xây dựng hỗ trợ di động vào các tiêu chuẩn của IPv6 ngay từ đầu, do đó giảm bớt nhiều vấn đề triển khai từng bước. (Có thể nói đúng hơn là IPv6 chính là một vấn đề triển khai từng bước lớn, mà khi giải quyết xong sẽ cung cấp hỗ trợ di động như một phần của gói.)
 
-Since all IPv6-capable hosts can acquire an address whenever they are
-attached to a foreign network (using several mechanisms defined as part
-of the core v6 specifications), Mobile IPv6 does away with the foreign
-agent and includes the necessary capabilities to act as a foreign agent
-in every host.
+Vì tất cả các host hỗ trợ IPv6 đều có thể nhận địa chỉ bất cứ khi nào chúng kết nối vào mạng ngoài (bằng nhiều cơ chế được định nghĩa trong các đặc tả lõi của v6), Mobile IPv6 loại bỏ đại diện ngoài và tích hợp các khả năng cần thiết để đóng vai trò đại diện ngoài vào mọi host.
 
-One other interesting aspect of IPv6 that comes into play with Mobile IP
-is its inclusion of a flexible set of extension headers, as described
-elsewhere in this chapter. This is used in the optimized routing
-scenario described above. Rather than *tunneling* a packet to the mobile
-node at its care-of address, an IPv6 node can send an IP packet to the
-care-of address with the home address contained in a *routing header*.
-This header is ignored by all the intermediate nodes, but it enables the
-mobile node to treat the packet as if it were sent to the home address,
-thus enabling it to continue presenting higher layer protocols with the
-illusion that its IP address is fixed. Using an extension header rather
-than a tunnel is more efficient from the perspective of both bandwidth
-consumption and processing.
+Một điểm thú vị khác của IPv6 liên quan đến Mobile IP là việc tích hợp một tập hợp linh hoạt các header mở rộng, như đã mô tả ở phần khác trong chương này. Điều này được sử dụng trong kịch bản định tuyến tối ưu mô tả ở trên. Thay vì *tunnel* một gói tin đến nút di động tại địa chỉ care-of, một nút IPv6 có thể gửi một gói IP đến địa chỉ care-of với địa chỉ nhà nằm trong một *header định tuyến*. Header này bị các nút trung gian bỏ qua, nhưng cho phép nút di động xử lý gói tin như thể nó được gửi đến địa chỉ nhà, từ đó cho phép nó tiếp tục cung cấp cho các giao thức tầng cao hơn ảo tưởng rằng địa chỉ IP của nó là cố định. Việc sử dụng header mở rộng thay vì tunnel hiệu quả hơn cả về băng thông lẫn xử lý.
 
-Finally, we note that many open issues remain in mobile networking.
-Managing the power consumption of mobile devices is increasingly
-important, so that smaller devices with limited battery power can be
-built. There is also the problem of *ad hoc* mobile networks—enabling a
-group of mobile nodes to form a network in the absence of any fixed
-nodes—which has some special challenges. A particularly challenging
-class of mobile networks is *sensor networks*. Sensors typically are
-small, inexpensive, and often battery powered, meaning that issues of
-very low power consumption and limited processing capability must also
-be considered. Furthermore, since wireless communications and mobility
-typically go hand in hand, the continual advances in wireless
-technologies keep on producing new challenges and opportunities for
-mobile networking.
+Cuối cùng, cần lưu ý rằng vẫn còn nhiều vấn đề mở trong mạng di động. Quản lý tiêu thụ năng lượng của thiết bị di động ngày càng quan trọng, để có thể xây dựng các thiết bị nhỏ với nguồn pin hạn chế. Cũng có vấn đề về mạng di động *ad hoc*—cho phép một nhóm nút di động tạo thành một mạng mà không cần nút cố định nào—với nhiều thách thức riêng. Một lớp mạng di động đặc biệt thách thức là *mạng cảm biến*. Cảm biến thường nhỏ, rẻ, và thường dùng pin, nghĩa là các vấn đề về tiêu thụ năng lượng cực thấp và khả năng xử lý hạn chế cũng phải được cân nhắc. Hơn nữa, vì truyền thông không dây và di động thường đi cùng nhau, các tiến bộ liên tục trong công nghệ không dây tiếp tục tạo ra những thách thức và cơ hội mới cho mạng di động.
