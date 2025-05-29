@@ -1,809 +1,303 @@
-5.2 Reliable Byte Stream (TCP)
-==============================
+5.2 Luồng Byte Đáng Tin Cậy (TCP)
+=================================
 
-In contrast to a simple demultiplexing protocol like UDP, a more
-sophisticated transport protocol is one that offers a reliable,
-connection-oriented, byte-stream service. Such a service has proven
-useful to a wide assortment of applications because it frees the
-application from having to worry about missing or reordered data. The
-Internet’s Transmission Control Protocol is probably the most widely
-used protocol of this type; it is also the most carefully tuned. It is
-for these two reasons that this section studies TCP in detail, although
-we identify and discuss alternative design choices at the end of the
-section.
+Trái ngược với một giao thức phân kênh đơn giản như UDP, một giao thức vận chuyển tinh vi hơn là giao thức cung cấp dịch vụ luồng byte, kết nối, đáng tin cậy. Một dịch vụ như vậy đã chứng tỏ hữu ích đối với nhiều loại ứng dụng vì nó giúp ứng dụng không phải lo lắng về việc mất hoặc sắp xếp lại dữ liệu. Giao thức Điều khiển Truyền vận Internet (Transmission Control Protocol - TCP) có lẽ là giao thức được sử dụng rộng rãi nhất thuộc loại này; nó cũng là giao thức được điều chỉnh cẩn thận nhất. Vì hai lý do này mà phần này nghiên cứu TCP một cách chi tiết, mặc dù chúng tôi sẽ xác định và thảo luận các lựa chọn thiết kế thay thế ở cuối phần.
 
-In terms of the properties of transport protocols given in the problem
-statement at the start of this chapter, TCP guarantees the reliable,
-in-order delivery of a stream of bytes. It is a full-duplex protocol,
-meaning that each TCP connection supports a pair of byte streams, one
-flowing in each direction. It also includes a flow-control mechanism for
-each of these byte streams that allows the receiver to limit how much
-data the sender can transmit at a given time. Finally, like UDP, TCP
-supports a demultiplexing mechanism that allows multiple application
-programs on any given host to simultaneously carry on a conversation
-with their peers.
+Xét về các thuộc tính của giao thức vận chuyển đã được nêu ra ở phần đầu chương này, TCP đảm bảo việc truyền luồng byte một cách đáng tin cậy, theo đúng thứ tự. Đây là một giao thức song công hoàn toàn, nghĩa là mỗi kết nối TCP hỗ trợ một cặp luồng byte, mỗi luồng đi theo một hướng. Nó cũng bao gồm một cơ chế điều khiển luồng cho mỗi luồng byte này, cho phép phía nhận giới hạn lượng dữ liệu mà phía gửi có thể truyền tại một thời điểm nhất định. Cuối cùng, giống như UDP, TCP hỗ trợ một cơ chế phân kênh cho phép nhiều chương trình ứng dụng trên bất kỳ máy chủ nào có thể đồng thời trò chuyện với các đối tác của chúng.
 
-In addition to the above features, TCP also implements a highly tuned
-congestion-control mechanism. The idea of this mechanism is to throttle
-how fast TCP sends data, not for the sake of keeping the sender from
-over-running the receiver, but so as to keep the sender from overloading
-the network. A description of TCP’s congestion-control mechanism is
-postponed until the next chapter, where we discuss it in the larger
-context of how network resources are fairly allocated.
+Ngoài các tính năng trên, TCP còn triển khai một cơ chế điều khiển tắc nghẽn được điều chỉnh rất kỹ lưỡng. Ý tưởng của cơ chế này là điều tiết tốc độ gửi dữ liệu của TCP, không phải để tránh phía gửi vượt quá khả năng của phía nhận, mà là để tránh phía gửi làm quá tải mạng. Việc mô tả cơ chế điều khiển tắc nghẽn của TCP sẽ được hoãn lại cho đến chương tiếp theo, nơi chúng tôi thảo luận về nó trong bối cảnh lớn hơn về cách tài nguyên mạng được phân bổ một cách công bằng.
 
-Since many people confuse congestion control and flow control, we
-restate the difference. *Flow control* involves preventing senders from
-over-running the capacity of receivers. *Congestion control* involves
-preventing too much data from being injected into the network, thereby
-causing switches or links to become overloaded. Thus, flow control is an
-end-to-end issue, while congestion control is concerned with how hosts
-and networks interact.
+Vì nhiều người thường nhầm lẫn giữa điều khiển tắc nghẽn và điều khiển luồng, chúng tôi xin nhắc lại sự khác biệt. *Điều khiển luồng* liên quan đến việc ngăn chặn phía gửi vượt quá khả năng của phía nhận. *Điều khiển tắc nghẽn* liên quan đến việc ngăn chặn quá nhiều dữ liệu được đưa vào mạng, dẫn đến các switch hoặc liên kết bị quá tải. Do đó, điều khiển luồng là vấn đề đầu-cuối, trong khi điều khiển tắc nghẽn liên quan đến cách các máy chủ và mạng tương tác với nhau.
 
-5.2.1 End-to-End Issues
------------------------
+5.2.1 Các Vấn Đề Đầu-Cuối
+-------------------------
 
-At the heart of TCP is the sliding window algorithm. Even though this is
-the same basic algorithm as is often used at the link level, because TCP
-runs over the Internet rather than a physical point-to-point link, there
-are many important differences. This subsection identifies these
-differences and explains how they complicate TCP. The following
-subsections then describe how TCP addresses these and other
-complications.
+Trọng tâm của TCP là thuật toán cửa sổ trượt. Mặc dù đây là thuật toán cơ bản giống như thường được sử dụng ở tầng liên kết, nhưng vì TCP chạy trên Internet thay vì một liên kết vật lý điểm-điểm, nên có nhiều khác biệt quan trọng. Phần này xác định những khác biệt đó và giải thích cách chúng làm phức tạp TCP. Các phần tiếp theo sẽ mô tả cách TCP giải quyết những phức tạp này và các vấn đề khác.
 
-First, whereas the link-level sliding window algorithm presented runs
-over a single physical link that always connects the same two computers,
-TCP supports logical connections between processes that are running on
-any two computers in the Internet. This means that TCP needs an explicit
-connection establishment phase during which the two sides of the
-connection agree to exchange data with each other. This difference is
-analogous to having to dial up the other party, rather than having a
-dedicated phone line. TCP also has an explicit connection teardown
-phase. One of the things that happens during connection establishment is
-that the two parties establish some shared state to enable the sliding
-window algorithm to begin. Connection teardown is needed so each host
-knows it is OK to free this state.
+Thứ nhất, trong khi thuật toán cửa sổ trượt ở tầng liên kết chạy trên một liên kết vật lý duy nhất luôn kết nối cùng hai máy tính, thì TCP hỗ trợ các kết nối logic giữa các tiến trình đang chạy trên bất kỳ hai máy tính nào trong Internet. Điều này có nghĩa là TCP cần một giai đoạn thiết lập kết nối rõ ràng, trong đó hai phía của kết nối đồng ý trao đổi dữ liệu với nhau. Sự khác biệt này tương tự như việc phải quay số cho bên kia, thay vì có một đường dây điện thoại chuyên dụng. TCP cũng có một giai đoạn kết thúc kết nối rõ ràng. Một trong những điều xảy ra trong quá trình thiết lập kết nối là hai bên thiết lập một số trạng thái chung để thuật toán cửa sổ trượt có thể bắt đầu. Việc kết thúc kết nối là cần thiết để mỗi máy chủ biết rằng có thể giải phóng trạng thái này.
 
-Second, whereas a single physical link that always connects the same two
-computers has a fixed round-trip time (RTT), TCP connections are likely
-to have widely different round-trip times. For example, a TCP connection
-between a host in San Francisco and a host in Boston, which are
-separated by several thousand kilometers, might have an RTT of 100 ms,
-while a TCP connection between two hosts in the same room, only a few
-meters apart, might have an RTT of only 1 ms. The same TCP protocol must
-be able to support both of these connections. To make matters worse, the
-TCP connection between hosts in San Francisco and Boston might have an
-RTT of 100 ms at 3 a.m., but an RTT of 500 ms at 3 p.m. Variations in
-the RTT are even possible during a single TCP connection that lasts only
-a few minutes. What this means to the sliding window algorithm is that
-the timeout mechanism that triggers retransmissions must be adaptive.
-(Certainly, the timeout for a point-to-point link must be a settable
-parameter, but it is not necessary to adapt this timer for a particular
-pair of nodes.)
+Thứ hai, trong khi một liên kết vật lý duy nhất luôn kết nối cùng hai máy tính có thời gian khứ hồi (RTT) cố định, các kết nối TCP có thể có thời gian khứ hồi rất khác nhau. Ví dụ, một kết nối TCP giữa một máy chủ ở San Francisco và một máy chủ ở Boston, cách nhau hàng nghìn km, có thể có RTT là 100 ms, trong khi một kết nối TCP giữa hai máy chủ trong cùng một phòng, chỉ cách nhau vài mét, có thể có RTT chỉ 1 ms. Cùng một giao thức TCP phải hỗ trợ cả hai loại kết nối này. Tệ hơn nữa, kết nối TCP giữa các máy chủ ở San Francisco và Boston có thể có RTT là 100 ms lúc 3 giờ sáng, nhưng lại là 500 ms lúc 3 giờ chiều. Thậm chí, sự biến động về RTT có thể xảy ra ngay trong một kết nối TCP chỉ kéo dài vài phút. Điều này có nghĩa là đối với thuật toán cửa sổ trượt, cơ chế timeout kích hoạt việc truyền lại phải thích ứng được. (Chắc chắn, timeout cho một liên kết điểm-điểm phải là một tham số có thể thiết lập, nhưng không cần phải điều chỉnh bộ đếm thời gian này cho từng cặp nút cụ thể.)
 
-A third difference is that packets may be reordered as they cross the
-Internet, but this is not possible on a point-to-point link where the
-first packet put into one end of the link must be the first to appear at
-the other end. Packets that are slightly out of order do not cause a
-problem since the sliding window algorithm can reorder packets correctly
-using the sequence number. The real issue is how far out of order
-packets can get or, said another way, how late a packet can arrive at
-the destination. In the worst case, a packet can be delayed in the
-Internet until the IP time to live (``TTL``) field expires, at which
-time the packet is discarded (and hence there is no danger of it
-arriving late). Knowing that IP throws packets away after their ``TTL``
-expires, TCP assumes that each packet has a maximum lifetime. The exact
-lifetime, known as the *maximum segment lifetime* (MSL), is an
-engineering choice. The current recommended setting is 120 seconds. Keep
-in mind that IP does not directly enforce this 120-second value; it is
-simply a conservative estimate that TCP makes of how long a packet might
-live in the Internet. The implication is significant—TCP has to be
-prepared for very old packets to suddenly show up at the receiver,
-potentially confusing the sliding window algorithm.
+Sự khác biệt thứ ba là các gói tin có thể bị sắp xếp lại khi đi qua Internet, điều này không thể xảy ra trên một liên kết điểm-điểm, nơi gói đầu tiên được đưa vào một đầu của liên kết phải là gói đầu tiên xuất hiện ở đầu kia. Các gói bị trễ nhẹ không gây ra vấn đề vì thuật toán cửa sổ trượt có thể sắp xếp lại các gói đúng thứ tự bằng cách sử dụng số thứ tự. Vấn đề thực sự là các gói có thể bị trễ đến mức nào, hay nói cách khác, một gói có thể đến đích muộn đến mức nào. Trong trường hợp xấu nhất, một gói có thể bị trì hoãn trong Internet cho đến khi trường thời gian sống (``TTL``) của IP hết hạn, lúc đó gói sẽ bị loại bỏ (và do đó không còn nguy cơ nó đến muộn). Biết rằng IP loại bỏ các gói sau khi ``TTL`` hết hạn, TCP giả định rằng mỗi gói có một thời gian sống tối đa. Thời gian sống chính xác, gọi là *thời gian sống tối đa của đoạn* (maximum segment lifetime - MSL), là một lựa chọn kỹ thuật. Giá trị khuyến nghị hiện tại là 120 giây. Lưu ý rằng IP không trực tiếp thực thi giá trị 120 giây này; nó chỉ là một ước lượng bảo thủ mà TCP đưa ra về thời gian một gói có thể tồn tại trong Internet. Hệ quả là TCP phải chuẩn bị cho trường hợp các gói rất cũ đột nhiên xuất hiện ở phía nhận, có thể gây nhầm lẫn cho thuật toán cửa sổ trượt.
 
-Fourth, the computers connected to a point-to-point link are generally
-engineered to support the link. For example, if a link’s delay ×
-bandwidth product is computed to be 8 KB—meaning that a window size is
-selected to allow up to 8 KB of data to be unacknowledged at a given
-time—then it is likely that the computers at either end of the link have
-the ability to buffer up to 8 KB of data. Designing the system otherwise
-would be silly. On the other hand, almost any kind of computer can be
-connected to the Internet, making the amount of resources dedicated to
-any one TCP connection highly variable, especially considering that any
-one host can potentially support hundreds of TCP connections at the same
-time. This means that TCP must include a mechanism that each side uses
-to “learn” what resources (e.g., how much buffer space) the other side
-is able to apply to the connection. This is the flow control issue.
+Thứ tư, các máy tính kết nối với một liên kết điểm-điểm thường được thiết kế để hỗ trợ liên kết đó. Ví dụ, nếu tích số độ trễ × băng thông của một liên kết được tính là 8 KB—nghĩa là kích thước cửa sổ được chọn để cho phép tối đa 8 KB dữ liệu chưa được xác nhận tại một thời điểm—thì có khả năng các máy tính ở hai đầu liên kết đều có khả năng đệm tối đa 8 KB dữ liệu. Thiết kế hệ thống khác đi sẽ là ngớ ngẩn. Ngược lại, hầu như bất kỳ loại máy tính nào cũng có thể kết nối với Internet, khiến lượng tài nguyên dành cho mỗi kết nối TCP rất khác nhau, đặc biệt khi một máy chủ có thể hỗ trợ hàng trăm kết nối TCP cùng lúc. Điều này có nghĩa là TCP phải bao gồm một cơ chế để mỗi phía “học” được tài nguyên (ví dụ, dung lượng bộ đệm) mà phía kia có thể cung cấp cho kết nối. Đây chính là vấn đề điều khiển luồng.
 
-Fifth, because the transmitting side of a directly connected link cannot
-send any faster than the bandwidth of the link allows, and only one host
-is pumping data into the link, it is not possible to unknowingly congest
-the link. Said another way, the load on the link is visible in the form
-of a queue of packets at the sender. In contrast, the sending side of a
-TCP connection has no idea what links will be traversed to reach the
-destination. For example, the sending machine might be directly
-connected to a relatively fast Ethernet—and capable of sending data at a
-rate of 10 Gbps—but somewhere out in the middle of the network, a
-1.5-Mbps link must be traversed. And, to make matters worse, data being
-generated by many different sources might be trying to traverse this
-same slow link. This leads to the problem of network congestion.
-Discussion of this topic is delayed until the next chapter.
+Thứ năm, vì phía truyền của một liên kết kết nối trực tiếp không thể gửi nhanh hơn băng thông của liên kết cho phép, và chỉ có một máy chủ bơm dữ liệu vào liên kết, nên không thể vô tình làm tắc nghẽn liên kết. Nói cách khác, tải trên liên kết được thể hiện rõ ràng dưới dạng hàng đợi các gói ở phía gửi. Ngược lại, phía gửi của một kết nối TCP không biết các liên kết nào sẽ được đi qua để đến đích. Ví dụ, máy gửi có thể được kết nối trực tiếp với một Ethernet khá nhanh—và có khả năng gửi dữ liệu với tốc độ 10 Gbps—nhưng đâu đó ở giữa mạng lại có một liên kết 1,5 Mbps phải đi qua. Tệ hơn nữa, dữ liệu được tạo ra bởi nhiều nguồn khác nhau có thể cùng cố gắng đi qua liên kết chậm này. Điều này dẫn đến vấn đề tắc nghẽn mạng. Việc thảo luận về chủ đề này sẽ được hoãn lại cho đến chương tiếp theo.
 
-We conclude this discussion of end-to-end issues by comparing TCP’s
-approach to providing a reliable/ordered delivery service with the
-approach used by virtual-circuit-based networks like the historically
-important X.25 network. In TCP, the underlying IP network is assumed to
-be unreliable and to deliver messages out of order; TCP uses the sliding
-window algorithm on an end-to-end basis to provide reliable/ordered
-delivery. In contrast, X.25 networks use the sliding window protocol
-within the network, on a hop-by-hop basis. The assumption behind this
-approach is that if messages are delivered reliably and in order between
-each pair of nodes along the path between the source host and the
-destination host, then the end-to-end service also guarantees
-reliable/ordered delivery.
+Chúng tôi kết thúc phần thảo luận về các vấn đề đầu-cuối này bằng cách so sánh cách tiếp cận của TCP trong việc cung cấp dịch vụ truyền tin cậy/đúng thứ tự với cách tiếp cận được sử dụng bởi các mạng dựa trên mạch ảo như mạng X.25 quan trọng trong lịch sử. Trong TCP, mạng IP bên dưới được giả định là không đáng tin cậy và có thể truyền các thông điệp không theo thứ tự; TCP sử dụng thuật toán cửa sổ trượt trên cơ sở đầu-cuối để cung cấp truyền tin cậy/đúng thứ tự. Ngược lại, các mạng X.25 sử dụng giao thức cửa sổ trượt bên trong mạng, trên cơ sở từng chặng. Giả định đằng sau cách tiếp cận này là nếu các thông điệp được truyền tin cậy và đúng thứ tự giữa mỗi cặp nút trên đường đi từ máy chủ nguồn đến máy chủ đích, thì dịch vụ đầu-cuối cũng đảm bảo truyền tin cậy/đúng thứ tự.
 
-The problem with this latter approach is that a sequence of hop-by-hop
-guarantees does not necessarily add up to an end-to-end guarantee.
-First, if a heterogeneous link (say, an Ethernet) is added to one end of
-the path, then there is no guarantee that this hop will preserve the
-same service as the other hops. Second, just because the sliding window
-protocol guarantees that messages are delivered correctly from node A to
-node B, and then from node B to node C, it does not guarantee that
-node B behaves perfectly. For example, network nodes have been known to
-introduce errors into messages while transferring them from an input
-buffer to an output buffer. They have also been known to accidentally
-reorder messages. As a consequence of these small windows of
-vulnerability, it is still necessary to provide true end-to-end checks
-to guarantee reliable/ordered service, even though the lower levels of
-the system also implement that functionality.
+Vấn đề với cách tiếp cận sau là một chuỗi các đảm bảo từng chặng không nhất thiết tạo thành một đảm bảo đầu-cuối. Thứ nhất, nếu một liên kết không đồng nhất (ví dụ, Ethernet) được thêm vào một đầu của đường đi, thì không có gì đảm bảo rằng chặng này sẽ duy trì cùng dịch vụ như các chặng khác. Thứ hai, chỉ vì giao thức cửa sổ trượt đảm bảo rằng các thông điệp được truyền đúng từ nút A đến nút B, rồi từ nút B đến nút C, không có nghĩa là nút B hoạt động hoàn hảo. Ví dụ, các nút mạng đã từng gây ra lỗi trong thông điệp khi chuyển chúng từ bộ đệm vào sang bộ đệm ra. Chúng cũng đã từng vô tình sắp xếp lại các thông điệp. Do những khoảng thời gian dễ bị tổn thương nhỏ này, vẫn cần phải cung cấp các kiểm tra đầu-cuối thực sự để đảm bảo dịch vụ truyền tin cậy/đúng thứ tự, ngay cả khi các tầng thấp hơn của hệ thống cũng triển khai chức năng đó.
 
 .. _key-e2e:
-.. admonition::  Key Takeaway
+.. admonition::  Bài Học Rút Ra
 
-   This discussion serves to illustrate one of the most important
-   principles in system design—the *end-to-end argument*. In a nutshell,
-   the end-to-end argument says that a function (in our example,
-   providing reliable/ordered delivery) should not be provided in the
-   lower levels of the system unless it can be completely and correctly
-   implemented at that level. Therefore, this rule argues in favor of
-   the TCP/IP approach. This rule is not absolute, however. It does
-   allow for functions to be incompletely provided at a low level as a
-   performance optimization. This is why it is perfectly consistent with
-   the end-to-end argument to perform error detection (e.g., CRC) on a
-   hop-by-hop basis; detecting and retransmitting a single corrupt
-   packet across one hop is preferable to having to retransmit an entire
-   file end-to-end.  :ref:`[Next] <key-dumb-receiver>`
+   Phần thảo luận này minh họa cho một trong những nguyên tắc quan trọng nhất trong thiết kế hệ thống—*lập luận đầu-cuối* (end-to-end argument). Tóm lại, lập luận đầu-cuối nói rằng một chức năng (trong ví dụ của chúng ta là cung cấp truyền tin cậy/đúng thứ tự) không nên được cung cấp ở các tầng thấp hơn của hệ thống trừ khi nó có thể được triển khai hoàn chỉnh và chính xác ở tầng đó. Do đó, quy tắc này ủng hộ cách tiếp cận TCP/IP. Tuy nhiên, quy tắc này không tuyệt đối. Nó cho phép các chức năng được cung cấp không hoàn chỉnh ở tầng thấp hơn như một tối ưu hóa hiệu năng. Đây là lý do tại sao hoàn toàn phù hợp với lập luận đầu-cuối khi thực hiện phát hiện lỗi (ví dụ, CRC) trên cơ sở từng chặng; phát hiện và truyền lại một gói bị lỗi qua một chặng tốt hơn là phải truyền lại toàn bộ tệp từ đầu-cuối.  :ref:`[Tiếp theo] <key-dumb-receiver>`
 
-5.2.2 Segment Format
+5.2.2 Định Dạng Đoạn
 --------------------
 
-TCP is a byte-oriented protocol, which means that the sender writes
-bytes into a TCP connection and the receiver reads bytes out of the
-TCP connection. Although “byte stream” describes the service TCP
-offers to application processes, TCP does not, itself, transmit
-individual bytes over the Internet. Instead, TCP on the source host
-buffers enough bytes from the sending process to fill a reasonably
-sized packet and then sends this packet to its peer on the destination
-host. TCP on the destination host then empties the contents of the
-packet into a receive buffer, and the receiving process reads from
-this buffer at its leisure.  This situation is illustrated in
-:numref:`Figure %s <fig-tcp-stream>`, which, for simplicity, shows
-data flowing in only one direction. Remember that, in general, a
-single TCP connection supports byte streams flowing in both
-directions.
+TCP là một giao thức hướng byte, nghĩa là phía gửi ghi các byte vào một kết nối TCP và phía nhận đọc các byte ra khỏi kết nối TCP. Mặc dù “luồng byte” mô tả dịch vụ mà TCP cung cấp cho các tiến trình ứng dụng, bản thân TCP không truyền từng byte riêng lẻ qua Internet. Thay vào đó, TCP trên máy chủ nguồn đệm đủ số byte từ tiến trình gửi để lấp đầy một gói có kích thước hợp lý rồi gửi gói này đến đối tác của nó trên máy chủ đích. TCP trên máy chủ đích sau đó làm rỗng nội dung của gói vào bộ đệm nhận, và tiến trình nhận đọc từ bộ đệm này khi thuận tiện. Tình huống này được minh họa trong :numref:`Hình %s <fig-tcp-stream>`, trong đó, để đơn giản, chỉ cho thấy dữ liệu chảy theo một hướng. Hãy nhớ rằng, nói chung, một kết nối TCP hỗ trợ các luồng byte chảy theo cả hai hướng.
 
 .. _fig-tcp-stream:
 .. figure:: figures/f05-03-9780123850591.png
    :width: 500px
    :align: center
 
-   How TCP manages a byte stream.
+   Cách TCP quản lý một luồng byte.
 
-The packets exchanged between TCP peers in :numref:`Figure %s
-<fig-tcp-stream>` are called *segments*, since each one carries a
-segment of the byte stream. Each TCP segment contains the header
-schematically depicted in :numref:`Figure %s <fig-tcp-format>`. The
-relevance of most of these fields will become apparent throughout this
-section. For now, we simply introduce them.
+Các gói được trao đổi giữa các đối tác TCP trong :numref:`Hình %s <fig-tcp-stream>` được gọi là *đoạn* (segment), vì mỗi gói mang một đoạn của luồng byte. Mỗi đoạn TCP chứa phần đầu được mô tả sơ đồ trong :numref:`Hình %s <fig-tcp-format>`. Ý nghĩa của hầu hết các trường này sẽ trở nên rõ ràng trong suốt phần này. Hiện tại, chúng tôi chỉ giới thiệu chúng.
 
 .. _fig-tcp-format:
 .. figure:: figures/f05-04-9780123850591.png
    :width: 400px
    :align: center
 
-   TCP header format.
+   Định dạng phần đầu TCP.
 
-The ``SrcPort`` and ``DstPort`` fields identify the source and
-destination ports, respectively, just as in UDP. These two fields, plus
-the source and destination IP addresses, combine to uniquely identify
-each TCP connection. That is, TCP’s demux key is given by the 4-tuple
+Trường ``SrcPort`` và ``DstPort`` xác định cổng nguồn và cổng đích, tương tự như trong UDP. Hai trường này, cộng với địa chỉ IP nguồn và đích, kết hợp lại để xác định duy nhất mỗi kết nối TCP. Nghĩa là, khóa phân kênh của TCP được xác định bởi bộ 4-tuple
 
 .. code:: c
 
    (SrcPort, SrcIPAddr, DstPort, DstIPAddr)
 
-Note that because TCP connections come and go, it is possible for a
-connection between a particular pair of ports to be established, used to
-send and receive data, and closed, and then at a later time for the same
-pair of ports to be involved in a second connection. We sometimes refer
-to this situation as two different *incarnations* of the same
-connection.
+Lưu ý rằng vì các kết nối TCP có thể được thiết lập và đóng, nên có thể một kết nối giữa một cặp cổng cụ thể được thiết lập, sử dụng để gửi và nhận dữ liệu, rồi đóng lại, và sau đó cùng cặp cổng đó lại được sử dụng cho một kết nối khác. Chúng tôi đôi khi gọi tình huống này là hai *phiên bản* khác nhau của cùng một kết nối.
 
-The ``Acknowledgement``, ``SequenceNum``, and ``AdvertisedWindow``
-fields are all involved in TCP’s sliding window algorithm. Because TCP
-is a byte-oriented protocol, each byte of data has a sequence number.
-The ``SequenceNum`` field contains the sequence number for the first
-byte of data carried in that segment, and the ``Acknowledgement`` and
-``AdvertisedWindow`` fields carry information about the flow of data
-going in the other direction. To simplify our discussion, we ignore
-the fact that data can flow in both directions, and we concentrate on
-data that has a particular ``SequenceNum`` flowing in one direction
-and ``Acknowledgement`` and ``AdvertisedWindow`` values flowing in the
-opposite direction, as illustrated in :numref:`Figure %s
-<fig-tcp-flow>`. The use of these three fields is described more fully
-later in this chapter.
+Các trường ``Acknowledgement``, ``SequenceNum`` và ``AdvertisedWindow`` đều liên quan đến thuật toán cửa sổ trượt của TCP. Vì TCP là giao thức hướng byte, mỗi byte dữ liệu đều có một số thứ tự. Trường ``SequenceNum`` chứa số thứ tự của byte đầu tiên của dữ liệu được mang trong đoạn này, và các trường ``Acknowledgement`` và ``AdvertisedWindow`` mang thông tin về luồng dữ liệu đi theo hướng ngược lại. Để đơn giản hóa phần thảo luận, chúng tôi bỏ qua thực tế rằng dữ liệu có thể chảy theo cả hai hướng, và tập trung vào dữ liệu có một ``SequenceNum`` cụ thể chảy theo một hướng và các giá trị ``Acknowledgement`` và ``AdvertisedWindow`` chảy theo hướng ngược lại, như minh họa trong :numref:`Hình %s <fig-tcp-flow>`. Việc sử dụng ba trường này sẽ được mô tả đầy đủ hơn ở phần sau của chương.
 
 .. _fig-tcp-flow:
 .. figure:: figures/f05-05-9780123850591.png
    :width: 500px
    :align: center
 
-   Simplified illustration (showing only one direction)
-   of the TCP process, with data flow in one direction and ACKs in
-   the other.
+   Minh họa đơn giản (chỉ cho thấy một hướng)
+   của quá trình TCP, với dữ liệu chảy theo một hướng và ACK theo hướng ngược lại.
 
-The 6-bit ``Flags`` field is used to relay control information between
-TCP peers. The possible flags include ``SYN``, ``FIN``, ``RESET``,
-``PUSH``, ``URG``, and ``ACK``. The ``SYN`` and ``FIN`` flags are used
-when establishing and terminating a TCP connection, respectively. Their
-use is described in a later section. The ``ACK`` flag is set any time
-the ``Acknowledgement`` field is valid, implying that the receiver
-should pay attention to it. The ``URG`` flag signifies that this segment
-contains urgent data. When this flag is set, the ``UrgPtr`` field
-indicates where the nonurgent data contained in this segment begins. The
-urgent data is contained at the front of the segment body, up to and
-including a value of ``UrgPtr`` bytes into the segment. The ``PUSH``
-flag signifies that the sender invoked the push operation, which
-indicates to the receiving side of TCP that it should notify the
-receiving process of this fact. We discuss these last two features more
-in a later section. Finally, the ``RESET`` flag signifies that the
-receiver has become confused—for example, because it received a segment
-it did not expect to receive—and so wants to abort the connection.
+Trường ``Flags`` 6 bit được sử dụng để truyền thông tin điều khiển giữa các đối tác TCP. Các cờ có thể bao gồm ``SYN``, ``FIN``, ``RESET``, ``PUSH``, ``URG`` và ``ACK``. Cờ ``SYN`` và ``FIN`` được sử dụng khi thiết lập và kết thúc một kết nối TCP, tương ứng. Việc sử dụng chúng sẽ được mô tả ở phần sau. Cờ ``ACK`` được đặt bất cứ khi nào trường ``Acknowledgement`` hợp lệ, ngụ ý rằng phía nhận nên chú ý đến nó. Cờ ``URG`` cho biết đoạn này chứa dữ liệu khẩn cấp. Khi cờ này được đặt, trường ``UrgPtr`` chỉ ra nơi dữ liệu không khẩn cấp bắt đầu trong đoạn này. Dữ liệu khẩn cấp nằm ở đầu thân đoạn, lên đến và bao gồm giá trị ``UrgPtr`` byte trong đoạn. Cờ ``PUSH`` cho biết phía gửi đã gọi thao tác push, báo hiệu cho phía nhận của TCP rằng nó nên thông báo cho tiến trình nhận về điều này. Chúng tôi sẽ thảo luận thêm về hai tính năng cuối này ở phần sau. Cuối cùng, cờ ``RESET`` cho biết phía nhận đã bị nhầm lẫn—ví dụ, vì nó nhận được một đoạn mà nó không mong đợi—và muốn hủy kết nối.
 
-Finally, the ``Checksum`` field is used in exactly the same way as for
-UDP—it is computed over the TCP header, the TCP data, and the
-pseudoheader, which is made up of the source address, destination
-address, and length fields from the IP header. The checksum is required
-for TCP in both IPv4 and IPv6. Also, since the TCP header is of variable
-length (options can be attached after the mandatory fields), a
-``HdrLen`` field is included that gives the length of the header in
-32-bit words. This field is also known as the ``Offset`` field, since it
-measures the offset from the start of the packet to the start of the
-data.
+Cuối cùng, trường ``Checksum`` được sử dụng giống hệt như trong UDP—nó được tính trên phần đầu TCP, dữ liệu TCP và pseudoheader, bao gồm địa chỉ nguồn, địa chỉ đích và trường độ dài từ phần đầu IP. Checksum là bắt buộc đối với TCP trong cả IPv4 và IPv6. Ngoài ra, vì phần đầu TCP có độ dài thay đổi (có thể gắn thêm các tùy chọn sau các trường bắt buộc), nên có trường ``HdrLen`` cho biết độ dài của phần đầu tính theo từ 32 bit. Trường này còn được gọi là trường ``Offset``, vì nó đo khoảng cách từ đầu gói đến đầu dữ liệu.
 
-5.2.3 Connection Establishment and Termination
+5.2.3 Thiết Lập và Kết Thúc Kết Nối
 ------------------------------------------------
 
-A TCP connection begins with a client (caller) doing an active open to a
-server (callee). Assuming that the server had earlier done a passive
-open, the two sides engage in an exchange of messages to establish the
-connection. (Recall from Chapter 1 that a party wanting to initiate a
-connection performs an active open, while a party willing to accept a
-connection does a passive open.\ [#]_) Only after this connection
-establishment phase is over do the two sides begin sending data.
-Likewise, as soon as a participant is done sending data, it closes one
-direction of the connection, which causes TCP to initiate a round of
-connection termination messages. Notice that, while connection setup is
-an asymmetric activity (one side does a passive open and the other side
-does an active open), connection teardown is symmetric (each side has to
-close the connection independently). Therefore, it is possible for one
-side to have done a close, meaning that it can no longer send data, but
-for the other side to keep the other half of the bidirectional
-connection open and to continue sending data.
+Một kết nối TCP bắt đầu khi phía khách (gọi) thực hiện mở chủ động đến phía máy chủ (bị gọi). Giả sử phía máy chủ đã thực hiện mở bị động trước đó, hai phía sẽ trao đổi các thông điệp để thiết lập kết nối. (Nhớ lại từ Chương 1 rằng bên muốn khởi tạo kết nối thực hiện mở chủ động, còn bên sẵn sàng chấp nhận kết nối thực hiện mở bị động.\ [#]_) Chỉ sau khi giai đoạn thiết lập kết nối kết thúc, hai phía mới bắt đầu gửi dữ liệu. Tương tự, ngay khi một bên hoàn thành việc gửi dữ liệu, nó đóng một hướng của kết nối, khiến TCP bắt đầu một vòng trao đổi thông điệp kết thúc kết nối. Lưu ý rằng, trong khi thiết lập kết nối là hoạt động không đối xứng (một bên mở bị động và bên kia mở chủ động), thì kết thúc kết nối là đối xứng (mỗi bên phải đóng kết nối một cách độc lập). Do đó, có thể một bên đã đóng, nghĩa là nó không thể gửi dữ liệu nữa, nhưng bên kia vẫn giữ nửa còn lại của kết nối hai chiều mở và tiếp tục gửi dữ liệu.
 
-.. [#] To be more precise, TCP allows connection setup to be symmetric,
-       with both sides trying to open the connection at the same time,
-       but the common case is for one side to do an active open and the
-       other side to do a passive open.
+.. [#] Chính xác hơn, TCP cho phép thiết lập kết nối đối xứng,
+       với cả hai bên cố gắng mở kết nối cùng lúc,
+       nhưng trường hợp phổ biến là một bên mở chủ động và bên kia mở bị động.
 
-Three-Way Handshake
-~~~~~~~~~~~~~~~~~~~
+Bắt Tay Ba Bước
+~~~~~~~~~~~~~~~
 
-The algorithm used by TCP to establish and terminate a connection is
-called a *three-way handshake*. We first describe the basic algorithm
-and then show how it is used by TCP. The three-way handshake involves
-the exchange of three messages between the client and the server, as
-illustrated by the timeline given in :numref:`Figure %s <fig-twh-timeline>`.
+Thuật toán được TCP sử dụng để thiết lập và kết thúc kết nối gọi là *bắt tay ba bước* (three-way handshake). Chúng tôi sẽ mô tả thuật toán cơ bản trước, sau đó chỉ ra cách TCP sử dụng nó. Bắt tay ba bước bao gồm việc trao đổi ba thông điệp giữa phía khách và phía máy chủ, như minh họa trên dòng thời gian trong :numref:`Hình %s <fig-twh-timeline>`.
 
 .. _fig-twh-timeline:
 .. figure:: figures/f05-06-9780123850591.png
    :width: 400px
    :align: center
 
-   Timeline for three-way handshake algorithm.
+   Dòng thời gian cho thuật toán bắt tay ba bước.
 
-The idea is that two parties want to agree on a set of parameters,
-which, in the case of opening a TCP connection, are the starting
-sequence numbers the two sides plan to use for their respective byte
-streams. In general, the parameters might be any facts that each side
-wants the other to know about. First, the client (the active
-participant) sends a segment to the server (the passive participant)
-stating the initial sequence number it plans to use (``Flags`` =
-``SYN``, ``SequenceNum`` = x). The server then responds with a single
-segment that both acknowledges the client’s sequence number (``Flags =
-ACK, Ack = x + 1``) and states its own beginning sequence number
-(``Flags = SYN, SequenceNum = y``). That is, both the ``SYN`` and
-``ACK`` bits are set in the ``Flags`` field of this second message.
-Finally, the client responds with a third segment that acknowledges
-the server’s sequence number (``Flags = ACK, Ack = y + 1``). The
-reason why each side acknowledges a sequence number that is one larger
-than the one sent is that the ``Acknowledgement`` field actually
-identifies the “next sequence number expected,” thereby implicitly
-acknowledging all earlier sequence numbers. Although not shown in this
-timeline, a timer is scheduled for each of the first two segments, and
-if the expected response is not received the segment is retransmitted.
+Ý tưởng là hai bên muốn đồng ý về một tập hợp các tham số, trong trường hợp thiết lập kết nối TCP là các số thứ tự bắt đầu mà hai phía dự định sử dụng cho các luồng byte tương ứng của mình. Nói chung, các tham số có thể là bất kỳ thông tin nào mà mỗi bên muốn bên kia biết. Đầu tiên, phía khách (người chủ động) gửi một đoạn đến phía máy chủ (người bị động) thông báo số thứ tự ban đầu mà nó dự định sử dụng (``Flags`` = ``SYN``, ``SequenceNum`` = x). Phía máy chủ sau đó đáp lại bằng một đoạn duy nhất vừa xác nhận số thứ tự của phía khách (``Flags = ACK, Ack = x + 1``) vừa thông báo số thứ tự bắt đầu của chính nó (``Flags = SYN, SequenceNum = y``). Nghĩa là, cả hai bit ``SYN`` và ``ACK`` đều được đặt trong trường ``Flags`` của thông điệp thứ hai này. Cuối cùng, phía khách đáp lại bằng đoạn thứ ba xác nhận số thứ tự của phía máy chủ (``Flags = ACK, Ack = y + 1``). Lý do mỗi bên xác nhận một số thứ tự lớn hơn một đơn vị so với số đã gửi là vì trường ``Acknowledgement`` thực tế xác định “số thứ tự tiếp theo mong đợi”, qua đó ngầm xác nhận tất cả các số thứ tự trước đó. Mặc dù không được thể hiện trên dòng thời gian này, một bộ đếm thời gian được đặt cho mỗi trong hai đoạn đầu tiên, và nếu không nhận được phản hồi như mong đợi thì đoạn sẽ được truyền lại.
 
-You may be asking yourself why the client and server have to exchange
-starting sequence numbers with each other at connection setup time. It
-would be simpler if each side simply started at some “well-known”
-sequence number, such as 0. In fact, the TCP specification requires that
-each side of a connection select an initial starting sequence number at
-random. The reason for this is to protect against two incarnations of
-the same connection reusing the same sequence numbers too soon—that is,
-while there is still a chance that a segment from an earlier incarnation
-of a connection might interfere with a later incarnation of the
-connection.
+Bạn có thể tự hỏi tại sao phía khách và phía máy chủ phải trao đổi số thứ tự bắt đầu với nhau khi thiết lập kết nối. Sẽ đơn giản hơn nếu mỗi bên chỉ bắt đầu từ một số thứ tự “nổi tiếng”, chẳng hạn như 0. Thực tế, đặc tả TCP yêu cầu mỗi bên của kết nối chọn một số thứ tự bắt đầu ngẫu nhiên. Lý do là để bảo vệ chống lại hai phiên bản của cùng một kết nối sử dụng lại cùng số thứ tự quá sớm—tức là, khi vẫn còn khả năng một đoạn từ phiên bản trước của kết nối có thể gây nhiễu cho phiên bản sau của kết nối.
 
-State-Transition Diagram
+Sơ Đồ Chuyển Trạng Thái
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-TCP is complex enough that its specification includes a state-transition
-diagram. A copy of this diagram is given in :numref:`Figure %s <fig-tcp-std>`.
-This diagram shows only the states involved in opening a connection
-(everything above ESTABLISHED) and in closing a connection (everything
-below ESTABLISHED). Everything that goes on while a connection is
-open—that is, the operation of the sliding window algorithm—is hidden in
-the ESTABLISHED state.
+TCP đủ phức tạp để đặc tả của nó bao gồm một sơ đồ chuyển trạng thái. Một bản sao của sơ đồ này được đưa ra trong :numref:`Hình %s <fig-tcp-std>`. Sơ đồ này chỉ cho thấy các trạng thái liên quan đến việc mở kết nối (mọi thứ phía trên ESTABLISHED) và kết thúc kết nối (mọi thứ phía dưới ESTABLISHED). Mọi hoạt động diễn ra khi kết nối đang mở—tức là, hoạt động của thuật toán cửa sổ trượt—được ẩn trong trạng thái ESTABLISHED.
 
 .. _fig-tcp-std:
 .. figure:: figures/f05-07-9780123850591.png
    :width: 600px
    :align: center
 
-   TCP state-transition diagram.
+   Sơ đồ chuyển trạng thái TCP.
 
-TCP’s state-transition diagram is fairly easy to understand. Each box
-denotes a state that one end of a TCP connection can find itself in. All
-connections start in the CLOSED state. As the connection progresses, the
-connection moves from state to state according to the arcs. Each arc is
-labeled with a tag of the form *event/action*. Thus, if a connection is
-in the LISTEN state and a SYN segment arrives (i.e., a segment with the
-``SYN`` flag set), the connection makes a transition to the SYN_RCVD
-state and takes the action of replying with an ``ACK+SYN`` segment.
+Sơ đồ chuyển trạng thái của TCP khá dễ hiểu. Mỗi ô vuông biểu thị một trạng thái mà một đầu của kết nối TCP có thể gặp phải. Tất cả các kết nối bắt đầu ở trạng thái CLOSED. Khi kết nối tiến triển, nó di chuyển từ trạng thái này sang trạng thái khác theo các cung. Mỗi cung được gắn nhãn theo dạng *sự kiện/hành động*. Do đó, nếu một kết nối đang ở trạng thái LISTEN và nhận được một đoạn SYN (tức là một đoạn có cờ ``SYN`` được đặt), kết nối sẽ chuyển sang trạng thái SYN_RCVD và thực hiện hành động trả lời bằng một đoạn ``ACK+SYN``.
 
-Notice that two kinds of events trigger a state transition: (1) a
-segment arrives from the peer (e.g., the event on the arc from LISTEN
-to SYN_RCVD), or (2) the local application process invokes an
-operation on TCP (e.g., the *active open* event on the arc from CLOSED
-to SYN_SENT).  In other words, TCP’s state-transition diagram
-effectively defines the *semantics* of both its peer-to-peer interface
-and its service interface. The *syntax* of these two interfaces is
-given by the segment format (as illustrated in :numref:`Figure %s
-<fig-tcp-format>`) and by some application programming interface, such
-as the socket API, respectively.
+Lưu ý rằng có hai loại sự kiện kích hoạt chuyển trạng thái: (1) một đoạn đến từ đối tác (ví dụ, sự kiện trên cung từ LISTEN đến SYN_RCVD), hoặc (2) tiến trình ứng dụng cục bộ gọi một thao tác trên TCP (ví dụ, sự kiện *active open* trên cung từ CLOSED đến SYN_SENT). Nói cách khác, sơ đồ chuyển trạng thái của TCP về cơ bản xác định *ngữ nghĩa* của cả giao diện peer-to-peer và giao diện dịch vụ của nó. *Cú pháp* của hai giao diện này được xác định bởi định dạng đoạn (như minh họa trong :numref:`Hình %s <fig-tcp-format>`) và bởi một số giao diện lập trình ứng dụng, chẳng hạn như socket API.
 
-Now let’s trace the typical transitions taken through the diagram in
-:numref:`Figure %s <fig-tcp-std>`. Keep in mind that at each end of the
-connection, TCP makes different transitions from state to state. When
-opening a connection, the server first invokes a passive open operation
-on TCP, which causes TCP to move to the LISTEN state. At some later
-time, the client does an active open, which causes its end of the
-connection to send a SYN segment to the server and to move to the
-SYN_SENT state. When the SYN segment arrives at the server, it moves to
-the SYN_RCVD state and responds with a SYN+ACK segment. The arrival of
-this segment causes the client to move to the ESTABLISHED state and to
-send an ACK back to the server. When this ACK arrives, the server
-finally moves to the ESTABLISHED state. In other words, we have just
-traced the three-way handshake.
+Bây giờ hãy lần theo các chuyển đổi điển hình qua sơ đồ trong :numref:`Hình %s <fig-tcp-std>`. Hãy nhớ rằng ở mỗi đầu của kết nối, TCP thực hiện các chuyển đổi trạng thái khác nhau. Khi mở kết nối, phía máy chủ trước tiên gọi thao tác mở bị động trên TCP, khiến TCP chuyển sang trạng thái LISTEN. Sau đó, phía khách thực hiện mở chủ động, khiến đầu kết nối của nó gửi một đoạn SYN đến phía máy chủ và chuyển sang trạng thái SYN_SENT. Khi đoạn SYN đến phía máy chủ, nó chuyển sang trạng thái SYN_RCVD và đáp lại bằng một đoạn SYN+ACK. Sự xuất hiện của đoạn này khiến phía khách chuyển sang trạng thái ESTABLISHED và gửi một ACK trở lại phía máy chủ. Khi ACK này đến, phía máy chủ cuối cùng chuyển sang trạng thái ESTABLISHED. Nói cách khác, chúng ta vừa lần theo quá trình bắt tay ba bước.
 
-There are three things to notice about the connection establishment half
-of the state-transition diagram. First, if the client’s ACK to the
-server is lost, corresponding to the third leg of the three-way
-handshake, then the connection still functions correctly. This is
-because the client side is already in the ESTABLISHED state, so the
-local application process can start sending data to the other end. Each
-of these data segments will have the ``ACK`` flag set, and the correct
-value in the ``Acknowledgement`` field, so the server will move to the
-ESTABLISHED state when the first data segment arrives. This is actually
-an important point about TCP—every segment reports what sequence number
-the sender is expecting to see next, even if this repeats the same
-sequence number contained in one or more previous segments.
+Có ba điều cần lưu ý về nửa sơ đồ chuyển trạng thái liên quan đến thiết lập kết nối. Thứ nhất, nếu ACK của phía khách gửi cho phía máy chủ bị mất, tương ứng với bước thứ ba của bắt tay ba bước, thì kết nối vẫn hoạt động bình thường. Điều này là vì phía khách đã ở trạng thái ESTABLISHED, nên tiến trình ứng dụng cục bộ có thể bắt đầu gửi dữ liệu cho phía bên kia. Mỗi đoạn dữ liệu này sẽ có cờ ``ACK`` được đặt, và giá trị đúng trong trường ``Acknowledgement``, nên phía máy chủ sẽ chuyển sang trạng thái ESTABLISHED khi đoạn dữ liệu đầu tiên đến. Đây thực sự là một điểm quan trọng về TCP—mọi đoạn đều báo cáo số thứ tự mà phía gửi mong đợi nhận tiếp theo, ngay cả khi điều này lặp lại cùng số thứ tự đã có trong một hoặc nhiều đoạn trước đó.
 
-The second thing to notice about the state-transition diagram is that
-there is a funny transition out of the LISTEN state whenever the local
-process invokes a *send* operation on TCP. That is, it is possible for a
-passive participant to identify both ends of the connection (i.e.,
-itself and the remote participant that it is willing to have connect to
-it), and then for it to change its mind about waiting for the other side
-and instead actively establish the connection. To the best of our
-knowledge, this is a feature of TCP that no application process actually
-takes advantage of.
+Điều thứ hai cần lưu ý về sơ đồ chuyển trạng thái là có một chuyển đổi lạ ra khỏi trạng thái LISTEN bất cứ khi nào tiến trình cục bộ gọi thao tác *send* trên TCP. Tức là, có thể một bên bị động xác định cả hai đầu của kết nối (tức là, chính nó và phía đối tác mà nó sẵn sàng cho phép kết nối), rồi sau đó thay đổi ý định về việc chờ phía bên kia và thay vào đó chủ động thiết lập kết nối. Theo hiểu biết của chúng tôi, đây là một tính năng của TCP mà không tiến trình ứng dụng nào thực sự tận dụng.
 
-The final thing to notice about the diagram is the arcs that are not
-shown. Specifically, most of the states that involve sending a segment
-to the other side also schedule a timeout that eventually causes the
-segment to be resent if the expected response does not happen. These
-retransmissions are not depicted in the state-transition diagram. If
-after several tries the expected response does not arrive, TCP gives up
-and returns to the CLOSED state.
+Điều cuối cùng cần lưu ý về sơ đồ là các cung không được thể hiện. Cụ thể, hầu hết các trạng thái liên quan đến việc gửi một đoạn cho phía bên kia cũng đặt một bộ đếm thời gian mà cuối cùng sẽ khiến đoạn được gửi lại nếu không nhận được phản hồi như mong đợi. Các lần truyền lại này không được thể hiện trong sơ đồ chuyển trạng thái. Nếu sau nhiều lần thử mà không nhận được phản hồi như mong đợi, TCP sẽ từ bỏ và quay lại trạng thái CLOSED.
 
-Turning our attention now to the process of terminating a connection,
-the important thing to keep in mind is that the application process on
-both sides of the connection must independently close its half of the
-connection. If only one side closes the connection, then this means it
-has no more data to send, but it is still available to receive data from
-the other side. This complicates the state-transition diagram because it
-must account for the possibility that the two sides invoke the *close*
-operator at the same time, as well as the possibility that first one
-side invokes close and then, at some later time, the other side invokes
-close. Thus, on any one side there are three combinations of transitions
-that get a connection from the ESTABLISHED state to the CLOSED state:
+Chuyển sang quá trình kết thúc kết nối, điều quan trọng cần nhớ là tiến trình ứng dụng ở cả hai phía của kết nối phải độc lập đóng nửa kết nối của mình. Nếu chỉ một bên đóng kết nối, điều này có nghĩa là nó không còn dữ liệu để gửi, nhưng vẫn sẵn sàng nhận dữ liệu từ phía bên kia. Điều này làm phức tạp sơ đồ chuyển trạng thái vì nó phải tính đến khả năng cả hai bên gọi thao tác *close* cùng lúc, cũng như khả năng một bên gọi close trước, rồi sau đó bên kia mới gọi close. Do đó, ở mỗi phía có ba tổ hợp chuyển đổi đưa một kết nối từ trạng thái ESTABLISHED về trạng thái CLOSED:
 
--  This side closes first:
+-  Bên này đóng trước:
    ESTABLISHED :math:`\rightarrow`
    FIN_WAIT_1 :math:`\rightarrow` FIN_WAIT_2 :math:`\rightarrow` TIME_WAIT :math:`\rightarrow` CLOSED.
 
--  The other side closes first:
+-  Bên kia đóng trước:
    ESTABLISHED :math:`\rightarrow`
    CLOSE_WAIT :math:`\rightarrow` LAST_ACK :math:`\rightarrow` CLOSED.
 
--  Both sides close at the same time:
+-  Cả hai bên đóng cùng lúc:
    ESTABLISHED :math:`\rightarrow`
    FIN_WAIT_1 :math:`\rightarrow` CLOSING :math:`\rightarrow` TIME_WAIT :math:`\rightarrow` CLOSED.
 
-There is actually a fourth, although rare, sequence of transitions that
-leads to the CLOSED state; it follows the arc from FIN_WAIT_1 to
-TIME_WAIT. We leave it as an exercise for you to figure out what
-combination of circumstances leads to this fourth possibility.
+Thực tế còn có một chuỗi chuyển đổi thứ tư, mặc dù hiếm gặp, dẫn đến trạng thái CLOSED; nó đi theo cung từ FIN_WAIT_1 đến TIME_WAIT. Chúng tôi để bạn tự tìm hiểu xem tổ hợp hoàn cảnh nào dẫn đến khả năng thứ tư này.
 
-The main thing to recognize about connection teardown is that a
-connection in the TIME_WAIT state cannot move to the CLOSED state until
-it has waited for two times the maximum amount of time an IP datagram
-might live in the Internet (i.e., 120 seconds). The reason for this is
-that, while the local side of the connection has sent an ACK in response
-to the other side’s FIN segment, it does not know that the ACK was
-successfully delivered. As a consequence, the other side might
-retransmit its FIN segment, and this second FIN segment might be delayed
-in the network. If the connection were allowed to move directly to the
-CLOSED state, then another pair of application processes might come
-along and open the same connection (i.e., use the same pair of port
-numbers), and the delayed FIN segment from the earlier incarnation of
-the connection would immediately initiate the termination of the later
-incarnation of that connection.
+Điều chính cần nhận ra về việc kết thúc kết nối là một kết nối ở trạng thái TIME_WAIT không thể chuyển sang trạng thái CLOSED cho đến khi nó đã chờ gấp đôi thời gian tối đa mà một datagram IP có thể tồn tại trong Internet (tức là 120 giây). Lý do là, mặc dù phía cục bộ đã gửi một ACK để đáp lại đoạn FIN của phía bên kia, nó không biết chắc rằng ACK đã được chuyển thành công. Do đó, phía bên kia có thể truyền lại đoạn FIN của nó, và đoạn FIN thứ hai này có thể bị trì hoãn trong mạng. Nếu kết nối được phép chuyển trực tiếp sang trạng thái CLOSED, thì một cặp tiến trình ứng dụng khác có thể đến và mở cùng một kết nối (tức là sử dụng cùng cặp số cổng), và đoạn FIN bị trì hoãn từ phiên bản trước của kết nối sẽ ngay lập tức khởi động việc kết thúc phiên bản sau của kết nối đó.
 
-5.2.4 Sliding Window Revisited
-------------------------------
+5.2.4 Thuật Toán Cửa Sổ Trượt Xét Lại
+-------------------------------------
 
-We are now ready to discuss TCP’s variant of the sliding window
-algorithm, which serves several purposes: (1) it guarantees the reliable
-delivery of data, (2) it ensures that data is delivered in order, and
-(3) it enforces flow control between the sender and the receiver. TCP’s
-use of the sliding window algorithm is the same as at the link level in
-the case of the first two of these three functions. Where TCP differs
-from the link-level algorithm is that it folds the flow-control function
-in as well. In particular, rather than having a fixed-size sliding
-window, the receiver *advertises* a window size to the sender. This is
-done using the ``AdvertisedWindow`` field in the TCP header. The sender
-is then limited to having no more than a value of ``AdvertisedWindow``
-bytes of unacknowledged data at any given time. The receiver selects a
-suitable value for ``AdvertisedWindow`` based on the amount of memory
-allocated to the connection for the purpose of buffering data. The idea
-is to keep the sender from over-running the receiver’s buffer. We
-discuss this at greater length below.
+Chúng ta đã sẵn sàng để thảo luận về biến thể thuật toán cửa sổ trượt của TCP, phục vụ nhiều mục đích: (1) đảm bảo truyền dữ liệu đáng tin cậy, (2) đảm bảo dữ liệu được truyền đúng thứ tự, và (3) thực thi điều khiển luồng giữa phía gửi và phía nhận. Việc sử dụng thuật toán cửa sổ trượt của TCP giống như ở tầng liên kết đối với hai chức năng đầu tiên. Sự khác biệt của TCP so với thuật toán tầng liên kết là nó tích hợp luôn chức năng điều khiển luồng. Cụ thể, thay vì có một cửa sổ trượt kích thước cố định, phía nhận *quảng bá* kích thước cửa sổ cho phía gửi. Điều này được thực hiện bằng trường ``AdvertisedWindow`` trong phần đầu TCP. Phía gửi bị giới hạn chỉ được phép có tối đa ``AdvertisedWindow`` byte dữ liệu chưa được xác nhận tại bất kỳ thời điểm nào. Phía nhận chọn giá trị phù hợp cho ``AdvertisedWindow`` dựa trên lượng bộ nhớ được phân bổ cho kết nối để đệm dữ liệu. Ý tưởng là giữ cho phía gửi không vượt quá bộ đệm của phía nhận. Chúng tôi sẽ thảo luận kỹ hơn về vấn đề này ở phần dưới.
 
-Reliable and Ordered Delivery
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Truyền Đáng Tin Cậy và Đúng Thứ Tự
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To see how the sending and receiving sides of TCP interact with each
-other to implement reliable and ordered delivery, consider the
-situation illustrated in :numref:`Figure %s <fig-tcp-fc>`. TCP on the
-sending side maintains a send buffer. This buffer is used to store
-data that has been sent but not yet acknowledged, as well as data that
-has been written by the sending application but not transmitted. On
-the receiving side, TCP maintains a receive buffer. This buffer holds
-data that arrives out of order, as well as data that is in the correct
-order (i.e., there are no missing bytes earlier in the stream) but
-that the application process has not yet had the chance to read.
+Để thấy cách phía gửi và phía nhận của TCP tương tác với nhau để triển khai truyền đáng tin cậy và đúng thứ tự, hãy xem xét tình huống minh họa trong :numref:`Hình %s <fig-tcp-fc>`. TCP ở phía gửi duy trì một bộ đệm gửi. Bộ đệm này được sử dụng để lưu trữ dữ liệu đã gửi nhưng chưa được xác nhận, cũng như dữ liệu đã được tiến trình gửi ghi nhưng chưa được truyền. Ở phía nhận, TCP duy trì một bộ đệm nhận. Bộ đệm này lưu trữ dữ liệu đến không theo thứ tự, cũng như dữ liệu đến đúng thứ tự (tức là không còn byte nào bị thiếu trước đó trong luồng) nhưng tiến trình ứng dụng chưa kịp đọc.
 
 .. _fig-tcp-fc:
 .. figure:: figures/f05-08-9780123850591.png
    :width: 500px
    :align: center
 
-   Relationship between TCP send buffer (a) and receive
-   buffer (b).
+   Mối quan hệ giữa bộ đệm gửi TCP (a) và bộ đệm nhận (b).
 
-To make the following discussion simpler to follow, we initially ignore
-the fact that both the buffers and the sequence numbers are of some
-finite size and hence will eventually wrap around. Also, we do not
-distinguish between a pointer into a buffer where a particular byte of
-data is stored and the sequence number for that byte.
+Để phần thảo luận sau đây dễ theo dõi hơn, ban đầu chúng tôi bỏ qua thực tế rằng cả bộ đệm và số thứ tự đều có kích thước hữu hạn và do đó cuối cùng sẽ bị tràn (wrap around). Ngoài ra, chúng tôi không phân biệt giữa một con trỏ vào bộ đệm nơi một byte dữ liệu cụ thể được lưu trữ và số thứ tự của byte đó.
 
-Looking first at the sending side, three pointers are maintained into
-the send buffer, each with an obvious meaning: ``LastByteAcked``,
-``LastByteSent``, and ``LastByteWritten``. Clearly,
+Xét phía gửi trước, ba con trỏ được duy trì vào bộ đệm gửi, mỗi con trỏ có ý nghĩa rõ ràng: ``LastByteAcked``, ``LastByteSent`` và ``LastByteWritten``. Rõ ràng,
 
 ::
 
    LastByteAcked <= LastByteSent
 
-since the receiver cannot have acknowledged a byte that has not yet been
-sent, and
+vì phía nhận không thể xác nhận một byte chưa được gửi, và
 
 ::
 
    LastByteSent <= LastByteWritten
 
-since TCP cannot send a byte that the application process has not yet
-written. Also note that none of the bytes to the left of
-``LastByteAcked`` need to be saved in the buffer because they have
-already been acknowledged, and none of the bytes to the right of
-``LastByteWritten`` need to be buffered because they have not yet been
-generated.
+vì TCP không thể gửi một byte mà tiến trình ứng dụng chưa ghi. Ngoài ra, không cần lưu các byte bên trái ``LastByteAcked`` trong bộ đệm vì chúng đã được xác nhận, và không cần lưu các byte bên phải ``LastByteWritten`` vì chúng chưa được tạo ra.
 
-A similar set of pointers (sequence numbers) are maintained on the
-receiving side: ``LastByteRead``, ``NextByteExpected``, and
-``LastByteRcvd``. The inequalities are a little less intuitive, however,
-because of the problem of out-of-order delivery. The first relationship
+Một tập hợp con trỏ (số thứ tự) tương tự được duy trì ở phía nhận: ``LastByteRead``, ``NextByteExpected`` và ``LastByteRcvd``. Các bất đẳng thức ở đây ít trực quan hơn, do vấn đề truyền không theo thứ tự. Mối quan hệ đầu tiên
 
 ::
 
    LastByteRead < NextByteExpected
 
-is true because a byte cannot be read by the application until it is
-received *and* all preceding bytes have also been received.
-``NextByteExpected`` points to the byte immediately after the latest
-byte to meet this criterion. Second,
+là đúng vì một byte không thể được tiến trình ứng dụng đọc cho đến khi nó đã được nhận *và* tất cả các byte trước đó cũng đã được nhận. ``NextByteExpected`` trỏ đến byte ngay sau byte mới nhất đáp ứng tiêu chí này. Thứ hai,
 
 ::
 
    NextByteExpected <= LastByteRcvd + 1
 
-since, if data has arrived in order, ``NextByteExpected`` points to the
-byte after ``LastByteRcvd``, whereas if data has arrived out of order,
-then ``NextByteExpected`` points to the start of the first gap in the
-data, as in :numref:`Figure %s <fig-tcp-fc>`. Note that bytes to the left of
-``LastByteRead`` need not be buffered because they have already been
-read by the local application process, and bytes to the right of
-``LastByteRcvd`` need not be buffered because they have not yet arrived.
+vì nếu dữ liệu đến đúng thứ tự, ``NextByteExpected`` trỏ đến byte sau ``LastByteRcvd``, còn nếu dữ liệu đến không theo thứ tự, thì ``NextByteExpected`` trỏ đến đầu của khoảng trống đầu tiên trong dữ liệu, như trong :numref:`Hình %s <fig-tcp-fc>`. Lưu ý rằng các byte bên trái ``LastByteRead`` không cần lưu trong bộ đệm vì chúng đã được tiến trình ứng dụng đọc, và các byte bên phải ``LastByteRcvd`` không cần lưu vì chúng chưa đến.
 
-Flow Control
-~~~~~~~~~~~~
+Điều Khiển Luồng
+~~~~~~~~~~~~~~~
 
-Most of the above discussion is similar to that found in the standard
-sliding window algorithm; the only real difference is that this time we
-elaborated on the fact that the sending and receiving application
-processes are filling and emptying their local buffer, respectively.
-(The earlier discussion glossed over the fact that data arriving from an
-upstream node was filling the send buffer and data being transmitted to
-a downstream node was emptying the receive buffer.)
+Hầu hết phần thảo luận trên giống với thuật toán cửa sổ trượt tiêu chuẩn; điểm khác biệt duy nhất là lần này chúng tôi nhấn mạnh việc các tiến trình ứng dụng gửi và nhận đang lấp đầy và làm rỗng bộ đệm cục bộ của chúng. (Phần thảo luận trước đó đã bỏ qua thực tế rằng dữ liệu đến từ một nút phía trên đang lấp đầy bộ đệm gửi và dữ liệu được truyền đến một nút phía dưới đang làm rỗng bộ đệm nhận.)
 
-You should make sure you understand this much before proceeding because
-now comes the point where the two algorithms differ more significantly.
-In what follows, we reintroduce the fact that both buffers are of some
-finite size, denoted ``MaxSendBuffer`` and ``MaxRcvBuffer``, although we
-don’t worry about the details of how they are implemented. In other
-words, we are only interested in the number of bytes being buffered, not
-in where those bytes are actually stored.
+Bạn nên chắc chắn rằng mình hiểu phần này trước khi tiếp tục, vì bây giờ là lúc hai thuật toán khác biệt rõ rệt hơn. Trong phần tiếp theo, chúng tôi đưa trở lại thực tế rằng cả hai bộ đệm đều có kích thước hữu hạn, ký hiệu là ``MaxSendBuffer`` và ``MaxRcvBuffer``, mặc dù chúng tôi không quan tâm đến chi tiết cách chúng được triển khai. Nói cách khác, chúng tôi chỉ quan tâm đến số byte được lưu trữ trong bộ đệm, không phải vị trí lưu trữ cụ thể.
 
-Recall that in a sliding window protocol, the size of the window sets
-the amount of data that can be sent without waiting for acknowledgment
-from the receiver. Thus, the receiver throttles the sender by
-advertising a window that is no larger than the amount of data that it
-can buffer. Observe that TCP on the receive side must keep
+Nhớ lại rằng trong giao thức cửa sổ trượt, kích thước cửa sổ xác định lượng dữ liệu có thể được gửi mà không cần chờ xác nhận từ phía nhận. Do đó, phía nhận điều tiết phía gửi bằng cách quảng bá một cửa sổ không lớn hơn lượng dữ liệu mà nó có thể đệm. Lưu ý rằng TCP ở phía nhận phải giữ
 
 ::
 
    LastByteRcvd - LastByteRead <= MaxRcvBuffer
 
-to avoid overflowing its buffer. It therefore advertises a window size
-of
+để tránh tràn bộ đệm. Do đó, nó quảng bá kích thước cửa sổ là
 
 ::
 
    AdvertisedWindow = MaxRcvBuffer - ((NextByteExpected - 1) - LastByteRead)
 
-which represents the amount of free space remaining in its buffer. As
-data arrives, the receiver acknowledges it as long as all the preceding
-bytes have also arrived. In addition, ``LastByteRcvd`` moves to the
-right (is incremented), meaning that the advertised window potentially
-shrinks. Whether or not it shrinks depends on how fast the local
-application process is consuming data. If the local process is reading
-data just as fast as it arrives (causing ``LastByteRead`` to be
-incremented at the same rate as ``LastByteRcvd``), then the advertised
-window stays open (i.e., ``AdvertisedWindow = MaxRcvBuffer``). If,
-however, the receiving process falls behind, perhaps because it performs
-a very expensive operation on each byte of data that it reads, then the
-advertised window grows smaller with every segment that arrives, until
-it eventually goes to 0.
+đại diện cho lượng không gian còn trống trong bộ đệm. Khi dữ liệu đến, phía nhận xác nhận nó miễn là tất cả các byte trước đó cũng đã đến. Ngoài ra, ``LastByteRcvd`` tăng lên, nghĩa là cửa sổ quảng bá có thể bị thu hẹp lại. Việc nó có bị thu hẹp hay không phụ thuộc vào tốc độ tiến trình ứng dụng cục bộ tiêu thụ dữ liệu. Nếu tiến trình cục bộ đọc dữ liệu nhanh như tốc độ dữ liệu đến (khiến ``LastByteRead`` tăng cùng tốc độ với ``LastByteRcvd``), thì cửa sổ quảng bá vẫn mở (tức là ``AdvertisedWindow = MaxRcvBuffer``). Tuy nhiên, nếu tiến trình nhận bị chậm, có thể vì nó thực hiện một thao tác tốn kém trên mỗi byte dữ liệu đọc được, thì cửa sổ quảng bá sẽ nhỏ dần với mỗi đoạn đến, cho đến khi cuối cùng về 0.
 
-TCP on the send side must then adhere to the advertised window it gets
-from the receiver. This means that at any given time, it must ensure
-that
+TCP ở phía gửi phải tuân thủ cửa sổ quảng bá mà nó nhận được từ phía nhận. Điều này có nghĩa là tại bất kỳ thời điểm nào, nó phải đảm bảo rằng
 
 ::
 
    LastByteSent - LastByteAcked <= AdvertisedWindow
 
-Said another way, the sender computes an *effective* window that limits
-how much data it can send:
+Nói cách khác, phía gửi tính toán một *cửa sổ hiệu dụng* giới hạn lượng dữ liệu nó có thể gửi:
 
 ::
 
    EffectiveWindow = AdvertisedWindow - (LastByteSent - LastByteAcked)
 
-Clearly, ``EffectiveWindow`` must be greater than 0 before the source
-can send more data. It is possible, therefore, that a segment arrives
-acknowledging x bytes, thereby allowing the sender to increment
-``LastByteAcked`` by x, but because the receiving process was not
-reading any data, the advertised window is now x bytes smaller than the
-time before. In such a situation, the sender would be able to free
-buffer space, but not to send any more data.
+Rõ ràng, ``EffectiveWindow`` phải lớn hơn 0 thì phía nguồn mới có thể gửi thêm dữ liệu. Do đó, có thể xảy ra trường hợp một đoạn đến xác nhận x byte, cho phép phía gửi tăng ``LastByteAcked`` lên x, nhưng vì tiến trình nhận không đọc dữ liệu, cửa sổ quảng bá bây giờ nhỏ hơn x byte so với trước đó. Trong trường hợp này, phía gửi có thể giải phóng không gian bộ đệm, nhưng không thể gửi thêm dữ liệu.
 
-All the while this is going on, the send side must also make sure that
-the local application process does not overflow the send buffer—that is,
+Trong khi tất cả điều này đang diễn ra, phía gửi cũng phải đảm bảo rằng tiến trình ứng dụng cục bộ không làm tràn bộ đệm gửi—tức là,
 
 ::
 
    LastByteWritten - LastByteAcked <= MaxSendBuffer
 
-If the sending process tries to write y bytes to TCP, but
+Nếu tiến trình gửi cố gắng ghi y byte vào TCP, nhưng
 
 ::
 
    (LastByteWritten - LastByteAcked) + y > MaxSendBuffer
 
-then TCP blocks the sending process and does not allow it to generate
-more data.
+thì TCP sẽ chặn tiến trình gửi và không cho phép nó tạo thêm dữ liệu.
 
-It is now possible to understand how a slow receiving process ultimately
-stops a fast sending process. First, the receive buffer fills up, which
-means the advertised window shrinks to 0. An advertised window of 0
-means that the sending side cannot transmit any data, even though data
-it has previously sent has been successfully acknowledged. Finally, not
-being able to transmit any data means that the send buffer fills up,
-which ultimately causes TCP to block the sending process. As soon as the
-receiving process starts to read data again, the receive-side TCP is
-able to open its window back up, which allows the send-side TCP to
-transmit data out of its buffer. When this data is eventually
-acknowledged, ``LastByteAcked`` is incremented, the buffer space holding
-this acknowledged data becomes free, and the sending process is
-unblocked and allowed to proceed.
+Bây giờ có thể hiểu được cách một tiến trình nhận chậm cuối cùng sẽ dừng một tiến trình gửi nhanh. Đầu tiên, bộ đệm nhận đầy, khiến cửa sổ quảng bá thu hẹp về 0. Một cửa sổ quảng bá bằng 0 nghĩa là phía gửi không thể truyền thêm dữ liệu, ngay cả khi dữ liệu trước đó đã được xác nhận thành công. Cuối cùng, không thể truyền thêm dữ liệu nghĩa là bộ đệm gửi đầy, điều này cuối cùng khiến TCP chặn tiến trình gửi. Ngay khi tiến trình nhận bắt đầu đọc dữ liệu trở lại, TCP phía nhận có thể mở lại cửa sổ, cho phép TCP phía gửi truyền dữ liệu ra khỏi bộ đệm của nó. Khi dữ liệu này cuối cùng được xác nhận, ``LastByteAcked`` tăng lên, không gian bộ đệm chứa dữ liệu đã xác nhận trở nên trống, và tiến trình gửi được bỏ chặn và tiếp tục.
 
-There is only one remaining detail that must be resolved—how does the
-sending side know that the advertised window is no longer 0? As
-mentioned above, TCP *always* sends a segment in response to a received
-data segment, and this response contains the latest values for the
-``Acknowledge`` and ``AdvertisedWindow`` fields, even if these values
-have not changed since the last time they were sent. The problem is
-this. Once the receive side has advertised a window size of 0, the
-sender is not permitted to send any more data, which means it has no way
-to discover that the advertised window is no longer 0 at some time in
-the future. TCP on the receive side does not spontaneously send nondata
-segments; it only sends them in response to an arriving data segment.
+Chỉ còn một chi tiết cần giải quyết—làm thế nào phía gửi biết rằng cửa sổ quảng bá không còn bằng 0? Như đã đề cập ở trên, TCP *luôn* gửi một đoạn để đáp lại một đoạn dữ liệu nhận được, và phản hồi này chứa các giá trị mới nhất cho các trường ``Acknowledge`` và ``AdvertisedWindow``, ngay cả khi các giá trị này không thay đổi so với lần gửi trước. Vấn đề là như sau. Khi phía nhận đã quảng bá cửa sổ bằng 0, phía gửi không được phép gửi thêm dữ liệu, nghĩa là nó không có cách nào để phát hiện rằng cửa sổ quảng bá không còn bằng 0 vào một thời điểm nào đó trong tương lai. TCP phía nhận không tự động gửi các đoạn không chứa dữ liệu; nó chỉ gửi chúng để đáp lại một đoạn dữ liệu đến.
 
-TCP deals with this situation as follows. Whenever the other side
-advertises a window size of 0, the sending side persists in sending a
-segment with 1 byte of data every so often. It knows that this data will
-probably not be accepted, but it tries anyway, because each of these
-1-byte segments triggers a response that contains the current advertised
-window. Eventually, one of these 1-byte probes triggers a response that
-reports a nonzero advertised window.
+TCP xử lý tình huống này như sau. Bất cứ khi nào phía bên kia quảng bá cửa sổ bằng 0, phía gửi vẫn tiếp tục gửi một đoạn chứa 1 byte dữ liệu sau một khoảng thời gian nhất định. Nó biết rằng dữ liệu này có thể sẽ không được chấp nhận, nhưng vẫn thử, vì mỗi đoạn 1 byte này sẽ kích hoạt một phản hồi chứa giá trị cửa sổ quảng bá hiện tại. Cuối cùng, một trong các đoạn thăm dò 1 byte này sẽ nhận được phản hồi báo cáo cửa sổ quảng bá khác 0.
 
-Note that these 1-byte messages are called *Zero Window Probes* and in
-practice they are sent every 5 to 60 seconds. As for what single byte of
-data to send in the probe: it’s the next byte of actual data just
-outside the window. (It has to be real data in case it’s accepted by the
-receiver.)
+Lưu ý rằng các thông điệp 1 byte này được gọi là *Zero Window Probes* và trên thực tế chúng được gửi mỗi 5 đến 60 giây. Về byte dữ liệu nào sẽ được gửi trong thăm dò: đó là byte dữ liệu thực tiếp theo nằm ngoài cửa sổ. (Nó phải là dữ liệu thực phòng trường hợp phía nhận chấp nhận nó.)
 
 .. _key-dumb-receiver:
-.. admonition::  Key Takeaway
+.. admonition::  Bài Học Rút Ra
 
-   Note that the reason the sending side periodically sends this probe
-   segment is that TCP is designed to make the receive side as simple as
-   possible—it simply responds to segments from the sender, and it never
-   initiates any activity on its own. This is an example of a
-   well-recognized (although not universally applied) protocol design
-   rule, which, for lack of a better name, we call the *smart sender/
-   dumb receiver* rule. Recall that we saw another example of this rule
-   when we discussed the use of NAKs in sliding window algorithm.
-   :ref:`[Next] <key-open-source>`
+   Lưu ý rằng lý do phía gửi định kỳ gửi đoạn thăm dò này là vì TCP được thiết kế để phía nhận càng đơn giản càng tốt—nó chỉ đơn giản phản hồi các đoạn từ phía gửi, và không bao giờ tự khởi tạo bất kỳ hoạt động nào. Đây là một ví dụ về một quy tắc thiết kế giao thức được công nhận rộng rãi (mặc dù không phải lúc nào cũng được áp dụng), mà chúng tôi, do chưa có tên hay hơn, gọi là quy tắc *người gửi thông minh/người nhận đơn giản* (smart sender/dumb receiver). Hãy nhớ rằng chúng ta đã thấy một ví dụ khác về quy tắc này khi thảo luận về việc sử dụng NAK trong thuật toán cửa sổ trượt. :ref:`[Tiếp theo] <key-open-source>`
 
-Protecting Against Wraparound
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Bảo Vệ Chống Tràn Số Thứ Tự
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This subsection and the next consider the size of the ``SequenceNum``
-and ``AdvertisedWindow`` fields and the implications of their sizes on
-TCP’s correctness and performance. TCP’s ``SequenceNum`` field is
-32 bits long, and its ``AdvertisedWindow`` field is 16 bits long,
-meaning that TCP has easily satisfied the requirement of the sliding
-window algorithm that the sequence number space be twice as big as the
-window size: 2\ :sup:`32` >> 2 × 2\ :sup:`16`. However, this
-requirement is not the interesting thing about these two fields.
-Consider each field in turn.
+Phần này và phần tiếp theo xem xét kích thước của các trường ``SequenceNum`` và ``AdvertisedWindow`` và ý nghĩa của chúng đối với tính đúng đắn và hiệu năng của TCP. Trường ``SequenceNum`` của TCP dài 32 bit, và trường ``AdvertisedWindow`` dài 16 bit, nghĩa là TCP dễ dàng đáp ứng yêu cầu của thuật toán cửa sổ trượt rằng không gian số thứ tự phải lớn gấp đôi kích thước cửa sổ: 2\ :sup:`32` >> 2 × 2\ :sup:`16`. Tuy nhiên, yêu cầu này không phải là điều thú vị về hai trường này. Hãy xem xét từng trường một.
 
-The relevance of the 32-bit sequence number space is that the sequence
-number used on a given connection might wrap around—a byte with
-sequence number S could be sent at one time, and then at a later time
-a second byte with the same sequence number S might be sent. Once
-again, we assume that packets cannot survive in the Internet for
-longer than the recommended MSL. Thus, we currently need to make sure
-that the sequence number does not wrap around within a 120-second
-period of time. Whether or not this happens depends on how fast data
-can be transmitted over the Internet—that is, how fast the 32-bit
-sequence number space can be consumed. (This discussion assumes that
-we are trying to consume the sequence number space as fast as
-possible, but of course we will be if we are doing our job of keeping
-the pipe full.) :numref:`Table %s <tab-eqnum>` shows how long it takes
-for the sequence number to wrap around on networks with various
-bandwidths.
+Ý nghĩa của không gian số thứ tự 32 bit là số thứ tự được sử dụng trên một kết nối có thể bị tràn—một byte có số thứ tự S có thể được gửi tại một thời điểm, rồi sau đó một byte thứ hai có cùng số thứ tự S lại được gửi. Một lần nữa, chúng tôi giả định rằng các gói không thể tồn tại trong Internet lâu hơn giá trị MSL khuyến nghị. Do đó, hiện tại chúng ta cần đảm bảo rằng số thứ tự không bị tràn trong vòng 120 giây. Việc điều này có xảy ra hay không phụ thuộc vào tốc độ truyền dữ liệu qua Internet—tức là, tốc độ tiêu thụ không gian số thứ tự 32 bit. (Phần thảo luận này giả định rằng chúng ta đang cố gắng tiêu thụ không gian số thứ tự nhanh nhất có thể, nhưng thực tế sẽ như vậy nếu chúng ta làm tốt việc giữ cho đường truyền luôn đầy.) :numref:`Bảng %s <tab-eqnum>` cho thấy thời gian để không gian số thứ tự 32 bit bị tràn trên các mạng có băng thông khác nhau.
 
 .. _tab-eqnum:
-.. table::  Time Until 32-Bit Sequence Number Space Wraps Around.
+.. table::  Thời Gian Để Không Gian Số Thứ Tự 32 Bit Bị Tràn.
    :align: center
    :widths: auto
 
    +--------------------------+-----------------------+
-   | Bandwidth                | Time until Wraparound |
+   | Băng thông               | Thời gian đến khi tràn|
    +==========================+=======================+
-   | T1 (1.5 Mbps)            | 6.4 hours             |
+   | T1 (1.5 Mbps)            | 6.4 giờ               |
    +--------------------------+-----------------------+
-   | T3 (45 Mbps)             | 13 minutes            |
+   | T3 (45 Mbps)             | 13 phút               |
    +--------------------------+-----------------------+
-   | Fast Ethernet (100 Mbps) | 6 minutes             |
+   | Fast Ethernet (100 Mbps) | 6 phút                |
    +--------------------------+-----------------------+
-   | OC-3 (155 Mbps)          | 4 minutes             |
+   | OC-3 (155 Mbps)          | 4 phút                |
    +--------------------------+-----------------------+
-   | OC-48 (2.5 Gbps)         | 14 seconds            |
+   | OC-48 (2.5 Gbps)         | 14 giây               |
    +--------------------------+-----------------------+
-   | OC-192 (10 Gbps)         | 3 seconds             |
+   | OC-192 (10 Gbps)         | 3 giây                |
    +--------------------------+-----------------------+
-   | 10GigE (10 Gbps)         | 3 seconds             |
+   | 10GigE (10 Gbps)         | 3 giây                |
    +--------------------------+-----------------------+
 
-As you can see, the 32-bit sequence number space is adequate at modest
-bandwidths, but given that OC-192 links are now common in the Internet
-backbone, and that most servers now come with 10Gig Ethernet (or 10
-Gbps) interfaces, we’re now well-past the point where 32 bits is too
-small. Fortunately, the IETF has worked out an extension to TCP that
-effectively extends the sequence number space to protect against the
-sequence number wrapping around. This and related extensions are
-described in a later section.
+Như bạn thấy, không gian số thứ tự 32 bit là đủ ở các băng thông vừa phải, nhưng vì các liên kết OC-192 hiện đã phổ biến trong xương sống Internet, và hầu hết các máy chủ hiện đều có giao diện Ethernet 10Gig (hoặc 10 Gbps), chúng ta đã vượt xa điểm mà 32 bit là quá nhỏ. May mắn thay, IETF đã đưa ra một phần mở rộng cho TCP giúp mở rộng hiệu quả không gian số thứ tự để bảo vệ chống lại việc số thứ tự bị tràn. Phần mở rộng này và các phần mở rộng liên quan sẽ được mô tả ở phần sau.
 
-Keeping the Pipe Full
-~~~~~~~~~~~~~~~~~~~~~
+Giữ Cho Đường Truyền Luôn Đầy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The relevance of the 16-bit ``AdvertisedWindow`` field is that it must
-be big enough to allow the sender to keep the pipe full. Clearly, the
-receiver is free to not open the window as large as the
-``AdvertisedWindow`` field allows; we are interested in the situation in
-which the receiver has enough buffer space to handle as much data as the
-largest possible ``AdvertisedWindow`` allows.
+Ý nghĩa của trường ``AdvertisedWindow`` 16 bit là nó phải đủ lớn để cho phép phía gửi giữ cho đường truyền luôn đầy. Rõ ràng, phía nhận có thể không mở cửa sổ lớn như trường ``AdvertisedWindow`` cho phép; chúng tôi quan tâm đến trường hợp phía nhận có đủ bộ đệm để xử lý lượng dữ liệu lớn nhất mà trường ``AdvertisedWindow`` cho phép.
 
-In this case, it is not just the network bandwidth but the delay x
-bandwidth product that dictates how big the ``AdvertisedWindow`` field
-needs to be—the window needs to be opened far enough to allow a full
-delay × bandwidth product’s worth of data to be transmitted. Assuming an
-RTT of 100 ms (a typical number for a cross-country connection in the
-United States), :numref:`Table %s <tab-adv-win>` gives the delay × bandwidth
-product for several network technologies.
+Trong trường hợp này, không chỉ băng thông mạng mà tích số độ trễ x băng thông mới quyết định trường ``AdvertisedWindow`` cần lớn đến mức nào—cửa sổ cần được mở đủ lớn để cho phép truyền một lượng dữ liệu bằng tích số độ trễ × băng thông. Giả sử RTT là 100 ms (một con số điển hình cho một kết nối xuyên quốc gia ở Hoa Kỳ), :numref:`Bảng %s <tab-adv-win>` cho biết tích số độ trễ × băng thông cho một số công nghệ mạng.
 
 .. _tab-adv-win:
-.. table::  Required Window Size for 100-ms RTT
+.. table::  Kích Thước Cửa Sổ Yêu Cầu Cho RTT 100 ms
    :align: center
    :widths: auto
 
    +--------------------------+---------------------------+
-   | Bandwidth                | Delay × Bandwidth Product |
+   | Băng thông               | Tích số độ trễ × băng thông|
    +==========================+===========================+
    | T1 (1.5 Mbps)            | 18 KB                     |
    +--------------------------+---------------------------+
@@ -820,271 +314,98 @@ product for several network technologies.
    | 10GigE (10 Gbps)         | 118.4 MB                  |
    +--------------------------+---------------------------+
 
-As you can see, TCP’s ``AdvertisedWindow`` field is in even worse shape
-than its ``SequenceNum`` field—it is not big enough to handle even a T3
-connection across the continental United States, since a 16-bit field
-allows us to advertise a window of only 64 KB. The very same TCP
-extension mentioned above provides a mechanism for effectively
-increasing the size of the advertised window.
+Như bạn thấy, trường ``AdvertisedWindow`` của TCP còn tệ hơn cả trường ``SequenceNum``—nó không đủ lớn để xử lý ngay cả một kết nối T3 xuyên quốc gia Hoa Kỳ, vì một trường 16 bit chỉ cho phép quảng bá cửa sổ tối đa 64 KB. Chính phần mở rộng TCP đã đề cập ở trên cung cấp một cơ chế để tăng hiệu quả kích thước cửa sổ quảng bá.
 
-5.2.5 Triggering Transmission
------------------------------
+5.2.5 Kích hoạt truyền tải
+--------------------------
 
-We next consider a surprisingly subtle issue: how TCP decides to
-transmit a segment. As described earlier, TCP supports a byte-stream
-abstraction; that is, application programs write bytes into the stream,
-and it is up to TCP to decide that it has enough bytes to send a
-segment. What factors govern this decision?
+Tiếp theo, chúng ta xem xét một vấn đề khá tinh tế: làm thế nào TCP quyết định truyền một đoạn dữ liệu. Như đã mô tả trước đó, TCP hỗ trợ một trừu tượng luồng byte; nghĩa là, các chương trình ứng dụng ghi các byte vào luồng, và nhiệm vụ của TCP là quyết định xem đã có đủ byte để gửi một đoạn dữ liệu hay chưa. Những yếu tố nào quyết định được sự lựa chọn này?
 
-If we ignore the possibility of flow control—that is, we assume the
-window is wide open, as would be the case when a connection first
-starts—then TCP has three mechanisms to trigger the transmission of a
-segment. First, TCP maintains a variable, typically called the *maximum
-segment size* (``MSS``), and it sends a segment as soon as it has
-collected ``MSS`` bytes from the sending process. ``MSS`` is usually set
-to the size of the largest segment TCP can send without causing the
-local IP to fragment. That is, ``MSS`` is set to the maximum
-transmission unit (MTU) of the directly connected network, minus the
-size of the TCP and IP headers. The second thing that triggers TCP to
-transmit a segment is that the sending process has explicitly asked it
-to do so. Specifically, TCP supports a *push* operation, and the sending
-process invokes this operation to effectively flush the buffer of unsent
-bytes. The final trigger for transmitting a segment is that a timer
-fires; the resulting segment contains as many bytes as are currently
-buffered for transmission. However, as we will soon see, this “timer”
-isn’t exactly what you expect.
+Nếu chúng ta bỏ qua khả năng kiểm soát luồng—tức là, giả sử cửa sổ mở hoàn toàn, như sẽ xảy ra khi một kết nối mới bắt đầu—thì TCP có ba cơ chế để kích hoạt việc truyền một đoạn dữ liệu. Thứ nhất, TCP duy trì một biến, thường được gọi là *kích thước đoạn tối đa* (``MSS``), và nó gửi một đoạn ngay khi nó đã thu thập được ``MSS`` byte từ tiến trình gửi. ``MSS`` thường được đặt bằng kích thước của đoạn lớn nhất mà TCP có thể gửi mà không làm phân mảnh IP cục bộ. Tức là, ``MSS`` được đặt bằng đơn vị truyền tối đa (MTU) của mạng kết nối trực tiếp, trừ đi kích thước của các header TCP và IP. Cơ chế thứ hai kích hoạt TCP truyền một đoạn là tiến trình gửi đã yêu cầu rõ ràng việc gửi. Cụ thể, TCP hỗ trợ một thao tác *push*, và tiến trình gửi gọi thao tác này nhằm xả sạch bộ đệm các byte chưa gửi. Cơ chế kích hoạt cuối cùng cho việc truyền một đoạn là khi một bộ đếm thời gian (timer) búng; đoạn dữ liệu kết quả chứa số byte hiện có trong bộ đệm truyền tải. Tuy nhiên, như chúng ta sẽ sớm thấy, “timer” này không hoàn toàn như bạn mong đợi.
 
-Silly Window Syndrome
-~~~~~~~~~~~~~~~~~~~~~
+Syndrome Cửa sổ Ngớ Ngẩn
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Of course, we can’t just ignore flow control, which plays an obvious
-role in throttling the sender. If the sender has ``MSS`` bytes of data
-to send and the window is open at least that much, then the sender
-transmits a full segment. Suppose, however, that the sender is
-accumulating bytes to send, but the window is currently closed. Now
-suppose an ACK arrives that effectively opens the window enough for the
-sender to transmit, say, ``MSS/2`` bytes. Should the sender transmit a
-half-full segment or wait for the window to open to a full ``MSS``? The
-original specification was silent on this point, and early
-implementations of TCP decided to go ahead and transmit a half-full
-segment. After all, there is no telling how long it will be before the
-window opens further.
+Dĩ nhiên, chúng ta không thể bỏ qua khả năng kiểm soát luồng, vốn đóng vai trò rõ ràng trong việc hạn chế người gửi. Nếu người gửi có ``MSS`` byte dữ liệu cần gửi và cửa sổ mở đủ lớn ít nhất bằng như vậy, thì người gửi sẽ truyền một đoạn đầy đủ. Tuy nhiên, giả sử rằng người gửi đang tích lũy byte để gửi, nhưng cửa sổ hiện đang đóng. Bây giờ, giả sử một ACK đến mở cửa sổ đủ cho người gửi truyền, ví dụ, ``MSS/2`` byte. Liệu người gửi có nên truyền một đoạn nửa đầy hay nên chờ cho đến khi cửa sổ mở đủ một ``MSS``? Đặc tả ban đầu đã im lặng về điểm này, và các triển khai TCP sớm đã quyết định tiếp tục và truyền một đoạn nửa đầy. Rốt cuộc, không có cách nào biết được sau bao lâu cửa sổ sẽ mở rộng thêm.
 
-It turns out that the strategy of aggressively taking advantage of any
-available window leads to a situation now known as the *silly window
-syndrome*. :numref:`Figure %s <fig-sillywindow>` helps visualize what
-happens.  If you think of a TCP stream as a conveyor belt with “full”
-containers (data segments) going in one direction and empty containers
-(ACKs) going in the reverse direction, then ``MSS``-sized segments
-correspond to large containers and 1-byte segments correspond to very
-small containers. As long as the sender is sending ``MSS``-sized
-segments and the receiver ACKs at least one ``MSS`` of data at a time,
-everything is good (:numref:`Figure %s(a) <fig-sillywindow>`). But,
-what if the receiver has to reduce the window, so that at some time
-the sender can’t send a full ``MSS`` of data? If the sender
-aggressively fills a smaller-than-\ ``MSS`` empty container as soon as
-it arrives, then the receiver will ACK that smaller number of bytes,
-and hence the small container introduced into the system remains in
-the system indefinitely.  That is, it is immediately filled and
-emptied at each end and is never coalesced with adjacent containers to
-create larger containers, as in :numref:`Figure %s(b)
-<fig-sillywindow>`. This scenario was discovered when early
-implementations of TCP regularly found themselves filling the network
-with tiny segments.
+Hóa ra, chiến lược chủ động tận dụng bất kỳ cửa sổ nào sẵn có dẫn đến tình trạng được gọi là *hội chứng cửa sổ ngớ ngẩn*. :numref:`Figure %s <fig-sillywindow>` giúp hình dung những gì xảy ra. Nếu bạn nghĩ về một luồng TCP như một băng chuyền với các thùng “đầy” (các đoạn dữ liệu) đi theo một hướng và thùng rỗng (ACK) đi ngược lại, thì các đoạn có kích thước ``MSS`` tương ứng với các thùng lớn và các đoạn 1 byte tương ứng với các thùng rất nhỏ. Miễn là người gửi gửi các đoạn có kích thước ``MSS`` và người nhận ACK ít nhất một ``MSS`` dữ liệu mỗi lần, mọi thứ đều hoạt động tốt (:numref:`Figure %s(a) <fig-sillywindow>`). Nhưng, nếu người nhận phải giảm cửa sổ, khiến một lúc nào đó người gửi không thể gửi đủ một ``MSS`` dữ liệu, thì nếu người gửi ngay lập tức lấp đầy một thùng nhỏ hơn ``MSS`` khi nó có thể, thì người nhận sẽ ACK với số byte nhỏ hơn, dẫn đến việc thùng nhỏ đó được đưa vào hệ thống và tiếp tục lưu động mãi mãi. Tức là, nó được lấp đầy và rỗng đi ngay tại mỗi đầu mà không bao giờ được hợp nhất với các thùng liền kề để tạo thành các thùng lớn hơn, như trong :numref:`Figure %s(b) <fig-sillywindow>`. Tình huống này đã được phát hiện khi các triển khai TCP sớm thường xuyên tự thấy mình lấp đầy mạng với các đoạn rất nhỏ.
 
 .. _fig-sillywindow:
 .. figure:: figures/f05-09-9780123850591.png
    :width: 500px
    :align: center
 
-   Silly window syndrome. (a) As long as the sender sends
-   MSS-sized segments and the receiver ACKs one MSS at a time, the
-   system works smoothly. (b) As soon as the sender sends less than
-   one MSS, or the receiver ACKs less than one MSS, a small
-   "container" enters the system and continues to circulate.
+   Hội chứng cửa sổ ngớ ngẩn. (a) Miễn là người gửi gửi các đoạn có kích thước MSS và người nhận ACK một MSS mỗi lần, hệ thống hoạt động trôi chảy. (b) Ngay khi người gửi gửi ít hơn một MSS, hoặc người nhận ACK ít hơn một MSS, một “thùng” nhỏ được đưa vào hệ thống và tiếp tục lưu động.
 
-Note that the silly window syndrome is only a problem when either the
-sender transmits a small segment or the receiver opens the window a
-small amount. If neither of these happens, then the small container is
-never introduced into the stream. It’s not possible to outlaw sending
-small segments; for example, the application might do a *push* after
-sending a single byte. It is possible, however, to keep the receiver
-from introducing a small container (i.e., a small open window). The rule
-is that after advertising a zero window the receiver must wait for space
-equal to an ``MSS`` before it advertises an open window.
-
-Since we can’t eliminate the possibility of a small container being
-introduced into the stream, we also need mechanisms to coalesce them.
-The receiver can do this by delaying ACKs—sending one combined ACK
-rather than multiple smaller ones—but this is only a partial solution
-because the receiver has no way of knowing how long it is safe to delay
-waiting either for another segment to arrive or for the application to
-read more data (thus opening the window). The ultimate solution falls to
-the sender, which brings us back to our original issue: When does the
-TCP sender decide to transmit a segment?
+Lưu ý rằng hội chứng cửa sổ ngớ ngẩn chỉ là vấn đề khi người gửi truyền một đoạn nhỏ hoặc người nhận mở cửa sổ với lượng nhỏ. Nếu không có trường hợp nào xảy ra, thì thùng nhỏ sẽ không bao giờ được đưa vào luồng. Không thể cấm việc gửi các đoạn nhỏ; ví dụ, ứng dụng có thể thực hiện một thao tác *push* sau khi gửi chỉ một byte. Tuy nhiên, có thể ngăn người nhận đưa vào một thùng nhỏ (tức là, một cửa sổ mở nhỏ) bằng cách quy định rằng sau khi quảng bá cửa sổ 0, người nhận phải chờ có đủ không gian bằng một ``MSS`` trước khi quảng bá cửa sổ mở.
 
 Nagle’s Algorithm
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
-Returning to the TCP sender, if there is data to send but the window is
-open less than ``MSS``, then we may want to wait some amount of time
-before sending the available data, but the question is how long? If we
-wait too long, then we hurt interactive applications like Telnet. If we
-don’t wait long enough, then we risk sending a bunch of tiny packets and
-falling into the silly window syndrome. The answer is to introduce a
-timer and to transmit when the timer expires.
+Quay trở lại người gửi TCP, nếu có dữ liệu để gửi nhưng cửa sổ hiện mở nhỏ hơn ``MSS``, thì ta có thể muốn chờ một khoảng thời gian trước khi gửi dữ liệu hiện có, nhưng câu hỏi đặt ra là chờ bao lâu? Nếu chờ quá lâu, các ứng dụng tương tác như Telnet sẽ bị ảnh hưởng; nếu không chờ đủ lâu, ta có nguy cơ gửi nhiều gói nhỏ và rơi vào hội chứng cửa sổ ngớ ngẩn. Câu trả lời là giới thiệu một bộ đếm thời gian (timer) và truyền dữ liệu khi bộ đếm kết thúc.
 
-While we could use a clock-based timer—for example, one that fires
-every 100 ms—Nagle introduced an elegant *self-clocking* solution. The
-idea is that as long as TCP has any data in flight, the sender will
-eventually receive an ACK. This ACK can be treated like a timer
-firing, triggering the transmission of more data. Nagle’s algorithm
-provides a simple, unified rule for deciding when to transmit:
+Trong khi ta có thể sử dụng bộ đếm thời gian dựa trên đồng hồ — ví dụ, búng mỗi 100 ms — Nagle đã giới thiệu một giải pháp *tự đồng bộ* (self-clocking) tinh tế. Ý tưởng là miễn là TCP có bất kỳ dữ liệu nào đang được truyền, người gửi cuối cùng sẽ nhận được một ACK. ACK này có thể được coi như kích hoạt của timer, kích hoạt việc truyền thêm dữ liệu. Thuật toán Nagle cung cấp một quy tắc đơn giản, thống nhất cho việc quyết định khi nào truyền:
 
 ::
 
-   When the application produces data to send
-       if both the available data and the window >= MSS
-           send a full segment
+   Khi ứng dụng tạo ra dữ liệu để gửi
+       nếu cả dữ liệu có sẵn và cửa sổ >= MSS
+           gửi một đoạn đầy đủ
        else
-           if there is unACKed data in flight
-               buffer the new data until an ACK arrives
+           nếu có dữ liệu chưa được ACK đang được truyền
+               lưu trữ dữ liệu mới cho đến khi có ACK đến
            else
-               send all the new data now
+               gửi tất cả dữ liệu mới ngay lập tức
 
-In other words, it’s always OK to send a full segment if the window
-allows. It’s also all right to immediately send a small amount of data
-if there are currently no segments in transit, but if there is anything
-in flight the sender must wait for an ACK before transmitting the next
-segment. Thus, an interactive application like Telnet that continually
-writes one byte at a time will send data at a rate of one segment per
-RTT. Some segments will contain a single byte, while others will contain
-as many bytes as the user was able to type in one round-trip time.
-Because some applications cannot afford such a delay for each write it
-does to a TCP connection, the socket interface allows the application to
-turn off Nagle’s algorithm by setting the ``TCP_NODELAY`` option.
-Setting this option means that data is transmitted as soon as possible.
+Nói cách khác, luôn được phép gửi một đoạn đầy đủ nếu cửa sổ cho phép. Cũng được phép gửi ngay một lượng dữ liệu nhỏ nếu không có đoạn nào đang truyền, nhưng nếu có bất cứ dữ liệu nào đang trong chuyến bay, người gửi phải đợi cho đến khi nhận được ACK trước khi truyền đoạn tiếp theo. Do đó, một ứng dụng tương tác như Telnet, khi liên tục gửi một byte một lần, sẽ gửi dữ liệu với tốc độ một đoạn mỗi RTT. Một số đoạn sẽ chứa chỉ một byte, trong khi những đoạn khác có thể chứa nhiều byte tùy thuộc vào tốc độ gõ của người dùng trong một thời gian đi-đi về. Vì một số ứng dụng không thể chấp nhận độ trễ như vậy cho mỗi lần ghi vào kết nối TCP, giao diện socket cho phép ứng dụng tắt thuật toán Nagle bằng cách đặt tùy chọn ``TCP_NODELAY``. Việc đặt tùy chọn này có nghĩa là dữ liệu sẽ được truyền đi ngay lập tức.
 
-5.2.6 Adaptive Retransmission
+5.2.6 Truyền lại Thích ứng
 -----------------------------
 
-Because TCP guarantees the reliable delivery of data, it retransmits
-each segment if an ACK is not received in a certain period of time. TCP
-sets this timeout as a function of the RTT it expects between the two
-ends of the connection. Unfortunately, given the range of possible RTTs
-between any pair of hosts in the Internet, as well as the variation in
-RTT between the same two hosts over time, choosing an appropriate
-timeout value is not that easy. To address this problem, TCP uses an
-adaptive retransmission mechanism. We now describe this mechanism and
-how it has evolved over time as the Internet community has gained more
-experience using TCP.
+Bởi vì TCP đảm bảo việc truyền dữ liệu tin cậy, nó sẽ truyền lại mỗi đoạn nếu không nhận được ACK trong một khoảng thời gian nhất định. TCP đặt thời gian chờ này như một hàm của RTT kỳ vọng giữa hai đầu kết nối. Đáng tiếc, xét đến phạm vi RTT có thể xảy ra giữa bất kỳ cặp host nào trên Internet, cũng như sự biến đổi của RTT giữa cùng hai host theo thời gian, thì việc chọn một giá trị thời gian chờ thích hợp không hề đơn giản. Để giải quyết vấn đề này, TCP sử dụng một cơ chế truyền lại thích ứng. Bây giờ chúng ta mô tả cơ chế này và cách nó đã phát triển theo thời gian khi cộng đồng Internet có thêm nhiều kinh nghiệm sử dụng TCP.
 
-Original Algorithm
+Thuật toán Gốc
 ~~~~~~~~~~~~~~~~~~
 
-We begin with a simple algorithm for computing a timeout value between a
-pair of hosts. This is the algorithm that was originally described in
-the TCP specification—and the following description presents it in those
-terms—but it could be used by any end-to-end protocol.
+Chúng ta bắt đầu với một thuật toán đơn giản để tính toán giá trị thời gian chờ giữa một cặp host. Đây là thuật toán ban đầu được mô tả trong đặc tả TCP—và phần mô tả sau đây trình bày nó theo cách đó—nhưng nó có thể được sử dụng bởi bất kỳ giao thức đầu-cuối nào.
 
-The idea is to keep a running average of the RTT and then to compute
-the timeout as a function of this RTT. Specifically, every time TCP
-sends a data segment, it records the time. When an ACK for that
-segment arrives, TCP reads the time again, and then takes the
-difference between these two times as a ``SampleRTT``. TCP then
-computes an ``EstimatedRTT`` as a weighted average between the
-previous estimate and this new sample. That is,
+Ý tưởng là duy trì một trung bình động của RTT và sau đó tính thời gian chờ như một hàm của RTT đó. Cụ thể, mỗi khi TCP gửi một đoạn dữ liệu, nó ghi lại thời gian. Khi một ACK cho đoạn đó đến, TCP lại đọc lại thời gian, và lấy hiệu giữa hai thời điểm này làm ``SampleRTT``. TCP sau đó tính toán một ``EstimatedRTT`` như một trung bình trọng số giữa ước lượng trước đó và mẫu mới này. Tức là,
 
 ::
 
    EstimatedRTT = alpha x EstimatedRTT + (1 - alpha) x SampleRTT
 
-The parameter ``alpha`` is selected to *smooth* the
-``EstimatedRTT``. A small ``alpha`` tracks changes in the RTT but is
-perhaps too heavily influenced by temporary fluctuations. On the other
-hand, a large ``alpha`` is more stable but perhaps not quick enough to
-adapt to real changes. The original TCP specification recommended a
-setting of ``alpha`` between 0.8 and 0.9. TCP then uses
-``EstimatedRTT`` to compute the timeout in a rather conservative way:
+Tham số ``alpha`` được chọn để *làm mềm* giá trị ``EstimatedRTT``. Một giá trị ``alpha`` nhỏ sẽ theo dõi các thay đổi của RTT nhưng có thể bị ảnh hưởng quá mức bởi những dao động tạm thời. Ngược lại, một giá trị ``alpha`` lớn thì ổn định hơn nhưng có thể không nhanh chóng thích ứng với những thay đổi thực sự. Đặc tả TCP ban đầu khuyến nghị đặt ``alpha`` giữa 0.8 và 0.9. Sau đó, TCP sử dụng ``EstimatedRTT`` để tính thời gian chờ một cách khá bảo thủ:
 
 ::
 
    TimeOut = 2 x EstimatedRTT
 
-Karn/Partridge Algorithm
+Thuật toán Karn/Partridge
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-After several years of use on the Internet, a rather obvious flaw was
-discovered in this simple algorithm. The problem was that an ACK does
-not really acknowledge a transmission; it actually acknowledges the
-receipt of data. In other words, whenever a segment is retransmitted
-and then an ACK arrives at the sender, it is impossible to determine
-if this ACK should be associated with the first or the second
-transmission of the segment for the purpose of measuring the sample
-RTT. It is necessary to know which transmission to associate it with
-so as to compute an accurate ``SampleRTT``. As illustrated in
-:numref:`Figure %s <fig-tcp-karn>`, if you assume that the ACK is for
-the original transmission but it was really for the second, then the
-``SampleRTT`` is too large (a); if you assume that the ACK is for the
-second transmission but it was actually for the first, then the
-``SampleRTT`` is too small (b).
+Sau vài năm sử dụng trên Internet, một khuyết điểm khá rõ ràng đã được phát hiện trong thuật toán đơn giản này. Vấn đề là một ACK không thực sự xác nhận việc truyền tải; nó thực sự xác nhận việc nhận dữ liệu. Nói cách khác, mỗi khi một đoạn được truyền lại và sau đó một ACK đến cho người gửi, thì không thể xác định được ACK đó nên được liên kết với lần truyền đầu tiên hay lần truyền thứ hai của đoạn đó để đo mẫu ``SampleRTT``. Việc cần biết liên kết ACK với lần truyền nào để tính một ``SampleRTT`` chính xác là cần thiết. Như được minh họa trong :numref:`Figure %s <fig-tcp-karn>`, nếu bạn giả định rằng ACK là cho lần truyền ban đầu nhưng thực chất nó là cho lần truyền thứ hai, thì ``SampleRTT`` sẽ bị quá lớn (a); nếu bạn giả định rằng ACK là cho lần truyền thứ hai nhưng thực sự nó là cho lần truyền đầu tiên, thì ``SampleRTT`` sẽ bị quá nhỏ (b).
 
 .. _fig-tcp-karn:
 .. figure:: figures/f05-10-9780123850591.png
    :width: 500px
    :align: center
 
-   Associating the ACK with (a) original transmission
-   versus (b) retransmission.
+   Liên kết ACK với (a) lần truyền ban đầu
+   so với (b) lần truyền lại.
 
-The solution, which was proposed in 1987, is surprisingly simple.
-Whenever TCP retransmits a segment, it stops taking samples of the RTT;
-it only measures ``SampleRTT`` for segments that have been sent only
-once. This solution is known as the Karn/Partridge algorithm, after its
-inventors. Their proposed fix also includes a second small change to
-TCP’s timeout mechanism. Each time TCP retransmits, it sets the next
-timeout to be twice the last timeout, rather than basing it on the last
-``EstimatedRTT``. That is, Karn and Partridge proposed that TCP use
-exponential backoff, similar to what the Ethernet does. The motivation
-for using exponential backoff is simple: Congestion is the most likely
-cause of lost segments, meaning that the TCP source should not react too
-aggressively to a timeout. In fact, the more times the connection times
-out, the more cautious the source should become. We will see this idea
-again, embodied in a much more sophisticated mechanism, in the next
-chapter.
+Giải pháp, được đề xuất vào năm 1987, thật bất ngờ đơn giản. Mỗi khi TCP truyền lại một đoạn, nó ngừng lấy mẫu RTT; nó chỉ đo ``SampleRTT`` cho các đoạn chỉ được gửi một lần. Giải pháp này được gọi là thuật toán Karn/Partridge, theo tên của những người phát minh ra nó. Sửa đổi mà họ đề xuất cũng bao gồm một thay đổi nhỏ thứ hai đối với cơ chế thời gian chờ của TCP. Mỗi khi TCP truyền lại, nó đặt thời gian chờ kế tiếp bằng gấp đôi thời gian chờ lần trước, thay vì dựa trên ``EstimatedRTT`` vừa có. Tức là, Karn và Partridge đề xuất rằng TCP sử dụng cơ chế trở lại lũy thừa (exponential backoff), tương tự như cách hoạt động của Ethernet. Động cơ cho việc sử dụng trở lại lũy thừa rất đơn giản: Tắc nghẽn là nguyên nhân có khả năng cao nhất gây mất đoạn, nghĩa là nguồn TCP không nên phản ứng quá mạnh đối với một lần hết thời gian. Trên thực tế, số lần kết nối hết thời gian càng nhiều, thì nguồn nên càng thận trọng hơn. Chúng ta sẽ thấy ý tưởng này được hiện hữu trong một cơ chế tinh vi hơn nhiều trong chương tiếp theo.
 
-Jacobson/Karels Algorithm
+Thuật toán Jacobson/Karels
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Karn/Partridge algorithm was introduced at a time when the Internet
-was suffering from high levels of network congestion. Their approach was
-designed to fix some of the causes of that congestion, but, although it
-was an improvement, the congestion was not eliminated. The following
-year (1988), two other researchers—Jacobson and Karels—proposed a more
-drastic change to TCP to battle congestion. The bulk of that proposed
-change is described in the next chapter. Here, we focus on the aspect of
-that proposal that is related to deciding when to time out and
-retransmit a segment.
+Thuật toán Karn/Partridge được giới thiệu vào thời điểm Internet đang chịu áp lực tắc nghẽn cao. Cách tiếp cận của họ được thiết kế để khắc phục một số nguyên nhân gốc của tắc nghẽn đó, nhưng mặc dù là một cải tiến, tắc nghẽn vẫn chưa được loại bỏ hoàn toàn. Năm sau đó (1988), hai nhà nghiên cứu khác—Jacobson và Karels—đã đề xuất một thay đổi sâu sắc hơn cho TCP nhằm đối phó với tắc nghẽn. Phần lớn thay đổi được đề xuất đó được mô tả trong chương tiếp theo. Ở đây, chúng ta tập trung vào khía cạnh của đề xuất đó liên quan đến việc quyết định khi nào kích hoạt thời gian chờ và truyền lại một đoạn.
 
-As an aside, it should be clear how the timeout mechanism is related to
-congestion—if you time out too soon, you may unnecessarily retransmit a
-segment, which only adds to the load on the network. The other reason
-for needing an accurate timeout value is that a timeout is taken to
-imply congestion, which triggers a congestion-control mechanism.
-Finally, note that there is nothing about the Jacobson/Karels timeout
-computation that is specific to TCP. It could be used by any end-to-end
-protocol.
+Nhắc thêm, cần rõ ràng rằng cơ chế thời gian chờ có liên quan đến tắc nghẽn—nếu bạn kích hoạt thời gian chờ quá sớm, bạn có thể truyền lại không cần thiết một đoạn, chỉ làm tăng tải cho mạng. Lý do khác cần một giá trị thời gian chờ chính xác là vì một thời gian chờ được hiểu là dấu hiệu của tắc nghẽn, từ đó kích hoạt cơ chế kiểm soát tắc nghẽn. Cuối cùng, lưu ý rằng không có gì đặc biệt về việc tính toán thời gian chờ theo phương pháp Jacobson/Karels đối với TCP; phương pháp này có thể được áp dụng cho bất kỳ giao thức đầu-cuối nào.
 
-The main problem with the original computation is that it does not take
-the variance of the sample RTTs into account. Intuitively, if the
-variation among samples is small, then the ``EstimatedRTT`` can be
-better trusted and there is no reason for multiplying this estimate by 2
-to compute the timeout. On the other hand, a large variance in the
-samples suggests that the timeout value should not be too tightly
-coupled to the ``EstimatedRTT``.
+Vấn đề chính với cách tính toán ban đầu là nó không tính đến phương sai của các mẫu RTT. Một cách trực giác, nếu sự biến thiên giữa các mẫu là nhỏ, thì ``EstimatedRTT`` có thể được tin cậy hơn và không có lý do gì để nhân đôi ước lượng đó để tính toán thời gian chờ. Ngược lại, nếu có sự biến thiên lớn giữa các mẫu, thì giá trị thời gian chờ nên được điều chỉnh cho phù hợp với thành phần phương sai.
 
-In the new approach, the sender measures a new ``SampleRTT`` as before.
-It then folds this new sample into the timeout calculation as follows:
+Trong cách tiếp cận mới, người gửi đo một ``SampleRTT`` mới như trước. Sau đó, nó gộp mẫu mới này vào phép tính thời gian chờ như sau:
 
 ::
 
@@ -1092,38 +413,20 @@ It then folds this new sample into the timeout calculation as follows:
    EstimatedRTT = EstimatedRTT + ( delta x Difference)
    Deviation = Deviation + delta (|Difference| - Deviation)
 
-where ``delta`` is between 0 and 1. That is, we calculate both the
-mean RTT and the variation in that mean.
+trong đó ``delta`` nằm trong khoảng từ 0 đến 1. Tức là, chúng ta tính cả trung bình RTT và sự biến thiên của nó.
 
-TCP then computes the timeout value as a function of both
-``EstimatedRTT`` and ``Deviation`` as follows:
+Sau đó, TCP tính thời gian chờ như một hàm của cả ``EstimatedRTT`` và ``Deviation`` như sau:
 
 ::
 
    TimeOut = mu x EstimatedRTT + phi x Deviation
 
-where based on experience, ``mu`` is typically set to 1 and ``phi`` is
-set to 4.  Thus, when the variance is small, ``TimeOut`` is close to
-``EstimatedRTT``; a large variance causes the ``Deviation`` term to
-dominate the calculation.
+trong đó dựa trên kinh nghiệm, ``mu`` thường được đặt là 1 và ``phi`` là 4. Do đó, khi độ biến thiên nhỏ, ``TimeOut`` gần với ``EstimatedRTT``; còn một độ biến thiên lớn sẽ khiến phần ``Deviation`` chi phối việc tính toán.
 
-Implementation
+Triển khai
 ~~~~~~~~~~~~~~
 
-There are two items of note regarding the implementation of timeouts in
-TCP. The first is that it is possible to implement the calculation for
-``EstimatedRTT`` and ``Deviation`` without using floating-point
-arithmetic. Instead, the whole calculation is scaled by 2\ :sup:`n`,
-with delta selected to be 1/2\ :sup:`n`. This allows us to do integer
-arithmetic, implementing multiplication and division using shifts,
-thereby achieving higher performance. The resulting calculation is given
-by the following code fragment, where n=3
-(i.e., ``delta = 1/8``). Note that ``EstimatedRTT`` and ``Deviation`` are
-stored in their scaled-up forms, while the value of ``SampleRTT`` at the
-start of the code and of ``TimeOut`` at the end are real, unscaled
-values. If you find the code hard to follow, you might want to try
-plugging some real numbers into it and verifying that it gives the same
-results as the equations above.
+Có hai điểm cần lưu ý về việc triển khai thời gian chờ trong TCP. Điểm đầu tiên là có thể triển khai phép tính cho ``EstimatedRTT`` và ``Deviation`` mà không cần sử dụng số học dấu phẩy động. Thay vào đó, toàn bộ phép tính được nhân tỷ lệ bởi 2\ :sup:`n`, với delta được chọn là 1/2\ :sup:`n`. Điều này cho phép chúng ta sử dụng số học nguyên, thực hiện phép nhân và chia bằng cách dịch bit (shifts), từ đó đạt được hiệu suất cao hơn. Phép tính kết quả được cho bởi đoạn mã dưới đây, với n=3 (tức là, ``delta = 1/8``). Lưu ý rằng ``EstimatedRTT`` và ``Deviation`` được lưu dạng đã nhân tỷ lệ, trong khi giá trị của ``SampleRTT`` ban đầu và ``TimeOut`` cuối cùng là các giá trị thực, chưa nhân tỷ lệ. Nếu bạn cảm thấy đoạn mã khó theo dõi, hãy thử cắm một số giá trị thực vào và xác minh rằng nó cho kết quả giống với các phương trình trên.
 
 ::
 
@@ -1137,541 +440,211 @@ results as the equations above.
        TimeOut = (EstimatedRTT >> 3) + (Deviation >> 1);
    }
 
-The second point of note is that the Jacobson/Karels algorithm is only
-as good as the clock used to read the current time. On typical Unix
-implementations at the time, the clock granularity was as large as
-500 ms, which is significantly larger than the average cross-country RTT
-of somewhere between 100 and 200 ms. To make matters worse, the Unix
-implementation of TCP only checked to see if a timeout should happen
-every time this 500-ms clock ticked and would only take a sample of the
-round-trip time once per RTT. The combination of these two factors could
-mean that a timeout would happen 1 second after the segment was
-transmitted. Once again, the extensions to TCP include a mechanism that
-makes this RTT calculation a bit more precise.
+Điểm thứ hai cần lưu ý là thuật toán Jacobson/Karels chỉ tốt bằng đồng hồ được sử dụng để lấy thời gian hiện tại. Trên các triển khai Unix điển hình vào thời điểm đó, độ chính xác của đồng hồ có thể lên tới 500 ms, điều này lớn hơn đáng kể so với RTT trung bình xuyên quốc gia, khoảng từ 100 đến 200 ms. Tệ hơn, việc triển khai TCP trên Unix chỉ kiểm tra xem có nên kích hoạt thời gian chờ mỗi khi đồng hồ 500 ms búng, và chỉ lấy một mẫu RTT mỗi RTT. Sự kết hợp của hai yếu tố này có thể dẫn đến việc thời gian chờ xảy ra 1 giây sau khi đoạn dữ liệu được truyền. Một lần nữa, mở rộng cho TCP bao gồm một cơ chế giúp phép tính RTT này trở nên chính xác hơn.
 
-All of the retransmission algorithms we have discussed are based on
-acknowledgment timeouts, which indicate that a segment has probably been
-lost. Note that a timeout does not, however, tell the sender whether any
-segments it sent after the lost segment were successfully received. This
-is because TCP acknowledgments are cumulative; they identify only the
-last segment that was received without any preceding gaps. The reception
-of segments that occur after a gap grows more frequent as faster
-networks lead to larger windows. If ACKs also told the sender which
-subsequent segments, if any, had been received, then the sender could be
-more intelligent about which segments it retransmits, draw better
-conclusions about the state of congestion, and make better RTT
-estimates. A TCP extension supporting this is described in a later
-section.
+Tất cả các thuật toán truyền lại mà chúng ta đã thảo luận đều dựa trên thời gian chờ nhận ACK, điều báo hiệu rằng một đoạn có lẽ đã bị mất. Lưu ý rằng thời gian chờ không, tuy nhiên, cho biết người gửi có nhận được bất kỳ đoạn nào gửi sau đoạn bị mất hay không. Điều này là do các ACK của TCP được tích lũy; chúng chỉ xác định đoạn cuối cùng được nhận mà không có khoảng trống trước đó. Việc nhận được các đoạn xảy ra sau một khoảng trống trở nên thường xuyên hơn khi các mạng nhanh dẫn đến cửa sổ lớn hơn. Nếu các ACK cũng báo cho người gửi biết các đoạn tiếp nối, nếu có, đã được nhận, thì người gửi có thể thông minh hơn trong việc quyết định gửi lại đoạn nào, rút ra kết luận tốt hơn về trạng thái tắc nghẽn, và tính toán RTT chính xác hơn. Một mở rộng của TCP hỗ trợ điều này được mô tả ở một phần sau.
 
 .. _key-open-source:
 .. admonition::  Key Takeaway
 
-   There is one other point to make about computing timeouts. It is a
-   surprisingly tricky business, so much so, that there is an entire RFC
-   dedicated to the topic: `RFC
-   6298 <https://tools.ietf.org/html/rfc6298>`__. The takeaway is that
-   sometimes fully specifying a protocol involves so much minutiae that
-   the line between specification and implementation becomes blurred.
-   That has happened more than once with TCP, causing some to argue that
-   “the implementation **is** the specification.” But that’s not
-   necessarily a bad thing as long as the reference implementation is
-   available as open source software. More generally, the industry is
-   seeing open source software grow in importance as open standards
-   recede in importance. :ref:`[Next] <key-micro-service>`
+   Có một điểm nữa cần nêu về việc tính toán thời gian chờ. Đây là một việc làm khá tinh vi đến mức, có cả một RFC được dành riêng cho chủ đề này: `RFC 6298 <https://tools.ietf.org/html/rfc6298>`__. Thông điệp rút ra là đôi khi việc chỉ định đầy đủ một giao thức bao gồm quá nhiều chi tiết nhỏ đến mức ranh giới giữa đặc tả và triển khai trở nên mờ nhạt. Điều này đã xảy ra hơn một lần với TCP, khiến một số người tranh luận rằng “triển khai **là** đặc tả.” Tuy nhiên, điều đó không nhất thiết là điều xấu miễn là triển khai tham chiếu có sẵn dưới dạng phần mềm mã nguồn mở. Nói chung hơn, ngành công nghiệp đang chứng kiến sự phát triển ngày càng quan trọng của phần mềm mã nguồn mở trong khi tiêu chuẩn mở dần mất đi tầm quan trọng. :ref:`[Next] <key-micro-service>`
 
-5.2.7 Record Boundaries
+5.2.7 Ranh giới Hồ sơ
 -----------------------
 
-Since TCP is a byte-stream protocol, the number of bytes written by the
-sender are not necessarily the same as the number of bytes read by the
-receiver. For example, the application might write 8 bytes, then
-2 bytes, then 20 bytes to a TCP connection, while on the receiving side
-the application reads 5 bytes at a time inside a loop that iterates 6
-times. TCP does not interject record boundaries between the 8th and 9th
-bytes, nor between the 10th and 11th bytes. This is in contrast to a
-message-oriented protocol, such as UDP, in which the message that is
-sent is exactly the same length as the message that is received.
+Vì TCP là một giao thức luồng byte, số byte được ghi bởi người gửi không nhất thiết bằng số byte được đọc bởi người nhận. Ví dụ, ứng dụng có thể ghi 8 byte, sau đó 2 byte, sau đó 20 byte vào một kết nối TCP, trong khi ở phía nhận, ứng dụng đọc 5 byte mỗi lần qua một vòng lặp lặp lại 6 lần. TCP không chèn ranh giới hồ sơ giữa byte thứ 8 và thứ 9, cũng không giữa byte thứ 10 và thứ 11. Điều này trái ngược với một giao thức định hướng thông điệp, chẳng hạn như UDP, trong đó thông điệp được gửi có độ dài chính xác bằng với thông điệp được nhận.
 
-Even though TCP is a byte-stream protocol, it has two different features
-that can be used by the sender to insert record boundaries into this
-byte stream, thereby informing the receiver how to break the stream of
-bytes into records. (Being able to mark record boundaries is useful, for
-example, in many database applications.) Both of these features were
-originally included in TCP for completely different reasons; they have
-only come to be used for this purpose over time.
+Mặc dù TCP là một giao thức luồng byte, nhưng nó có hai tính năng khác nhau mà người gửi có thể sử dụng để chèn ranh giới hồ sơ vào luồng byte này, giúp thông báo cho người nhận cách chia tách luồng byte thành các hồ sơ. (Khả năng đánh dấu ranh giới hồ sơ là hữu ích, ví dụ, trong nhiều ứng dụng cơ sở dữ liệu.) Cả hai tính năng này ban đầu được đưa vào TCP vì các lý do hoàn toàn khác nhau; chỉ qua thời gian chúng mới được sử dụng cho mục đích này.
 
-The first mechanism is the urgent data feature, as implemented by the
-``URG`` flag and the ``UrgPtr`` field in the TCP header. Originally, the
-urgent data mechanism was designed to allow the sending application to
-send *out-of-band* data to its peer. By “out of band” we mean data that
-is separate from the normal flow of data (e.g., a command to interrupt
-an operation already under way). This out-of-band data was identified in
-the segment using the ``UrgPtr`` field and was to be delivered to the
-receiving process as soon as it arrived, even if that meant delivering
-it before data with an earlier sequence number. Over time, however, this
-feature has not been used, so instead of signifying “urgent” data, it
-has come to be used to signify “special” data, such as a record marker.
-This use has developed because, as with the push operation, TCP on the
-receiving side must inform the application that urgent data has arrived.
-That is, the urgent data in itself is not important. It is the fact that
-the sending process can effectively send a signal to the receiver that
-is important.
+Cơ chế đầu tiên là tính năng dữ liệu khẩn cấp, được triển khai qua cờ ``URG`` và trường ``UrgPtr`` trong header TCP. Ban đầu, cơ chế dữ liệu khẩn cấp được thiết kế để cho phép ứng dụng gửi dữ liệu *ngoài luồng* tới đối tác. “Ngoài luồng” ở đây có nghĩa là dữ liệu tách biệt khỏi luồng dữ liệu bình thường (ví dụ, một lệnh dừng hoạt động đang diễn ra). Dữ liệu ngoài luồng được xác định trong đoạn thông qua trường ``UrgPtr`` và sẽ được chuyển đến tiến trình nhận ngay khi đến, dù điều đó có nghĩa là chuyển nó trước dữ liệu với số thứ tự sớm hơn. Qua thời gian, tuy nhiên, tính năng này không còn được sử dụng; vì vậy thay vì biểu thị “dữ liệu khẩn cấp”, nó đã được sử dụng để biểu thị “dữ liệu đặc biệt”, chẳng hạn như dấu hiệu ranh giới hồ sơ. Cách sử dụng này phát triển vì, giống như thao tác push, phía nhận TCP phải thông báo cho ứng dụng rằng dữ liệu khẩn cấp đã đến. Tức là, chính dữ liệu khẩn cấp không quan trọng, mà là thực tế rằng tiến trình gửi có thể gửi hiệu quả một tín hiệu tới người nhận, điều này là quan trọng.
 
-The second mechanism for inserting end-of-record markers into a byte is
-the *push* operation. Originally, this mechanism was designed to allow
-the sending process to tell TCP that it should send (flush) whatever
-bytes it had collected to its peer. The *push* operation can be used to
-implement record boundaries because the specification says that TCP must
-send whatever data it has buffered at the source when the application
-says push, and, optionally, TCP at the destination notifies the
-application whenever an incoming segment has the PUSH flag set. If the
-receiving side supports this option (the socket interface does not),
-then the push operation can be used to break the TCP stream into
-records.
+Cơ chế thứ hai để chèn dấu hiệu kết thúc hồ sơ vào luồng byte là thao tác *push*. Ban đầu, cơ chế này được thiết kế để cho phép tiến trình gửi thông báo cho TCP rằng nó nên gửi (xả) tất cả các byte đã thu thập được tới đối tác. Thao tác *push* có thể được sử dụng để triển khai ranh giới hồ sơ vì đặc tả nói rằng TCP phải gửi tất cả dữ liệu đã được lưu trong bộ đệm ở nguồn khi ứng dụng gọi thao tác push, và, tùy chọn, TCP ở phía nhận sẽ thông báo cho ứng dụng mỗi khi một đoạn đến với cờ PUSH được bật. Nếu phía nhận hỗ trợ tùy chọn này (giao diện socket thì không), thao tác push có thể được dùng để chia luồng TCP thành các hồ sơ.
 
-Of course, the application program is always free to insert record
-boundaries without any assistance from TCP. For example, it can send a
-field that indicates the length of a record that is to follow, or it can
-insert its own record boundary markers into the data stream.
+Tất nhiên, chương trình ứng dụng luôn có quyền tự chèn ranh giới hồ sơ mà không cần hỗ trợ từ TCP. Ví dụ, nó có thể gửi một trường biểu thị độ dài của hồ sơ sẽ được gửi sau đó, hoặc nó có thể tự chèn dấu hiệu ranh giới hồ sơ vào luồng dữ liệu.
 
-5.2.8 TCP Extensions
+5.2.8 Các Mở Rộng TCP
 --------------------
 
-We have mentioned at four different points in this section that there
-are now extensions to TCP that help to mitigate some problem that TCP
-faced as the underlying network got faster. These extensions are
-designed to have as small an impact on TCP as possible. In particular,
-they are realized as options that can be added to the TCP header. (We
-glossed over this point earlier, but the reason why the TCP header has a
-``HdrLen`` field is that the header can be of variable length; the
-variable part of the TCP header contains the options that have been
-added.) The significance of adding these extensions as options rather
-than changing the core of the TCP header is that hosts can still
-communicate using TCP even if they do not implement the options. Hosts
-that do implement the optional extensions, however, can take advantage
-of them. The two sides agree that they will use the options during TCP’s
-connection establishment phase.
+Chúng ta đã đề cập đến bốn điểm khác nhau trong phần này rằng hiện nay có các mở rộng cho TCP giúp giảm bớt một số vấn đề mà TCP gặp phải khi mạng bên dưới trở nên nhanh hơn. Những mở rộng này được thiết kế nhằm tác động càng nhỏ đến TCP càng tốt. Cụ thể, chúng được thực hiện dưới dạng các tùy chọn có thể được thêm vào header TCP. (Chúng ta đã lướt qua điểm này trước đó, nhưng lý do tại sao header TCP có trường ``HdrLen`` là vì header có thể có độ dài biến đổi; phần biến đổi của header TCP chứa các tùy chọn đã được thêm vào.) Ý nghĩa của việc thêm những mở rộng này dưới dạng tùy chọn thay vì thay đổi lõi của header TCP là các host vẫn có thể giao tiếp qua TCP ngay cả khi chúng không triển khai các tùy chọn đó. Những host triển khai các mở rộng tùy chọn, ngược lại, có thể tận dụng chúng. Hai bên thỏa thuận rằng họ sẽ sử dụng các tùy chọn này trong giai đoạn thiết lập kết nối của TCP.
 
-The first extension helps to improve TCP’s timeout mechanism. Instead of
-measuring the RTT using a coarse-grained event, TCP can read the actual
-system clock when it is about to send a segment, and put this time—think
-of it as a 32-bit *timestamp*\ —in the segment’s header. The receiver then
-echoes this timestamp back to the sender in its acknowledgment, and the
-sender subtracts this timestamp from the current time to measure the
-RTT. In essence, the timestamp option provides a convenient place for
-TCP to store the record of when a segment was transmitted; it stores the
-time in the segment itself. Note that the endpoints in the connection do
-not need synchronized clocks, since the timestamp is written and read at
-the same end of the connection.
+Mở rộng đầu tiên giúp cải thiện cơ chế thời gian chờ của TCP. Thay vì đo RTT bằng cách sử dụng một sự kiện dựa trên đồng hồ thô, TCP có thể đọc đồng hồ hệ thống thực sự khi nó sắp gửi một đoạn, và chèn thời gian đó—hãy coi đó là một *timestamp* 32 bit—vào header của đoạn. Phía nhận sau đó sẽ phản hồi lại timestamp này trong ACK, và người gửi trừ timestamp đó khỏi thời gian hiện tại để đo được RTT. Về cơ bản, tùy chọn timestamp cung cấp một vị trí thuận tiện cho TCP lưu lại hồ sơ thời điểm một đoạn được truyền; nó lưu thời gian trực tiếp trong đoạn. Lưu ý rằng các đầu cuối trong kết nối không cần đồng bộ đồng hồ, vì timestamp được ghi và đọc tại cùng một đầu.
 
-The second extension addresses the problem of TCP’s 32-bit
-``SequenceNum`` field wrapping around too soon on a high-speed network.
-Rather than define a new 64-bit sequence number field, TCP uses the
-32-bit timestamp just described to effectively extend the sequence
-number space. In other words, TCP decides whether to accept or reject a
-segment based on a 64-bit identifier that has the ``SequenceNum`` field
-in the low-order 32 bits and the timestamp in the high-order 32 bits.
-Since the timestamp is always increasing, it serves to distinguish
-between two different incarnations of the same sequence number. Note
-that the timestamp is being used in this setting only to protect against
-wraparound; it is not treated as part of the sequence number for the
-purpose of ordering or acknowledging data.
+Mở rộng thứ hai giải quyết vấn đề trường ``SequenceNum`` 32 bit của TCP bị cuộn quá sớm trên mạng tốc độ cao. Thay vì định nghĩa một trường số thứ tự 64 bit mới, TCP sử dụng timestamp 32 bit đã mô tả để mở rộng hiệu quả không gian số thứ tự. Nói cách khác, TCP quyết định xem có chấp nhận hay từ chối một đoạn dựa trên một định danh 64 bit, trong đó trường ``SequenceNum`` chiếm 32 bit thấp và timestamp chiếm 32 bit cao. Vì timestamp luôn tăng, nó phục vụ để phân biệt giữa hai lần xuất hiện khác nhau của cùng một số thứ tự. Lưu ý rằng timestamp trong bối cảnh này chỉ được dùng để bảo vệ chống lại hiện tượng cuộn (wraparound); nó không được xem như một phần của số thứ tự cho mục đích sắp xếp hay xác nhận dữ liệu.
 
-The third extension allows TCP to advertise a larger window, thereby
-allowing it to fill larger delay × bandwidth pipes that are made
-possible by high-speed networks. This extension involves an option that
-defines a *scaling factor* for the advertised window. That is, rather
-than interpreting the number that appears in the ``AdvertisedWindow``
-field as indicating how many bytes the sender is allowed to have
-unacknowledged, this option allows the two sides of TCP to agree that
-the ``AdvertisedWindow`` field counts larger chunks (e.g., how many
-16-byte units of data the sender can have unacknowledged). In other
-words, the window scaling option specifies how many bits each side
-should left-shift the ``AdvertisedWindow`` field before using its
-contents to compute an effective window.
+Mở rộng thứ ba cho phép TCP quảng bá một cửa sổ lớn hơn, từ đó cho phép nó lấp đầy các đường truyền với tích của độ trễ × băng thông lớn hơn, nhờ vào các mạng tốc độ cao. Mở rộng này liên quan đến một tùy chọn định nghĩa một *hệ số tỉ lệ* cho cửa sổ quảng bá. Tức là, thay vì diễn giải số xuất hiện trong trường ``AdvertisedWindow`` là số byte mà người gửi được phép giữ chưa được ACK, tùy chọn này cho phép hai bên TCP đồng ý rằng trường ``AdvertisedWindow`` đếm các khối dữ liệu lớn hơn (ví dụ, số đơn vị 16 byte mà người gửi có thể giữ chưa được ACK). Nói cách khác, tùy chọn mở rộng cửa sổ xác định số bit mà mỗi bên nên dịch trái trường ``AdvertisedWindow`` trước khi sử dụng nội dung của nó để tính cửa sổ hiệu quả.
 
-The fourth extension allows TCP to augment its cumulative acknowledgment
-with selective acknowledgments of any additional segments that have been
-received but aren’t contiguous with all previously received segments.
-This is the *selective acknowledgment*, or *SACK*, option. When the SACK
-option is used, the receiver continues to acknowledge segments
-normally—the meaning of the ``Acknowledge`` field does not change—but it
-also uses optional fields in the header to acknowledge any additional
-blocks of received data. This allows the sender to retransmit just the
-segments that are missing according to the selective acknowledgment.
+Mở rộng thứ tư cho phép TCP bổ sung thêm vào phần ACK tích lũy của nó với các ACK chọn lọc cho bất kỳ đoạn bổ sung nào đã được nhận nhưng không liền kề với tất cả các đoạn trước đó. Đây là tùy chọn *selective acknowledgment* hay *SACK*. Khi tùy chọn SACK được sử dụng, phía nhận vẫn tiếp tục xác nhận các đoạn như thông thường—ý nghĩa của trường ``Acknowledge`` không thay đổi—nhưng nó cũng sử dụng các trường tùy chọn trong header để xác nhận các khối dữ liệu bổ sung đã được nhận. Điều này cho phép người gửi chỉ truyền lại những đoạn bị mất theo thông tin ACK chọn lọc.
 
-Without SACK, there are only two reasonable strategies for a sender. The
-pessimistic strategy responds to a timeout by retransmitting not just
-the segment that timed out, but any segments transmitted subsequently.
-In effect, the pessimistic strategy assumes the worst: that all those
-segments were lost. The disadvantage of the pessimistic strategy is that
-it may unnecessarily retransmit segments that were successfully received
-the first time. The other strategy is the optimistic strategy, which
-responds to a timeout by retransmitting only the segment that timed out.
-In effect, the optimistic approach assumes the rosiest scenario: that
-only the one segment has been lost. The disadvantage of the optimistic
-strategy is that it is very slow, unnecessarily, when a series of
-consecutive segments has been lost, as might happen when there is
-congestion. It is slow because each segment’s loss is not discovered
-until the sender receives an ACK for its retransmission of the previous
-segment. So it consumes one RTT per segment until it has retransmitted
-all the segments in the lost series. With the SACK option, a better
-strategy is available to the sender: retransmit just the segments that
-fill the gaps between the segments that have been selectively
-acknowledged.
+Nếu không có SACK, chỉ có hai chiến lược hợp lý cho người gửi. Chiến lược bi quan phản ứng với một lần hết thời gian bằng cách truyền lại không chỉ đoạn bị hết thời gian mà còn cả các đoạn được gửi sau đó. Về hiệu quả, chiến lược bi quan giả định tồi tệ nhất: rằng tất cả các đoạn đó đều đã bị mất. Nhược điểm của chiến lược bi quan là có thể truyền lại không cần thiết những đoạn đã được nhận thành công lần đầu. Chiến lược thứ hai là chiến lược lạc quan, phản ứng với hết thời gian bằng cách chỉ truyền lại đoạn bị lỗi. Về hiệu quả, cách tiếp cận lạc quan giả định kịch bản tốt nhất: rằng chỉ có một đoạn bị mất. Nhược điểm của chiến lược lạc quan là nó rất chậm, không cần thiết, khi mất liên tiếp một chuỗi các đoạn, như có thể xảy ra khi có tắc nghẽn. Nó chậm vì mất của từng đoạn không được phát hiện cho đến khi người gửi nhận được ACK cho lần truyền lại của đoạn trước. Do đó, nó tiêu tốn một RTT cho mỗi đoạn cho đến khi truyền lại tất cả các đoạn bị mất trong chuỗi. Với tùy chọn SACK, một chiến lược tốt hơn có thể được sử dụng bởi người gửi: chỉ truyền lại những đoạn lấp đầy khoảng trống giữa các đoạn đã được ACK chọn lọc.
 
-These extensions, by the way, are not the full story. We’ll see some
-more extensions in the next chapter when we look at how TCP handles
-congestion. The Internet Assigned Numbers Authority (IANA) keeps track
-of all the options that are defined for TCP (and for many other Internet
-protocols). See the references at the end of the chapter for a link to
-IANA’s protocol number registry.
+Nhân tiện, những mở rộng này không phải là toàn bộ câu chuyện. Chúng ta sẽ thấy một số mở rộng khác trong chương tiếp theo khi xem cách TCP xử lý tắc nghẽn. Cơ quan Quản lý Số đã được ủy quyền của Internet (IANA) theo dõi tất cả các tùy chọn được định nghĩa cho TCP (và cho nhiều giao thức Internet khác). Xem tài liệu tham khảo ở cuối chương để biết đường liên kết đến đăng ký số giao thức của IANA.
 
-5.2.9 Performance
+5.2.9 Hiệu Năng
 -----------------
 
-Recall that Chapter 1 introduced the two quantitative metrics by which
-network performance is evaluated: latency and throughput. As mentioned
-in that discussion, these metrics are influenced not only by the
-underlying hardware (e.g., propagation delay and link bandwidth) but
-also by software overheads. Now that we have a complete software-based
-protocol graph available to us that includes alternative transport
-protocols, we can discuss how to meaningfully measure its performance.
-The importance of such measurements is that they represent the
-performance seen by application programs.
+Nhắc lại rằng Chương 1 đã giới thiệu hai chỉ số định lượng để đánh giá hiệu năng mạng: độ trễ và throughput. Như đã đề cập trong phần thảo luận đó, các chỉ số này không chỉ bị ảnh hưởng bởi phần cứng bên dưới (ví dụ, độ trễ truyền và băng thông liên kết) mà còn bởi chi phí xử lý phần mềm. Bây giờ, khi chúng ta có một đồ thị giao thức dựa trên phần mềm đầy đủ, bao gồm các giao thức vận chuyển thay thế, chúng ta có thể thảo luận cách đo lường hiệu năng một cách có ý nghĩa. Tầm quan trọng của các phép đo này là chúng thể hiện hiệu năng mà các chương trình ứng dụng cảm nhận được.
 
 .. _fig-experiment:
 .. figure:: figures/f05-11-9780123850591.png
    :width: 500px
    :align: center
 
-   Measured system: Two Linux workstations and a pair of
-   Gbps Ethernet links.
+   Hệ thống đo: Hai máy trạm Linux và một cặp liên kết Ethernet Gbps.
 
-We begin, as any report of experimental results should, by describing
-our experimental method. This includes the apparatus used in the
-experiments; in this case, each workstation has a pair of dual CPU
-2.4-GHz Xeon processors running Linux. In order to enable speeds above
-1 Gbps, a pair of Ethernet adaptors (labeled NIC, for network
-interface card) are used on each machine. The Ethernet spans a single
-machine room so propagation is not an issue, making this a measure of
-processor/software overheads. A test program running on top of the
-socket interface simply tries to transfer data as quickly as possible
-from one machine to the other. :numref:`Figure %s <fig-experiment>`
-illustrates the setup.
+Chúng tôi bắt đầu, như mọi báo cáo kết quả thực nghiệm nên làm, bằng cách mô tả phương pháp thực nghiệm của chúng tôi. Điều này bao gồm thiết bị dùng trong các thí nghiệm; trong trường hợp này, mỗi máy trạm có một cặp bộ xử lý Xeon 2.4-GHz hai nhân chạy Linux. Để cho phép tốc độ trên 1 Gbps, một cặp card giao diện mạng Ethernet (được dán nhãn là NIC) được sử dụng trên mỗi máy. Mạng Ethernet trải dài trong một phòng máy, do đó độ trễ truyền không phải là vấn đề, biến đây thành thước đo của chi phí xử lý của bộ vi xử lý/phần mềm. Một chương trình kiểm tra chạy trên giao diện socket cố gắng chuyển dữ liệu nhanh nhất có thể từ máy này sang máy kia. :numref:`Figure %s <fig-experiment>` minh họa cấu hình này.
 
-You may notice that this experimental setup is not especially bleeding
-edge in terms of the hardware or link speed. The point of this section
-is not to show how fast a particular protocol can run, but to illustrate
-the general methodology for measuring and reporting protocol
-performance.
+Bạn có thể nhận thấy rằng cấu hình thực nghiệm này không thực sự tiên tiến về phần cứng hay tốc độ liên kết. Mục của phần này không phải là để cho thấy một giao thức cụ thể có thể chạy nhanh đến mức nào, mà là để minh họa phương pháp chung trong việc đo lường và báo cáo hiệu năng giao thức.
 
-The throughput test is performed for a variety of message sizes using
-a standard benchmarking tool called TTCP. The results of the
-throughput test are given in :numref:`Figure %s <fig-xput>`. The key
-thing to notice in this graph is that throughput improves as the
-messages get larger. This makes sense—each message involves a certain
-amount of overhead, so a larger message means that this overhead is
-amortized over more bytes. The throughput curve flattens off above
-1 KB, at which point the per-message overhead becomes insignificant
-when compared to the large number of bytes that the protocol stack has
-to process.
+Bài kiểm tra throughput được thực hiện với nhiều kích thước thông điệp khác nhau sử dụng một công cụ đánh giá chuẩn gọi là TTCP. Kết quả của bài kiểm tra throughput được trình bày trong :numref:`Figure %s <fig-xput>`. Điều quan trọng cần lưu ý ở biểu đồ này là throughput cải thiện khi các thông điệp có kích thước lớn hơn. Điều này hợp lý—mỗi thông điệp đi kèm với một lượng chi phí xử lý nhất định, nên một thông điệp lớn hơn đồng nghĩa với việc chi phí đó được phân bổ trên nhiều byte hơn. Đường cong throughput trở nên phẳng ở trên 1 KB, khi chi phí xử lý cho mỗi thông điệp trở nên không đáng kể so với số lượng byte lớn mà ngăn xếp giao thức phải xử lý.
 
 .. _fig-xput:
 .. figure:: figures/f05-12-9780123850591.png
    :width: 400px
    :align: center
 
-   Measured throughput using TCP, for various message
-   sizes.
+   Throughput đo được sử dụng TCP, với các kích thước thông điệp khác nhau.
 
-It’s worth noting that the maximum throughput is less than 2 Gbps, the
-available link speed in this setup. Further testing and analysis of
-results would be needed to figure out where the bottleneck is (or if
-there is more than one). For example, looking at CPU load might give an
-indication of whether the CPU is the bottleneck or whether memory
-bandwidth, adaptor performance, or some other issue is to blame.
+Cần lưu ý rằng throughput tối đa nhỏ hơn 2 Gbps, tốc độ liên kết có sẵn trong cấu hình này. Cần có thêm thử nghiệm và phân tích kết quả để xác định nút thắt (bottleneck) nằm ở đâu (hoặc nếu có hơn một nút thắt). Ví dụ, việc xem xét tải CPU có thể cho biết liệu CPU có phải là nút thắt hay không hoặc bộ nhớ, hiệu suất card giao diện mạng hay vấn đề khác.
 
-We also note that the network in this test is basically “perfect.” It
-has almost no delay or loss, so the only factors affecting performance
-are the TCP implementation and the workstation hardware and software. By
-contrast, most of the time we deal with networks that are far from
-perfect, notably our bandwidth-constrained, last-mile links and
-loss-prone wireless links. Before we can fully appreciate how these
-links affect TCP performance, we need to understand how TCP deals with
-*congestion*, which is the topic of the next chapter.
+Chúng tôi cũng lưu ý rằng mạng trong thí nghiệm này cơ bản là “hoàn hảo”. Nó hầu như không có độ trễ hay mất mát, nên các yếu tố duy nhất ảnh hưởng đến hiệu năng là việc triển khai TCP và phần cứng/phần mềm của máy trạm. Ngược lại, phần lớn các mạng mà chúng ta gặp phải không hoàn hảo, đặc biệt là các liên kết có băng thông hạn chế, liên kết “last-mile” và các liên kết không dây dễ bị mất gói. Trước khi chúng ta có thể đánh giá đầy đủ cách các liên kết này ảnh hưởng đến hiệu năng của TCP, chúng ta cần hiểu cách TCP xử lý *tắc nghẽn*, chủ đề của chương tiếp theo.
 
-At various times in the history of networking, the steadily increasing
-speed of network links has threatened to run ahead of what could be
-delivered to applications. For example, a large research effort was
-begun in the United States in 1989 to build “gigabit networks,” where
-the goal was not only to build links and switches that could run at
-1Gbps or higher but also to deliver that throughput all the way to a
-single application process. There were some real problems (e.g., network
-adaptors, workstation architectures, and operating systems all had to be
-designed with network-to-application throughput in mind) and also some
-perceived problems that turned out to be not so serious. High on the
-list of such problems was the concern that existing transport protocols,
-TCP in particular, might not be up to the challenge of gigabit
-operation.
+Trong lịch sử mạng, tốc độ liên kết ngày càng tăng đã đe dọa vượt qua khả năng cung cấp của các ứng dụng. Ví dụ, một nỗ lực nghiên cứu lớn đã được bắt đầu ở Hoa Kỳ vào năm 1989 để xây dựng “mạng gigabit”, với mục tiêu không chỉ là xây dựng các liên kết và bộ chuyển mạch có thể chạy ở 1 Gbps hoặc cao hơn mà còn là truyền tải throughput đó đến cho một tiến trình ứng dụng đơn lẻ. Đã có một số vấn đề thực sự (ví dụ, card giao diện mạng, kiến trúc máy trạm và hệ điều hành đều phải được thiết kế với throughput từ mạng đến ứng dụng trong tâm trí) và cũng có những vấn đề cảm nhận mà về sau chứng tỏ không nghiêm trọng. Một trong những mối quan tâm trong số đó là lo ngại rằng các giao thức vận chuyển hiện có, TCP đặc biệt, có thể không đáp ứng được yêu cầu của hoạt động gigabit.
 
-As it turns out, TCP has done well keeping up with the increasing
-demands of high-speed networks and applications. One of the most
-important factors was the introduction of window scaling to deal with
-larger bandwidth-delay products. However, there is often a big
-difference between the theoretical performance of TCP and what is
-achieved in practice. Relatively simple problems like copying the data
-more times than necessary as it passes from network adaptor to
-application can drive down performance, as can insufficient buffer
-memory when the bandwidth-delay product is large. And the dynamics of
-TCP are complex enough (as will become even more apparent in the next
-chapter) that subtle interactions among network behavior, application
-behavior, and the TCP protocol itself can dramatically alter
-performance.
+Hóa ra, TCP đã làm tốt việc bắt kịp các yêu cầu ngày càng tăng của các mạng tốc độ cao và các ứng dụng. Một trong những yếu tố quan trọng nhất là việc giới thiệu mở rộng cửa sổ để xử lý các tích của băng thông và độ trễ lớn hơn. Tuy nhiên, thường có sự khác biệt lớn giữa hiệu năng lý thuyết của TCP và hiệu năng thực tế đạt được. Những vấn đề tương đối đơn giản như việc sao chép dữ liệu nhiều hơn mức cần thiết khi đi từ card giao diện mạng lên ứng dụng có thể làm giảm hiệu năng, cũng như bộ nhớ đệm không đủ khi tích của băng thông và độ trễ lớn. Và động học của TCP đủ phức tạp (như sẽ trở nên rõ ràng hơn trong chương tiếp theo) đến mức các tương tác tinh vi giữa hành vi mạng, hành vi ứng dụng và chính giao thức TCP có thể ảnh hưởng đáng kể đến hiệu năng.
 
-For our purposes, it’s worth noting that TCP continues to perform very
-well as network speeds increase, and when it runs up against some limit
-(normally related to congestion, increasing bandwidth-delay products, or
-both), researchers rush in to find solutions. We’ve seen some of those
-in this chapter, and we’ll see some more in the next.
+Cho mục đích của chúng ta, điều đáng chú ý là TCP vẫn tiếp tục hoạt động rất tốt khi tốc độ mạng tăng lên, và khi gặp phải giới hạn nào đó (thường liên quan đến tắc nghẽn, tích của băng thông và độ trễ tăng lên, hoặc cả hai), các nhà nghiên cứu sẽ nhanh chóng tìm ra giải pháp. Chúng ta đã thấy một số giải pháp trong chương này, và sẽ thấy thêm trong chương tiếp theo.
 
-5.2.10 Alternative Design Choices (SCTP, QUIC)
+5.2.10 Các Lựa Chọn Thiết Kế Thay Thế (SCTP, QUIC)
 ------------------------------------------------
 
-Although TCP has proven to be a robust protocol that satisfies the needs
-of a wide range of applications, the design space for transport
-protocols is quite large. TCP is by no means the only valid point in
-that design space. We conclude our discussion of TCP by considering
-alternative design choices. While we offer an explanation for why TCP’s
-designers made the choices they did, we observe that other protocols
-exist that have made other choices, and more such protocols may appear
-in the future.
+Mặc dù TCP đã chứng tỏ là một giao thức ổn định đáp ứng nhu cầu của một phạm vi ứng dụng rất rộng, không gian thiết kế của các giao thức vận chuyển lại rất lớn. TCP không phải là điểm duy nhất hợp lệ trong không gian thiết kế đó. Chúng ta kết thúc phần thảo luận về TCP bằng cách xem xét các lựa chọn thiết kế thay thế. Trong khi chúng tôi đưa ra giải thích tại sao các nhà thiết kế TCP lại đưa ra những lựa chọn như vậy, chúng tôi cũng nhận thấy rằng có các giao thức khác đã chọn những hướng đi khác, và có thể sẽ xuất hiện nhiều giao thức như vậy trong tương lai.
 
-First, we have suggested from the very first chapter of this book that
-there are at least two interesting classes of transport protocols:
-stream-oriented protocols like TCP and request/reply protocols like RPC.
-In other words, we have implicitly divided the design space in half and
-placed TCP squarely in the stream-oriented half of the world. We could
-further divide the stream-oriented protocols into two groups—reliable
-and unreliable—with the former containing TCP and the latter being more
-suitable for interactive video applications that would rather drop a
-frame than incur the delay associated with a retransmission.
+Đầu tiên, chúng ta đã gợi ý ngay từ chương đầu tiên của cuốn sách rằng có ít nhất hai lớp giao thức vận chuyển thú vị: các giao thức hướng luồng như TCP và các giao thức yêu cầu/phản hồi như RPC. Nói cách khác, chúng ta đã ngầm chia không gian thiết kế làm đôi và đặt TCP vào nửa hướng luồng. Ta có thể chia nhỏ thêm các giao thức hướng luồng thành hai nhóm—đáng tin cậy và không đáng tin cậy—trong đó nhóm đầu chứa TCP và nhóm thứ hai phù hợp hơn với các ứng dụng video tương tác mà có thể chấp nhận mất một khung hình hơn là chịu được độ trễ liên quan đến việc truyền lại.
 
-This exercise in building a transport protocol taxonomy is interesting
-and could be continued in greater and greater detail, but the world
-isn’t as black and white as we might like. Consider the suitability of
-TCP as a transport protocol for request/reply applications, for example.
-TCP is a full-duplex protocol, so it would be easy to open a TCP
-connection between the client and server, send the request message in
-one direction, and send the reply message in the other direction. There
-are two complications, however. The first is that TCP is a
-*byte*-oriented protocol rather than a *message*-oriented protocol, and
-request/reply applications always deal with messages. (We explore the
-issue of bytes versus messages in greater detail in a moment.) The
-second complication is that in those situations where both the request
-message and the reply message fit in a single network packet, a
-well-designed request/reply protocol needs only two packets to implement
-the exchange, whereas TCP would need at least nine: three to establish
-the connection, two for the message exchange, and four to tear down the
-connection. Of course, if the request or reply messages are large enough
-to require multiple network packets (e.g., it might take 100 packets to
-send a 100,000-byte reply message), then the overhead of setting up and
-tearing down the connection is inconsequential. In other words, it isn’t
-always the case that a particular protocol cannot support a certain
-functionality; it’s sometimes the case that one design is more efficient
-than another under particular circumstances.
+Bài tập phân loại giao thức vận chuyển này rất thú vị và có thể được tiếp tục với mức độ chi tiết ngày càng cao, nhưng thế giới không đơn giản như màu đen và trắng như ta mong muốn. Hãy xem xét khả năng của TCP như một giao thức vận chuyển cho các ứng dụng yêu cầu/phản hồi, ví dụ. TCP là một giao thức toàn chiều, nên rất dễ để mở một kết nối TCP giữa client và server, gửi thông điệp yêu cầu theo một hướng và gửi thông điệp phản hồi theo hướng kia. Tuy nhiên, có hai phức tạp phát sinh. Đầu tiên là TCP là giao thức hướng *byte* thay vì hướng *tin nhắn*, và các ứng dụng yêu cầu/phản hồi luôn xử lý các tin nhắn. (Chúng ta sẽ khám phá vấn đề byte so với tin nhắn chi tiết hơn ngay sau.) Phức tạp thứ hai là trong các trường hợp khi cả thông điệp yêu cầu và phản hồi vừa đủ chứa trong một gói mạng, một giao thức yêu cầu/phản hồi được thiết kế tốt chỉ cần hai gói để thực hiện trao đổi, trong khi TCP cần ít nhất chín gói: ba để thiết lập kết nối, hai cho trao đổi thông điệp, và bốn để hủy kết nối. Tất nhiên, nếu thông điệp yêu cầu hoặc phản hồi đủ lớn đến mức cần nhiều gói mạng (ví dụ, có thể mất 100 gói để gửi một thông điệp phản hồi 100.000 byte), thì chi phí thiết lập và hủy kết nối trở nên không đáng kể. Nói cách khác, không phải lúc nào một giao thức cụ thể cũng không thể hỗ trợ một chức năng nào đó; đôi khi chỉ có một thiết kế là hiệu quả hơn thiết kế kia trong các hoàn cảnh cụ thể.
 
-Second, as just suggested, you might question why TCP chose to provide a
-reliable *byte*-stream service rather than a reliable *message*-stream
-service; messages would be the natural choice for a database application
-that wants to exchange records. There are two answers to this question.
-The first is that a message-oriented protocol must, by definition,
-establish an upper bound on message sizes. After all, an infinitely long
-message is a byte stream. For any message size that a protocol selects,
-there will be applications that want to send larger messages, rendering
-the transport protocol useless and forcing the application to implement
-its own transport-like services. The second reason is that, while
-message-oriented protocols are definitely more appropriate for
-applications that want to send records to each other, you can easily
-insert record boundaries into a byte stream to implement this
-functionality.
+Thứ hai, như vừa đề cập, bạn có thể đặt câu hỏi tại sao TCP lại chọn cung cấp dịch vụ luồng byte đáng tin cậy thay vì dịch vụ luồng tin nhắn đáng tin cậy; tin nhắn sẽ là lựa chọn tự nhiên cho một ứng dụng cơ sở dữ liệu muốn trao đổi hồ sơ. Có hai câu trả lời cho câu hỏi này. Đầu tiên, một giao thức hướng tin nhắn theo định nghĩa phải thiết lập một giới hạn trên về kích thước tin nhắn. Rốt cuộc, một tin nhắn vô hạn là một luồng byte. Với bất kỳ kích thước tin nhắn nào được một giao thức chọn, luôn có những ứng dụng muốn gửi tin nhắn lớn hơn, điều này khiến giao thức vận chuyển trở nên vô dụng và buộc ứng dụng phải tự triển khai các dịch vụ tương tự giao thức vận chuyển. Lý do thứ hai là, mặc dù các giao thức hướng tin nhắn chắc chắn phù hợp hơn với các ứng dụng muốn gửi hồ sơ cho nhau, bạn có thể dễ dàng chèn ranh giới hồ sơ vào một luồng byte để triển khai chức năng này.
 
-A third decision made in the design of TCP is that it delivers bytes
-*in order* to the application. This means that it may hold onto bytes
-that were received out of order from the network, awaiting some
-missing bytes to fill a hole. This is enormously helpful for many
-applications but turns out to be quite unhelpful if the application is
-capable of processing data out of order. As a simple example, a Web
-page containing multiple embedded objects doesn’t need all the objects
-to be delivered in order before starting to display the page. In fact,
-there is a class of applications that would prefer to handle
-out-of-order data at the application layer, in return for getting data
-sooner when packets are dropped or misordered within the network.  The
-desire to support such applications led to the creation of not one but
-two IETF standard transport protocols. The first of these was SCTP,
-the *Stream Control Transmission Protocol*. SCTP provides a partially
-ordered delivery service, rather than the strictly ordered service of
-TCP.  (SCTP also makes some other design decisions that differ from
-TCP, including message orientation and support of multiple IP
-addresses for a single session.) More recently, the IETF has been
-standardizing a protocol optimized for Web traffic, known as
-QUIC. More on QUIC in a moment.
+Quyết định thứ ba trong thiết kế TCP là nó chuyển giao các byte *theo thứ tự* cho ứng dụng. Điều này có nghĩa là TCP có thể giữ lại các byte nhận được không theo thứ tự từ mạng, chờ đợi các byte bị thiếu để lấp đầy khoảng trống. Điều này vô cùng hữu ích cho nhiều ứng dụng nhưng lại trở nên không cần thiết nếu ứng dụng có khả năng xử lý dữ liệu không theo thứ tự. Ví dụ, một trang Web chứa nhiều đối tượng nhúng không cần tất cả các đối tượng được chuyển giao theo thứ tự mới bắt đầu hiển thị trang. Thực tế, có một lớp ứng dụng mà ưu tiên xử lý dữ liệu không theo thứ tự ở tầng ứng dụng để nhận dữ liệu sớm hơn khi các gói bị mất hoặc bị xáo trộn trong mạng. Mong muốn hỗ trợ các ứng dụng như vậy đã dẫn đến việc tạo ra không phải một mà là hai giao thức vận chuyển tiêu chuẩn của IETF. Giao thức đầu tiên trong số đó là SCTP, hay còn được gọi là *Stream Control Transmission Protocol*. SCTP cung cấp dịch vụ chuyển giao một phần theo thứ tự, thay vì dịch vụ hoàn toàn theo thứ tự của TCP. (SCTP cũng đưa ra một số quyết định thiết kế khác biệt so với TCP, bao gồm hướng tin nhắn và hỗ trợ nhiều địa chỉ IP cho một phiên làm việc.) Gần đây hơn, IETF đã tiêu chuẩn hóa một giao thức được tối ưu hóa cho lưu lượng Web, được biết đến với tên QUIC. Sẽ có thêm thông tin về QUIC ngay sau.
 
-Fourth, TCP chose to implement explicit setup/teardown phases, but
-this is not required. In the case of connection setup, it would be
-possible to send all necessary connection parameters along with the
-first data message. TCP elected to take a more conservative approach
-that gives the receiver the opportunity to reject the connection
-before any data arrives. In the case of teardown, we could quietly
-close a connection that has been inactive for a long period of time,
-but this would complicate applications like remote login that want to
-keep a connection alive for weeks at a time; such applications would
-be forced to send out-of-band “keep alive” messages to keep the
-connection state at the other end from disappearing.
+Thứ tư, TCP đã chọn triển khai các giai đoạn thiết lập/hủy kết nối rõ ràng, nhưng điều này không bắt buộc. Trong trường hợp thiết lập kết nối, có thể gửi tất cả các tham số cần thiết kèm theo thông điệp dữ liệu đầu tiên. TCP đã chọn cách tiếp cận thận trọng hơn, cho phép phía nhận có cơ hội từ chối kết nối trước khi bất kỳ dữ liệu nào đến. Trong trường hợp hủy kết nối, chúng ta có thể đóng kết nối một cách im lặng khi nó không hoạt động trong một khoảng thời gian dài, nhưng điều này sẽ gây khó khăn cho các ứng dụng như đăng nhập từ xa muốn giữ kết nối sống sót trong nhiều tuần; các ứng dụng đó sẽ buộc phải gửi thông điệp “keep alive” ngoài luồng để giữ trạng thái kết nối ở phía bên kia không bị mất.
 
-Finally, TCP is a window-based protocol, but this is not the only
-possibility. The alternative is a *rate-based* design, in which the
-receiver tells the sender the rate—expressed in either bytes or packets
-per second—at which it is willing to accept incoming data. For example,
-the receiver might inform the sender that it can accommodate 100 packets
-a second. There is an interesting duality between windows and rate,
-since the number of packets (bytes) in the window, divided by the RTT,
-is exactly the rate. For example, a window size of 10 packets and a
-100-ms RTT implies that the sender is allowed to transmit at a rate of
-100 packets a second. It is by increasing or decreasing the advertised
-window size that the receiver is effectively raising or lowering the
-rate at which the sender can transmit. In TCP, this information is fed
-back to the sender in the ``AdvertisedWindow`` field of the ACK for
-every segment. One of the key issues in a rate-based protocol is how
-often the desired rate—which may change over time—is relayed back to the
-source: Is it for every packet, once per RTT, or only when the rate
-changes? While we have just now considered window versus rate in the
-context of flow control, it is an even more hotly contested issue in the
-context of congestion control, which we will discuss in the next
-chapter.
+Cuối cùng, TCP là một giao thức dựa trên cửa sổ, nhưng đây không phải là khả năng duy nhất. Lựa chọn thay thế là thiết kế *dựa trên tốc độ* (rate-based), trong đó phía nhận cho biết tốc độ—được biểu diễn bằng byte hoặc gói mỗi giây—mà nó sẵn sàng chấp nhận dữ liệu đến. Ví dụ, phía nhận có thể báo cho người gửi biết rằng nó có thể xử lý 100 gói mỗi giây. Có một mối đối nghịch thú vị giữa cửa sổ và tốc độ, vì số lượng gói (hay byte) trong cửa sổ, chia cho RTT, chính là tốc độ. Ví dụ, một kích thước cửa sổ 10 gói với RTT 100 ms ngụ ý rằng người gửi có thể truyền với tốc độ 100 gói mỗi giây. Việc tăng hoặc giảm kích thước cửa sổ được quảng bá chính là cách phía nhận điều chỉnh tốc độ mà người gửi được phép truyền. Trong TCP, thông tin này được phản hồi lại cho người gửi qua trường ``AdvertisedWindow`` của ACK cho mỗi đoạn. Một trong những vấn đề then chốt của giao thức dựa trên tốc độ là tần suất mà tốc độ mong muốn—có thể thay đổi theo thời gian—được truyền lại cho nguồn: có phải cho mỗi gói, một lần mỗi RTT, hay chỉ khi tốc độ thay đổi? Trong khi chúng ta vừa xem xét cửa sổ so với tốc độ trong bối cảnh điều khiển luồng, thì đây còn là một vấn đề được tranh cãi mãnh liệt trong bối cảnh kiểm soát tắc nghẽn, điều mà chúng ta sẽ thảo luận trong chương tiếp theo.
 
 QUIC
 ~~~~
 
-QUIC originated at Google in 2012 and was subsequently developed as a
-proposed standard at the IETF. Unlike many other efforts to add to the
-set of transport protocols in the Internet, QUIC has achieved
-widespread deployment. As discussed further in :ref:`Chapter 9
-<Chapter 9: Applications>`, QUIC was motivated in large part by the
-challenges of matching the request/response semantics of HTTP to the
-stream-oriented nature of TCP.  These issues have become more
-noticeable over time, due to factors such as the rise of high-latency
-wireless networks, the availability of multiple networks for a single
-device (e.g., Wi-Fi and cellular), and the increasing use of
-encrypted, authenticated connections on the Web (as discussed in
-:ref:`Chapter 8 <Chapter 8: Network Security>`). While a full
-description of QUIC is beyond our scope, some of the key design
-decisions are worth discussing.
+QUIC có nguồn gốc từ Google vào năm 2012 và sau đó được phát triển thành một tiêu chuẩn được đề xuất tại IETF. Khác với nhiều nỗ lực khác nhằm bổ sung thêm các giao thức vận chuyển trên Internet, QUIC đã được triển khai rộng rãi. Như được thảo luận trong :ref:`Chapter 9 <Chapter 9: Applications>`, QUIC được thúc đẩy phần lớn bởi thách thức trong việc khớp các ngữ nghĩa yêu cầu/phản hồi của HTTP với bản chất hướng luồng của TCP. Những vấn đề này càng trở nên rõ ràng theo thời gian, do các yếu tố như sự trỗi dậy của các mạng không dây có độ trễ cao, sự sẵn có của nhiều mạng cho một thiết bị (ví dụ: Wi-Fi và di động), và việc sử dụng ngày càng nhiều các kết nối có mã hóa, có xác thực trên Web (như đã được thảo luận trong :ref:`Chapter 8 <Chapter 8: Network Security>`). Trong khi một mô tả đầy đủ về QUIC vượt quá phạm vi của chúng ta, một số quyết định thiết kế then chốt của nó đáng được bàn luận.
 
 .. sidebar:: Multipath TCP
 
-          It isn't always necessary to define a new protocol if you
-          find an existing protocol does not adequately serve a
-          particular use case. Sometimes it's possible to make
-          substantial changes in how an existing protocol is
-          implemented, yet remain true to the original spec.
-          Multipath TCP is an example of such a situation.
+          Không phải lúc nào cũng cần phải định nghĩa một giao thức mới nếu bạn
+          nhận thấy rằng một giao thức hiện có không phục vụ đầy đủ cho một
+          trường hợp sử dụng cụ thể. Đôi khi có thể thực hiện những thay đổi
+          đáng kể trong cách triển khai một giao thức hiện có, nhưng vẫn giữ vững
+          đặc tả gốc.
+          Multipath TCP là một ví dụ về tình huống như vậy.
 
-          The idea of Multipath TCP is to steer packets over
-          multiple paths through the Internet, for example, by
-          using two different IP addresses for one of the
-          end-points.  This can be especially helpful when
-          delivering data to a mobile device that is connected to
-          both Wi-Fi and the cellular network (and hence, has two
-          unique IP addresses). Being wireless, both networks can
-          experience significant packet-loss, so being able to use
-          both to carry packets can dramatically improve the user
-          experience.  The key is for the receiving side of TCP to
-          reconstruct the original, in-order byte stream before
-          passing data up to the application, which remains unaware
-          it is sitting on top of Multipath TCP. (This is in
-          contrast to applications that purposely open two or more
-          TCP connections to get better performance.)
+          Ý tưởng của Multipath TCP là điều khiển các gói tin qua
+          nhiều đường dẫn khác nhau trên Internet, ví dụ, bằng cách
+          sử dụng hai địa chỉ IP khác nhau cho một trong các đầu cuối.
+          Điều này đặc biệt hữu ích khi truyền dữ liệu đến một thiết bị di động
+          đang kết nối cả Wi-Fi và mạng di động (và do đó có hai địa chỉ IP duy nhất).
+          Vì các mạng không dây có thể gặp mất gói tin nghiêm trọng, nên khả năng
+          sử dụng cả hai để truyền gói có thể cải thiện đáng kể trải nghiệm người dùng.
+          Điều then chốt là phía nhận của TCP phải tái tạo lại luồng byte ban đầu
+          theo đúng thứ tự trước khi chuyển dữ liệu lên ứng dụng, ứng dụng không nhận ra
+          rằng nó đang hoạt động trên Multipath TCP. (Điều này trái ngược với các ứng dụng
+          chủ động mở hai hoặc nhiều kết nối TCP để đạt hiệu năng tốt hơn.)
 
-          As simple as Multipath TCP sounds, it is incredibly
-          difficult to get right because it breaks many assumptions
-          about how TCP flow control, in-order segment reassembly,
-          and congestion control are implemented. We leave it as an
-          exercise for the reader to explore these subtleties. Doing
-          so is a great way to make sure your basic understanding
-          of TCP is sound.
+Nếu độ trễ mạng cao—ví dụ 100 ms hoặc hơn—thì vài RTT có thể nhanh chóng tích lũy thành một sự phiền nhiễu rõ rệt đối với người dùng cuối. Việc thiết lập một phiên HTTP qua TCP với Transport Layer Security (:ref:`Section 8.5 <8.5 Example Systems>`) thường mất ít nhất ba lượt đi-đi về (một cho việc thiết lập phiên TCP và hai cho việc thiết lập các tham số mã hóa) trước khi thông điệp HTTP đầu tiên có thể được gửi đi. Các nhà thiết kế QUIC nhận ra rằng độ trễ này—kết quả trực tiếp của cách tiếp cận thiết kế giao thức theo tầng—có thể được giảm đáng kể nếu việc thiết lập kết nối và các cuộc bắt tay an ninh cần thiết được kết hợp và tối ưu hóa sao cho số lượt đi-đi về là tối thiểu.
 
-If network latency is high—say 100 milliseconds or more—then a few
-RTTs can quickly add up to a visible annoyance for an end
-user. Establishing an HTTP session over TCP with Transport Layer
-Security (:ref:`Section 8.5 <8.5 Example Systems>`) would typically
-take at least three round trips (one for TCP session establishment and two for
-setting up the encryption parameters) before the first HTTP message
-could be sent. The designers of QUIC recognized that this delay—the
-direct result of a layered approach to protocol design—could be
-dramatically reduced if connection setup and the required security
-handshakes were combined and optimized for minimal round trips.
+Cũng cần lưu ý rằng sự có mặt của nhiều giao diện mạng có thể ảnh hưởng đến thiết kế. Nếu điện thoại di động của bạn mất kết nối Wi-Fi và cần chuyển sang mạng di động, thì điều đó thường đòi hỏi cả một lần hết thời gian TCP trên một kết nối và một chuỗi các cuộc bắt tay mới trên kết nối kia. Việc làm cho kết nối có thể duy trì qua các kết nối ở tầng mạng khác nhau là một mục tiêu thiết kế khác của QUIC.
 
-Note also how the presence of multiple network interfaces might affect
-the design. If your mobile phone loses its Wi-Fi connection and needs
-to switch to a cellular connection, that would typically require both
-a TCP timeout on one connection and a new series of handshakes on the
-other. Making the connection something that can persist over different
-network layer connections was another design goal for QUIC.
+Cuối cùng, như đã đề cập ở trên, mô hình luồng byte tin cậy của TCP không phù hợp lắm với một yêu cầu trang Web, khi cần truy xuất nhiều đối tượng và quá trình hiển thị trang có thể bắt đầu trước khi tất cả đối tượng đã đến. Trong khi một giải pháp thay thế cho điều này có thể là mở nhiều kết nối TCP song song, cách tiếp cận này (đã được sử dụng trong những ngày đầu của Web) có những hạn chế riêng, đặc biệt về kiểm soát tắc nghẽn (xem :ref:`Chapter 6 <Chapter 6: Congestion Control>`). Cụ thể, mỗi kết nối chạy vòng lặp kiểm soát tắc nghẽn riêng, nên trải nghiệm tắc nghẽn của một kết nối không được phản ánh ở các kết nối khác, và mỗi kết nối cố gắng xác định lượng băng thông thích hợp để sử dụng một cách độc lập. QUIC đã giới thiệu ý tưởng của các luồng (streams) trong một kết nối, cho phép các đối tượng được chuyển giao không theo thứ tự trong khi vẫn giữ được cái nhìn tổng thể về tắc nghẽn trên tất cả các luồng.
 
-Finally, as noted above, the reliable byte stream model for TCP is a
-poor match to a Web page request, when many objects need to be fetched
-and page rendering could begin before they have all arrived. While
-one workaround for this would be to open multiple TCP connections in
-parallel, this approach (which was used in the early days of the Web)
-has its own set of drawbacks, notably on congestion control (see
-:ref:`Chapter 6 <Chapter 6: Congestion Control>`). Specifically, each
-connection runs its own congestion control loop, so the experience of
-congestion on one connection is not apparent to the other connections,
-and each connection tries to figure out the appropriate amount of
-bandwidth to consume on its own. QUIC introduced the idea of streams
-within a connection, so that objects could be delivered out-of-order
-while maintaining a holistic view of congestion across all the
-streams.
+Thật thú vị, đến khi QUIC ra đời, đã có rất nhiều quyết định thiết kế được đưa ra gây ra những thách thức đối với việc triển khai một giao thức vận chuyển mới. Đáng chú ý, nhiều “middleboxes” như NAT và firewall (xem :ref:`Section 8.5 <8.5 Example Systems>`) đã hiểu biết đủ về các giao thức vận chuyển phổ biến hiện có (TCP và UDP) đến mức không thể tin cậy để truyền qua một giao thức vận chuyển mới. Do đó, QUIC thực sự được xây dựng trên nền UDP. Nói cách khác, nó là một giao thức vận chuyển chạy trên một giao thức vận chuyển. Điều này không phải là điều hiếm gặp như sự chú trọng của chúng ta vào lớp có thể gợi ý, như được minh họa trong hai phần nhỏ tiếp theo. Lựa chọn này được thực hiện nhằm mục đích làm cho QUIC có thể được triển khai trên Internet như hiện nay, và nó đã khá thành công.
 
-Interestingly, by the time QUIC emerged, many design decisions had
-been made that presented challenges for the deployment of a new
-transport protocol. Notably, many "middleboxes'' such as NATs and
-firewalls (see :ref:`Section 8.5 <8.5 Example Systems>`) have enough
-understanding of the existing widespread transport protocols (TCP and
-UDP) that they can't be relied upon to pass a new transport
-protocol. As a result, QUIC actually rides on top of UDP. In other
-words, it is a transport protocol running on top of a transport
-protocol. This is not as uncommon as our focus on layering might
-suggest, as the next two subsections also illustrate. This choice was
-made in the interests of making QUIC deployable on the Internet as it
-exists, and has been quite successful.
+QUIC triển khai thiết lập kết nối nhanh chóng với mã hóa và xác thực ngay trong RTT đầu tiên. Nó cung cấp một định danh kết nối tồn tại xuyên suốt các thay đổi trong mạng bên dưới. Nó hỗ trợ ghép nối nhiều luồng lên một kết nối vận chuyển duy nhất, nhằm tránh hiện tượng nghẽn đầu dòng có thể xảy ra khi một gói bị mất trong khi các dữ liệu hữu ích khác vẫn tiếp tục đến. Và nó giữ nguyên (và ở một số khía cạnh còn cải thiện) các đặc tính tránh nghẽn của TCP, một khía cạnh quan trọng của các giao thức vận chuyển mà chúng ta quay lại ở :ref:`Chapter 6 <Chapter 6: Congestion Control>`.
 
-QUIC implements fast connection establishment with encryption and
-authentication in the first RTT. It provides a connection identifier
-that persists across changes in the underlying network. It supports the
-multiplexing of several streams onto a single transport connection, to
-avoid the head-of-line blocking that may arise when a single packet is
-dropped while other useful data continues to arrive. And it preserves
-(and in some ways improves on)
-the congestion avoidance properties of TCP, an important aspect of
-transport protocols that we return to in :ref:`Chapter 6 <Chapter 6:
-Congestion Control>`.
+HTTP đã trải qua một số phiên bản (1.0, 1.1, 2.0, được thảo luận trong :ref:`Section 9.1 <9.1 Traditional Applications>`) với nỗ lực ánh xạ các yêu cầu của nó một cách rõ ràng hơn lên các khả năng của TCP. Với sự ra đời của QUIC, HTTP/3 giờ đây có thể tận dụng một tầng vận chuyển được thiết kế tỉ mỉ để đáp ứng các yêu cầu ứng dụng của Web.
 
-HTTP went through a number of versions (1.0, 1.1, 2.0, discussed in
-:ref:`Section 9.1 <9.1 Traditional Applications>`) in an effort to map its
-requirements more cleanly onto the capabilities of TCP. With the
-arrival of QUIC, HTTP/3 is now able to leverage a transport layer that
-was explicitly designed to meet the application requirements of
-the Web.
+QUIC là một phát triển rất thú vị trong thế giới các giao thức vận chuyển. Nhiều hạn chế của TCP đã được biết đến trong nhiều thập kỷ, nhưng QUIC đại diện cho một trong những nỗ lực thành công nhất cho đến nay nhằm khẳng định một điểm nhìn khác trong không gian thiết kế. Bởi vì QUIC được lấy cảm hứng từ kinh nghiệm với HTTP và Web—những thứ xuất hiện rất lâu sau khi TCP đã được thiết lập vững chắc trên Internet—nó đưa ra một nghiên cứu trường hợp hấp dẫn về những hệ quả không lường trước của thiết kế theo tầng và về sự tiến hóa của Internet.
 
-QUIC is a most interesting development in the world of transport
-protocols. Many of the limitations of TCP have been known for decades,
-but QUIC represents one of the most successful efforts to date to
-stake out a different point in the design space. Because QUIC was
-inspired by experience with HTTP and the Web—which arose long after
-TCP was well established in the Internet—it presents a fascinating
-case study in the unforeseen consequences of layered designs and in
-the evolution of the Internet.
+5.2.7 Hiệu Năng
+-----------------
 
+Nhắc lại rằng Chương 1 đã giới thiệu hai chỉ số định lượng mà hiệu năng mạng được đánh giá: độ trễ và throughput. Như đã đề cập trong phần thảo luận đó, các chỉ số này không chỉ bị ảnh hưởng bởi phần cứng bên dưới (ví dụ, độ trễ truyền và băng thông liên kết) mà còn bởi chi phí xử lý phần mềm. Giờ đây, khi chúng ta có một đồ thị giao thức dựa trên phần mềm đầy đủ, bao gồm các giao thức vận chuyển thay thế, chúng ta có thể thảo luận cách đo lường hiệu năng một cách có ý nghĩa. Tầm quan trọng của các phép đo này là chúng phản ánh hiệu năng mà các chương trình ứng dụng cảm nhận được.
 
+.. _fig-experiment:
+.. figure:: figures/f05-11-9780123850591.png
+   :width: 500px
+   :align: center
+
+   Hệ thống đo: Hai máy trạm Linux và một cặp liên kết Ethernet Gbps.
+
+Chúng ta bắt đầu, như mọi báo cáo kết quả thí nghiệm nên làm, bằng cách mô tả phương pháp thí nghiệm của chúng ta. Điều này bao gồm thiết bị được sử dụng trong các thí nghiệm; trong trường hợp này, mỗi máy trạm có một cặp bộ xử lý Xeon 2.4-GHz hai nhân chạy Linux. Để đạt tốc độ trên 1 Gbps, mỗi máy sử dụng một cặp card giao diện mạng Ethernet (được gọi là NIC). Mạng Ethernet trải dài qua một phòng máy nên độ trễ truyền không phải là vấn đề, biến đây trở thành thước đo của chi phí xử lý của bộ vi xử lý/phần mềm. Một chương trình kiểm tra chạy trên giao diện socket cố gắng truyền dữ liệu càng nhanh càng tốt từ máy này sang máy kia. :numref:`Figure %s <fig-experiment>` minh họa cấu hình này.
+
+Bạn có thể nhận thấy rằng cấu hình thí nghiệm này không phải là tiên tiến nhất về phần cứng hoặc tốc độ liên kết. Mục của phần này không phải là để cho thấy một giao thức cụ thể có thể chạy nhanh như thế nào, mà là để minh họa phương pháp chung trong việc đo lường và báo cáo hiệu năng giao thức.
+
+Bài kiểm tra throughput được thực hiện cho nhiều kích thước thông điệp khác nhau sử dụng một công cụ đánh giá chuẩn gọi là TTCP. Kết quả của bài kiểm tra throughput được đưa ra trong :numref:`Figure %s <fig-xput>`. Điều quan trọng cần lưu ý ở biểu đồ này là throughput cải thiện khi kích thước thông điệp tăng lên. Điều này hợp lý—mỗi thông điệp đi kèm với một lượng chi phí xử lý nhất định, nên một thông điệp lớn hơn có nghĩa là chi phí đó được phân bổ trên nhiều byte hơn. Đường cong throughput trở nên phẳng khi kích thước thông điệp vượt quá 1 KB, tại đó chi phí xử lý mỗi thông điệp trở nên không đáng kể so với số byte lớn mà ngăn xếp giao thức phải xử lý.
+
+.. _fig-xput:
+.. figure:: figures/f05-12-9780123850591.png
+   :width: 400px
+   :align: center
+
+   Throughput đo được sử dụng TCP, đối với các kích thước thông điệp khác nhau.
+
+Cần lưu ý rằng throughput tối đa nhỏ hơn 2 Gbps, tốc độ liên kết có sẵn trong cấu hình này. Cần có thêm các thử nghiệm và phân tích kết quả để xác định nút thắt (bottleneck) nằm ở đâu (hoặc nếu có hơn một nút thắt). Ví dụ, xem xét tải CPU có thể cho biết liệu CPU có phải là nút thắt hay liệu vấn đề có đến từ băng thông bộ nhớ, hiệu suất card hay vấn đề khác.
+
+Chúng tôi cũng lưu ý rằng mạng trong thí nghiệm này cơ bản là “hoàn hảo”. Nó hầu như không có độ trễ hay mất mát, nên các yếu tố duy nhất ảnh hưởng đến hiệu năng là việc triển khai TCP và phần cứng/phần mềm của máy trạm. Ngược lại, hầu hết các mạng chúng ta gặp phải không hoàn hảo, đặc biệt là các liên kết có băng thông giới hạn, liên kết “last-mile” và liên kết không dây dễ bị mất gói. Trước khi chúng ta có thể hiểu đầy đủ cách các liên kết này ảnh hưởng đến hiệu năng TCP, chúng ta cần hiểu cách TCP xử lý *tắc nghẽn*, chủ đề của chương tiếp theo.
+
+Trong lịch sử mạng, tốc độ liên kết ngày càng tăng đã đe dọa vượt quá khả năng cung cấp cho ứng dụng. Ví dụ, một nỗ lực nghiên cứu lớn đã được bắt đầu ở Hoa Kỳ vào năm 1989 nhằm xây dựng “mạng gigabit”, với mục tiêu không chỉ là xây dựng các liên kết và bộ chuyển mạch có thể chạy ở 1 Gbps hoặc cao hơn mà còn là truyền đạt throughput đó đến một tiến trình ứng dụng đơn lẻ. Đã có một số vấn đề thực sự (ví dụ, card giao diện mạng, kiến trúc máy trạm và hệ điều hành đều phải được thiết kế với throughput từ mạng đến ứng dụng trong tâm trí) và cũng có những vấn đề được cho là nghiêm trọng nhưng sau này thấy không phải vậy. Một trong những mối lo ngại hàng đầu là rằng các giao thức vận chuyển hiện tại, TCP đặc biệt, có thể không đáp ứng được thách thức của hoạt động ở tốc độ gigabit.
+
+Hóa ra, TCP đã làm tốt việc bắt kịp những yêu cầu ngày càng tăng của các mạng tốc độ cao và các ứng dụng. Một trong những yếu tố quan trọng nhất là việc giới thiệu mở rộng cửa sổ nhằm xử lý các tích của băng thông và độ trễ lớn hơn. Tuy nhiên, thường có sự khác biệt lớn giữa hiệu năng lý thuyết của TCP và hiệu năng đạt được trong thực tế. Những vấn đề tương đối đơn giản như việc sao chép dữ liệu nhiều hơn mức cần thiết khi di chuyển từ card giao diện sang ứng dụng có thể làm giảm hiệu năng, cũng như bộ nhớ đệm không đủ khi tích của băng thông và độ trễ lớn. Và động học của TCP đủ phức tạp (như sẽ trở nên rõ ràng hơn trong chương tiếp theo) đến mức các tương tác tinh vi giữa hành vi mạng, hành vi ứng dụng và giao thức TCP có thể thay đổi hiệu năng một cách đáng kể.
+
+Đối với mục đích của chúng ta, điều đáng chú ý là TCP vẫn tiếp tục hoạt động rất tốt khi tốc độ mạng tăng lên, và khi nó gặp phải một giới hạn nào đó (thường liên quan đến tắc nghẽn, tích của băng thông và độ trễ hoặc cả hai), các nhà nghiên cứu sẽ gấp rút tìm ra giải pháp. Chúng ta đã thấy một số giải pháp trong chương này, và sẽ thấy thêm các giải pháp khác trong chương tiếp theo.
+
+5.2.10 Các Lựa Chọn Thiết Kế Thay Thế (SCTP, QUIC)
+------------------------------------------------
+
+Mặc dù TCP đã chứng tỏ là một giao thức ổn định đáp ứng nhu cầu của một phạm vi ứng dụng rộng, không gian thiết kế của giao thức vận chuyển lại rất rộng. TCP không phải là điểm duy nhất hợp lệ trong không gian thiết kế đó. Chúng ta kết thúc phần thảo luận về TCP bằng cách xem xét các lựa chọn thiết kế thay thế. Trong khi chúng tôi giải thích lý do tại sao các nhà thiết kế TCP lại đưa ra những lựa chọn như vậy, chúng tôi nhận thấy rằng các giao thức khác đã chọn hướng đi khác và có thể sẽ xuất hiện thêm giao thức như vậy trong tương lai.
+
+Đầu tiên, chúng ta đã gợi ý ngay từ chương đầu tiên rằng có ít nhất hai loại giao thức vận chuyển thú vị: giao thức hướng luồng như TCP và giao thức yêu cầu/phản hồi như RPC. Nói cách khác, chúng ta đã ngầm chia không gian thiết kế làm đôi và đặt TCP vào nửa hướng luồng. Chúng ta có thể chia nhỏ thêm các giao thức hướng luồng thành hai nhóm—đáng tin cậy và không đáng tin cậy—trong đó nhóm đầu chứa TCP và nhóm thứ hai phù hợp hơn cho các ứng dụng video tương tác có thể chấp nhận mất một khung hình thay vì chịu được độ trễ liên quan đến việc truyền lại.
+
+Việc xây dựng một phân loại giao thức vận chuyển là một bài tập thú vị và có thể được chi tiết hóa thêm, nhưng thế giới không đơn giản như đen và trắng như chúng ta mong muốn. Hãy xem xét khả năng của TCP như là một giao thức vận chuyển cho các ứng dụng yêu cầu/phản hồi, ví dụ. TCP là một giao thức toàn chiều, nên rất dễ để mở một kết nối TCP giữa client và server, gửi thông điệp yêu cầu theo một hướng, và gửi thông điệp phản hồi theo hướng kia. Tuy nhiên, có hai trở ngại. Trước tiên, TCP là một giao thức hướng *byte* chứ không phải hướng *tin nhắn*, và các ứng dụng yêu cầu/phản hồi luôn làm việc với tin nhắn. (Chúng ta sẽ khám phá vấn đề byte so với tin nhắn chi tiết hơn ngay sau đây.) Trở ngại thứ hai là trong trường hợp mà cả thông điệp yêu cầu và phản hồi có thể chứa trong một gói mạng duy nhất, một giao thức yêu cầu/phản hồi được thiết kế tốt chỉ cần hai gói để thực hiện trao đổi, trong khi TCP cần ít nhất chín gói: ba để thiết lập kết nối, hai cho trao đổi thông điệp, và bốn để hủy kết nối. Tất nhiên, nếu thông điệp yêu cầu hoặc phản hồi đủ lớn đến mức cần nhiều gói (ví dụ, có thể mất 100 gói để gửi một thông điệp phản hồi 100.000 byte), thì chi phí thiết lập và hủy kết nối trở nên không đáng kể. Nói cách khác, không phải lúc nào một giao thức cụ thể cũng không thể hỗ trợ một chức năng nào đó; đôi khi chỉ là vì một thiết kế hiệu quả hơn thiết kế khác dưới những hoàn cảnh cụ thể.
+
+Thứ hai, như mới đề cập, bạn có thể đặt câu hỏi tại sao TCP lại chọn cung cấp dịch vụ luồng byte đáng tin cậy thay vì dịch vụ luồng tin nhắn đáng tin cậy; tin nhắn sẽ là lựa chọn tự nhiên cho một ứng dụng cơ sở dữ liệu muốn trao đổi hồ sơ. Có hai câu trả lời cho câu hỏi này. Lý do đầu tiên là một giao thức hướng tin nhắn, theo định nghĩa, phải thiết lập một giới hạn trên về kích thước tin nhắn. Rốt cuộc, một tin nhắn vô hạn là một luồng byte. Với bất kỳ kích thước tin nhắn nào mà một giao thức chọn, sẽ luôn có những ứng dụng muốn gửi tin nhắn lớn hơn, làm cho giao thức vận chuyển trở nên vô dụng và buộc ứng dụng phải tự triển khai các dịch vụ giống như giao thức vận chuyển. Lý do thứ hai là, mặc dù giao thức hướng tin nhắn chắc chắn phù hợp hơn cho các ứng dụng muốn gửi hồ sơ cho nhau, bạn có thể dễ dàng chèn ranh giới hồ sơ vào một luồng byte để thực hiện chức năng này.
+
+Quyết định thứ ba của TCP là nó chuyển giao các byte *theo thứ tự* cho ứng dụng. Điều này có nghĩa là TCP có thể giữ lại các byte nhận được không theo thứ tự từ mạng, chờ đợi những byte bị thiếu để lấp đầy khoảng trống. Điều này vô cùng hữu ích cho nhiều ứng dụng nhưng trở nên không cần thiết nếu ứng dụng có khả năng xử lý dữ liệu không theo thứ tự. Ví dụ, một trang Web chứa nhiều đối tượng nhúng không cần tất cả các đối tượng được chuyển giao theo thứ tự trước khi bắt đầu hiển thị trang. Thực tế, có một loại ứng dụng ưa thích xử lý dữ liệu không theo thứ tự ở tầng ứng dụng để nhận dữ liệu nhanh hơn khi các gói bị mất hoặc bị xáo trộn trong mạng. Mong muốn hỗ trợ các ứng dụng như vậy đã dẫn đến việc tạo ra không phải một mà là hai giao thức vận chuyển tiêu chuẩn của IETF. Giao thức đầu tiên là SCTP, hay còn gọi là *Stream Control Transmission Protocol*. SCTP cung cấp dịch vụ chuyển giao một phần theo thứ tự, thay vì dịch vụ hoàn toàn theo thứ tự của TCP. (SCTP cũng đưa ra một số quyết định thiết kế khác biệt so với TCP, bao gồm hướng tin nhắn và hỗ trợ nhiều địa chỉ IP cho một phiên làm việc.) Gần đây hơn, IETF đã tiêu chuẩn hóa một giao thức tối ưu cho lưu lượng Web, được gọi là QUIC. (Sẽ có thêm thông tin về QUIC ngay sau đây.)
+
+Thứ tư, TCP đã chọn triển khai các giai đoạn thiết lập/hủy kết nối rõ ràng, nhưng điều này không bắt buộc. Trong trường hợp thiết lập kết nối, có thể gửi tất cả các tham số cần thiết cùng với thông điệp dữ liệu đầu tiên. TCP đã chọn cách tiếp cận thận trọng hơn, cho phép phía nhận có cơ hội từ chối kết nối trước khi bất kỳ dữ liệu nào đến. Trong trường hợp hủy kết nối, chúng ta có thể đóng kết nối im lặng khi nó không hoạt động trong một khoảng thời gian dài, nhưng điều này sẽ gây khó khăn cho các ứng dụng như đăng nhập từ xa muốn giữ kết nối sống sót trong nhiều tuần; những ứng dụng đó sẽ bị buộc phải gửi thông điệp “keep alive” ngoài luồng để giữ trạng thái kết nối ở phía bên kia không bị mất.
+
+Cuối cùng, TCP là một giao thức dựa trên cửa sổ, nhưng đây không phải là khả năng duy nhất. Lựa chọn thay thế là thiết kế *dựa trên tốc độ* (rate-based), trong đó phía nhận thông báo cho người gửi biết tốc độ—được biểu diễn bằng byte hoặc gói mỗi giây—mà nó sẵn sàng chấp nhận dữ liệu. Ví dụ, phía nhận có thể báo cho người gửi biết rằng nó có thể tiếp nhận 100 gói mỗi giây. Có một sự tương quan thú vị giữa cửa sổ và tốc độ, vì số gói (hoặc byte) trong cửa sổ, chia cho RTT, chính là tốc độ. Ví dụ, cửa sổ có kích thước 10 gói với RTT 100 ms ngụ ý rằng người gửi được phép truyền với tốc độ 100 gói mỗi giây. Việc tăng hoặc giảm kích thước cửa sổ quảng bá chính là cách phía nhận điều chỉnh tốc độ người gửi có thể truyền. Trong TCP, thông tin này được phản hồi cho người gửi thông qua trường ``AdvertisedWindow`` của mỗi ACK. Một trong những vấn đề then chốt của giao thức dựa trên tốc độ là tần suất mà tốc độ mong muốn—có thể thay đổi theo thời gian—được chuyển lại cho nguồn: là cho mỗi gói, một lần mỗi RTT, hay chỉ khi tốc độ thay đổi? Trong khi chúng ta vừa xem xét cửa sổ so với tốc độ trong bối cảnh kiểm soát luồng, đây lại là một vấn đề tranh cãi mãnh liệt trong bối cảnh kiểm soát tắc nghẽn, vấn đề mà chúng ta sẽ thảo luận trong chương tiếp theo.
+
+QUIC
+~~~~
+
+QUIC có nguồn gốc từ Google vào năm 2012 và sau đó được phát triển thành một tiêu chuẩn đề xuất tại IETF. Khác với nhiều nỗ lực khác nhằm bổ sung thêm giao thức vận chuyển vào Internet, QUIC đã đạt được sự triển khai rộng rãi. Như được thảo luận thêm trong :ref:`Chapter 9 <Chapter 9: Applications>`, QUIC được thúc đẩy phần lớn bởi những thách thức khi khớp các đặc tính yêu cầu/phản hồi của HTTP với bản chất hướng luồng của TCP. Những vấn đề này trở nên rõ ràng hơn theo thời gian, do các yếu tố như sự trỗi dậy của mạng không dây có độ trễ cao, sự sẵn có của nhiều mạng cho một thiết bị (ví dụ: Wi-Fi và di động), và việc sử dụng ngày càng nhiều các kết nối có mã hóa, có xác thực trên Web (như đã thảo luận trong :ref:`Chapter 8 <Chapter 8: Network Security>`). Trong khi một mô tả đầy đủ về QUIC vượt quá phạm vi của chúng ta, một số quyết định thiết kế then chốt của nó đáng được bàn luận.
+
+.. sidebar:: Multipath TCP
+
+          Không phải lúc nào cũng cần định nghĩa một giao thức mới nếu bạn nhận thấy rằng giao thức hiện có không phục vụ đầy đủ cho một trường hợp sử dụng cụ thể. Đôi khi, có thể thực hiện những thay đổi đáng kể trong cách triển khai một giao thức hiện có mà vẫn giữ vững đặc tả gốc.
+          Multipath TCP là một ví dụ về tình huống như vậy.
+
+          Ý tưởng của Multipath TCP là điều khiển các gói tin qua nhiều đường khác nhau trên Internet, ví dụ, bằng cách sử dụng hai địa chỉ IP khác nhau cho một trong các đầu cuối. Điều này có thể đặc biệt hữu ích khi truyền dữ liệu đến một thiết bị di động kết nối cả Wi-Fi và mạng di động (và do đó có hai địa chỉ IP duy nhất). Vì các mạng không dây có thể gặp mất gói tin đáng kể, khả năng sử dụng cả hai để truyền dữ liệu có thể cải thiện đáng kể trải nghiệm người dùng. Điều then chốt là phía nhận TCP phải tái tạo lại luồng byte ban đầu theo đúng thứ tự trước khi chuyển dữ liệu lên ứng dụng, ứng dụng sẽ không biết rằng nó đang chạy trên Multipath TCP. (Điều này trái ngược với các ứng dụng chủ động mở hai hoặc nhiều kết nối TCP để đạt hiệu năng tốt hơn.)
+
+Nếu độ trễ mạng cao—ví dụ 100 ms hoặc hơn—thì vài RTT có thể nhanh chóng tích lũy thành một sự phiền nhiễu rõ rệt đối với người dùng cuối. Việc thiết lập một phiên HTTP qua TCP với Transport Layer Security (:ref:`Section 8.5 <8.5 Example Systems>`) thường mất ít nhất ba lượt đi-đi về (một lượt cho việc thiết lập phiên TCP và hai lượt cho việc thiết lập các tham số mã hóa) trước khi thông điệp HTTP đầu tiên có thể được gửi đi. Các nhà thiết kế QUIC nhận ra rằng độ trễ này—kết quả trực tiếp của cách tiếp cận thiết kế theo tầng—có thể được giảm đáng kể nếu việc thiết lập kết nối và các cuộc bắt tay bảo mật cần thiết được kết hợp và tối ưu hóa nhằm giảm thiểu số lượt đi-đi về.
+
+Cũng cần lưu ý rằng việc có mặt của nhiều giao diện mạng có thể ảnh hưởng đến thiết kế. Nếu điện thoại di động của bạn mất kết nối Wi-Fi và cần chuyển sang kết nối di động, điều đó thường đòi hỏi cả một lần hết thời gian TCP trên một kết nối và một chuỗi các cuộc bắt tay mới trên kết nối kia. Làm cho kết nối có thể tồn tại qua nhiều kết nối ở tầng mạng khác nhau là một mục tiêu thiết kế khác của QUIC.
+
+Cuối cùng, như đã đề cập ở trên, mô hình luồng byte tin cậy của TCP không phải lúc nào cũng phù hợp với yêu cầu của một yêu cầu trang Web, khi cần truy xuất nhiều đối tượng và việc hiển thị trang có thể bắt đầu trước khi tất cả đối tượng đều đến. Trong khi một giải pháp thay thế cho điều này có thể là mở nhiều kết nối TCP song song, cách tiếp cận này (đã được sử dụng trong những ngày đầu của Web) có những hạn chế riêng, đặc biệt về kiểm soát tắc nghẽn (xem :ref:`Chapter 6 <Chapter 6: Congestion Control>`). Cụ thể, mỗi kết nối chạy vòng lặp kiểm soát tắc nghẽn của riêng nó, nên trải nghiệm tắc nghẽn của một kết nối không được phản ánh ở các kết nối khác, và mỗi kết nối cố gắng tự xác định lượng băng thông thích hợp để sử dụng. QUIC đã giới thiệu ý tưởng của các luồng trong một kết nối, cho phép các đối tượng được chuyển giao không theo thứ tự trong khi vẫn duy trì một cái nhìn tổng thể về tắc nghẽn trên tất cả các luồng.
+
+Thật thú vị, đến khi QUIC ra đời, đã có rất nhiều quyết định thiết kế được đưa ra gây ra những thách thức đối với việc triển khai một giao thức vận chuyển mới. Đáng chú ý, nhiều “middleboxes” như NAT và firewall (xem :ref:`Section 8.5 <8.5 Example Systems>`) đã hiểu biết đủ về các giao thức vận chuyển phổ biến hiện có (TCP và UDP) đến mức không thể tin cậy để truyền qua một giao thức vận chuyển mới. Do đó, QUIC thực sự chạy trên nền UDP. Nói cách khác, nó là một giao thức vận chuyển chạy trên một giao thức vận chuyển. Điều này không hiếm như ta có thể nghĩ dựa trên sự phân tầng của giao thức, như được minh họa bởi hai phần tiếp theo. Lựa chọn này được thực hiện nhằm mục đích làm cho QUIC có thể triển khai trên Internet như hiện tại, và nó đã khá thành công.
+
+QUIC triển khai thiết lập kết nối nhanh chóng với mã hóa và xác thực ngay trong RTT đầu tiên. Nó cung cấp một định danh kết nối tồn tại xuyên suốt các thay đổi của mạng bên dưới. Nó hỗ trợ ghép nối nhiều luồng lên một kết nối vận chuyển duy nhất, nhằm tránh hiện tượng nghẽn đầu dòng có thể xảy ra khi một gói bị mất trong khi các dữ liệu hữu ích khác vẫn tiếp tục đến. Và nó giữ nguyên (và ở một số khía cạnh còn cải thiện) các đặc tính tránh nghẽn của TCP, một khía cạnh quan trọng của các giao thức vận chuyển mà chúng ta quay lại ở :ref:`Chapter 6 <Chapter 6: Congestion Control>`.
+
+HTTP đã trải qua một số phiên bản (1.0, 1.1, 2.0, được thảo luận trong :ref:`Section 9.1 <9.1 Traditional Applications>`) với nỗ lực ánh xạ các yêu cầu của nó một cách rõ ràng hơn lên khả năng của TCP. Với sự ra đời của QUIC, HTTP/3 giờ đây có thể tận dụng một tầng vận chuyển được thiết kế tỉ mỉ nhằm đáp ứng các yêu cầu ứng dụng của Web.
+
+QUIC là một phát triển rất thú vị trong thế giới các giao thức vận chuyển. Nhiều hạn chế của TCP đã được biết đến trong nhiều thập kỷ, nhưng QUIC đại diện cho một trong những nỗ lực thành công nhất đến nay nhằm khẳng định một hướng đi khác trong không gian thiết kế. Bởi vì QUIC được lấy cảm hứng từ kinh nghiệm với HTTP và Web—những thứ xuất hiện rất lâu sau khi TCP đã được thiết lập vững chắc trên Internet—nó đem đến một nghiên cứu trường hợp hấp dẫn về những hệ quả không lường trước của thiết kế theo tầng và về sự tiến hóa của Internet.
