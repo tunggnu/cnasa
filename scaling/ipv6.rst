@@ -1,477 +1,181 @@
-4.2 IP Version 6
-================
+4.2 IP Phiên bản 6
+==================
 
-The motivation for defining a new version of IP is simple: to deal
-with exhaustion of the IP address space. CIDR helped considerably to
-contain the rate at which the Internet address space was being
-consumed and also helped to control the growth of routing table
-information needed in the Internet’s routers. However, these
-techniques are no longer adequate. In particular, it is virtually
-impossible to achieve 100% address utilization efficiency, so the
-address space was consumed well before the 4 billionth host was
-connected to the Internet. Even if we were able to use all 4 billion
-addresses, it is now clear that IP addresses need to be assigned to
-more than traditional computers, including smart phones, televisions,
-household appliances, and drones. With the clarity of 20/20 hindsight,
-a 32-bit address space is quite small.
+Động lực để định nghĩa một phiên bản mới của IP rất đơn giản: để đối phó với việc cạn kiệt không gian địa chỉ IP. CIDR đã giúp đáng kể trong việc kiểm soát tốc độ tiêu thụ không gian địa chỉ Internet và cũng giúp kiểm soát sự tăng trưởng của thông tin bảng định tuyến cần thiết trong các router của Internet. Tuy nhiên, các kỹ thuật này không còn đủ nữa. Đặc biệt, gần như không thể đạt được hiệu quả sử dụng địa chỉ 100%, vì vậy không gian địa chỉ đã bị tiêu thụ hết trước khi host thứ 4 tỷ được kết nối vào Internet. Ngay cả khi chúng ta có thể sử dụng hết 4 tỷ địa chỉ, giờ đây rõ ràng rằng địa chỉ IP cần được gán cho nhiều thiết bị hơn ngoài các máy tính truyền thống, bao gồm điện thoại thông minh, tivi, thiết bị gia dụng và drone. Với cái nhìn rõ ràng của hindsight, không gian địa chỉ 32 bit là khá nhỏ.
 
-4.2.1 Historical Perspective
-----------------------------
+4.2.1 Góc nhìn lịch sử
+----------------------
 
-The IETF began looking at the problem of expanding the IP address space
-in 1991, and several alternatives were proposed. Since the IP address is
-carried in the header of every IP packet, increasing the size of the
-address dictates a change in the packet header. This means a new version
-of the Internet Protocol and, as a consequence, a need for new software
-for every host and router in the Internet. This is clearly not a trivial
-matter—it is a major change that needs to be thought about very
-carefully.
+IETF bắt đầu xem xét vấn đề mở rộng không gian địa chỉ IP vào năm 1991, và một số phương án đã được đề xuất. Vì địa chỉ IP được mang trong header của mỗi gói IP, việc tăng kích thước địa chỉ đòi hỏi phải thay đổi header gói. Điều này đồng nghĩa với một phiên bản mới của Giao thức Internet và, kéo theo đó, cần phần mềm mới cho mọi host và router trên Internet. Rõ ràng đây không phải là vấn đề nhỏ—nó là một thay đổi lớn cần được cân nhắc rất kỹ lưỡng.
 
-The effort to define a new version of IP was originally known as IP Next
-Generation, or IPng. As the work progressed, an official IP version
-number was assigned, so IPng became IPv6. Note that the version
-of IP discussed so far in this chapter is version 4 (IPv4). The apparent
-discontinuity in numbering is the result of version number 5 being used
-for an experimental protocol many years ago.
+Nỗ lực định nghĩa một phiên bản mới của IP ban đầu được gọi là IP Next Generation, hay IPng. Khi công việc tiến triển, một số phiên bản chính thức đã được gán, vì vậy IPng trở thành IPv6. Lưu ý rằng phiên bản IP được thảo luận cho đến nay trong chương này là phiên bản 4 (IPv4). Sự gián đoạn rõ ràng trong đánh số là do số phiên bản 5 đã được sử dụng cho một giao thức thử nghiệm nhiều năm trước.
 
-The significance of changing to a new version of IP caused a snowball
-effect. The general feeling among network designers was that if you are
-going to make a change of this magnitude you might as well fix as many
-other things in IP as possible at the same time. Consequently, the IETF
-solicited white papers from anyone who cared to write one, asking for
-input on the features that might be desired in a new version of IP. In
-addition to the need to accommodate scalable routing and addressing,
-some of the other wish list items for IPng included:
+Tầm quan trọng của việc chuyển sang một phiên bản IP mới đã gây ra hiệu ứng quả cầu tuyết. Cảm nhận chung của các nhà thiết kế mạng là nếu bạn sẽ thực hiện một thay đổi lớn như vậy thì cũng nên sửa càng nhiều vấn đề khác của IP càng tốt cùng lúc. Do đó, IETF đã kêu gọi các bài báo trắng từ bất kỳ ai quan tâm, yêu cầu đóng góp ý kiến về các tính năng có thể mong muốn trong một phiên bản IP mới. Ngoài nhu cầu hỗ trợ định tuyến và địa chỉ hóa khả mở, một số mục trong danh sách mong muốn cho IPng bao gồm:
 
--  Support for real-time services
+-  Hỗ trợ dịch vụ thời gian thực
 
--  Security support
+-  Hỗ trợ bảo mật
 
--  Autoconfiguration (i.e., the ability of hosts to automatically
-   configure themselves with such information as their own IP address
-   and domain name)
+-  Tự động cấu hình (tức là khả năng để các host tự động cấu hình các thông tin như địa chỉ IP và tên miền của chính mình)
 
--  Enhanced routing functionality, including support for mobile hosts
+-  Tăng cường chức năng định tuyến, bao gồm hỗ trợ host di động
 
-It is interesting to note that, while many of these features were absent
-from IPv4 at the time IPv6 was being designed, support for all of them
-has made its way into IPv4 in recent years, often using similar
-techniques in both protocols. It can be argued that the freedom to think
-of IPv6 as a clean slate facilitated the design of new capabilities for
-IP that were then retrofitted into IPv4.
+Điều thú vị là, mặc dù nhiều tính năng này vắng mặt trong IPv4 vào thời điểm thiết kế IPv6, nhưng hỗ trợ cho tất cả chúng đã xuất hiện trong IPv4 những năm gần đây, thường sử dụng các kỹ thuật tương tự ở cả hai giao thức. Có thể cho rằng việc được tự do coi IPv6 như một tờ giấy trắng đã tạo điều kiện cho việc thiết kế các khả năng mới cho IP, sau đó được bổ sung ngược trở lại vào IPv4.
 
-In addition to the wish list, one absolutely non-negotiable feature for
-IPv6 was that there must be a transition plan to move from the current
-version of IP (version 4) to the new version. With the Internet being so
-large and having no centralized control, it would be completely
-impossible to have a “flag day” on which everyone shut down their hosts
-and routers and installed a new version of IP. The architects expected
-a long transition period in which some hosts and routers would run
-IPv4 only, some will run IPv4 and IPv6, and some will run IPv6
-only. It is doubtful they anticipated that transition period would be
-approaching its 30th anniversary.
+Ngoài danh sách mong muốn, một tính năng hoàn toàn không thể thương lượng đối với IPv6 là phải có một kế hoạch chuyển đổi từ phiên bản IP hiện tại (phiên bản 4) sang phiên bản mới. Với Internet quá lớn và không có kiểm soát tập trung, hoàn toàn không thể có một “ngày cờ hiệu” mà mọi người đều tắt host và router của mình để cài đặt phiên bản IP mới. Các kiến trúc sư dự kiến một giai đoạn chuyển đổi dài trong đó một số host và router sẽ chỉ chạy IPv4, một số sẽ chạy cả IPv4 và IPv6, và một số sẽ chỉ chạy IPv6. Có lẽ họ không ngờ rằng giai đoạn chuyển đổi này sẽ kéo dài gần 30 năm.
 
-4.2.2 Addresses and Routing
+4.2.2 Địa chỉ và Định tuyến
 ---------------------------
 
-First and foremost, IPv6 provides a 128-bit address space, as opposed
-to the 32 bits of version 4. Thus, while version 4 can potentially
-address 4 billion nodes if address assignment efficiency reaches 100%,
-IPv6 can address 3.4 × 10\ :sup:`38` nodes, again assuming 100%
-efficiency.  As we have seen, though, 100% efficiency in address
-assignment is not likely. Some analysis of other addressing schemes,
-such as those of the French and U.S. telephone networks, as well as
-that of IPv4, have turned up some empirical numbers for address
-assignment efficiency. Based on the most pessimistic estimates of
-efficiency drawn from this study, the IPv6 address space is predicted
-to provide over 1500 addresses per square foot of the Earth’s surface,
-which certainly seems like it should serve us well even when toasters
-on Venus have IP addresses.
+Trước hết, IPv6 cung cấp không gian địa chỉ 128 bit, so với 32 bit của phiên bản 4. Do đó, trong khi phiên bản 4 có thể địa chỉ hóa 4 tỷ nút nếu hiệu quả gán địa chỉ đạt 100%, thì IPv6 có thể địa chỉ hóa 3.4 × 10\ :sup:`38` nút, cũng giả sử hiệu quả 100%. Tuy nhiên, như chúng ta đã thấy, hiệu quả gán địa chỉ 100% là điều khó xảy ra. Một số phân tích về các sơ đồ địa chỉ khác, như mạng điện thoại Pháp và Mỹ, cũng như IPv4, đã đưa ra một số con số thực nghiệm về hiệu quả gán địa chỉ. Dựa trên các ước tính bi quan nhất từ nghiên cứu này, không gian địa chỉ IPv6 được dự đoán sẽ cung cấp hơn 1500 địa chỉ cho mỗi foot vuông bề mặt Trái Đất, điều này chắc chắn là đủ ngay cả khi các lò nướng bánh trên Sao Kim cũng có địa chỉ IP.
 
-Address Space Allocation
-~~~~~~~~~~~~~~~~~~~~~~~~
+Phân bổ không gian địa chỉ
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Drawing on the effectiveness of CIDR in IPv4, IPv6 addresses are also
-classless, but the address space is still subdivided in various ways
-based on the leading bits. Rather than specifying different address
-classes, the leading bits specify different uses of the IPv6 address.
-The current assignment of prefixes is listed in :numref:`Table %s
-<tab-v6tab>`.
+Dựa trên hiệu quả của CIDR trong IPv4, địa chỉ IPv6 cũng không phân lớp, nhưng không gian địa chỉ vẫn được chia nhỏ theo các bit đầu. Thay vì chỉ định các lớp địa chỉ khác nhau, các bit đầu chỉ định các mục đích sử dụng khác nhau của địa chỉ IPv6. Phân bổ prefix hiện tại được liệt kê trong :numref:`Bảng %s <tab-v6tab>`.
 
 .. _tab-v6tab:
-.. table:: Address Prefix Assignments for IPv6.
+.. table:: Phân bổ prefix địa chỉ cho IPv6.
    :align: center
    :widths: auto
 
    +-----------------+---------------------+
-   | Prefix          | Use                 |
+   | Prefix          | Sử dụng              |
    +=================+=====================+
-   | 00…0 (128 bits) | Unspecified         |
+   | 00…0 (128 bit)  | Không xác định       |
    +-----------------+---------------------+
-   | 00…1 (128 bits) | Loopback            |
+   | 00…1 (128 bit)  | Loopback            |
    +-----------------+---------------------+
-   | 1111 1111       | Multicast addresses |
+   | 1111 1111       | Địa chỉ multicast   |
    +-----------------+---------------------+
    | 1111 1110 10    | Link-local unicast  |
    +-----------------+---------------------+
-   | Everything else | Global Unicast      |
+   | Các giá trị khác| Global Unicast      |
    +-----------------+---------------------+
 
-This allocation of the address space warrants a little discussion.
-First, the entire functionality of IPv4’s three main address classes (A,
-B, and C) is contained inside the “everything else” range. Global
-Unicast Addresses, as we will see shortly, are a lot like classless IPv4
-addresses, only much longer. These are the main ones of interest at this
-point, with over 99% of the total IPv6 address space available to this
-important form of address. (At the time of writing, IPv6 unicast
-addresses are being allocated from the block that begins ``001``, with
-the remaining address space—about 87%—being reserved for future use.)
+Việc phân bổ không gian địa chỉ này cần được bàn thêm một chút. Đầu tiên, toàn bộ chức năng của ba lớp địa chỉ chính của IPv4 (A, B, và C) nằm trong dải “các giá trị khác”. Địa chỉ Global Unicast, như chúng ta sẽ thấy ngay sau đây, rất giống với địa chỉ IPv4 không phân lớp, chỉ là dài hơn nhiều. Đây là loại địa chỉ quan trọng nhất hiện tại, chiếm hơn 99% tổng không gian địa chỉ IPv6. (Tại thời điểm viết sách, địa chỉ unicast IPv6 đang được phân bổ từ khối bắt đầu bằng ``001``, phần còn lại của không gian địa chỉ—khoảng 87%—được dành cho sử dụng trong tương lai.)
 
-The multicast address space is (obviously) for multicast, thereby
-serving the same role as class D addresses in IPv4. Note that multicast
-addresses are easy to distinguish—they start with a byte of all 1s. We
-will see how these addresses are used in a later section.
+Không gian địa chỉ multicast (rõ ràng) dành cho multicast, đóng vai trò tương tự như địa chỉ lớp D trong IPv4. Lưu ý rằng địa chỉ multicast rất dễ nhận biết—chúng bắt đầu bằng một byte toàn bit 1. Chúng ta sẽ xem cách sử dụng các địa chỉ này ở phần sau.
 
-The idea behind link-local use addresses is to enable a host to
-construct an address that will work on the network to which it is
-connected without being concerned about the global uniqueness of the
-address. This may be useful for autoconfiguration, as we will see below.
-Similarly, the site-local use addresses are intended to allow valid
-addresses to be constructed on a site (e.g., a private corporate
-network) that is not connected to the larger Internet; again, global
-uniqueness need not be an issue.
+Ý tưởng đằng sau địa chỉ link-local là cho phép một host tự tạo ra một địa chỉ có thể hoạt động trên mạng mà nó kết nối mà không cần quan tâm đến tính duy nhất toàn cầu của địa chỉ. Điều này hữu ích cho tự động cấu hình, như sẽ thấy bên dưới. Tương tự, địa chỉ site-local nhằm cho phép tạo ra các địa chỉ hợp lệ trong một site (ví dụ, mạng nội bộ doanh nghiệp) không kết nối với Internet lớn hơn; một lần nữa, tính duy nhất toàn cầu không phải là vấn đề.
 
-Within the global unicast address space are some important special types
-of addresses. A node may be assigned an IPv4-compatible IPv6 address by
-zero-extending a 32-bit IPv4 address to 128 bits. A node that is only
-capable of understanding IPv4 can be assigned an IPv4-mapped IPv6
-address by prefixing the 32-bit IPv4 address with 2 bytes of all 1s and
-then zero-extending the result to 128 bits. These two special address
-types have uses in the IPv4-to-IPv6 transition (see the sidebar on this
-topic).
+Trong không gian địa chỉ global unicast có một số loại địa chỉ đặc biệt quan trọng. Một nút có thể được gán một địa chỉ IPv6 tương thích IPv4 bằng cách mở rộng địa chỉ IPv4 32 bit thành 128 bit bằng các số 0. Một nút chỉ hiểu IPv4 có thể được gán một địa chỉ IPv6 ánh xạ IPv4 bằng cách thêm vào trước địa chỉ IPv4 2 byte toàn bit 1 rồi mở rộng bằng số 0 cho đủ 128 bit. Hai loại địa chỉ đặc biệt này có vai trò trong quá trình chuyển đổi từ IPv4 sang IPv6 (xem khung bên về chủ đề này).
 
-Address Notation
-~~~~~~~~~~~~~~~~
+Ký hiệu địa chỉ
+~~~~~~~~~~~~~~~
 
-Just as with IPv4, there is some special notation for writing down IPv6
-addresses. The standard representation is ``x:x:x:x:x:x:x:x``, where
-each ``x`` is a hexadecimal representation of a 16-bit piece of the
-address. An example would be
+Cũng như IPv4, có một số ký hiệu đặc biệt để ghi địa chỉ IPv6. Biểu diễn chuẩn là ``x:x:x:x:x:x:x:x``, trong đó mỗi ``x`` là biểu diễn thập lục phân của một đoạn 16 bit của địa chỉ. Một ví dụ là
 
 ::
 
    47CD:1234:4422:AC02:0022:1234:A456:0124
 
-Any IPv6 address can be written using this notation. Since there are a
-few special types of IPv6 addresses, there are some special notations
-that may be helpful in certain circumstances. For example, an address
-with a large number of contiguous 0s can be written more compactly by
-omitting all the 0 fields. Thus,
+Bất kỳ địa chỉ IPv6 nào cũng có thể được viết theo ký hiệu này. Vì có một số loại địa chỉ IPv6 đặc biệt, nên có một số ký hiệu đặc biệt hữu ích trong một số trường hợp. Ví dụ, một địa chỉ có nhiều số 0 liên tiếp có thể được viết ngắn gọn hơn bằng cách bỏ qua tất cả các trường 0. Như vậy,
 
 ::
 
    47CD:0000:0000:0000:0000:0000:A456:0124
 
-could be written
+có thể được viết là
 
 ::
 
    47CD::A456:0124
 
-Clearly, this form of shorthand can only be used for one set of
-contiguous 0s in an address to avoid ambiguity.
+Rõ ràng, dạng viết tắt này chỉ có thể dùng cho một dãy số 0 liên tiếp trong một địa chỉ để tránh mơ hồ.
 
-The two types of IPv6 addresses that contain an embedded IPv4 address
-have their own special notation that makes extraction of the IPv4
-address easier. For example, the IPv4-mapped IPv6 address of a host
-whose IPv4 address was 128.96.33.81 could be written as
+Hai loại địa chỉ IPv6 có chứa địa chỉ IPv4 nhúng có ký hiệu riêng giúp việc trích xuất địa chỉ IPv4 dễ dàng hơn. Ví dụ, địa chỉ IPv6 ánh xạ IPv4 của một host có địa chỉ IPv4 là 128.96.33.81 có thể được viết là
 
 ::
 
    ::FFFF:128.96.33.81
 
-That is, the last 32 bits are written in IPv4 notation, rather than as a
-pair of hexadecimal numbers separated by a colon. Note that the double
-colon at the front indicates the leading 0s.
+Tức là, 32 bit cuối được viết theo ký hiệu IPv4, thay vì là hai số thập lục phân phân tách bằng dấu hai chấm. Lưu ý rằng dấu hai chấm kép ở đầu chỉ các số 0 ở đầu.
 
-Global Unicast Addresses
-~~~~~~~~~~~~~~~~~~~~~~~~
+Địa chỉ Global Unicast
+~~~~~~~~~~~~~~~~~~~~~~
 
-By far the most important sort of addressing that IPv6 must provide is
-plain old unicast addressing. It must do this in a way that supports the
-rapid rate of addition of new hosts to the Internet and that allows
-routing to be done in a scalable way as the number of physical networks
-in the Internet grows. Thus, at the heart of IPv6 is the unicast address
-allocation plan that determines how unicast addresses will be assigned
-to service providers, autonomous systems, networks, hosts, and routers.
+Loại địa chỉ quan trọng nhất mà IPv6 phải cung cấp là địa chỉ unicast thông thường. Nó phải làm điều này theo cách hỗ trợ tốc độ bổ sung host mới vào Internet nhanh chóng và cho phép định tuyến được thực hiện một cách khả mở khi số lượng mạng vật lý trong Internet tăng lên. Do đó, trọng tâm của IPv6 là kế hoạch phân bổ địa chỉ unicast xác định cách địa chỉ unicast sẽ được gán cho các nhà cung cấp dịch vụ, hệ tự trị, mạng, host và router.
 
-In fact, the address allocation plan that is proposed for IPv6 unicast
-addresses is extremely similar to that being deployed with CIDR in IPv4.
-To understand how it works and how it provides scalability, it is
-helpful to define some new terms. We may think of a nontransit AS (i.e.,
-a stub or multihomed AS) as a *subscriber*, and we may think of a
-transit AS as a *provider*. Furthermore, we may subdivide providers into
-*direct* and *indirect*. The former are directly connected to
-subscribers. The latter primarily connect other providers, are not
-connected directly to subscribers, and are often known as *backbone*
-*networks*.
+Thực tế, kế hoạch phân bổ địa chỉ được đề xuất cho địa chỉ unicast IPv6 cực kỳ giống với kế hoạch đang được triển khai với CIDR trong IPv4. Để hiểu cách nó hoạt động và cung cấp khả năng mở rộng, sẽ hữu ích khi định nghĩa một số thuật ngữ mới. Ta có thể coi một AS không chuyển tiếp (tức là stub hoặc multihomed AS) là một *subscriber* (người đăng ký), và một AS chuyển tiếp là một *provider* (nhà cung cấp). Hơn nữa, ta có thể chia nhỏ nhà cung cấp thành *trực tiếp* và *gián tiếp*. Loại đầu kết nối trực tiếp với người đăng ký. Loại sau chủ yếu kết nối các nhà cung cấp khác, không kết nối trực tiếp với người đăng ký, và thường được gọi là *mạng backbone*.
 
-With this set of definitions, we can see that the Internet is not just
-an arbitrarily interconnected set of autonomous systems; it has some
-intrinsic hierarchy. The difficulty lies in making use of this hierarchy
-without inventing mechanisms that fail when the hierarchy is not
-strictly observed, as happened with EGP. For example, the distinction
-between direct and indirect providers becomes blurred when a subscriber
-connects to a backbone or when a direct provider starts connecting to
-many other providers.
+Với tập định nghĩa này, ta thấy Internet không chỉ là một tập hợp các hệ tự trị kết nối tùy ý; nó có một số phân cấp nội tại. Khó khăn nằm ở việc tận dụng phân cấp này mà không phát minh ra các cơ chế sẽ thất bại khi phân cấp không được tuân thủ nghiêm ngặt, như đã xảy ra với EGP. Ví dụ, sự phân biệt giữa nhà cung cấp trực tiếp và gián tiếp trở nên mờ nhạt khi một người đăng ký kết nối với backbone hoặc khi một nhà cung cấp trực tiếp bắt đầu kết nối với nhiều nhà cung cấp khác.
 
-As with CIDR, the goal of the IPv6 address allocation plan is to provide
-aggregation of routing information to reduce the burden on intradomain
-routers. Again, the key idea is to use an address prefix—a set of
-contiguous bits at the most significant end of the address—to aggregate
-reachability information to a large number of networks and even to a
-large number of autonomous systems. The main way to achieve this is to
-assign an address prefix to a direct provider and then for that direct
-provider to assign longer prefixes that begin with that prefix to its
-subscribers. Thus, a provider can advertise a single prefix for all of
-its subscribers.
+Cũng như CIDR, mục tiêu của kế hoạch phân bổ địa chỉ IPv6 là cung cấp gom nhóm thông tin định tuyến để giảm gánh nặng cho các router nội miền. Ý tưởng then chốt một lần nữa là sử dụng một prefix địa chỉ—một tập các bit liên tiếp ở đầu địa chỉ—để gom nhóm thông tin khả năng tiếp cận cho một số lượng lớn mạng và thậm chí nhiều hệ tự trị. Cách chính để đạt được điều này là gán một prefix địa chỉ cho một nhà cung cấp trực tiếp, sau đó nhà cung cấp đó sẽ gán các prefix dài hơn bắt đầu bằng prefix đó cho các người đăng ký của mình. Như vậy, một nhà cung cấp có thể quảng bá một prefix duy nhất cho tất cả người đăng ký của mình.
 
-Of course, the drawback is that if a site decides to change providers,
-it will need to obtain a new address prefix and renumber all the nodes
-in the site. This could be a colossal undertaking, enough to dissuade
-most people from ever changing providers. For this reason, there is
-ongoing research on other addressing schemes, such as geographic
-addressing, in which a site’s address is a function of its location
-rather than the provider to which it attaches. At present, however,
-provider-based addressing is necessary to make routing work efficiently.
+Tất nhiên, nhược điểm là nếu một site quyết định đổi nhà cung cấp, nó sẽ cần lấy một prefix địa chỉ mới và đánh số lại tất cả các nút trong site. Điều này có thể là một công việc khổng lồ, đủ để ngăn hầu hết mọi người đổi nhà cung cấp. Vì lý do này, vẫn đang có nghiên cứu về các sơ đồ địa chỉ khác, như địa chỉ hóa theo địa lý, trong đó địa chỉ của một site là hàm của vị trí thay vì nhà cung cấp mà nó kết nối. Tuy nhiên, hiện tại, địa chỉ hóa dựa trên nhà cung cấp là cần thiết để định tuyến hoạt động hiệu quả.
 
-Note that while IPv6 address assignment is essentially equivalent to the
-way address assignment has happened in IPv4 since the introduction of
-CIDR, IPv6 has the significant advantage of not having a large installed
-base of assigned addresses to fit into its plans.
+Lưu ý rằng mặc dù việc gán địa chỉ IPv6 về cơ bản tương đương với cách gán địa chỉ trong IPv4 kể từ khi có CIDR, IPv6 có lợi thế lớn là không có một cơ sở địa chỉ đã gán lớn phải tích hợp vào kế hoạch của nó.
 
-One question is whether it makes sense for hierarchical aggregation to
-take place at other levels in the hierarchy. For example, should all
-providers obtain their address prefixes from within a prefix allocated
-to the backbone to which they connect? Given that most providers connect
-to multiple backbones, this probably doesn’t make sense. Also, since the
-number of providers is much smaller than the number of sites, the
-benefits of aggregating at this level are much fewer.
+Một câu hỏi là liệu có hợp lý không khi gom nhóm phân cấp ở các mức khác trong phân cấp. Ví dụ, liệu tất cả các nhà cung cấp nên lấy prefix địa chỉ của mình từ trong một prefix được cấp cho backbone mà họ kết nối không? Vì hầu hết các nhà cung cấp kết nối với nhiều backbone, điều này có lẽ không hợp lý. Ngoài ra, vì số lượng nhà cung cấp nhỏ hơn nhiều so với số lượng site, lợi ích của việc gom nhóm ở mức này cũng ít hơn.
 
-One place where aggregation may make sense is at the national or
-continental level. Continental boundaries form natural divisions in
-the Internet topology. If all addresses in Europe, for example, had a
-common prefix, then a great deal of aggregation could be done, and
-most routers in other continents would only need one routing table
-entry for all networks with the Europe prefix. Providers in Europe
-would all select their prefixes such that they began with the European
-prefix. Using this scheme, an IPv6 address might look like
-:numref:`Figure %s <fig-v6addr>`. The ``RegistryID`` might be an
-identifier assigned to a European address registry, with different IDs
-assigned to other continents or countries.  Note that prefixes would
-be of different lengths under this scenario.  For example, a provider
-with few customers could have a longer prefix (and thus less total
-address space available) than one with many customers.
+Một nơi mà gom nhóm có thể hợp lý là ở cấp quốc gia hoặc lục địa. Ranh giới lục địa tạo thành các phân chia tự nhiên trong cấu trúc liên kết Internet. Nếu tất cả các địa chỉ ở châu Âu, ví dụ, có một prefix chung, thì có thể gom nhóm rất nhiều, và hầu hết các router ở các lục địa khác chỉ cần một mục bảng định tuyến cho tất cả các mạng có prefix châu Âu. Các nhà cung cấp ở châu Âu sẽ chọn prefix của mình sao cho bắt đầu bằng prefix châu Âu. Theo sơ đồ này, một địa chỉ IPv6 có thể trông như :numref:`Hình %s <fig-v6addr>`. ``RegistryID`` có thể là một định danh được gán cho một registry địa chỉ châu Âu, với các ID khác được gán cho các lục địa hoặc quốc gia khác. Lưu ý rằng prefix sẽ có độ dài khác nhau trong kịch bản này. Ví dụ, một nhà cung cấp có ít khách hàng có thể có prefix dài hơn (và do đó ít không gian địa chỉ hơn) so với nhà cung cấp có nhiều khách hàng.
 
 .. _fig-v6addr:
 .. figure:: figures/f04-11-9780123850591.png
    :width: 500px
    :align: center
 
-   An IPv6 provider-based unicast address.
+   Một địa chỉ unicast dựa trên nhà cung cấp của IPv6.
 
-One tricky situation could occur when a subscriber is connected to more
-than one provider. Which prefix should the subscriber use for his or her
-site? There is no perfect solution to the problem. For example, suppose
-a subscriber is connected to two providers, X and Y. If the subscriber
-takes his prefix from X, then Y has to advertise a prefix that has no
-relationship to its other subscribers and that as a consequence cannot
-be aggregated. If the subscriber numbers part of his AS with the prefix
-of X and part with the prefix of Y, he runs the risk of having half his
-site become unreachable if the connection to one provider goes down. One
-solution that works fairly well if X and Y have a lot of subscribers in
-common is for them to have three prefixes between them: one for
-subscribers of X only, one for subscribers of Y only, and one for the
-sites that are subscribers of both X and Y.
+Một tình huống khó có thể xảy ra khi một người đăng ký kết nối với nhiều nhà cung cấp. Người đăng ký nên dùng prefix nào cho site của mình? Không có giải pháp hoàn hảo cho vấn đề này. Ví dụ, giả sử một người đăng ký kết nối với hai nhà cung cấp, X và Y. Nếu người đăng ký lấy prefix từ X, thì Y phải quảng bá một prefix không liên quan gì đến các người đăng ký khác của mình và do đó không thể gom nhóm. Nếu người đăng ký đánh số một phần AS của mình với prefix của X và một phần với prefix của Y, anh ta có nguy cơ một nửa site của mình không thể truy cập được nếu kết nối với một nhà cung cấp bị mất. Một giải pháp khá hiệu quả nếu X và Y có nhiều người đăng ký chung là họ có ba prefix giữa họ: một cho người đăng ký chỉ của X, một cho người đăng ký chỉ của Y, và một cho các site là người đăng ký của cả X và Y.
 
-4.2.3 Packet Format
+4.2.3 Định dạng gói
 -------------------
 
-Despite the fact that IPv6 extends IPv4 in several ways, its header
-format is actually simpler. This simplicity is due to a concerted effort
-to remove unnecessary functionality from the protocol. :numref:`Figure
-%s <fig-v6header>` shows the result.
+Mặc dù IPv6 mở rộng IPv4 theo nhiều cách, định dạng header của nó thực ra đơn giản hơn. Sự đơn giản này là kết quả của nỗ lực loại bỏ các chức năng không cần thiết khỏi giao thức. :numref:`Hình %s <fig-v6header>` cho thấy kết quả.
 
-As with many headers, this one starts with a ``Version`` field, which is
-set to 6 for IPv6. The ``Version`` field is in the same place relative
-to the start of the header as IPv4’s ``Version`` field so that
-header-processing software can immediately decide which header format to
-look for. The ``TrafficClass`` and ``FlowLabel`` fields both relate to
-quality of service issues.
+Như nhiều header khác, header này bắt đầu với trường ``Version``, được đặt là 6 cho IPv6. Trường ``Version`` nằm ở cùng vị trí so với đầu header như trường ``Version`` của IPv4 để phần mềm xử lý header có thể ngay lập tức quyết định định dạng header nào cần tìm. Các trường ``TrafficClass`` và ``FlowLabel`` đều liên quan đến các vấn đề chất lượng dịch vụ.
 
-The ``PayloadLen`` field gives the length of the packet, excluding the
-IPv6 header, measured in bytes. The ``NextHeader`` field cleverly
-replaces both the IP options and the ``Protocol`` field of IPv4. If
-options are required, then they are carried in one or more special
-headers following the IP header, and this is indicated by the value of
-the ``NextHeader`` field. If there are no special headers, the
-``NextHeader`` field is the demux key identifying the higher-level
-protocol running over IP (e.g., TCP or UDP); that is, it serves the
-same purpose as the IPv4 ``Protocol`` field. Also, fragmentation is
-now handled as an optional header, which means that the
-fragmentation-related fields of IPv4 are not included in the IPv6
-header. The ``HopLimit`` field is simply the ``TTL`` of IPv4, renamed
-to reflect the way it is actually used.
+Trường ``PayloadLen`` cho biết độ dài của gói, không tính header IPv6, tính bằng byte. Trường ``NextHeader`` thay thế thông minh cả trường tùy chọn IP và trường ``Protocol`` của IPv4. Nếu cần tùy chọn, chúng sẽ được mang trong một hoặc nhiều header đặc biệt sau header IP, và điều này được chỉ ra bởi giá trị của trường ``NextHeader``. Nếu không có header đặc biệt nào, trường ``NextHeader`` là khóa demux xác định giao thức tầng cao hơn chạy trên IP (ví dụ, TCP hoặc UDP); tức là, nó đóng vai trò giống như trường ``Protocol`` của IPv4. Ngoài ra, phân mảnh giờ được xử lý như một header tùy chọn, nghĩa là các trường liên quan đến phân mảnh của IPv4 không còn trong header IPv6. Trường ``HopLimit`` đơn giản là ``TTL`` của IPv4, được đổi tên để phản ánh cách nó thực sự được sử dụng.
 
 .. _fig-v6header:
 .. figure:: figures/f04-12-9780123850591.png
    :width: 500px
    :align: center
 
-   IPv6 packet header.
+   Header gói IPv6.
 
-Finally, the bulk of the header is taken up with the source and
-destination addresses, each of which is 16 bytes (128 bits) long. Thus,
-the IPv6 header is always 40 bytes long. Considering that IPv6 addresses
-are four times longer than those of IPv4, this compares quite well with
-the IPv4 header, which is 20 bytes long in the absence of options.
+Cuối cùng, phần lớn của header được chiếm bởi địa chỉ nguồn và đích, mỗi địa chỉ dài 16 byte (128 bit). Như vậy, header IPv6 luôn dài 40 byte. Xét rằng địa chỉ IPv6 dài gấp bốn lần địa chỉ IPv4, điều này so sánh khá tốt với header IPv4, vốn dài 20 byte nếu không có tùy chọn.
 
-The way that IPv6 handles options is quite an improvement over IPv4. In
-IPv4, if any options were present, every router had to parse the entire
-options field to see if any of the options were relevant. This is
-because the options were all buried at the end of the IP header, as an
-unordered collection of ‘(type, length, value)’ tuples. In contrast,
-IPv6 treats options as *extension headers* that must, if present, appear
-in a specific order. This means that each router can quickly determine
-if any of the options are relevant to it; in most cases, they will not
-be. Usually this can be determined by just looking at the ``NextHeader``
-field. The end result is that option processing is much more efficient
-in IPv6, which is an important factor in router performance. In
-addition, the new formatting of options as extension headers means that
-they can be of arbitrary length, whereas in IPv4 they were limited to
-44 bytes at most. We will see how some of the options are used below.
+Cách IPv6 xử lý tùy chọn là một cải tiến lớn so với IPv4. Trong IPv4, nếu có bất kỳ tùy chọn nào, mọi router đều phải phân tích toàn bộ trường tùy chọn để xem có tùy chọn nào liên quan không. Điều này là do các tùy chọn đều nằm ở cuối header IP, như một tập hợp không có thứ tự các bộ ‘(type, length, value)’. Ngược lại, IPv6 coi tùy chọn là *header mở rộng* mà nếu có, phải xuất hiện theo thứ tự xác định. Điều này nghĩa là mỗi router có thể nhanh chóng xác định xem có tùy chọn nào liên quan đến nó không; trong hầu hết các trường hợp là không. Thường chỉ cần nhìn vào trường ``NextHeader`` là đủ. Kết quả là xử lý tùy chọn hiệu quả hơn nhiều trong IPv6, điều này rất quan trọng đối với hiệu năng router. Ngoài ra, định dạng mới của tùy chọn dưới dạng header mở rộng nghĩa là chúng có thể có độ dài tùy ý, trong khi ở IPv4 bị giới hạn tối đa 44 byte. Chúng ta sẽ xem một số tùy chọn được sử dụng như thế nào ở phần dưới.
 
 .. _fig-v6ext:
 .. figure:: figures/f04-13-9780123850591.png
    :width: 400px
    :align: center
 
-   IPv6 fragmentation extension header.
+   Header mở rộng phân mảnh của IPv6.
 
-Each option has its own type of extension header. The type of each
-extension header is identified by the value of the ``NextHeader`` field
-in the header that precedes it, and each extension header contains a
-``NextHeader`` field to identify the header following it. The last
-extension header will be followed by a transport-layer header (e.g.,
-TCP) and in this case the value of the ``NextHeader`` field is the same
-as the value of the ``Protocol`` field would be in an IPv4 header. Thus,
-the ``NextHeader`` field does double duty; it may either identify the
-type of extension header to follow, or, in the last extension header, it
-serves as a demux key to identify the higher-layer protocol running over
-IPv6.
+Mỗi tùy chọn có loại header mở rộng riêng. Loại của mỗi header mở rộng được xác định bởi giá trị của trường ``NextHeader`` trong header đứng trước nó, và mỗi header mở rộng chứa một trường ``NextHeader`` để xác định header tiếp theo. Header mở rộng cuối cùng sẽ được theo sau bởi một header tầng vận chuyển (ví dụ, TCP) và trong trường hợp này giá trị của trường ``NextHeader`` giống như giá trị của trường ``Protocol`` trong header IPv4. Như vậy, trường ``NextHeader`` có hai vai trò; nó có thể xác định loại header mở rộng tiếp theo, hoặc, trong header mở rộng cuối cùng, nó đóng vai trò là khóa demux xác định giao thức tầng cao hơn chạy trên IPv6.
 
-Consider the example of the fragmentation header, shown in
-:numref:`Figure %s <fig-v6ext>`. This header provides functionality
-similar to the fragmentation fields in the IPv4 header, but it is only
-present if fragmentation is necessary. Assuming it is the only
-extension header present, then the ``NextHeader`` field of the IPv6
-header would contain the value \ ``44``, which is the value assigned
-to indicate the fragmentation header. The ``NextHeader`` field of the
-fragmentation header itself contains a value describing the header
-that follows it.  Again, assuming no other extension headers are
-present, then the next header might be the TCP header, which results
-in ``NextHeader`` containing the value \ ``6``, just as the
-``Protocol`` field would in IPv4. If the fragmentation header were
-followed by, say, an authentication header, then the fragmentation
-header’s ``NextHeader`` field would contain the value \ ``51``.
+Xét ví dụ về header phân mảnh, thể hiện trong :numref:`Hình %s <fig-v6ext>`. Header này cung cấp chức năng tương tự các trường phân mảnh trong header IPv4, nhưng chỉ xuất hiện khi cần phân mảnh. Giả sử đây là header mở rộng duy nhất, thì trường ``NextHeader`` của header IPv6 sẽ chứa giá trị ``44``, là giá trị chỉ định header phân mảnh. Trường ``NextHeader`` của chính header phân mảnh chứa giá trị mô tả header tiếp theo. Một lần nữa, giả sử không có header mở rộng nào khác, thì header tiếp theo có thể là header TCP, dẫn đến ``NextHeader`` chứa giá trị ``6``, giống như trường ``Protocol`` trong IPv4. Nếu header phân mảnh được theo sau bởi, ví dụ, một header xác thực, thì trường ``NextHeader`` của header phân mảnh sẽ chứa giá trị ``51``.
 
-4.2.4 Advanced Capabilities
+4.2.4 Các khả năng nâng cao
 ---------------------------
 
-As mentioned at the beginning of this section, the primary motivation
-behind the development of IPv6 was to support the continued growth of
-the Internet. Once the IP header had to be changed for the sake of the
-addresses, however, the door was open for a wide variety of other
-changes, two of which we describe below. But IPv6 includes several
-additional features, most of which are covered elsewhere in this book;
-e.g., mobility, security, quality-of-service. It is interesting to
-note that, in most of these areas, the IPv4 and IPv6 capabilities have
-become virtually indistinguishable, so that the main driver for IPv6
-remains the need for larger addresses.
+Như đã đề cập ở đầu mục này, động lực chính đằng sau sự phát triển của IPv6 là để hỗ trợ sự phát triển liên tục của Internet. Tuy nhiên, một khi header IP phải thay đổi vì địa chỉ, thì cánh cửa mở ra cho nhiều thay đổi khác, hai trong số đó được mô tả dưới đây. Nhưng IPv6 còn bao gồm nhiều tính năng bổ sung, hầu hết được đề cập ở nơi khác trong sách này; ví dụ, di động, bảo mật, chất lượng dịch vụ. Điều thú vị là, ở hầu hết các lĩnh vực này, khả năng của IPv4 và IPv6 gần như không phân biệt được, nên động lực chính cho IPv6 vẫn là nhu cầu về địa chỉ lớn hơn.
 
-Autoconfiguration
-~~~~~~~~~~~~~~~~~
+Tự động cấu hình
+~~~~~~~~~~~~~~~~
 
-While the Internet’s growth has been impressive, one factor that has
-inhibited faster acceptance of the technology is the fact that getting
-connected to the Internet has typically required a fair amount of system
-administration expertise. In particular, every host that is connected to
-the Internet needs to be configured with a certain minimum amount of
-information, such as a valid IP address, a subnet mask for the link to
-which it attaches, and the address of a name server. Thus, it has not
-been possible to unpack a new computer and connect it to the Internet
-without some preconfiguration. One goal of IPv6, therefore, is to
-provide support for autoconfiguration, sometimes referred to as
-*plug-and-play* operation.
+Mặc dù sự phát triển của Internet rất ấn tượng, một yếu tố đã cản trở việc chấp nhận công nghệ nhanh hơn là thực tế việc kết nối Internet thường đòi hỏi khá nhiều kiến thức quản trị hệ thống. Đặc biệt, mỗi host kết nối Internet cần được cấu hình với một lượng thông tin tối thiểu, như địa chỉ IP hợp lệ, subnet mask cho liên kết mà nó kết nối, và địa chỉ máy chủ tên miền. Do đó, không thể chỉ đơn giản mở hộp một máy tính mới và kết nối vào Internet mà không có cấu hình trước. Một mục tiêu của IPv6, do đó, là cung cấp hỗ trợ tự động cấu hình, đôi khi gọi là *plug-and-play*.
 
-As we saw in the previous chapter, autoconfiguration is possible for
-IPv4, but it depends on the existence of a server that is configured to
-hand out addresses and other configuration information to Dynamic Host
-Configuration Protocol (DHCP) clients. The longer address format in IPv6
-helps provide a useful, new form of autoconfiguration called *stateless*
-autoconfiguration, which does not require a server.
+Như đã thấy ở chương trước, tự động cấu hình là khả thi với IPv4, nhưng nó phụ thuộc vào sự tồn tại của một máy chủ được cấu hình để cấp phát địa chỉ và thông tin cấu hình khác cho các client DHCP. Định dạng địa chỉ dài hơn trong IPv6 giúp cung cấp một dạng tự động cấu hình mới hữu ích gọi là *stateless autoconfiguration*, không cần máy chủ.
 
-Recall that IPv6 unicast addresses are hierarchical, and that the least
-significant portion is the interface ID. Thus, we can subdivide the
-autoconfiguration problem into two parts:
+Nhớ lại rằng địa chỉ unicast IPv6 là phân cấp, và phần ít quan trọng nhất là interface ID. Do đó, ta có thể chia nhỏ bài toán tự động cấu hình thành hai phần:
 
-1. Obtain an interface ID that is unique on the link to which the host
-   is attached.
+1. Lấy một interface ID duy nhất trên liên kết mà host kết nối.
 
-2. Obtain the correct address prefix for this subnet.
+2. Lấy đúng prefix địa chỉ cho subnet này.
 
-The first part turns out to be rather easy, since every host on a link
-must have a unique link-level address. For example, all hosts on an
-Ethernet have a unique 48-bit Ethernet address. This can be turned
-into a valid link-local use address by adding the appropriate prefix
-from :numref:`Table %s <tab-v6tab>` (``1111 1110 10``) followed by
-enough 0s to make up 128 bits. For some devices—for example, printers
-or hosts on a small routerless network that do not connect to any
-other networks—this address may be perfectly adequate. Those devices
-that need a globally valid address depend on a router on the same link
-to periodically advertise the appropriate prefix for the
-link. Clearly, this requires that the router be configured with the
-correct address prefix, and that this prefix be chosen in such a way
-that there is enough space at the end (e.g., 48 bits) to attach an
-appropriate link-level address.
+Phần đầu hóa ra khá dễ, vì mọi host trên một liên kết đều phải có địa chỉ tầng liên kết duy nhất. Ví dụ, tất cả các host trên Ethernet đều có địa chỉ Ethernet 48 bit duy nhất. Địa chỉ này có thể được chuyển thành một địa chỉ link-local hợp lệ bằng cách thêm prefix phù hợp từ :numref:`Bảng %s <tab-v6tab>` (``1111 1110 10``) rồi thêm đủ số 0 cho đủ 128 bit. Với một số thiết bị—ví dụ, máy in hoặc host trên mạng nhỏ không có router, không kết nối mạng khác—địa chỉ này có thể là đủ. Những thiết bị cần địa chỉ hợp lệ toàn cầu phụ thuộc vào một router trên cùng liên kết định kỳ quảng bá prefix phù hợp cho liên kết. Rõ ràng, điều này yêu cầu router được cấu hình với prefix địa chỉ đúng, và prefix này được chọn sao cho còn đủ không gian ở cuối (ví dụ, 48 bit) để gắn địa chỉ tầng liên kết phù hợp.
 
-The ability to embed link-level addresses as long as 48 bits into IPv6
-addresses was one of the reasons for choosing such a large address size.
-Not only does 128 bits allow the embedding, but it leaves plenty of
-space for the multilevel hierarchy of addressing that we discussed
-above.
+Khả năng nhúng địa chỉ tầng liên kết dài tới 48 bit vào địa chỉ IPv6 là một trong những lý do chọn kích thước địa chỉ lớn như vậy. Không chỉ 128 bit cho phép nhúng, mà còn dư nhiều không gian cho phân cấp địa chỉ nhiều tầng như đã bàn ở trên.
 
-Source-Directed Routing
-~~~~~~~~~~~~~~~~~~~~~~~
+Định tuyến do nguồn chỉ định
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Another of IPv6’s extension headers is the routing header. In the
-absence of this header, routing for IPv6 differs very little from that
-of IPv4 under CIDR. The routing header contains a list of IPv6 addresses
-that represent nodes or topological areas that the packet should visit
-en route to its destination. A topological area may be, for example, a
-backbone provider’s network. Specifying that packets must visit this
-network would be a way of implementing provider selection on a
-packet-by-packet basis. Thus, a host could say that it wants some
-packets to go through a provider that is cheap, others through a
-provider that provides high reliability, and still others through a
-provider that the host trusts to provide security.
+Một trong các header mở rộng của IPv6 là header định tuyến. Khi không có header này, định tuyến cho IPv6 rất giống với IPv4 dưới CIDR. Header định tuyến chứa một danh sách các địa chỉ IPv6 đại diện cho các nút hoặc vùng topo mà gói tin nên đi qua trên đường đến đích. Một vùng topo có thể là, ví dụ, mạng của một nhà cung cấp backbone. Chỉ định rằng các gói phải đi qua mạng này là một cách để hiện thực lựa chọn nhà cung cấp trên từng gói. Như vậy, một host có thể chỉ định muốn một số gói đi qua nhà cung cấp rẻ, số khác qua nhà cung cấp có độ tin cậy cao, số khác nữa qua nhà cung cấp mà host tin tưởng về bảo mật.
 
-To provide the ability to specify topological entities rather than
-individual nodes, IPv6 defines an *anycast* address. An anycast address
-is assigned to a set of interfaces, and packets sent to that address
-will go to the “nearest” of those interfaces, with nearest being
-determined by the routing protocols. For example, all the routers of a
-backbone provider could be assigned a single anycast address, which
-would be used in the routing header.
-
-
+Để cung cấp khả năng chỉ định thực thể topo thay vì từng nút riêng lẻ, IPv6 định nghĩa một địa chỉ *anycast*. Địa chỉ anycast được gán cho một tập các interface, và các gói gửi đến địa chỉ đó sẽ đến “gần nhất” trong số các interface đó, với “gần nhất” được xác định bởi các giao thức định tuyến. Ví dụ, tất cả các router của một nhà cung cấp backbone có thể được gán một địa chỉ anycast duy nhất, dùng trong header định tuyến.
