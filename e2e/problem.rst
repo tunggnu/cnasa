@@ -1,77 +1,42 @@
-Problem: Getting Processes to Communicate
------------------------------------------
+Vấn đề: Làm thế nào để các tiến trình giao tiếp với nhau
+--------------------------------------------------------
 
-Many technologies can be used to connect together a collection of
-computers, ranging from simple Ethernets and wireless networks to
-global-scale internetworks. Once interconnected, the next problem is to
-turn this host-to-host packet delivery service into a process-to-process
-communication channel. This is the role played by the *transport* level
-of the network architecture, which, because it supports communication
-between application programs running in end nodes, is sometimes called
-the *end-to-end* protocol.
+Nhiều công nghệ có thể được sử dụng để kết nối một tập hợp các máy tính lại với nhau, từ các mạng Ethernet đơn giản và mạng không dây cho đến các liên mạng quy mô toàn cầu. Khi đã được kết nối, vấn đề tiếp theo là biến dịch vụ chuyển gói tin từ máy này sang máy khác thành một kênh giao tiếp giữa các tiến trình. Đây là vai trò của tầng *vận chuyển* trong kiến trúc mạng, tầng này, bởi vì nó hỗ trợ giao tiếp giữa các chương trình ứng dụng chạy trên các nút đầu cuối, đôi khi còn được gọi là giao thức *end-to-end* (đầu-cuối).
 
-Two forces shape the end-to-end protocol. From above, the
-application-level processes that use its services have certain
-requirements. The following list itemizes some of the common properties
-that a transport protocol can be expected to provide:
+Có hai lực lượng định hình giao thức end-to-end. Từ phía trên, các tiến trình ở tầng ứng dụng sử dụng dịch vụ của nó có những yêu cầu nhất định. Danh sách sau đây liệt kê một số thuộc tính phổ biến mà một giao thức vận chuyển có thể được kỳ vọng cung cấp:
 
--  Guarantees message delivery
+-  Đảm bảo chuyển phát thông điệp
 
--  Delivers messages in the same order they are sent
+-  Chuyển phát thông điệp theo đúng thứ tự gửi đi
 
--  Delivers at most one copy of each message
+-  Đảm bảo mỗi thông điệp chỉ được chuyển phát tối đa một lần
 
--  Supports arbitrarily large messages
+-  Hỗ trợ các thông điệp có kích thước tùy ý lớn
 
--  Supports synchronization between the sender and the receiver
+-  Hỗ trợ đồng bộ hóa giữa bên gửi và bên nhận
 
--  Allows the receiver to apply flow control to the sender
+-  Cho phép bên nhận áp dụng điều khiển luồng đối với bên gửi
 
--  Supports multiple application processes on each host
+-  Hỗ trợ nhiều tiến trình ứng dụng trên mỗi máy chủ
 
-Note that this list does not include all the functionality that
-application processes might want from the network. For example, it does
-not include security features like authentication or encryption, which
-are typically provided by protocols that sit above the transport level.
-(We discuss security-related topics in a later chapter.)
+Lưu ý rằng danh sách này không bao gồm tất cả các chức năng mà các tiến trình ứng dụng có thể mong muốn từ mạng. Ví dụ, nó không bao gồm các tính năng bảo mật như xác thực hay mã hóa, những thứ thường được cung cấp bởi các giao thức nằm trên tầng vận chuyển. (Chúng tôi sẽ bàn về các chủ đề liên quan đến bảo mật ở chương sau.)
 
-From below, the underlying network upon which the transport protocol
-operates has certain limitations in the level of service it can provide.
-Some of the more typical limitations of the network are that it may
+Từ phía dưới, mạng nền tảng mà giao thức vận chuyển hoạt động trên đó có những giới hạn nhất định về mức độ dịch vụ mà nó có thể cung cấp. Một số giới hạn điển hình của mạng bao gồm:
 
--  Drop messages
+-  Làm mất thông điệp
 
--  Reorder messages
+-  Chuyển phát thông điệp sai thứ tự
 
--  Deliver duplicate copies of a given message
+-  Chuyển phát nhiều bản sao của cùng một thông điệp
 
--  Limit messages to some finite size
+-  Giới hạn kích thước thông điệp ở một mức hữu hạn nào đó
 
--  Deliver messages after an arbitrarily long delay
+-  Chuyển phát thông điệp sau một khoảng trễ tùy ý dài
 
-Such a network is said to provide a *best-effort* level of service, as
-exemplified by the Internet.
+Một mạng như vậy được gọi là cung cấp dịch vụ ở mức *nỗ lực tối đa* (*best-effort*), điển hình như Internet.
 
-The challenge, therefore, is to develop algorithms that turn the
-less-than-perfect properties of the underlying network into the high
-level of service required by application programs. Different transport
-protocols employ different combinations of these algorithms. This
-chapter looks at these algorithms in the context of four representative
-services—a simple asynchronous demultiplexing service, a reliable
-byte-stream service, a request/reply service, and a service for
-real-time applications.
+Thách thức đặt ra là phải phát triển các thuật toán biến các đặc tính chưa hoàn hảo của mạng nền tảng thành mức dịch vụ cao mà các chương trình ứng dụng yêu cầu. Các giao thức vận chuyển khác nhau sử dụng các tổ hợp thuật toán khác nhau để đạt được điều này. Chương này sẽ xem xét các thuật toán đó trong bối cảnh của bốn loại dịch vụ tiêu biểu—một dịch vụ phân kênh bất đồng bộ đơn giản, một dịch vụ truyền dòng byte tin cậy, một dịch vụ yêu cầu/đáp ứng, và một dịch vụ dành cho các ứng dụng thời gian thực.
 
-In the case of the demultiplexing and byte-stream services, we use the
-Internet’s User Datagram Protocol (UDP) and Transmission Control
-Protocol (TCP), respectively, to illustrate how these services are
-provided in practice. In the case of a request/reply service, we discuss
-the role it plays in a Remote Procedure Call (RPC) service and what
-features that entails. The Internet does not have a single RPC protocol,
-so we cap this discussion off with a description of three widely used
-RPC protocols: SunRPC, DCE-RPC, and gRPC.
+Trong trường hợp dịch vụ phân kênh và dịch vụ truyền dòng byte, chúng tôi sử dụng Giao thức Datagram Người dùng của Internet (UDP) và Giao thức Điều khiển Truyền vận (TCP) tương ứng để minh họa cách các dịch vụ này được cung cấp trong thực tế. Đối với dịch vụ yêu cầu/đáp ứng, chúng tôi sẽ bàn về vai trò của nó trong dịch vụ Gọi Thủ tục Từ xa (RPC) và những tính năng mà nó đòi hỏi. Internet không có một giao thức RPC duy nhất, vì vậy chúng tôi sẽ kết thúc phần này bằng mô tả ba giao thức RPC được sử dụng rộng rãi: SunRPC, DCE-RPC và gRPC.
 
-Finally, real-time applications make particular demands on the transport
-protocol, such as the need to carry timing information that allows audio
-or video samples to be played back at the appropriate point in time. We
-look at the requirements placed by applications on such a protocol and
-the most widely used example, the Real-Time Transport Protocol (RTP).
+Cuối cùng, các ứng dụng thời gian thực đặt ra những yêu cầu đặc biệt đối với giao thức vận chuyển, chẳng hạn như cần mang thông tin thời gian cho phép các mẫu âm thanh hoặc video được phát lại đúng thời điểm. Chúng tôi sẽ xem xét các yêu cầu mà ứng dụng đặt ra cho loại giao thức này và ví dụ phổ biến nhất, Giao thức Vận chuyển Thời gian Thực (RTP).
