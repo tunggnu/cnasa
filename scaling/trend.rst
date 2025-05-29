@@ -1,80 +1,30 @@
-Perspective: The Cloud is Eating the Internet
-=============================================
+Góc nhìn: Đám mây đang “ăn” Internet
+====================================
 
-The Cloud and the Internet are symbiotic systems. They were historically
-distinct, but today the line between them is increasingly fuzzy. If you
-start with the textbook definition, the Internet provides end-to-end
-connectivity between any two hosts (e.g., a client laptop and a remote
-server machine), and the cloud supports several warehouse-sized
-datacenters, each of which provides a cost-effective way to power, cool,
-and operate a large number of server machines. End-users connect to the
-nearest datacenter over the Internet in exactly the same way they
-connect to a server in a remote machine room.
+Đám mây (Cloud) và Internet là hai hệ thống cộng sinh. Chúng từng tách biệt về mặt lịch sử, nhưng ngày nay ranh giới giữa chúng ngày càng trở nên mờ nhạt. Nếu bắt đầu với định nghĩa trong sách giáo khoa, Internet cung cấp kết nối đầu-cuối giữa bất kỳ hai máy chủ nào (ví dụ, một laptop của khách và một máy chủ từ xa), còn đám mây hỗ trợ nhiều trung tâm dữ liệu quy mô nhà kho, mỗi trung tâm cung cấp một cách hiệu quả về chi phí để cấp nguồn, làm mát và vận hành một số lượng lớn máy chủ. Người dùng cuối kết nối đến trung tâm dữ liệu gần nhất qua Internet theo đúng cách họ kết nối đến một máy chủ trong một phòng máy từ xa.
 
-That’s an accurate description of the relationship between the Internet
-and the Cloud in the early days of commercial cloud providers like
-Amazon, Microsoft, and Google. For example, Amazon’s cloud circa 2009
-had two datacenters, one on the east coast of the US and one on the west
-coast. Today, however, each of the major cloud providers operates
-several dozen datacenters spread across the globe, and it should be no
-surprise that they are strategically located in close proximity to
-Internet Exchange Points (IXP), each of which provides rich connectivity
-to the rest of the Internet. There are over 150 IXPs worldwide, and
-while not every cloud provider replicates a full datacenter near each
-one (many of these sites are co-location facilities), it is fair to say
-the cloud’s most frequently accessed content (e.g., the most popular
-Netflix movies, YouTube videos, and Facebook photos) is potentially
-distributed to that many locations.
+Đó là một mô tả chính xác về mối quan hệ giữa Internet và Đám mây vào những ngày đầu của các nhà cung cấp đám mây thương mại như Amazon, Microsoft và Google. Ví dụ, đám mây của Amazon khoảng năm 2009 có hai trung tâm dữ liệu, một ở bờ đông và một ở bờ tây nước Mỹ. Tuy nhiên, ngày nay, mỗi nhà cung cấp đám mây lớn vận hành hàng chục trung tâm dữ liệu trải khắp toàn cầu, và không có gì ngạc nhiên khi chúng được đặt chiến lược gần các Điểm Trao đổi Internet (IXP), mỗi điểm cung cấp kết nối phong phú đến phần còn lại của Internet. Có hơn 150 IXP trên toàn thế giới, và mặc dù không phải nhà cung cấp đám mây nào cũng nhân bản một trung tâm dữ liệu đầy đủ gần mỗi điểm (nhiều địa điểm trong số này là các cơ sở đồng vị trí), có thể nói rằng nội dung được truy cập nhiều nhất của đám mây (ví dụ, các bộ phim Netflix phổ biến nhất, video YouTube, và ảnh Facebook) có thể được phân phối đến nhiều địa điểm như vậy.
 
-There are two consequences to this wide dispersion of the cloud. One is
-that the end-to-end path from client to server doesn’t necessarily
-traverse the entire Internet. A user is likely to find the content he or
-she wants to access has been replicated at a nearby IXP—which is usually
-just one AS hop away—as opposed to being on the far side of the globe.
-The second consequence is that the major cloud providers do not use the
-public Internet to interconnect their distributed datacenters. It is
-common for cloud providers to keep their content synchronized across
-distributed datacenters, but they typically do this over a private
-backbone. This allows them to take advantage of whatever optimizations
-they want without needing to fully inter-operate with anyone else.
+Có hai hệ quả từ sự phân tán rộng rãi của đám mây này. Thứ nhất là đường đi đầu-cuối từ client đến server không nhất thiết phải đi qua toàn bộ Internet. Một người dùng có khả năng sẽ tìm thấy nội dung mình muốn truy cập đã được nhân bản tại một IXP gần đó—thường chỉ cách một bước AS—thay vì nằm ở phía bên kia địa cầu. Hệ quả thứ hai là các nhà cung cấp đám mây lớn không sử dụng Internet công cộng để kết nối các trung tâm dữ liệu phân tán của họ. Việc đồng bộ hóa nội dung giữa các trung tâm dữ liệu phân tán là phổ biến, nhưng họ thường thực hiện điều này qua một backbone riêng. Điều này cho phép họ tận dụng bất kỳ tối ưu hóa nào họ muốn mà không cần phải tương tác hoàn toàn với bất kỳ ai khác.
 
-In other words, while the figures in :ref:`Section 4.1 <4.1 Global
-Internet>` fairly represents the Internet’s overall shape, and BGP
-makes it *possible* to connect any pair of hosts, in practice most
-users interact with applications running in the Cloud, which looks
-more like :numref:`Figure %s <fig-cloud>`. (One important detail that
-the figure does not convey is that Cloud providers do not typically
-build a WAN by laying their own fiber, but they instead lease fiber
-from service providers, meaning that the private cloud backbone and
-the service provider backbones often share the same physical
-infrastructure.)
+Nói cách khác, mặc dù các hình vẽ trong :ref:`Mục 4.1 <4.1 Global Internet>` thể hiện khá đúng hình dạng tổng thể của Internet, và BGP làm cho việc kết nối bất kỳ cặp host nào trở nên *có thể*, nhưng trên thực tế hầu hết người dùng tương tác với các ứng dụng chạy trong Đám mây, vốn trông giống như :numref:`Hình %s <fig-cloud>`. (Một chi tiết quan trọng mà hình vẽ không thể hiện là các nhà cung cấp Đám mây thường không tự xây dựng một mạng WAN bằng cách tự kéo cáp quang, mà thay vào đó họ thuê cáp quang từ các nhà cung cấp dịch vụ, nghĩa là backbone riêng của đám mây và backbone của nhà cung cấp dịch vụ thường dùng chung hạ tầng vật lý.)
 
 .. _fig-cloud:
 .. figure:: figures/structure/Slide1.png
    :width: 500px
    :align: center
 
-   Cloud is widely distributed throughout the Internet
-   with private backbones.
+   Đám mây được phân phối rộng khắp Internet
+   với các backbone riêng.
 
-Note that while it is possible to replicate *content* across the cloud’s
-many locations, we do not yet have the technology to replicate *people*.
-This means that when widely dispersed users want to talk with each
-other—for example, as part of a video conference call—it’s the multicast
-tree that gets distributed across the cloud. In other words, multicast
-isn’t typically running in the routers of the service provider backbones
-(as :ref:`Section 4.3 <4.3 Multicast>` suggests), but it is instead running
-in server processes distributed across some subset of the 150+ locations
-that serve as the Internet’s major interconnection points. A multicast
-tree constructed in this way is called an overlay, which is a topic that
-we return to in :ref:`Section 9.4 <9.4 Overlay Networks>`.
+Lưu ý rằng mặc dù có thể nhân bản *nội dung* trên nhiều địa điểm của đám mây, chúng ta vẫn chưa có công nghệ để nhân bản *con người*. Điều này có nghĩa là khi những người dùng phân tán rộng muốn giao tiếp với nhau—ví dụ, trong một cuộc gọi hội nghị video—cây multicast sẽ được phân phối trên đám mây. Nói cách khác, multicast thường không chạy trong các router backbone của nhà cung cấp dịch vụ (như :ref:`Mục 4.3 <4.3 Multicast>` gợi ý), mà thay vào đó chạy trong các tiến trình máy chủ phân phối trên một tập con của hơn 150 địa điểm đóng vai trò là các điểm kết nối chính của Internet. Một cây multicast được xây dựng theo cách này được gọi là overlay, chủ đề này sẽ được đề cập lại trong :ref:`Mục 9.4 <9.4 Overlay Networks>`.
 
-.. admonition:: Broader Perspective
+.. admonition:: Góc nhìn rộng hơn
 
-   To continue reading about the cloudification of the Internet, see
-   :ref:`Perspective: HTTP is the New Narrow Waist`.
+   Để tiếp tục đọc về quá trình “đám mây hóa” Internet, xem
+   :ref:`Góc nhìn: HTTP là Eo thắt mới`.
 
-   To learn more about the Cloud’s distributed footprint, we recommend
+   Để tìm hiểu thêm về dấu chân phân phối của Đám mây, chúng tôi khuyến nghị
    `How the Internet Travels Across the
    Ocean <https://www.nytimes.com/interactive/2019/03/10/technology/internet-cables-oceans.html>`__,
-   New York Times, March 2019.
+   New York Times, tháng 3 năm 2019.
