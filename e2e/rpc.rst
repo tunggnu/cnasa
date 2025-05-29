@@ -1,777 +1,241 @@
-5.3 Remote Procedure Call
-=========================
+5.3 Gọi Thủ Tục Từ Xa (RPC)
+===========================
 
-A common pattern of communication used by application programs
-structured as a *client/server* pair is the request/reply message
-transaction: A client sends a request message to a server, and the
-server responds with a reply message, with the client blocking
-(suspending execution) to wait for the reply. :numref:`Figure
-%s <fig-rpc-timeline>` illustrates the basic interaction between the
-client and server in such an exchange.
+Một mô hình giao tiếp phổ biến được các chương trình ứng dụng sử dụng khi được cấu trúc theo cặp *client/server* là giao dịch thông điệp yêu cầu/phản hồi: Một client gửi một thông điệp yêu cầu đến server, và server phản hồi bằng một thông điệp trả lời, với client bị chặn (tạm dừng thực thi) để chờ phản hồi. :numref:`Hình %s <fig-rpc-timeline>` minh họa tương tác cơ bản giữa client và server trong một trao đổi như vậy.
 
 .. _fig-rpc-timeline:
 .. figure:: figures/f05-13-9780123850591.png
    :width: 300px
    :align: center
 
-   Timeline for RPC.
+   Dòng thời gian cho RPC.
 
-A transport protocol that supports the request/reply paradigm is much
-more than a UDP message going in one direction followed by a UDP message
-going in the other direction. It needs to deal with correctly
-identifying processes on remote hosts and correlating requests with
-responses. It may also need to overcome some or all of the limitations
-of the underlying network outlined in the problem statement at the
-beginning of this chapter. While TCP overcomes these limitations by
-providing a reliable byte-stream service, it doesn’t perfectly match the
-request/reply paradigm either. This section describes a third category
-of transport protocol, called *Remote Procedure Call* (RPC), that more
-closely matches the needs of an application involved in a request/reply
-message exchange.
+Một giao thức vận chuyển hỗ trợ mô hình yêu cầu/phản hồi phức tạp hơn nhiều so với một thông điệp UDP đi một chiều rồi một thông điệp UDP đi chiều ngược lại. Nó cần xử lý việc xác định đúng tiến trình trên các máy chủ từ xa và liên kết các yêu cầu với các phản hồi. Nó cũng có thể cần vượt qua một số hoặc tất cả các hạn chế của mạng nền được nêu ra ở phần đầu chương này. Trong khi TCP vượt qua các hạn chế này bằng cách cung cấp dịch vụ dòng byte tin cậy, nó cũng không hoàn toàn phù hợp với mô hình yêu cầu/phản hồi. Phần này mô tả một loại giao thức vận chuyển thứ ba, gọi là *Gọi Thủ Tục Từ Xa* (RPC), phù hợp hơn với nhu cầu của các ứng dụng trao đổi thông điệp yêu cầu/phản hồi.
 
-5.3.1 RPC Fundamentals
-----------------------
+5.3.1 Những điều cơ bản về RPC
+------------------------------
 
-RPC is not technically a protocol—it is better thought of as a general
-mechanism for structuring distributed systems. RPC is popular because it
-is based on the semantics of a local procedure call—the application
-program makes a call into a procedure without regard for whether it is
-local or remote and blocks until the call returns. An application
-developer can be largely unaware of whether the procedure is local or
-remote, simplifying his task considerably. When the procedures being
-called are actually methods of remote objects in an object-oriented
-language, RPC is known as *remote method invocation* (RMI). While the
-RPC concept is simple, there are two main problems that make it more
-complicated than local procedure calls:
+RPC về mặt kỹ thuật không phải là một giao thức—nó nên được xem như một cơ chế tổng quát để cấu trúc các hệ thống phân tán. RPC phổ biến vì nó dựa trên ngữ nghĩa của lời gọi thủ tục cục bộ—chương trình ứng dụng gọi một thủ tục mà không quan tâm nó là cục bộ hay từ xa và bị chặn cho đến khi lời gọi trả về. Lập trình viên ứng dụng phần lớn không cần biết thủ tục đó là cục bộ hay từ xa, giúp đơn giản hóa công việc của họ rất nhiều. Khi các thủ tục được gọi thực chất là các phương thức của đối tượng từ xa trong ngôn ngữ hướng đối tượng, RPC được gọi là *gọi phương thức từ xa* (RMI). Mặc dù khái niệm RPC đơn giản, có hai vấn đề chính khiến nó phức tạp hơn so với lời gọi thủ tục cục bộ:
 
--  The network between the calling process and the called process has
-   much more complex properties than the backplane of a computer. For
-   example, it is likely to limit message sizes and has a tendency to
-   lose and reorder messages.
+-  Mạng giữa tiến trình gọi và tiến trình được gọi có các thuộc tính phức tạp hơn nhiều so với bus nội bộ của máy tính. Ví dụ, nó có thể giới hạn kích thước thông điệp và có xu hướng làm mất hoặc đảo thứ tự thông điệp.
 
--  The computers on which the calling and called processes run may have
-   significantly different architectures and data representation
-   formats.
+-  Các máy tính mà tiến trình gọi và tiến trình được gọi chạy trên đó có thể có kiến trúc và định dạng dữ liệu rất khác nhau.
 
-Thus, a complete RPC mechanism actually involves two major components:
+Do đó, một cơ chế RPC hoàn chỉnh thực sự bao gồm hai thành phần chính:
 
-1. A protocol that manages the messages sent between the client and the
-   server processes and that deals with the potentially undesirable
-   properties of the underlying network.
+1. Một giao thức quản lý các thông điệp được gửi giữa các tiến trình client và server, đồng thời xử lý các thuộc tính không mong muốn của mạng nền.
 
-2. Programming language and compiler support to package the arguments
-   into a request message on the client machine and then to translate
-   this message back into the arguments on the server machine, and
-   likewise with the return value (this piece of the RPC mechanism is
-   usually called a *stub compiler*).
+2. Hỗ trợ ngôn ngữ lập trình và trình biên dịch để đóng gói các tham số thành một thông điệp yêu cầu trên máy client và sau đó chuyển đổi thông điệp này thành các tham số trên máy server, cũng như với giá trị trả về (phần này của cơ chế RPC thường được gọi là *trình biên dịch stub*).
 
-:numref:`Figure %s <fig-rpc-stub>` schematically depicts what happens
-when a client invokes a remote procedure. First, the client calls a
-local stub for the procedure, passing it the arguments required by the
-procedure.  This stub hides the fact that the procedure is remote by
-translating the arguments into a request message and then invoking an
-RPC protocol to send the request message to the server machine. At the
-server, the RPC protocol delivers the request message to the server
-stub, which translates it into the arguments to the procedure and then
-calls the local procedure. After the server procedure completes, it
-returns in a reply message that it hands off to the RPC protocol for
-transmission back to the client. The RPC protocol on the client passes
-this message up to the client stub, which translates it into a return
-value that it returns to the client program.
+:numref:`Hình %s <fig-rpc-stub>` mô tả sơ đồ những gì xảy ra khi một client gọi một thủ tục từ xa. Đầu tiên, client gọi một stub cục bộ cho thủ tục, truyền vào các tham số cần thiết. Stub này ẩn đi việc thủ tục là từ xa bằng cách chuyển đổi các tham số thành một thông điệp yêu cầu và sau đó gọi một giao thức RPC để gửi thông điệp yêu cầu đến máy chủ. Ở phía server, giao thức RPC chuyển thông điệp yêu cầu đến stub server, stub này chuyển đổi nó thành các tham số cho thủ tục rồi gọi thủ tục cục bộ. Sau khi thủ tục server hoàn thành, nó trả về trong một thông điệp phản hồi, thông điệp này được giao cho giao thức RPC để truyền ngược lại client. Giao thức RPC ở client chuyển thông điệp này lên stub client, stub này chuyển nó thành giá trị trả về và trả về cho chương trình client.
 
 .. _fig-rpc-stub:
 .. figure:: figures/f05-14-9780123850591.png
    :width: 500px
    :align: center
 
-   Complete RPC mechanism.
+   Cơ chế RPC hoàn chỉnh.
 
-This section considers just the protocol-related aspects of an RPC
-mechanism. That is, it ignores the stubs and focuses instead on the RPC
-protocol, sometimes referred to as a request/reply protocol, that
-transmits messages between client and server. The transformation of
-arguments into messages and *vice versa* is covered elsewhere. It is
-also important to keep in mind that the client and server programs are
-written in some programming language, meaning that a given RPC mechanism
-might support Python stubs, Java stubs, GoLang stubs, and so on, each of
-which includes language-specific idioms for how procedures are invoked.
+Phần này chỉ xem xét các khía cạnh liên quan đến giao thức của một cơ chế RPC. Tức là, nó bỏ qua các stub và tập trung vào giao thức RPC, đôi khi còn gọi là giao thức yêu cầu/phản hồi, truyền thông điệp giữa client và server. Việc chuyển đổi tham số thành thông điệp và ngược lại được trình bày ở nơi khác. Cũng cần lưu ý rằng các chương trình client và server được viết bằng một ngôn ngữ lập trình nào đó, nghĩa là một cơ chế RPC có thể hỗ trợ stub Python, stub Java, stub GoLang, v.v., mỗi loại có các đặc trưng riêng về cách gọi thủ tục.
 
-The term *RPC* refers to a type of protocol rather than a specific
-standard like TCP, so specific RPC protocols vary in the functions they
-perform. And, unlike TCP, which is the dominant reliable byte-stream
-protocol, there is no one dominant RPC protocol. Thus, in this section
-we will talk more about alternative design choices than previously.
+Thuật ngữ *RPC* đề cập đến một loại giao thức chứ không phải một tiêu chuẩn cụ thể như TCP, vì vậy các giao thức RPC cụ thể khác nhau về chức năng mà chúng thực hiện. Và, không giống như TCP là giao thức dòng byte tin cậy thống trị, không có một giao thức RPC nào chiếm ưu thế tuyệt đối. Do đó, trong phần này chúng ta sẽ nói nhiều hơn về các lựa chọn thiết kế thay thế.
 
-Identifiers in RPC
-~~~~~~~~~~~~~~~~~~
+Định danh trong RPC
+~~~~~~~~~~~~~~~~~~~
 
-Two functions that must be performed by any RPC protocol are:
+Hai chức năng mà bất kỳ giao thức RPC nào cũng phải thực hiện là:
 
--  Provide a name space for uniquely identifying the procedure to be
-   called.
+-  Cung cấp không gian tên để định danh duy nhất thủ tục cần gọi.
 
--  Match each reply message to the corresponding request message.
+-  Ghép mỗi thông điệp phản hồi với thông điệp yêu cầu tương ứng.
 
-The first problem has some similarities to the problem of identifying
-nodes in a network (something IP addresses do, for example). One of the
-design choices when identifying things is whether to make this name
-space flat or hierarchical. A flat name space would simply assign a
-unique, unstructured identifier (e.g., an integer) to each procedure,
-and this number would be carried in a single field in an RPC request
-message. This would require some kind of central coordination to avoid
-assigning the same procedure number to two different procedures.
-Alternatively, the protocol could implement a hierarchical name space,
-analogous to that used for file pathnames, which requires only that a
-file’s “basename” be unique within its directory. This approach
-potentially simplifies the job of ensuring uniqueness of procedure
-names. A hierarchical name space for RPC could be implemented by
-defining a set of fields in the request message format, one for each
-level of naming in, say, a two- or three-level hierarchical name space.
+Vấn đề đầu tiên có một số điểm tương đồng với việc định danh các nút trong mạng (ví dụ như địa chỉ IP). Một trong những lựa chọn thiết kế khi định danh là không gian tên phẳng hay phân cấp. Một không gian tên phẳng chỉ đơn giản gán một định danh duy nhất, không có cấu trúc (ví dụ, một số nguyên) cho mỗi thủ tục, và số này sẽ được mang trong một trường của thông điệp yêu cầu RPC. Điều này đòi hỏi một cơ chế phối hợp trung tâm để tránh gán cùng số thủ tục cho hai thủ tục khác nhau. Ngoài ra, giao thức có thể triển khai không gian tên phân cấp, tương tự như đường dẫn file, chỉ yêu cầu “basename” của file là duy nhất trong thư mục của nó. Cách tiếp cận này có thể đơn giản hóa việc đảm bảo tính duy nhất của tên thủ tục. Một không gian tên phân cấp cho RPC có thể được triển khai bằng cách định nghĩa một tập trường trong định dạng thông điệp yêu cầu, mỗi trường cho một cấp tên trong không gian tên hai hoặc ba cấp.
 
-The key to matching a reply message to the corresponding request is to
-uniquely identify request-replies pairs using a message ID field. A
-reply message had its message ID field set to the same value as the
-request message. When the client RPC module receives the reply, it uses
-the message ID to search for the corresponding outstanding request. To
-make the RPC transaction appear like a local procedure call to the
-caller, the caller is blocked until the reply message is received. When
-the reply is received, the blocked caller is identified based on the
-request number in the reply, the remote procedure’s return value is
-obtained from the reply, and the caller is unblocked so that it can
-return with that return value.
+Chìa khóa để ghép một thông điệp phản hồi với thông điệp yêu cầu tương ứng là định danh duy nhất cặp yêu cầu-phản hồi bằng một trường ID thông điệp. Một thông điệp phản hồi sẽ có trường ID thông điệp giống với thông điệp yêu cầu. Khi module RPC client nhận được phản hồi, nó dùng ID thông điệp để tìm kiếm yêu cầu đang chờ tương ứng. Để giao dịch RPC trông giống như một lời gọi thủ tục cục bộ với bên gọi, bên gọi sẽ bị chặn cho đến khi nhận được thông điệp phản hồi. Khi phản hồi đến, bên gọi bị chặn được xác định dựa trên số yêu cầu trong phản hồi, giá trị trả về của thủ tục từ xa được lấy từ phản hồi, và bên gọi được bỏ chặn để trả về với giá trị đó.
 
-One of the recurrent challenges in RPC is dealing with unexpected
-responses, and we see this with message IDs. For example, consider the
-following pathological (but realistic) situation. A client machine sends
-a request message with a message ID of 0, then crashes and reboots, and
-then sends an unrelated request message, also with a message ID of 0.
-The server may not have been aware that the client crashed and rebooted
-and, upon seeing a request message with a message ID of 0, acknowledges
-it and discards it as a duplicate. The client never gets a response to
-the request.
+Một trong những thách thức lặp lại trong RPC là xử lý các phản hồi không mong đợi, và điều này thể hiện ở các ID thông điệp. Ví dụ, hãy xem xét tình huống (dù hiếm nhưng thực tế): Một máy client gửi một thông điệp yêu cầu với ID thông điệp là 0, sau đó bị treo và khởi động lại, rồi gửi một thông điệp yêu cầu không liên quan, cũng với ID thông điệp là 0. Server có thể không biết client đã bị treo và khởi động lại, và khi thấy một thông điệp yêu cầu với ID 0, nó xác nhận và loại bỏ nó như là bản sao. Client sẽ không bao giờ nhận được phản hồi cho yêu cầu đó.
 
-One way to eliminate this problem is to use a *boot ID*. A machine’s
-boot ID is a number that is incremented each time the machine reboots;
-this number is read from nonvolatile storage (e.g., a disk or flash
-drive), incremented, and written back to the storage device during the
-machine’s start-up procedure. This number is then put in every message
-sent by that host. If a message is received with an old message ID but a
-new boot ID, it is recognized as a new message. In effect, the message
-ID and boot ID combine to form a unique ID for each transaction.
+Một cách để loại bỏ vấn đề này là sử dụng *boot ID*. Boot ID của một máy là một số được tăng lên mỗi lần máy khởi động lại; số này được đọc từ bộ nhớ không mất dữ liệu (ví dụ, đĩa hoặc flash), tăng lên, và ghi lại vào thiết bị lưu trữ trong quá trình khởi động máy. Số này sau đó được đưa vào mọi thông điệp gửi đi từ máy đó. Nếu một thông điệp được nhận với ID thông điệp cũ nhưng boot ID mới, nó được nhận diện là một thông điệp mới. Thực chất, ID thông điệp và boot ID kết hợp lại tạo thành một ID duy nhất cho mỗi giao dịch.
 
-Overcoming Network Limitations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Vượt qua các hạn chế của mạng
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RPC protocols often perform additional functions to deal with the fact
-that networks are not perfect channels. Two such functions are:
+Các giao thức RPC thường thực hiện thêm các chức năng để xử lý thực tế rằng mạng không phải là kênh hoàn hảo. Hai chức năng như vậy là:
 
--  Provide reliable message delivery
+-  Đảm bảo chuyển phát thông điệp tin cậy
 
--  Support large message sizes through fragmentation and reassembly
+-  Hỗ trợ kích thước thông điệp lớn thông qua phân mảnh và lắp ráp lại
 
-An RPC protocol might “define this problem away” by choosing to run on
-top of a reliable protocol like TCP, but in many cases, the RPC protocol
-implements its own reliable message delivery layer on top of an
-unreliable substrate (e.g., UDP/IP). Such an RPC protocol would likely
-implement reliability using acknowledgments and timeouts, similarly to
-TCP.
+Một giao thức RPC có thể “định nghĩa lại vấn đề này” bằng cách chọn chạy trên một giao thức tin cậy như TCP, nhưng trong nhiều trường hợp, giao thức RPC tự triển khai lớp chuyển phát tin cậy trên một nền không tin cậy (ví dụ, UDP/IP). Một giao thức RPC như vậy có thể triển khai tin cậy bằng cách sử dụng xác nhận và timeout, tương tự như TCP.
 
-The basic algorithm is straightforward, as illustrated by the timeline
-given in :numref:`Figure %s <fig-chan-timeline1>`. The client sends a
-request message and the server acknowledges it. Then, after executing
-the procedure, the server sends a reply message and the client
-acknowledges the reply.
+Thuật toán cơ bản khá đơn giản, như minh họa bởi dòng thời gian trong :numref:`Hình %s <fig-chan-timeline1>`. Client gửi một thông điệp yêu cầu và server xác nhận nó. Sau đó, sau khi thực hiện thủ tục, server gửi một thông điệp phản hồi và client xác nhận phản hồi đó.
 
 .. _fig-chan-timeline1:
 .. figure:: figures/f05-15-9780123850591.png
    :width: 200px
    :align: center
 
-   Simple timeline for a reliable RPC protocol.
+   Dòng thời gian đơn giản cho một giao thức RPC tin cậy.
 
-Either a message carrying data (a request message or a reply message) or
-the ACK sent to acknowledge that message may be lost in the network. To
-account for this possibility, both client and server save a copy of each
-message they send until an ACK for it has arrived. Each side also sets a
-RETRANSMIT timer and resends the message should this timer expire. Both
-sides reset this timer and try again some agreed-upon number of times
-before giving up and freeing the message.
+Bất kỳ thông điệp nào mang dữ liệu (yêu cầu hoặc phản hồi) hoặc ACK xác nhận thông điệp đó đều có thể bị mất trên mạng. Để xử lý khả năng này, cả client và server đều lưu một bản sao của mỗi thông điệp mà họ gửi cho đến khi nhận được ACK cho nó. Mỗi bên cũng đặt một bộ định thời RETRANSMIT và gửi lại thông điệp nếu bộ định thời này hết hạn. Cả hai bên đặt lại bộ định thời này và thử lại một số lần nhất định trước khi từ bỏ và giải phóng thông điệp.
 
-If an RPC client receives a reply message, clearly the corresponding
-request message must have been received by the server. Hence, the reply
-message itself is an *implicit acknowledgment*, and any additional
-acknowledgment from the server is not logically necessary. Similarly, a
-request message could implicitly acknowledge the preceding reply
-message—assuming the protocol makes request-reply transactions
-sequential, so that one transaction must complete before the next
-begins. Unfortunately, this sequentiality would severely limit RPC
-performance.
+Nếu một client RPC nhận được một thông điệp phản hồi, rõ ràng thông điệp yêu cầu tương ứng đã được server nhận. Do đó, thông điệp phản hồi tự nó là một *xác nhận ngầm*, và bất kỳ xác nhận bổ sung nào từ server là không cần thiết về mặt logic. Tương tự, một thông điệp yêu cầu có thể xác nhận ngầm thông điệp phản hồi trước đó—giả sử giao thức thực hiện các giao dịch yêu cầu-phản hồi tuần tự, nghĩa là một giao dịch phải hoàn thành trước khi giao dịch tiếp theo bắt đầu. Đáng tiếc, tính tuần tự này sẽ hạn chế nghiêm trọng hiệu suất RPC.
 
-A way out of this predicament is for the RPC protocol to implement a
-*channel* abstraction. Within a given channel, request/reply
-transactions are sequential—there can be only one transaction active on
-a given channel at any given time—but there can be multiple channels. Or
-said another way, the channel abstraction makes it possible to
-*multiplex* multiple RPC request/reply transactions between a
-client/server pair.
+Một cách giải quyết là giao thức RPC triển khai một trừu tượng *kênh* (channel). Trong một kênh nhất định, các giao dịch yêu cầu/phản hồi là tuần tự—chỉ có thể có một giao dịch hoạt động trên một kênh tại một thời điểm—nhưng có thể có nhiều kênh. Nói cách khác, trừu tượng kênh cho phép *phân kênh* nhiều giao dịch yêu cầu/phản hồi RPC giữa một cặp client/server.
 
-Each message includes a channel ID field to indicate which channel the
-message belongs to. A request message in a given channel would
-implicitly acknowledge the previous reply in that channel, if it
-hadn’t already been acknowledged. An application program can open
-multiple channels to a server if it wants to have more than one
-request/reply transaction between them at the same time (the
-application would need multiple threads). As illustrated in
-:numref:`Figure %s <fig-implicitAckTimeline>`, the reply message
-serves to acknowledge the request message, and a subsequent request
-acknowledges the preceding reply. Note that we saw a very similar
-approach—called *concurrent logical channels*—in an earlier section as
-a way to improve on the performance of a stop-and-wait reliability
-mechanism.
+Mỗi thông điệp bao gồm một trường ID kênh để chỉ ra thông điệp thuộc về kênh nào. Một thông điệp yêu cầu trong một kênh nhất định sẽ xác nhận ngầm thông điệp phản hồi trước đó trong kênh đó, nếu nó chưa được xác nhận. Một chương trình ứng dụng có thể mở nhiều kênh tới server nếu muốn có nhiều giao dịch yêu cầu/phản hồi đồng thời giữa chúng (ứng dụng sẽ cần nhiều luồng). Như minh họa ở :numref:`Hình %s <fig-implicitAckTimeline>`, thông điệp phản hồi đóng vai trò xác nhận thông điệp yêu cầu, và một yêu cầu tiếp theo xác nhận phản hồi trước đó. Lưu ý rằng chúng ta đã thấy một cách tiếp cận rất giống—gọi là *kênh logic đồng thời*—ở phần trước như một cách cải thiện hiệu suất của cơ chế tin cậy dừng-và-đợi.
 
 .. _fig-implicitAckTimeline:
 .. figure:: figures/f05-16-9780123850591.png
    :width: 200px
    :align: center
 
-   Timeline for a reliable RPC protocol using implicit
-   acknowledgment.
+   Dòng thời gian cho giao thức RPC tin cậy sử dụng xác nhận ngầm.
 
-Another complication that RPC must address is that the server may take
-an arbitrarily long time to produce the result, and, worse yet, it may
-crash before generating the reply. Keep in mind that we are talking
-about the period of time after the server has acknowledged the request
-but before it has sent the reply. To help the client distinguish between
-a slow server and a dead server, the RPC’s client side can periodically
-send an “Are you alive?” message to the server, and the server side
-responds with an ACK. Alternatively, the server could send “I am still
-alive” messages to the client without the client having first solicited
-them. The approach is more scalable because it puts more of the
-per-client burden (managing the timeout timer) on the clients.
+Một phức tạp khác mà RPC phải xử lý là server có thể mất một thời gian tùy ý để tạo ra kết quả, và tệ hơn, nó có thể bị treo trước khi tạo ra phản hồi. Hãy nhớ rằng chúng ta đang nói về khoảng thời gian sau khi server đã xác nhận yêu cầu nhưng trước khi gửi phản hồi. Để giúp client phân biệt giữa server chậm và server chết, phía client của RPC có thể định kỳ gửi thông điệp “Bạn còn sống không?” đến server, và phía server phản hồi bằng một ACK. Ngoài ra, server có thể chủ động gửi thông điệp “Tôi vẫn còn sống” đến client mà không cần client yêu cầu trước. Cách tiếp cận này mở rộng tốt hơn vì nó đặt gánh nặng quản lý bộ định thời timeout lên các client.
 
-RPC reliability may include the property known as *at-most-once
-semantics*. This means that for every request message that the client
-sends, at most one copy of that message is delivered to the server. Each
-time the client calls a remote procedure, that procedure is invoked at
-most one time on the server machine. We say “at most once” rather than
-“exactly once” because it is always possible that either the network or
-the server machine has failed, making it impossible to deliver even one
-copy of the request message.
+Tính tin cậy của RPC có thể bao gồm thuộc tính gọi là *ngữ nghĩa tối đa một lần* (at-most-once semantics). Điều này có nghĩa là với mỗi thông điệp yêu cầu mà client gửi, tối đa chỉ một bản sao của thông điệp đó được chuyển đến server. Mỗi lần client gọi một thủ tục từ xa, thủ tục đó chỉ được thực thi tối đa một lần trên máy server. Chúng ta nói “tối đa một lần” thay vì “chính xác một lần” vì luôn có khả năng mạng hoặc máy server bị lỗi, khiến không thể chuyển được dù chỉ một bản sao của thông điệp yêu cầu.
 
-To implement at-most-once semantics, RPC on the server side must
-recognize duplicate requests (and ignore them), even if it has already
-successfully replied to the original request. Hence, it must maintain
-some state information that identifies past requests. One approach is to
-identify requests using sequence numbers, so a server need only remember
-the most recent sequence number. Unfortunately, this would limit an RPC
-to one outstanding request (to a given server) at a time, since one
-request must be completed before the request with the next sequence
-number can be transmitted. Once again, channels provide a solution. The
-server could recognize duplicate requests by remembering the current
-sequence number for each channel, without limiting the client to one
-request at a time.
+Để thực hiện ngữ nghĩa tối đa một lần, RPC phía server phải nhận diện các yêu cầu trùng lặp (và bỏ qua chúng), ngay cả khi nó đã phản hồi thành công cho yêu cầu gốc. Do đó, nó phải duy trì một số trạng thái nhận diện các yêu cầu trước đó. Một cách là nhận diện yêu cầu bằng số thứ tự, do đó server chỉ cần nhớ số thứ tự gần nhất. Đáng tiếc, điều này sẽ giới hạn RPC chỉ có một yêu cầu đang chờ (tới một server nhất định) tại một thời điểm, vì một yêu cầu phải hoàn thành trước khi yêu cầu tiếp theo có thể được gửi. Một lần nữa, các kênh cung cấp giải pháp. Server có thể nhận diện các yêu cầu trùng lặp bằng cách nhớ số thứ tự hiện tại cho mỗi kênh, mà không giới hạn client chỉ có một yêu cầu tại một thời điểm.
 
-As obvious as at-most-once sounds, not all RPC protocols support this
-behavior. Some support a semantics that is facetiously called
-*zero-or-more* semantics; that is, each invocation on a client results
-in the remote procedure being invoked zero or more times. It is not
-difficult to understand how this would cause problems for a remote
-procedure that changed some local state variable (e.g., incremented a
-counter) or that had some externally visible side effect (e.g., launched
-a missile) each time it was invoked. On the other hand, if the remote
-procedure being invoked is *idempotent*—multiple invocations have the
-same effect as just one—then the RPC mechanism need not support
-at-most-once semantics; a simpler (possibly faster) implementation will
-suffice.
+Mặc dù ngữ nghĩa tối đa một lần nghe có vẻ hiển nhiên, không phải tất cả các giao thức RPC đều hỗ trợ hành vi này. Một số hỗ trợ ngữ nghĩa được gọi đùa là *không hoặc nhiều lần* (zero-or-more semantics); tức là, mỗi lần gọi ở client có thể dẫn đến thủ tục từ xa được thực thi không hoặc nhiều lần. Không khó để hiểu điều này sẽ gây vấn đề cho một thủ tục từ xa thay đổi biến trạng thái cục bộ (ví dụ, tăng một bộ đếm) hoặc có tác động bên ngoài (ví dụ, phóng tên lửa) mỗi lần nó được gọi. Mặt khác, nếu thủ tục từ xa là *idempotent*—gọi nhiều lần cũng như chỉ gọi một lần—thì cơ chế RPC không cần hỗ trợ ngữ nghĩa tối đa một lần; một triển khai đơn giản hơn (có thể nhanh hơn) là đủ.
 
-As was the case with reliability, the two reasons why an RPC protocol
-might implement message fragmentation and reassembly are that it is not
-provided by the underlying protocol stack or that it can be implemented
-more efficiently by the RPC protocol. Consider the case where RPC is
-implemented on top of UDP/IP and relies on IP for fragmentation and
-reassembly. If even one fragment of a message fails to arrive within a
-certain amount of time, IP discards the fragments that did arrive and
-the message is effectively lost. Eventually, the RPC protocol (assuming
-it implements reliability) would time out and retransmit the message. In
-contrast, consider an RPC protocol that implements its own fragmentation
-and reassembly and aggressively ACKs or NACKs (negatively acknowledges)
-individual fragments. Lost fragments would be more quickly detected and
-retransmitted, and only the lost fragments would be retransmitted, not
-the whole message.
+Cũng như với tính tin cậy, hai lý do khiến một giao thức RPC có thể triển khai phân mảnh và lắp ráp lại thông điệp là vì nó không được cung cấp bởi tầng giao thức nền hoặc vì nó có thể được triển khai hiệu quả hơn bởi giao thức RPC. Xét trường hợp RPC được triển khai trên UDP/IP và dựa vào IP để phân mảnh/lắp ráp lại. Nếu chỉ một mảnh của thông điệp không đến trong một khoảng thời gian nhất định, IP sẽ loại bỏ các mảnh đã đến và thông điệp bị coi là mất. Cuối cùng, giao thức RPC (giả sử nó triển khai tin cậy) sẽ timeout và gửi lại thông điệp. Ngược lại, một giao thức RPC tự triển khai phân mảnh/lắp ráp lại và tích cực ACK hoặc NACK (xác nhận âm) từng mảnh riêng lẻ. Các mảnh bị mất sẽ được phát hiện và gửi lại nhanh hơn, và chỉ các mảnh bị mất mới được gửi lại, không phải toàn bộ thông điệp.
 
-Synchronous versus Asynchronous Protocols
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Giao thức đồng bộ và bất đồng bộ
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One way to characterize a protocol is by whether it is *synchronous* or
-*asynchronous*. The precise meaning of these terms depends on where in
-the protocol hierarchy you use them. At the transport layer, it is most
-accurate to think of them as defining the extremes of a spectrum rather
-than as two mutually exclusive alternatives. The key attribute of any
-point along the spectrum is how much the sending process knows after the
-operation to send a message returns. In other words, if we assume that
-an application program invokes a ``send`` operation on a transport
-protocol, then exactly what does the application know about the success
-of the operation when the ``send`` operation returns?
+Một cách để phân loại giao thức là dựa vào việc nó là *đồng bộ* hay *bất đồng bộ*. Ý nghĩa chính xác của các thuật ngữ này phụ thuộc vào vị trí trong hệ phân cấp giao thức mà bạn sử dụng chúng. Ở tầng vận chuyển, tốt nhất nên xem chúng như xác định hai cực của một phổ thay vì hai lựa chọn loại trừ lẫn nhau. Thuộc tính then chốt của bất kỳ điểm nào trên phổ này là tiến trình gửi biết được gì sau khi thao tác gửi thông điệp trả về. Nói cách khác, nếu giả sử một chương trình ứng dụng gọi thao tác ``send`` trên một giao thức vận chuyển, thì chính xác ứng dụng biết gì về thành công của thao tác khi ``send`` trả về?
 
-At the *asynchronous* end of the spectrum, the application knows
-absolutely nothing when ``send`` returns. Not only does it not know if
-the message was received by its peer, but it doesn’t even know for sure
-that the message has successfully left the local machine. At the
-*synchronous* end of the spectrum, the ``send`` operation typically
-returns a reply message. That is, the application not only knows that
-the message it sent was received by its peer, but it also knows that the
-peer has returned an answer. Thus, synchronous protocols implement the
-request/reply abstraction, while asynchronous protocols are used if the
-sender wants to be able to transmit many messages without having to wait
-for a response. Using this definition, RPC protocols are usually
-synchronous protocols.
+Ở đầu *bất đồng bộ* của phổ, ứng dụng hoàn toàn không biết gì khi ``send`` trả về. Nó không biết liệu thông điệp đã được nhận bởi đối tác hay chưa, thậm chí không biết chắc thông điệp đã rời khỏi máy cục bộ hay chưa. Ở đầu *đồng bộ* của phổ, thao tác ``send`` thường trả về một thông điệp phản hồi. Tức là, ứng dụng không chỉ biết thông điệp nó gửi đã được đối tác nhận, mà còn biết đối tác đã trả lời. Do đó, các giao thức đồng bộ triển khai trừu tượng yêu cầu/phản hồi, trong khi các giao thức bất đồng bộ được dùng nếu bên gửi muốn gửi nhiều thông điệp mà không phải chờ phản hồi. Theo định nghĩa này, các giao thức RPC thường là giao thức đồng bộ.
 
-Although we have not discussed them in this chapter, there are
-interesting points between these two extremes. For example, the
-transport protocol might implement ``send`` so that it blocks (does not
-return) until the message has been successfully received at the remote
-machine, but returns before the sender’s peer on that machine has
-actually processed and responded to it. This is sometimes called a
-*reliable datagram protocol*.
+Mặc dù chúng ta chưa bàn về chúng trong chương này, có những điểm thú vị nằm giữa hai cực này. Ví dụ, giao thức vận chuyển có thể triển khai ``send`` sao cho nó bị chặn (không trả về) cho đến khi thông điệp đã được nhận thành công tại máy từ xa, nhưng trả về trước khi đối tác trên máy đó thực sự xử lý và phản hồi. Điều này đôi khi được gọi là *giao thức datagram tin cậy*.
 
-5.3.2 RPC Implementations (SunRPC, DCE, gRPC)
+5.3.2 Các triển khai RPC (SunRPC, DCE, gRPC)
 ---------------------------------------------
 
-We now turn our discussion to some example implementations of RPC
-protocols. These will serve to highlight some of the different design
-decisions that protocol designers have made. Our first example is
-SunRPC, a widely used RPC protocol also known as Open Network Computing
-RPC (ONC RPC). Our second example, which we will refer to as DCE-RPC, is
-part of the Distributed Computing Environment (DCE). DCE is a set of
-standards and software for building distributed systems that was defined
-by the Open Software Foundation (OSF), a consortium of computer
-companies that originally included IBM, Digital Equipment Corporation,
-and Hewlett-Packard; today, OSF goes by the name The Open Group. Our
-third example is gRPC, a popular RPC mechanism that Google has open
-sourced, based on an RPC mechanism that they have been using internally
-to implement cloud services in their datacenters.
+Bây giờ chúng ta chuyển sang thảo luận về một số ví dụ triển khai giao thức RPC. Những ví dụ này sẽ làm nổi bật một số lựa chọn thiết kế khác nhau mà các nhà thiết kế giao thức đã thực hiện. Ví dụ đầu tiên là SunRPC, một giao thức RPC được sử dụng rộng rãi còn gọi là Open Network Computing RPC (ONC RPC). Ví dụ thứ hai, gọi là DCE-RPC, là một phần của Môi trường Tính toán Phân tán (DCE). DCE là một tập hợp các tiêu chuẩn và phần mềm để xây dựng hệ thống phân tán do Open Software Foundation (OSF) định nghĩa, một liên minh các công ty máy tính ban đầu gồm IBM, Digital Equipment Corporation, và Hewlett-Packard; ngày nay, OSF được gọi là The Open Group. Ví dụ thứ ba là gRPC, một cơ chế RPC phổ biến mà Google đã mã nguồn mở, dựa trên một cơ chế RPC mà họ đã sử dụng nội bộ để triển khai các dịch vụ đám mây trong các trung tâm dữ liệu của mình.
 
-These three examples represent interesting alternative design choices in
-the RPC solution space, but lest you think they are the only options,
-we describe three other RPC-like mechanisms (WSDL, SOAP, and REST) in
-the context of web services in Chapter 9.
+Ba ví dụ này đại diện cho những lựa chọn thiết kế khác nhau trong không gian giải pháp RPC, nhưng để bạn không nghĩ rằng chúng là những lựa chọn duy nhất, chúng tôi sẽ mô tả ba cơ chế giống RPC khác (WSDL, SOAP, và REST) trong bối cảnh dịch vụ web ở Chương 9.
 
 SunRPC
 ~~~~~~
 
-SunRPC became a *de facto* standard thanks to its wide distribution with
-Sun workstations and the central role it plays in Sun’s popular Network
-File System (NFS). The IETF subsequently adopted it as a standard
-Internet protocol under the name ONC RPC.
+SunRPC trở thành tiêu chuẩn *de facto* nhờ được phân phối rộng rãi cùng với các workstation Sun và vai trò trung tâm của nó trong Hệ thống Tập tin Mạng (NFS) nổi tiếng của Sun. IETF sau đó đã thông qua nó như một giao thức Internet tiêu chuẩn dưới tên ONC RPC.
 
-SunRPC can be implemented over several different transport protocols.
-:numref:`Figure %s <fig-sunrpc>` illustrates the protocol graph when
-SunRPC is implemented on UDP. As we noted earlier in this section, a
-strict layerist might frown on the idea of running a transport
-protocol over a transport protocol, or argue that RPC must be
-something other than a transport protocol since it appears “above” the
-transport layer.  Pragmatically, the design decision to run RPC over
-an existing transport layer makes quite a lot of sense, as will be
-apparent in the following discussion.
+SunRPC có thể được triển khai trên nhiều giao thức vận chuyển khác nhau. :numref:`Hình %s <fig-sunrpc>` minh họa đồ thị giao thức khi SunRPC được triển khai trên UDP. Như đã đề cập ở phần trước, một người theo chủ nghĩa tầng nghiêm ngặt có thể không đồng tình với ý tưởng chạy một giao thức vận chuyển trên một giao thức vận chuyển, hoặc cho rằng RPC phải là thứ gì đó khác ngoài giao thức vận chuyển vì nó xuất hiện “trên” tầng vận chuyển. Thực tế, quyết định thiết kế chạy RPC trên tầng vận chuyển hiện có là hợp lý, như sẽ thấy rõ trong phần thảo luận sau.
 
 .. _fig-sunrpc:
 .. figure:: figures/f05-17-9780123850591.png
    :width: 100px
    :align: center
 
-   Protocol graph for SunRPC on top of UDP.
+   Đồ thị giao thức cho SunRPC trên UDP.
 
-SunRPC uses two-tier identifiers to identify remote procedures: a
-32-bit program number and a 32-bit procedure number. (There is also a
-32-bit version number, but we ignore that in the following
-discussion.) For example, the NFS server has been assigned program
-number ``x00100003``, and within this program ``getattr`` is procedure
-``1``, ``setattr`` is procedure ``2``, ``read`` is procedure ``6``,
-``write`` is procedure ``8``, and so on. The program number and
-procedure number are transmitted in the SunRPC request message’s
-header, whose fields are shown in :numref:`Figure %s
-<fig-sunrpc-format>`. The server—which may support several program
-numbers—is responsible for calling the specified procedure of the
-specified program. A SunRPC request really represents a request to
-call the specified program and procedure on the particular machine to
-which the request was sent, even though the same program number may be
-implemented on other machines in the same network. Thus, the address
-of the server’s machine (e.g., an IP address) is an implicit third
-tier of the RPC address.
+SunRPC sử dụng định danh hai tầng để xác định thủ tục từ xa: một số chương trình 32 bit và một số thủ tục 32 bit. (Cũng có một số phiên bản 32 bit, nhưng chúng ta bỏ qua trong phần thảo luận này.) Ví dụ, server NFS được gán số chương trình ``x00100003``, và trong chương trình này ``getattr`` là thủ tục ``1``, ``setattr`` là thủ tục ``2``, ``read`` là thủ tục ``6``, ``write`` là thủ tục ``8``, v.v. Số chương trình và số thủ tục được truyền trong phần đầu thông điệp yêu cầu SunRPC, các trường được thể hiện ở :numref:`Hình %s <fig-sunrpc-format>`. Server—có thể hỗ trợ nhiều số chương trình—chịu trách nhiệm gọi thủ tục được chỉ định của chương trình được chỉ định. Một yêu cầu SunRPC thực chất là yêu cầu gọi chương trình và thủ tục được chỉ định trên máy cụ thể mà yêu cầu được gửi tới, mặc dù cùng số chương trình có thể được triển khai trên các máy khác trong cùng mạng. Do đó, địa chỉ của máy server (ví dụ, địa chỉ IP) là tầng thứ ba ngầm định của địa chỉ RPC.
 
 .. _fig-sunrpc-format:
 .. figure:: figures/f05-18-9780123850591.png
    :width: 400px
    :align: center
 
-   SunRPC header formats: (a) request; (b) reply.
+   Định dạng phần đầu SunRPC: (a) yêu cầu; (b) phản hồi.
 
-Different program numbers may belong to different servers on the same
-machine. These different servers have different transport layer demux
-keys (e.g., UDP ports), most of which are not well-known numbers but
-instead are assigned dynamically. These demux keys are called *transport
-selectors*. How can a SunRPC client that wants to talk to a particular
-program determine which transport selector to use to reach the
-corresponding server? The solution is to assign a well-known address to
-*just one* program on the remote machine and let that program handle the
-task of telling clients which transport selector to use to reach any
-other program on the machine. The original version of this SunRPC
-program is called the *Port Mapper*, and it supports only UDP and TCP as
-underlying protocols. Its program number is ``x00100000``, and its
-well-known port is ``111``. RPCBIND, which evolved from the Port Mapper,
-supports arbitrary underlying transport protocols. As each SunRPC server
-starts, it calls an RPCBIND registration procedure, on the server’s own
-home machine, to register its transport selector and the program numbers
-that it supports. A remote client can then call an RPCBIND lookup
-procedure to look up the transport selector for a particular program
-number.
+Các số chương trình khác nhau có thể thuộc về các server khác nhau trên cùng một máy. Các server này có các khóa phân kênh tầng vận chuyển khác nhau (ví dụ, cổng UDP), hầu hết không phải là số nổi tiếng mà được gán động. Các khóa phân kênh này được gọi là *bộ chọn vận chuyển* (transport selectors). Làm thế nào để một client SunRPC muốn nói chuyện với một chương trình cụ thể biết được bộ chọn vận chuyển nào để dùng để đến đúng server? Giải pháp là gán một địa chỉ nổi tiếng cho *chỉ một* chương trình trên máy từ xa và để chương trình đó xử lý việc thông báo cho client biết bộ chọn vận chuyển nào để dùng để đến các chương trình khác trên máy. Phiên bản gốc của chương trình SunRPC này gọi là *Port Mapper*, chỉ hỗ trợ UDP và TCP làm giao thức nền. Số chương trình của nó là ``x00100000``, và cổng nổi tiếng là ``111``. RPCBIND, phát triển từ Port Mapper, hỗ trợ các giao thức vận chuyển nền tùy ý. Khi mỗi server SunRPC khởi động, nó gọi một thủ tục đăng ký RPCBIND trên chính máy chủ của mình để đăng ký bộ chọn vận chuyển và các số chương trình mà nó hỗ trợ. Một client từ xa sau đó có thể gọi một thủ tục tra cứu RPCBIND để tìm bộ chọn vận chuyển cho một số chương trình cụ thể.
 
-To make this more concrete, consider an example using the Port Mapper
-with UDP. To send a request message to NFS’s ``read`` procedure, a
-client first sends a request message to the Port Mapper at well-known
-UDP port \ ``111``, asking that procedure ``3`` be invoked to map
-program number ``x00100003`` to the UDP port where the NFS program
-currently resides. The client then sends a SunRPC request message with
-program number ``x00100003`` and procedure number ``6`` to this UDP
-port, and the SunRPC module listening at that port calls the NFS
-``read`` procedure. The client also caches the program-to-port number
-mapping so that it need not go back to the Port Mapper each time it
-wants to talk to the NFS program.\ [#]_
+Để cụ thể hơn, hãy xét ví dụ sử dụng Port Mapper với UDP. Để gửi một thông điệp yêu cầu đến thủ tục ``read`` của NFS, client đầu tiên gửi một thông điệp yêu cầu đến Port Mapper tại cổng UDP nổi tiếng ``111``, yêu cầu thủ tục ``3`` được gọi để ánh xạ số chương trình ``x00100003`` sang cổng UDP nơi chương trình NFS hiện đang chạy. Client sau đó gửi một thông điệp yêu cầu SunRPC với số chương trình ``x00100003`` và số thủ tục ``6`` đến cổng UDP này, và module SunRPC lắng nghe tại cổng đó sẽ gọi thủ tục ``read`` của NFS. Client cũng lưu vào bộ nhớ đệm ánh xạ số chương trình sang số cổng để không phải quay lại Port Mapper mỗi lần muốn nói chuyện với chương trình NFS.\ [#]_
 
-.. [#] In practice, NFS is such an important program that it has been
-       given its own well-known UDP port, but for the purposes of
-       illustration we’re pretending that’s not the case.
+.. [#] Trên thực tế, NFS là một chương trình quan trọng đến mức nó đã được gán cổng UDP nổi tiếng riêng, nhưng để minh họa, chúng ta giả định không phải như vậy.
 
-To match up a reply message with the corresponding request, so that
-the result of the RPC can be returned to the correct caller, both
-request and reply message headers include a ``XID`` (transaction ID)
-field, as in :numref:`Figure %s <fig-sunrpc-format>`. A ``XID`` is a
-unique transaction ID used only by one request and the corresponding
-reply. After the server has successfully replied to a given request,
-it does not remember the ``XID``. Because of this, SunRPC cannot
-guarantee at-most-once semantics.
+Để ghép một thông điệp phản hồi với thông điệp yêu cầu tương ứng, để kết quả RPC có thể trả về đúng bên gọi, cả phần đầu thông điệp yêu cầu và phản hồi đều bao gồm trường ``XID`` (transaction ID), như trong :numref:`Hình %s <fig-sunrpc-format>`. ``XID`` là một ID giao dịch duy nhất chỉ được dùng bởi một yêu cầu và phản hồi tương ứng. Sau khi server đã phản hồi thành công cho một yêu cầu, nó không nhớ ``XID`` nữa. Vì vậy, SunRPC không thể đảm bảo ngữ nghĩa tối đa một lần.
 
-The details of SunRPC’s semantics depend on the underlying transport
-protocol. It does not implement its own reliability, so it is only
-reliable if the underlying transport is reliable. (Of course, any
-application that runs over SunRPC may also choose to implement its own
-reliability mechanisms above the level of SunRPC.) The ability to send
-request and reply messages that are larger than the network MTU is also
-dependent on the underlying transport. In other words, SunRPC does not
-make any attempt to improve on the underlying transport when it comes to
-reliability and message size. Since SunRPC can run over many different
-transport protocols, this gives it considerable flexibility without
-complicating the design of the RPC protocol itself.
+Chi tiết về ngữ nghĩa của SunRPC phụ thuộc vào giao thức vận chuyển nền. Nó không tự triển khai tin cậy, nên chỉ tin cậy nếu tầng vận chuyển nền tin cậy. (Tất nhiên, bất kỳ ứng dụng nào chạy trên SunRPC cũng có thể tự triển khai cơ chế tin cậy ở tầng trên SunRPC.) Khả năng gửi thông điệp yêu cầu và phản hồi lớn hơn MTU mạng cũng phụ thuộc vào tầng vận chuyển nền. Nói cách khác, SunRPC không cố gắng cải thiện tầng vận chuyển nền về mặt tin cậy và kích thước thông điệp. Vì SunRPC có thể chạy trên nhiều giao thức vận chuyển khác nhau, điều này mang lại sự linh hoạt mà không làm phức tạp thiết kế giao thức RPC.
 
-Returning to the SunRPC header format of :numref:`Figure %s
-<fig-sunrpc-format>`, the request message contains variable-length
-``Credentials`` and ``Verifier`` fields, both of which are used by the
-client to authenticate itself to the server—that is, to give evidence
-that the client has the right to invoke the server. How a client
-authenticates itself to a server is a general issue that must be
-addressed by any protocol that wants to provide a reasonable level of
-security. This topic is discussed in more detail in another chapter.
+Quay lại định dạng phần đầu SunRPC ở :numref:`Hình %s <fig-sunrpc-format>`, thông điệp yêu cầu chứa các trường ``Credentials`` và ``Verifier`` có độ dài biến đổi, cả hai đều được client dùng để xác thực với server—tức là, cung cấp bằng chứng rằng client có quyền gọi server. Cách một client xác thực với server là một vấn đề chung mà bất kỳ giao thức nào muốn cung cấp mức độ bảo mật hợp lý đều phải giải quyết. Chủ đề này sẽ được bàn chi tiết hơn ở chương khác.
 
 DCE-RPC
 ~~~~~~~
 
-DCE-RPC is the RPC protocol at the core of the DCE system and was the
-basis of the RPC mechanism underlying Microsoft’s DCOM and ActiveX. It
-can be used with the Network Data Representation (NDR) stub compiler
-described in another chapter, but it also serves as the underlying RPC
-protocol for the Common Object Request Broker Architecture (CORBA),
-which is an industry-wide standard for building distributed,
-object-oriented systems.
+DCE-RPC là giao thức RPC cốt lõi của hệ thống DCE và là nền tảng cho cơ chế RPC của Microsoft DCOM và ActiveX. Nó có thể được sử dụng với trình biên dịch stub Network Data Representation (NDR) được mô tả ở chương khác, nhưng nó cũng là giao thức RPC nền tảng cho Common Object Request Broker Architecture (CORBA), một tiêu chuẩn công nghiệp để xây dựng hệ thống phân tán hướng đối tượng.
 
-DCE-RPC, like SunRPC, can be implemented on top of several transport
-protocols including UDP and TCP. It is also similar to SunRPC in that it
-defines a two-level addressing scheme: the transport protocol
-demultiplexes to the correct server, DCE-RPC dispatches to a particular
-procedure exported by that server, and clients consult an “endpoint
-mapping service” (similar to SunRPC’s Port Mapper) to learn how to reach
-a particular server. Unlike SunRPC, however, DCE-RPC implements
-at-most-once call semantics. (In truth, DCE-RPC supports multiple call
-semantics, including an idempotent semantics similar to SunRPC’s, but
-at-most-once is the default behavior.) There are some other differences
-between the two approaches, which we will highlight in the following
-paragraphs.
+DCE-RPC, giống như SunRPC, có thể được triển khai trên nhiều giao thức vận chuyển bao gồm UDP và TCP. Nó cũng giống SunRPC ở chỗ định nghĩa sơ đồ địa chỉ hai tầng: giao thức vận chuyển phân kênh đến đúng server, DCE-RPC phân phối đến thủ tục cụ thể được server xuất ra, và client tham khảo dịch vụ ánh xạ endpoint (giống Port Mapper của SunRPC) để biết cách đến đúng server. Tuy nhiên, khác với SunRPC, DCE-RPC triển khai ngữ nghĩa gọi tối đa một lần. (Thực ra, DCE-RPC hỗ trợ nhiều ngữ nghĩa gọi, bao gồm cả ngữ nghĩa idempotent giống SunRPC, nhưng tối đa một lần là hành vi mặc định.) Có một số khác biệt khác giữa hai cách tiếp cận, sẽ được làm rõ ở các đoạn sau.
 
 .. _fig-dce:
 .. figure:: figures/f05-19-9780123850591.png
    :width: 200px
    :align: center
 
-   Typical DCE-RPC message exchange.
+   Trao đổi thông điệp điển hình của DCE-RPC.
 
-:numref:`Figure %s <fig-dce>` gives a timeline for the typical exchange of
-messages, where each message is labeled by its DCE-RPC type. The client
-sends a ``Request`` message, the server eventually replies with a
-``Response`` message, and the client acknowledges (``Ack``) the
-response. Instead of the server acknowledging the request messages,
-however, the client periodically sends a ``Ping`` message to the server,
-which responds with a ``Working`` message to indicate that the remote
-procedure is still in progress. If the server’s reply is received
-reasonably quickly, no ``Ping``\ s are sent. Although not shown in the
-figure, other message types are also supported. For example, the client
-can send a ``Quit`` message to the server, asking it to abort an earlier
-call that is still in progress; the server responds with a ``Quack``
-(quit acknowledgment) message. Also, the server can respond to a
-``Request`` message with a ``Reject`` message (indicating that a call
-has been rejected), and it can respond to a ``Ping`` message with a
-``Nocall`` message (indicating that the server has never heard of the
-caller).
+:numref:`Hình %s <fig-dce>` cho thấy dòng thời gian cho trao đổi thông điệp điển hình, mỗi thông điệp được gắn nhãn theo loại DCE-RPC. Client gửi thông điệp ``Request``, server cuối cùng phản hồi bằng thông điệp ``Response``, và client xác nhận (``Ack``) phản hồi. Tuy nhiên, thay vì server xác nhận thông điệp yêu cầu, client định kỳ gửi thông điệp ``Ping`` đến server, server phản hồi bằng thông điệp ``Working`` để báo rằng thủ tục từ xa vẫn đang thực hiện. Nếu phản hồi của server đến đủ nhanh, không có ``Ping`` nào được gửi. Mặc dù không được thể hiện trong hình, các loại thông điệp khác cũng được hỗ trợ. Ví dụ, client có thể gửi thông điệp ``Quit`` đến server, yêu cầu hủy một lời gọi trước đó vẫn đang thực hiện; server phản hồi bằng thông điệp ``Quack`` (quit acknowledgment). Ngoài ra, server có thể phản hồi thông điệp ``Request`` bằng thông điệp ``Reject`` (báo rằng lời gọi bị từ chối), và có thể phản hồi thông điệp ``Ping`` bằng thông điệp ``Nocall`` (báo rằng server chưa từng nghe về client đó).
 
-Each request/reply transaction in DCE-RPC takes place in the context of
-an *activity*. An activity is a logical request/reply channel between a
-pair of participants. At any given time, there can be only one message
-transaction active on a given channel. Like the concurrent logical
-channel approach described above, the application programs have to open
-multiple channels if they want to have more than one request/reply
-transaction between them at the same time. The activity to which a
-message belongs is identified by the message’s ``ActivityId`` field. A
-``SequenceNum`` field then distinguishes between calls made as part of
-the same activity; it serves the same purpose as SunRPC’s ``XID``
-(transaction id) field. Unlike SunRPC, DCE-RPC keeps track of the last
-sequence number used as part of a particular activity, so as to ensure
-at-most-once semantics. To distinguish between replies sent before and
-after a server machine reboots, DCE-RPC uses a ``ServerBoot`` field to
-hold the machine’s boot ID.
+Mỗi giao dịch yêu cầu/phản hồi trong DCE-RPC diễn ra trong ngữ cảnh của một *hoạt động* (activity). Một hoạt động là một kênh yêu cầu/phản hồi logic giữa một cặp đối tác. Tại bất kỳ thời điểm nào, chỉ có thể có một giao dịch thông điệp hoạt động trên một kênh. Giống như cách tiếp cận kênh logic đồng thời đã mô tả ở trên, các chương trình ứng dụng phải mở nhiều kênh nếu muốn có nhiều giao dịch yêu cầu/phản hồi đồng thời giữa chúng. Hoạt động mà một thông điệp thuộc về được xác định bởi trường ``ActivityId`` của thông điệp. Trường ``SequenceNum`` phân biệt các lời gọi được thực hiện như một phần của cùng một hoạt động; nó có cùng mục đích như trường ``XID`` (transaction id) của SunRPC. Khác với SunRPC, DCE-RPC theo dõi số thứ tự cuối cùng đã dùng trong một hoạt động cụ thể, để đảm bảo ngữ nghĩa tối đa một lần. Để phân biệt các phản hồi được gửi trước và sau khi máy server khởi động lại, DCE-RPC sử dụng trường ``ServerBoot`` để lưu boot ID của máy.
 
-Another design choice made in DCE-RPC that differs from SunRPC is the
-support of fragmentation and reassembly in the RPC protocol. As noted
-above, even if an underlying protocol such as IP provides
-fragmentation/reassembly, a more sophisticated algorithm implemented as
-part of RPC can result in quicker recovery and reduced bandwidth
-consumption when fragments are lost. The ``FragmentNum`` field uniquely
-identifies each fragment that makes up a given request or reply message.
-Each DCE-RPC fragment is assigned a unique fragment number (0, 1, 2, 3,
-and so on). Both the client and server implement a selective
-acknowledgment mechanism, which works as follows. (We describe the
-mechanism in terms of a client sending a fragmented request message to
-the server; the same mechanism applies when a server sends a fragment
-response to the client.)
+Một lựa chọn thiết kế khác trong DCE-RPC khác với SunRPC là hỗ trợ phân mảnh và lắp ráp lại trong giao thức RPC. Như đã đề cập, ngay cả khi giao thức nền như IP cung cấp phân mảnh/lắp ráp lại, một thuật toán tinh vi hơn được triển khai ở tầng RPC có thể giúp phục hồi nhanh hơn và giảm băng thông khi các mảnh bị mất. Trường ``FragmentNum`` xác định duy nhất mỗi mảnh tạo nên một thông điệp yêu cầu hoặc phản hồi. Mỗi mảnh DCE-RPC được gán một số mảnh duy nhất (0, 1, 2, 3, ...). Cả client và server đều triển khai cơ chế xác nhận chọn lọc, hoạt động như sau. (Chúng tôi mô tả cơ chế này theo hướng client gửi thông điệp yêu cầu phân mảnh đến server; cơ chế tương tự áp dụng khi server gửi phản hồi phân mảnh đến client.)
 
-First, each fragment that makes up the request message contains both a
-unique ``FragmentNum`` and a flag indicating whether this packet is a
-fragment of a call (``frag``) or the last fragment of a call (); request
-messages that fit in a single packet carry a flag. The server knows it
-has received the complete request message when it has the packet and
-there are no gaps in the fragment numbers. Second, in response to each
-arriving fragment, the server sends a ``Fack`` (fragment acknowledgment)
-message to the client. This acknowledgment identifies the highest
-fragment number that the server has successfully received. In other
-words, the acknowledgment is cumulative, much like in TCP. In addition,
-however, the server selectively acknowledges any higher fragment numbers
-it has received out of order. It does so with a bit vector that
-identifies these out-of-order fragments relative to the highest in-order
-fragment it has received. Finally, the client responds by retransmitting
-the missing fragments.
+Đầu tiên, mỗi mảnh tạo nên thông điệp yêu cầu chứa cả ``FragmentNum`` duy nhất và một cờ chỉ ra liệu gói này là mảnh của một lời gọi (``frag``) hay là mảnh cuối cùng của một lời gọi; các thông điệp yêu cầu vừa một gói mang cờ này. Server biết đã nhận đủ thông điệp yêu cầu khi có gói cuối cùng và không có khoảng trống trong các số mảnh. Thứ hai, để đáp lại mỗi mảnh đến, server gửi một thông điệp ``Fack`` (fragment acknowledgment) đến client. Xác nhận này xác định số mảnh lớn nhất mà server đã nhận thành công. Nói cách khác, xác nhận là tích lũy, giống như trong TCP. Ngoài ra, server còn xác nhận chọn lọc bất kỳ số mảnh cao hơn nào đã nhận ngoài thứ tự. Nó làm điều này bằng một vector bit xác định các mảnh ngoài thứ tự so với mảnh đúng thứ tự cao nhất đã nhận. Cuối cùng, client phản hồi bằng cách gửi lại các mảnh bị thiếu.
 
-:numref:`Figure %s <fig-fack>` illustrates how this all works. Suppose
-the server has successfully received fragments up through number 20,
-plus fragments 23, 25, and 26. The server responds with a ``Fack``
-that identifies fragment 20 as the highest in-order fragment, plus a
-bit-vector (``SelAck``) with the third (23=20+3), fifth (25=20+5), and
-sixth (26=20+6) bits turned on. So as to support an (almost)
-arbitrarily long bit vector, the size of the vector (measured in
-32-bit words) is given in the ``SelAckLen`` field.
+:numref:`Hình %s <fig-fack>` minh họa cách hoạt động này. Giả sử server đã nhận thành công các mảnh đến số 20, cộng với các mảnh 23, 25, và 26. Server phản hồi bằng một ``Fack`` xác định mảnh 20 là mảnh đúng thứ tự cao nhất, cộng với một bit-vector (``SelAck``) với các bit thứ ba (23=20+3), năm (25=20+5), và sáu (26=20+6) được bật. Để hỗ trợ một vector bit gần như tùy ý dài, kích thước vector (tính bằng từ 32 bit) được cho trong trường ``SelAckLen``.
 
 .. _fig-fack:
 .. figure:: figures/f05-20-9780123850591.png
    :width: 500px
    :align: center
 
-   Fragmentation with selective acknowledgments.
+   Phân mảnh với xác nhận chọn lọc.
 
-Given DCE-RPC’s support for very large messages—the ``FragmentNum``
-field is 16 bits long, meaning it can support 64K fragments—it is not
-appropriate for the protocol to blast all the fragments that make up a
-message as fast as it can since doing so might overrun the receiver.
-Instead, DCE-RPC implements a flow-control algorithm that is very
-similar to TCP’s. Specifically, each ``Fack`` message not only
-acknowledges received fragments but also informs the sender of how
-many fragments it may now send. This is the purpose of the
-``WindowSize`` field in :numref:`Figure %s <fig-fack>`, which serves
-exactly the same purpose as TCP’s ``AdvertisedWindow`` field except it
-counts fragments rather than bytes. DCE-RPC also implements a
-congestion-control mechanism that is similar to TCP’s. Given the
-complexity of congestion control, it is perhaps not surprising that
-some RPC protocols avoid it by avoiding fragmentation.
+Với việc DCE-RPC hỗ trợ thông điệp rất lớn—trường ``FragmentNum`` dài 16 bit, nghĩa là có thể hỗ trợ 64K mảnh—không phù hợp để giao thức gửi tất cả các mảnh tạo nên một thông điệp càng nhanh càng tốt vì làm vậy có thể làm tràn bộ nhận. Thay vào đó, DCE-RPC triển khai thuật toán điều khiển luồng rất giống với TCP. Cụ thể, mỗi thông điệp ``Fack`` không chỉ xác nhận các mảnh đã nhận mà còn thông báo cho bên gửi biết có thể gửi thêm bao nhiêu mảnh. Đây là mục đích của trường ``WindowSize`` trong :numref:`Hình %s <fig-fack>`, phục vụ đúng chức năng như trường ``AdvertisedWindow`` của TCP, chỉ khác là đếm mảnh thay vì byte. DCE-RPC cũng triển khai cơ chế điều khiển tắc nghẽn giống TCP. Với độ phức tạp của điều khiển tắc nghẽn, không ngạc nhiên khi một số giao thức RPC tránh nó bằng cách tránh phân mảnh.
 
-In summary, designers have quite a range of options open to them when
-designing an RPC protocol. SunRPC takes the more minimalist approach and
-adds relatively little to the underlying transport beyond the essentials
-of locating the right procedure and identifying messages. DCE-RPC adds
-more functionality, with the possibility of improved performance in some
-environments at the cost of greater complexity.
+Tóm lại, các nhà thiết kế có khá nhiều lựa chọn khi thiết kế một giao thức RPC. SunRPC chọn cách tiếp cận tối giản và chỉ bổ sung rất ít cho tầng vận chuyển nền ngoài những thứ thiết yếu như xác định đúng thủ tục và nhận diện thông điệp. DCE-RPC bổ sung nhiều chức năng hơn, với khả năng cải thiện hiệu suất trong một số môi trường, đổi lại là độ phức tạp cao hơn.
 
 gRPC
 ~~~~
 
-Despite its origins in Google, gRPC does not stand for Google RPC. The
-“g” stands for something different in each release. For version 1.10 it
-stood for “glamorous” and for 1.18 it stood for “goose”. According to
-the official gRPC FAQ, it is now a recursive acronym: gRPC means  “gRPC
-Remote Procedure Call”. Googlers are
-wild and crazy people. Nonetheless, gRPC is popular because it makes
-available to everyone—as open source—a decade’s worth of experience
-within Google using RPC to build scalable cloud services.
+Dù có nguồn gốc từ Google, gRPC không phải là viết tắt của Google RPC. Chữ “g” có ý nghĩa khác nhau ở mỗi phiên bản. Ở phiên bản 1.10 nó là “glamorous”, ở 1.18 là “goose”. Theo FAQ chính thức của gRPC, hiện nay nó là một từ viết tắt đệ quy: gRPC nghĩa là “gRPC Remote Procedure Call”. Các kỹ sư Google thật sáng tạo. Tuy nhiên, gRPC phổ biến vì nó cung cấp cho mọi người—dưới dạng mã nguồn mở—kinh nghiệm hàng thập kỷ của Google trong việc sử dụng RPC để xây dựng các dịch vụ đám mây quy mô lớn.
 
-Before getting into the details, there are some major differences
-between gRPC and the other two examples we’ve just covered. The biggest
-is that gRPC is designed for cloud services rather than the simpler
-client/server paradigm that preceded it. The difference is essentially
-an extra level of indirection. In the client/server world, the client
-invokes a method on a specific server process running on a specific
-server machine. One server process is presumed to be enough to serve
-calls from all the client processes that might call it.
+Trước khi đi vào chi tiết, có một số khác biệt lớn giữa gRPC và hai ví dụ trước. Khác biệt lớn nhất là gRPC được thiết kế cho dịch vụ đám mây thay vì mô hình client/server đơn giản trước đó. Sự khác biệt này về cơ bản là một mức độ gián tiếp bổ sung. Trong thế giới client/server, client gọi một phương thức trên một tiến trình server cụ thể chạy trên một máy chủ cụ thể. Một tiến trình server được giả định là đủ để phục vụ các lời gọi từ tất cả các client có thể gọi nó.
 
-With cloud services, the client invokes a method on a *service*, which
-in order to support calls from arbitrarily many clients at the same
-time, is implemented by a scalable number of server processes, each
-potentially running on a different server machine. This is where the
-cloud comes into play: datacenters make a seemingly infinite number of
-server machines available to scale up cloud services. When we use the
-term “scalable” we mean that the number of identical server processes
-you elect to create depends on the workload (i.e., the number of clients
-that want service at any given time) and that number can be adjusted
-dynamically over time. One other detail is that cloud services don’t
-typically create a new process, per se, but rather, they launch a new
-*container*, which is essentially a process encapsulated inside an
-isolated environment that includes all the software packages the process
-needs to run. Docker is today’s canonical example of a container
-platform.
+Với dịch vụ đám mây, client gọi một phương thức trên một *dịch vụ*, để hỗ trợ các lời gọi từ số lượng client tùy ý cùng lúc, dịch vụ này được triển khai bởi một số lượng tiến trình server có thể mở rộng, mỗi tiến trình có thể chạy trên một máy chủ khác nhau. Đây là nơi đám mây phát huy tác dụng: các trung tâm dữ liệu cung cấp số lượng máy chủ dường như vô hạn để mở rộng dịch vụ đám mây. Khi nói “có thể mở rộng”, ý là số lượng tiến trình server giống nhau bạn chọn tạo ra phụ thuộc vào tải (tức là số lượng client muốn được phục vụ tại một thời điểm) và số lượng đó có thể điều chỉnh động theo thời gian. Một chi tiết nữa là dịch vụ đám mây thường không tạo tiến trình mới, mà thay vào đó khởi động một *container* mới, về cơ bản là một tiến trình được đóng gói trong một môi trường cô lập chứa tất cả các gói phần mềm cần thiết để chạy. Docker là ví dụ điển hình về nền tảng container ngày nay.
 
 .. _fig-rpc-service:
 .. figure:: figures/rpc/Slide1.png
    :width: 400px
    :align: center
 
-   Using RPC to invoke a scalable cloud service.
+   Sử dụng RPC để gọi một dịch vụ đám mây có thể mở rộng.
 
-Back to the claim that a service is essentially an extra level of
-indirection layered on top of a server, all this means is that the
-caller identifies the service it wants to invoke, and a *load balancer*
-directs that invocation to one of the many available server processes
-(containers) that implement that service, as shown in :numref:`Figure
-%s <fig-rpc-service>`. The load balancer can be implemented in different
-ways, including a hardware device, but it is typically implemented by a
-proxy process that runs in a virtual machine (also hosted in the cloud)
-rather than as a physical appliance.
+Quay lại khẳng định rằng một dịch vụ về cơ bản là một mức độ gián tiếp bổ sung đặt lên trên server, tất cả điều này nghĩa là bên gọi xác định dịch vụ muốn gọi, và một *bộ cân bằng tải* sẽ chuyển lời gọi đó đến một trong nhiều tiến trình server (container) sẵn có triển khai dịch vụ đó, như minh họa ở :numref:`Hình %s <fig-rpc-service>`. Bộ cân bằng tải có thể được triển khai theo nhiều cách, bao gồm thiết bị phần cứng, nhưng thường được triển khai bằng một tiến trình proxy chạy trong máy ảo (cũng được lưu trữ trên đám mây) thay vì là thiết bị vật lý.
 
-There is a set of best practices for implementing the actual server code
-that eventually responds to that request, and some additional cloud
-machinery to create/destroy containers and load balance requests across
-those containers. Kubernetes is today’s canonical example of such a
-container management system, and the *micro-services architecture* is
-what we call the best practices in building services in this cloud
-native manner. Both are interesting topics, but beyond the scope of this
-book.
+Có một tập hợp các thực tiễn tốt nhất để triển khai mã server thực tế cuối cùng phản hồi yêu cầu đó, và một số cơ chế đám mây bổ sung để tạo/hủy container và cân bằng tải các yêu cầu giữa các container đó. Kubernetes là ví dụ điển hình về hệ thống quản lý container như vậy ngày nay, và *kiến trúc micro-services* là tên gọi cho các thực tiễn tốt nhất trong xây dựng dịch vụ theo cách gốc đám mây này. Cả hai đều là chủ đề thú vị, nhưng vượt quá phạm vi cuốn sách này.
 
-What we are interested in here is transport protocol at the core of
-gRPC. Here again, there is a major departure from the two previous
-example protocols, not in terms of fundamental problems that need to be
-addressed, but in terms of gRPC’s approach to addressing them. In short,
-gRPC “outsources” many of the problems to other protocols, leaving gRPC
-to essentially package those capabilities in an easy-to-use form. Let’s
-look at the details.
+Điều chúng ta quan tâm ở đây là giao thức vận chuyển ở lõi của gRPC. Ở đây lại có một khác biệt lớn so với hai giao thức ví dụ trước, không phải về các vấn đề cơ bản cần giải quyết, mà về cách tiếp cận của gRPC để giải quyết chúng. Nói ngắn gọn, gRPC “giao phó” nhiều vấn đề cho các giao thức khác, để lại cho gRPC chủ yếu là đóng gói các khả năng đó thành một hình thức dễ sử dụng. Hãy xem chi tiết.
 
-First, gRPC runs on top of TCP instead of UDP, which means it outsources
-the problems of connection management and reliably transmitting request
-and reply messages of arbitrary size. Second, gRPC actually runs on top
-of a secured version of TCP called *Transport Layer Security* (TLS)—a
-thin layer that sits above TCP in the protocol stack—which means it
-outsources responsibility for securing the communication channel so
-adversaries can’t eavesdrop or hijack the message exchange. Third, gRPC
-actually, actually runs on top of HTTP/2 (which is itself layered on top
-of TCP and TLS), meaning gRPC outsources yet two other problems: (1)
-efficiently encoding/compressing binary data into a message, (2)
-multiplexing multiple remote procedure calls onto a single TCP
-connection. In other words, gRPC encodes the identifier for the remote
-method as a URI, the request parameters to the remote method as content
-in the HTTP message, and the return value from the remote method in the
-HTTP response. The full gRPC stack is depicted in :numref:`Figure
-%s <fig-grpc-stack>`, which also includes the language-specific elements.
-(One strength of gRPC is the wide set of programming languages it
-supports, with only a small subset shown in :numref:`Figure
-%s <fig-grpc-stack>`.)
+Đầu tiên, gRPC chạy trên TCP thay vì UDP, nghĩa là nó giao phó các vấn đề quản lý kết nối và truyền tin cậy các thông điệp yêu cầu và phản hồi có kích thước tùy ý. Thứ hai, gRPC thực sự chạy trên một phiên bản TCP bảo mật gọi là *Transport Layer Security* (TLS)—một lớp mỏng nằm trên TCP trong ngăn xếp giao thức—nghĩa là nó giao phó trách nhiệm bảo mật kênh truyền thông để kẻ xấu không thể nghe lén hoặc chiếm đoạt trao đổi thông điệp. Thứ ba, gRPC thực sự, thực sự chạy trên HTTP/2 (bản thân nó được xếp trên TCP và TLS), nghĩa là gRPC giao phó thêm hai vấn đề nữa: (1) mã hóa/nén dữ liệu nhị phân hiệu quả vào một thông điệp, (2) phân kênh nhiều lời gọi thủ tục từ xa trên một kết nối TCP duy nhất. Nói cách khác, gRPC mã hóa định danh phương thức từ xa dưới dạng URI, các tham số yêu cầu cho phương thức từ xa dưới dạng nội dung trong thông điệp HTTP, và giá trị trả về từ phương thức từ xa trong phản hồi HTTP. Toàn bộ ngăn xếp gRPC được mô tả ở :numref:`Hình %s <fig-grpc-stack>`, cũng bao gồm các thành phần đặc thù ngôn ngữ. (Một điểm mạnh của gRPC là hỗ trợ nhiều ngôn ngữ lập trình, chỉ một phần nhỏ được thể hiện ở :numref:`Hình %s <fig-grpc-stack>`.)
 
 .. _fig-grpc-stack:
 .. figure:: figures/rpc/Slide2.png
    :width: 400px
    :align: center
 
-   gRPC core stacked on top of HTTP, TLS, and TCP and
-   supporting a collection of languages.
+   Lõi gRPC xếp trên HTTP, TLS, TCP và hỗ trợ nhiều ngôn ngữ.
 
-We discuss TLS in Chapter 8 (in the context of a broad range of security
-topics) and HTTP in Chapter 9 (in the context of what are traditionally
-viewed as application level protocols). But we find ourselves in an
-interesting dependency loop: RPC is a flavor of transport protocol used
-to implement distributed applications, HTTP is an example of an
-application-level protocol, and yet gRPC runs on top of HTTP rather than
-the other way around.
+Chúng tôi sẽ bàn về TLS ở Chương 8 (trong bối cảnh các chủ đề bảo mật rộng hơn) và HTTP ở Chương 9 (trong bối cảnh các giao thức cấp ứng dụng truyền thống). Nhưng chúng ta thấy mình rơi vào một vòng phụ thuộc thú vị: RPC là một kiểu giao thức vận chuyển dùng để triển khai ứng dụng phân tán, HTTP là ví dụ về giao thức cấp ứng dụng, nhưng gRPC lại chạy trên HTTP thay vì ngược lại.
 
-The short explanation is that layering provides a convenient way for
-humans to wrap their heads around complex systems, but what we’re really
-trying to do is solve a set of problem (e.g., reliably transfer messages
-of arbitrary size, identify senders and recipients, match requests
-messages with reply messages, and so on) and the way these solutions get
-bundled into protocols, and those protocols then layered on top of each
-other, is the consequence of incremental changes over time. You could
-argue it’s an historical accident. Had the Internet started with an RPC
-mechanism as ubiquitous as TCP, HTTP might have been implemented on top
-of it (as might have almost all of the other application-level protocols
-described in Chapter 9) and Google would have spent their time improving
-*that* protocol rather than inventing one of their own (as they and
-others have been doing with TCP). What happened instead is that the web
-became the Internet’s killer app, which meant that its application
-protocol (HTTP) became universally supported by the rest of the
-Internet’s infrastructure: Firewalls, Load Balancers, Encryption,
-Authentication, Compression, and so on. Because all of these network
-elements have been designed to work well with HTTP, HTTP has effectively
-become the Internet’s universal request/reply transport protocol.
+Giải thích ngắn gọn là việc phân tầng cung cấp một cách tiện lợi để con người hình dung các hệ thống phức tạp, nhưng thực ra chúng ta đang cố gắng giải quyết một tập hợp vấn đề (ví dụ, truyền tin cậy thông điệp kích thước tùy ý, nhận diện người gửi và người nhận, ghép thông điệp yêu cầu với phản hồi, v.v.) và cách các giải pháp này được đóng gói thành các giao thức, rồi các giao thức đó được xếp tầng lên nhau, là kết quả của những thay đổi dần dần theo thời gian. Bạn có thể cho rằng đó là một tai nạn lịch sử. Nếu Internet bắt đầu với một cơ chế RPC phổ biến như TCP, HTTP có thể đã được triển khai trên nó (cũng như hầu hết các giao thức cấp ứng dụng khác được mô tả ở Chương 9) và Google sẽ dành thời gian cải tiến giao thức đó thay vì phát minh ra một giao thức riêng (như họ và nhiều người khác đã làm với TCP). Thay vào đó, web trở thành ứng dụng sát thủ của Internet, nghĩa là giao thức ứng dụng của nó (HTTP) được toàn bộ hạ tầng Internet hỗ trợ: Firewall, Load Balancer, Mã hóa, Xác thực, Nén, v.v. Vì tất cả các thành phần mạng này được thiết kế để hoạt động tốt với HTTP, HTTP thực tế đã trở thành giao thức vận chuyển yêu cầu/phản hồi phổ quát của Internet.
 
-Returning to the unique characteristics of gRPC, the biggest value it
-brings to the table is to incorporate *streaming* into the RPC
-mechanism, which is to say, gRPC supports four different request/reply
-patterns:
+Quay lại các đặc điểm riêng của gRPC, giá trị lớn nhất mà nó mang lại là tích hợp *streaming* vào cơ chế RPC, tức là, gRPC hỗ trợ bốn kiểu mẫu yêu cầu/phản hồi khác nhau:
 
-1. Simple RPC: The client sends a single request message and the server
-   responds with a single reply message.
+1. RPC đơn giản: Client gửi một thông điệp yêu cầu và server phản hồi bằng một thông điệp trả lời.
 
-2. Server Streaming RPC: The client sends a single request message and
-   the server responds with a stream of reply messages. The client
-   completes once it has all the server’s responses.
+2. RPC streaming phía server: Client gửi một thông điệp yêu cầu và server phản hồi bằng một luồng các thông điệp trả lời. Client hoàn thành khi nhận đủ các phản hồi từ server.
 
-3. Client Streaming RPC: The client sends a stream of requests to the
-   server, and the server sends back a single response, typically (but
-   not necessarily) after it has received all the client’s requests.
+3. RPC streaming phía client: Client gửi một luồng các yêu cầu đến server, và server gửi lại một phản hồi duy nhất, thường (nhưng không nhất thiết) sau khi nhận đủ các yêu cầu từ client.
 
-4. Bidirectional Streaming RPC: The call is initiated by the client, but
-   after that, the client and server can read and write requests and
-   responses in any order; the streams are completely independent.
+4. RPC streaming hai chiều: Lời gọi được khởi tạo bởi client, nhưng sau đó, client và server có thể đọc và ghi các yêu cầu và phản hồi theo bất kỳ thứ tự nào; các luồng hoàn toàn độc lập.
 
-This extra freedom in how the client and server interact means the gRPC
-transport protocol needs to send additional metadata and control
-messages—in addition to the actual request and reply messages—between
-the two peers. Examples include ``Error`` and ``Status`` codes (to
-indicate success or why something failed), ``Timeouts`` (to indicate how
-long a client is willing to wait for a response), ``PING`` (a keep-alive
-notice to indicate that one side or the other is still running), ``EOS``
-(end-of-stream notice to indicate that there are no more requests or
-responses), and ``GOAWAY`` (a notice from servers to clients to indicate
-that they will no longer accept any new streams). Unlike many other
-protocols in this book, where we show the protocol’s header format, the
-way this control information gets passed between the two sides is
-largely dictated by the underlying transport protocol, in this case
-HTTP/2. For example, as we’ll see in Chapter 9, HTTP already includes a
-set of header fields and reply codes that gRPC takes advantage of.
+Sự tự do bổ sung này trong cách client và server tương tác nghĩa là giao thức vận chuyển gRPC cần gửi thêm metadata và thông điệp điều khiển—ngoài các thông điệp yêu cầu và phản hồi thực tế—giữa hai bên. Ví dụ bao gồm mã ``Error`` và ``Status`` (để chỉ thành công hoặc lý do thất bại), ``Timeouts`` (để chỉ thời gian client sẵn sàng chờ phản hồi), ``PING`` (thông báo giữ kết nối để chỉ một bên vẫn đang chạy), ``EOS`` (thông báo kết thúc luồng để chỉ không còn yêu cầu hay phản hồi nào nữa), và ``GOAWAY`` (thông báo từ server đến client rằng sẽ không nhận thêm stream mới nào nữa). Không giống nhiều giao thức khác trong sách này, nơi chúng tôi trình bày định dạng phần đầu giao thức, cách thông tin điều khiển này được truyền giữa hai bên phần lớn do giao thức vận chuyển nền quyết định, trong trường hợp này là HTTP/2. Ví dụ, như sẽ thấy ở Chương 9, HTTP đã bao gồm một tập trường phần đầu và mã phản hồi mà gRPC tận dụng.
 
-You may want to peruse the HTTP discussion in Chapter 9 before
-continuing, but the following is fairly straightforward. A simple RPC
-request (with no streaming) might include the following HTTP message
-from the client to the server:
+Bạn có thể muốn xem qua phần HTTP ở Chương 9 trước khi tiếp tục, nhưng phần sau khá dễ hiểu. Một yêu cầu RPC đơn giản (không streaming) có thể bao gồm thông điệp HTTP sau từ client đến server:
 
 .. code-block:: html
 
@@ -787,8 +251,7 @@ from the client to the server:
    DATA (flags = END_STREAM)
    <Length-Prefixed Message>
 
-leading to the following response message from the server back to the
-client:
+dẫn đến thông điệp phản hồi sau từ server về client:
 
 .. code-block:: html
 
@@ -802,47 +265,18 @@ client:
    grpc-status = 0 # OK
    trace-proto-bin = jher831yy13JHy3hc
 
-In this example, ``HEADERS`` and ``DATA`` are two standard HTTP
-control messages, which effectively delineate between “the message’s
-header” and “the message’s payload.” Specifically, each line following
-``HEADERS`` (but before ``DATA``) is an ``attribute = value`` pair
-that makes up the header (think of each line as analogous to a header
-field); those pairs that start with colon (e.g., ``:status = 200``)
-are part of the HTTP standard (e.g., status ``200`` indicates
-success); and those pairs that do not start with a colon are
-gRPC-specific customizations (e.g., ``grpc-encoding = gzip`` indicates
-that the data in the message that follows has been compressed using
-``gzip``, and ``grpc-timeout = 1S`` indicates that the client has set
-a one second timeout).
+Trong ví dụ này, ``HEADERS`` và ``DATA`` là hai thông điệp điều khiển HTTP tiêu chuẩn, về cơ bản phân biệt giữa “phần đầu thông điệp” và “payload của thông điệp”. Cụ thể, mỗi dòng sau ``HEADERS`` (nhưng trước ``DATA``) là một cặp ``attribute = value`` tạo nên phần đầu (hãy nghĩ mỗi dòng như một trường phần đầu); các cặp bắt đầu bằng dấu hai chấm (ví dụ, ``:status = 200``) là một phần của tiêu chuẩn HTTP (ví dụ, trạng thái ``200`` chỉ thành công); các cặp không bắt đầu bằng dấu hai chấm là các tuỳ chỉnh riêng của gRPC (ví dụ, ``grpc-encoding = gzip`` chỉ ra dữ liệu trong thông điệp đã được nén bằng ``gzip``, và ``grpc-timeout = 1S`` chỉ client đặt timeout một giây).
 
-There is one final piece to explain. The header line
+Còn một chi tiết cuối cùng cần giải thích. Dòng phần đầu
 
 .. code-block:: html
 
    content-type = application/grpc+proto
 
-indicates that the message body (as demarcated by the ``DATA`` line)
-is meaningful only to the application program (i.e., the server
-method) that this client is requesting service from. More
-specifically, the ``+proto`` string specifies that the recipient will
-be able to interpret the bits in the message according to a *Protocol
-Buffer* (abbreviated ``proto``) interface specification. Protocol
-Buffers are gRPC’s way of specifying how the parameters being passed
-to the server are encoded into a message, which is in turn used to
-generate the stubs that sit between the underlying RPC mechanism and
-the actual functions being called (see :numref:`Figure %s
-<fig-rpc-stub>`). This is a topic we’ll take up in Chapter 7.
+chỉ ra rằng phần thân thông điệp (được phân định bởi dòng ``DATA``) chỉ có ý nghĩa với chương trình ứng dụng (tức là phương thức server) mà client này yêu cầu dịch vụ. Cụ thể hơn, chuỗi ``+proto`` chỉ ra rằng bên nhận sẽ có thể diễn giải các bit trong thông điệp theo một đặc tả *Protocol Buffer* (viết tắt là ``proto``). Protocol Buffer là cách gRPC xác định cách các tham số được truyền cho server được mã hóa vào một thông điệp, từ đó dùng để sinh ra các stub nằm giữa cơ chế RPC nền và các hàm thực tế được gọi (xem :numref:`Hình %s <fig-rpc-stub>`). Chủ đề này sẽ được bàn ở Chương 7.
 
 .. _key-micro-service:
-.. admonition:: Key Takeaway
+.. admonition:: Bài học then chốt
 
-   The bottom line is that complex mechanisms like RPC, once packaged as
-   a monolithic bundle of software (as with SunRPC and DCE-RPC), is
-   nowadays built by assembling an assortment of smaller pieces, each of
-   which solves a narrow problem. gRPC is both an example of that
-   approach, and a tool that enables further adoption of the approach.
-   The micro-services architecture mentioned earlier in this subsection
-   applies the “built from small parts” strategy to entire cloud
-   applications (e.g., Uber, Lyft, Netflix, Yelp, Spotify), where gRPC
-   is often the communication mechanism used by those small pieces to
-   exchange messages with each other. :ref:`[Next] <key-alf>`
+   Điểm mấu chốt là các cơ chế phức tạp như RPC, từng được đóng gói thành một gói phần mềm nguyên khối (như SunRPC và DCE-RPC), ngày nay được xây dựng bằng cách lắp ghép nhiều thành phần nhỏ, mỗi thành phần giải quyết một vấn đề hẹp. gRPC vừa là ví dụ cho cách tiếp cận đó, vừa là công cụ thúc đẩy việc áp dụng rộng rãi hơn. Kiến trúc micro-services đề cập ở trên áp dụng chiến lược “xây từ các phần nhỏ” cho toàn bộ ứng dụng đám mây (ví dụ, Uber, Lyft, Netflix, Yelp, Spotify), nơi gRPC thường là cơ chế giao tiếp giữa các phần nhỏ đó. :ref:`[Tiếp theo] <key-alf>`
+   
