@@ -1,559 +1,177 @@
-5.4 Transport for Real-Time (RTP)
-=================================
+5.4 Vận chuyển cho Thời gian Thực (RTP)
+=======================================
 
-In the early days of packet switching, most applications were
-concerned with transferring files, although as early as 1981,
-experiments were under way to carry real-time traffic, such as
-digitized voice samples. We call an application “real-time” when it
-has strong requirements for the timely delivery of information. Voice
-over IP (VoIP) is a classic example of a real-time application because
-you can’t easily carry on a conversation with someone if it takes more
-than a fraction of a second to get a response.  As we will see
-shortly, real-time applications place some specific demands on the
-transport protocol that are not well met by the protocols discussed so
-far in this chapter.
+Vào những ngày đầu của chuyển mạch gói, hầu hết các ứng dụng đều quan tâm đến việc truyền tệp, mặc dù ngay từ năm 1981, đã có các thử nghiệm nhằm truyền tải lưu lượng thời gian thực, như các mẫu giọng nói số hóa. Chúng ta gọi một ứng dụng là “thời gian thực” khi nó có yêu cầu nghiêm ngặt về việc chuyển giao thông tin đúng thời điểm. Thoại qua IP (VoIP) là một ví dụ kinh điển về ứng dụng thời gian thực vì bạn không thể dễ dàng trò chuyện với ai đó nếu phải mất hơn một phần nhỏ của giây để nhận được phản hồi. Như chúng ta sẽ thấy ngay sau đây, các ứng dụng thời gian thực đặt ra một số yêu cầu cụ thể đối với giao thức vận chuyển mà các giao thức đã thảo luận trong chương này chưa đáp ứng tốt.
 
 .. _fig-zoom:
 .. figure:: figures/rpc/Slide4.png
    :width: 600px
    :align: center
 
-   User interface of a videoconferencing tool.
+   Giao diện người dùng của một công cụ hội nghị truyền hình.
 
-Multimedia applications—those that involve video, audio, and data—are
-sometimes divided into two classes: *interactive* applications and
-*streaming* applications. :numref:`Figure %s <fig-zoom>` shows the
-authors using an example conferencing tool that's typical of the
-interactive class. Along with VoIP, these are the sort of applications
-with the most stringent real-time requirements.
+Các ứng dụng đa phương tiện—những ứng dụng liên quan đến video, âm thanh và dữ liệu—đôi khi được chia thành hai loại: ứng dụng *tương tác* và ứng dụng *streaming*. :numref:`Hình %s <fig-zoom>` cho thấy các tác giả đang sử dụng một công cụ hội nghị điển hình cho loại tương tác. Cùng với VoIP, đây là những loại ứng dụng có yêu cầu thời gian thực nghiêm ngặt nhất.
 
-Streaming applications typically deliver audio or video streams from a
-server to a client and are typified by such commercial products as
-Spotify. Streaming video, typified by YouTube and Netflix, has become
-one of the dominant forms of traffic on the Internet. Because streaming
-applications lack human-to-human interaction, they place somewhat less
-stringent real-time requirements on the underlying protocols. Timeliness
-is still important, however—for example, you want a video to start
-playing soon after pushing “play,” and once it starts to play, late
-packets will either cause it to stall or create some sort of visual
-degradation. So, while streaming applications are not strictly real
-time, they still have enough in common with interactive multimedia
-applications to warrant consideration of a common protocol for both
-types of application.
+Các ứng dụng streaming thường truyền các luồng âm thanh hoặc video từ máy chủ đến máy khách và được đại diện bởi các sản phẩm thương mại như Spotify. Video streaming, tiêu biểu như YouTube và Netflix, đã trở thành một trong những dạng lưu lượng chủ đạo trên Internet. Vì các ứng dụng streaming không có sự tương tác giữa người với người, nên chúng đặt ra yêu cầu thời gian thực ít nghiêm ngặt hơn đối với các giao thức nền. Tuy nhiên, tính kịp thời vẫn rất quan trọng—ví dụ, bạn muốn video bắt đầu phát ngay sau khi nhấn “play”, và khi đã phát, các gói đến muộn sẽ khiến video bị dừng hoặc gây ra suy giảm hình ảnh. Vì vậy, dù các ứng dụng streaming không hoàn toàn là thời gian thực, chúng vẫn có đủ điểm chung với các ứng dụng đa phương tiện tương tác để xứng đáng có một giao thức chung cho cả hai loại ứng dụng.
 
-It should by now be apparent that designers of a transport protocol for
-real-time and multimedia applications face a real challenge in defining
-the requirements broadly enough to meet the needs of very different
-applications. They must also pay attention to the interactions among
-different applications, such as the synchronization of audio and video
-streams. We will see below how these concerns affected the design of the
-primary real-time transport protocol in use today: *Real-time
-Transport Protocol* (RTP).
+Đến đây, có thể thấy rằng các nhà thiết kế giao thức vận chuyển cho ứng dụng thời gian thực và đa phương tiện phải đối mặt với thách thức thực sự trong việc xác định các yêu cầu đủ rộng để đáp ứng nhu cầu của nhiều loại ứng dụng rất khác nhau. Họ cũng phải chú ý đến sự tương tác giữa các ứng dụng khác nhau, như việc đồng bộ hóa các luồng âm thanh và video. Chúng ta sẽ thấy dưới đây các mối quan tâm này đã ảnh hưởng đến thiết kế của giao thức vận chuyển thời gian thực chủ yếu hiện nay: *Giao thức Vận chuyển Thời gian Thực* (RTP).
 
-Much of RTP actually derives from protocol functionality that was
-originally embedded in the application itself. Two of the first such
-applications were ``vic`` and ``vat``, the former supporting real-time
-video and the latter supporting real-time audio. Both applications
-originally ran directly over UDP, while the designers figured out
-which features were needed to handle the real-time nature of the
-communication. Later, they realized that these features could be
-useful to many other applications and defined a protocol with those
-features. That protocol was eventually standardized as RTP.
+Phần lớn RTP thực chất bắt nguồn từ các chức năng giao thức vốn được nhúng trong chính ứng dụng. Hai trong số những ứng dụng đầu tiên như vậy là ``vic`` và ``vat``, ứng dụng đầu hỗ trợ video thời gian thực và ứng dụng sau hỗ trợ âm thanh thời gian thực. Cả hai ứng dụng ban đầu đều chạy trực tiếp trên UDP, trong khi các nhà thiết kế xác định những tính năng cần thiết để xử lý bản chất thời gian thực của giao tiếp. Sau này, họ nhận ra rằng các tính năng này có thể hữu ích cho nhiều ứng dụng khác và đã định nghĩa một giao thức với các tính năng đó. Giao thức này cuối cùng được chuẩn hóa thành RTP.
 
-RTP can run over many lower-layer protocols, but still commonly runs
-over UDP. That leads to the protocol stack shown in :numref:`Figure %s
-<fig-vat-stack>`. Note that we are therefore running a transport
-protocol over a transport protocol. There is no rule against that, and
-in fact it makes a lot of sense, since UDP provides such a minimal
-level of functionality, and the basic demultiplexing based on port
-numbers happens to be just what RTP needs as a starting point. So,
-rather than recreate port numbers in RTP, RTP outsources the
-demultiplexing function to UDP.
+RTP có thể chạy trên nhiều giao thức tầng dưới khác nhau, nhưng vẫn thường chạy trên UDP. Điều này dẫn đến ngăn xếp giao thức như minh họa ở :numref:`Hình %s <fig-vat-stack>`. Lưu ý rằng chúng ta đang chạy một giao thức vận chuyển trên một giao thức vận chuyển. Không có quy tắc nào cấm điều đó, và thực tế điều này rất hợp lý, vì UDP cung cấp mức chức năng tối thiểu, và việc phân kênh cơ bản dựa trên số cổng lại chính là thứ RTP cần làm điểm khởi đầu. Vì vậy, thay vì tạo lại số cổng trong RTP, RTP giao chức năng phân kênh cho UDP.
 
 .. _fig-vat-stack:
 .. figure:: figures/f05-22-9780123850591.png
    :width: 300px
    :align: center
 
-   Protocol stack for multimedia applications using RTP.
+   Ngăn xếp giao thức cho ứng dụng đa phương tiện sử dụng RTP.
 
-5.4.1 Requirements
+5.4.1 Các yêu cầu
+-----------------
+
+Yêu cầu cơ bản nhất đối với một giao thức đa phương tiện đa dụng là nó cho phép các ứng dụng tương tự nhau có thể tương tác với nhau. Ví dụ, hai ứng dụng hội nghị âm thanh được phát triển độc lập phải có thể giao tiếp với nhau. Điều này ngay lập tức gợi ý rằng các ứng dụng nên sử dụng cùng một phương pháp mã hóa và nén giọng nói; nếu không, dữ liệu gửi từ một bên sẽ không thể hiểu được với bên nhận. Vì có khá nhiều phương pháp mã hóa giọng nói khác nhau, mỗi phương pháp có sự đánh đổi riêng giữa chất lượng, yêu cầu băng thông và chi phí tính toán, nên có lẽ sẽ không hợp lý nếu chỉ cho phép sử dụng một phương pháp duy nhất. Thay vào đó, giao thức của chúng ta nên cung cấp cách để bên gửi thông báo cho bên nhận biết phương pháp mã hóa nào nó muốn sử dụng, và có thể thương lượng cho đến khi tìm được phương pháp mà cả hai bên đều hỗ trợ.
+
+Tương tự như âm thanh, có rất nhiều phương pháp mã hóa video khác nhau. Do đó, chức năng chung đầu tiên mà RTP có thể cung cấp là khả năng truyền đạt lựa chọn phương pháp mã hóa. Lưu ý rằng điều này cũng giúp xác định loại ứng dụng (ví dụ, âm thanh hay video); một khi biết thuật toán mã hóa nào đang được sử dụng, ta cũng biết loại dữ liệu nào đang được mã hóa.
+
+Một yêu cầu quan trọng khác là cho phép bên nhận luồng dữ liệu xác định mối quan hệ thời gian giữa các dữ liệu nhận được. Các ứng dụng thời gian thực cần đặt dữ liệu nhận được vào *bộ đệm phát lại* để làm mượt độ trễ dao động (jitter) có thể phát sinh trong quá trình truyền qua mạng. Do đó, cần có một cơ chế đánh dấu thời gian cho dữ liệu để bên nhận có thể phát lại đúng thời điểm.
+
+Liên quan đến việc xác định thời gian của một luồng đa phương tiện là vấn đề đồng bộ hóa nhiều phương tiện trong một hội nghị. Ví dụ rõ ràng nhất là đồng bộ hóa luồng âm thanh và video xuất phát từ cùng một bên gửi. Như chúng ta sẽ thấy dưới đây, đây là một vấn đề phức tạp hơn so với việc xác định thời gian phát lại cho một luồng đơn.
+
+Một chức năng quan trọng khác cần cung cấp là chỉ báo mất gói. Lưu ý rằng một ứng dụng có giới hạn độ trễ chặt chẽ thường không thể sử dụng giao thức vận chuyển tin cậy như TCP vì việc truyền lại dữ liệu để sửa lỗi mất gói có thể khiến gói đến quá muộn để còn hữu ích. Do đó, ứng dụng phải có khả năng xử lý các gói bị mất, và bước đầu tiên là phát hiện ra chúng thực sự bị mất. Ví dụ, một ứng dụng video sử dụng mã hóa MPEG có thể thực hiện các hành động khác nhau khi mất gói, tùy thuộc vào việc gói đó thuộc khung I, khung B hay khung P.
+
+Mất gói cũng là chỉ báo tiềm năng của tắc nghẽn. Vì các ứng dụng đa phương tiện thường không chạy trên TCP, chúng cũng không được hưởng các tính năng tránh tắc nghẽn của TCP. Tuy nhiên, nhiều ứng dụng đa phương tiện có khả năng phản ứng với tắc nghẽn—ví dụ, bằng cách thay đổi các tham số của thuật toán mã hóa để giảm băng thông sử dụng. Rõ ràng, để làm được điều này, bên nhận cần thông báo cho bên gửi biết đang xảy ra mất gói để bên gửi điều chỉnh tham số mã hóa.
+
+Một chức năng chung khác giữa các ứng dụng đa phương tiện là khái niệm chỉ báo ranh giới khung (frame boundary). Một khung trong ngữ cảnh này là đặc trưng của ứng dụng. Ví dụ, sẽ hữu ích nếu thông báo cho ứng dụng video biết một tập hợp gói nào đó tương ứng với một khung hình. Trong ứng dụng âm thanh, việc đánh dấu bắt đầu của một “talkspurt” (một chuỗi âm thanh hoặc từ ngữ liên tiếp, sau đó là im lặng) cũng rất hữu ích. Bên nhận có thể nhận diện các khoảng im lặng giữa các talkspurt và tận dụng chúng để điều chỉnh điểm phát lại. Điều này dựa trên quan sát rằng việc rút ngắn hoặc kéo dài nhẹ các khoảng lặng giữa các từ không bị người dùng nhận ra, trong khi rút ngắn hoặc kéo dài bản thân từ ngữ thì lại rất dễ nhận thấy và gây khó chịu.
+
+Một chức năng cuối cùng mà chúng ta có thể muốn đưa vào giao thức là một cách xác định bên gửi thân thiện với người dùng hơn là địa chỉ IP. Như minh họa ở :numref:`Hình %s <fig-zoom>`, các ứng dụng hội nghị âm thanh và video có thể hiển thị các chuỗi ký tự trên bảng điều khiển của chúng, do đó giao thức ứng dụng nên hỗ trợ việc liên kết một chuỗi ký tự như vậy với một luồng dữ liệu.
+
+Bên cạnh các chức năng mà giao thức của chúng ta cần cung cấp, còn có một yêu cầu bổ sung: Nó nên sử dụng băng thông một cách hợp lý. Nói cách khác, chúng ta không muốn thêm quá nhiều bit phụ vào mỗi gói dưới dạng phần đầu dài. Lý do là các gói âm thanh—một trong những loại dữ liệu đa phương tiện phổ biến nhất—có xu hướng nhỏ, để giảm thời gian lấp đầy chúng bằng các mẫu. Gói âm thanh dài sẽ dẫn đến độ trễ cao do đóng gói, ảnh hưởng tiêu cực đến chất lượng hội thoại. (Đây là một trong những yếu tố khi chọn độ dài cell ATM.) Vì các gói dữ liệu bản thân đã ngắn, một phần đầu lớn sẽ khiến tỷ lệ băng thông đường truyền dành cho phần đầu tăng lên, giảm dung lượng dành cho dữ liệu “hữu ích”. Chúng ta sẽ thấy một số khía cạnh trong thiết kế RTP bị ảnh hưởng bởi yêu cầu giữ phần đầu ngắn.
+
+Bạn có thể tranh luận liệu mọi tính năng vừa mô tả *thực sự* cần thiết cho một giao thức vận chuyển thời gian thực hay không, và có thể còn nhiều tính năng khác có thể bổ sung. Ý chính ở đây là làm cho cuộc sống của lập trình viên ứng dụng dễ dàng hơn bằng cách cung cấp cho họ một tập hợp trừu tượng và khối xây dựng hữu ích cho ứng dụng của mình. Ví dụ, bằng cách đưa cơ chế đánh dấu thời gian vào RTP, chúng ta giúp mọi lập trình viên ứng dụng thời gian thực không phải tự phát minh lại. Chúng ta cũng tăng khả năng hai ứng dụng thời gian thực khác nhau có thể tương tác với nhau.
+
+5.4.2 Thiết kế RTP
 ------------------
 
-The most basic requirement for a general-purpose multimedia protocol is
-that it allows similar applications to interoperate with each other. For
-example, it should be possible for two independently implemented
-audioconferencing applications to talk to each other. This immediately
-suggests that the applications had better use the same method of
-encoding and compressing voice; otherwise, the data sent by one party
-will be incomprehensible to the receiving party. Since there are quite a
-few different coding schemes for voice, each with its own trade-offs
-among quality, bandwidth requirements, and computational cost, it would
-probably be a bad idea to decree that only one such scheme can be used.
-Instead, our protocol should provide a way that a sender can tell a
-receiver which coding scheme it wants to use, and possibly negotiate
-until a scheme that is available to both parties is identified.
+Sau khi đã thấy danh sách khá dài các yêu cầu cho giao thức vận chuyển đa phương tiện, chúng ta chuyển sang chi tiết của giao thức được xác định để đáp ứng các yêu cầu đó. Giao thức này, RTP, được phát triển trong IETF và được sử dụng rộng rãi. Chuẩn RTP thực ra định nghĩa một cặp giao thức, RTP và Giao thức Điều khiển Vận chuyển Thời gian Thực (RTCP). RTP dùng để trao đổi dữ liệu đa phương tiện, còn RTCP dùng để định kỳ gửi thông tin điều khiển liên quan đến một luồng dữ liệu nhất định. Khi chạy trên UDP, luồng dữ liệu RTP và luồng điều khiển RTCP liên quan sử dụng các cổng tầng vận chuyển liên tiếp nhau. Dữ liệu RTP sử dụng số cổng chẵn và thông tin điều khiển RTCP sử dụng số cổng lẻ liền kề sau đó.
 
-Just as with audio, there are many different video coding schemes. Thus,
-we see that the first common function that RTP can provide is the
-ability to communicate that choice of coding scheme. Note that this also
-serves to identify the type of application (e.g., audio or video); once
-we know what coding algorithm is being used, we know what type of data
-is being encoded as well.
-
-Another important requirement is to enable the recipient of a data
-stream to determine the timing relationship among the received data.
-Real-time applications need to place received data into a *playback
-buffer* to smooth out the jitter that may have been introduced into the
-data stream during transmission across the network. Thus, some sort of
-timestamping of the data will be necessary to enable the receiver to
-play it back at the appropriate time.
-
-Related to the timing of a single media stream is the issue of
-synchronization of multiple media in a conference. The obvious example
-of this would be to synchronize an audio and video stream that are
-originating from the same sender. As we will see below, this is a
-slightly more complex problem than playback time determination for a
-single stream.
-
-Another important function to be provided is an indication of packet
-loss. Note that an application with tight latency bounds generally
-cannot use a reliable transport like TCP because retransmission of data
-to correct for loss would probably cause the packet to arrive too late
-to be useful. Thus, the application must be able to deal with missing
-packets, and the first step in dealing with them is noticing that they
-are in fact missing. As an example, a video application using MPEG
-encoding may take different actions when a packet is lost, depending on
-whether the packet came from an I frame, a B frame, or a P frame.
-
-Packet loss is also a potential indicator of congestion. Since
-multimedia applications generally do not run over TCP, they also miss
-out on the congestion avoidance features of TCP. Yet, many multimedia
-applications are capable of responding to congestion—for example, by
-changing the parameters of the coding algorithm to reduce the bandwidth
-consumed. Clearly, to make this work, the receiver needs to notify the
-sender that losses are occurring so that the sender can adjust its
-coding parameters.
-
-Another common function across multimedia applications is the concept
-of frame boundary indication. A frame in this context is application
-specific. For example, it may be helpful to notify a video application
-that a certain set of packets correspond to a single frame. In an
-audio application it is helpful to mark the beginning of a
-“talkspurt,” which is a collection of sounds or words followed by
-silence. The receiver can then identify the silences between
-talkspurts and use them as opportunities to move the playback
-point. This follows the observation that slight shortening or
-lengthening of the spaces between words are not perceptible to users,
-whereas shortening or lengthening the words themselves is both
-perceptible and annoying.
-
-A final function that we might want to put into the protocol is some
-way of identifying senders that is more user-friendly than an IP
-address. As illustrated in :numref:`Figure %s <fig-zoom>`, audio and
-video conferencing applications can display strings such as on their
-control panels, and thus the application protocol should support the
-association of such a string with a data stream.
-
-In addition to the functionality that is required from our protocol, we
-note an additional requirement: It should make reasonably efficient use
-of bandwidth. Put another way, we don’t want to introduce a lot of extra
-bits that need to be sent with every packet in the form of a long
-header. The reason for this is that audio packets, which are one of the
-most common types of multimedia data, tend to be small, so as to reduce
-the time it takes to fill them with samples. Long audio packets would
-mean high latency due to packetization, which has a negative effect on
-the perceived quality of conversations. (This was one of the factors in
-choosing the length of ATM cells.) Since the data packets themselves are
-short, a large header would mean that a relatively large amount of link
-bandwidth would be used by headers, thus reducing the available capacity
-for “useful” data. We will see several aspects of the design of RTP that
-have been influenced by the necessity of keeping the header short.
-
-You could argue whether every single feature just described *really*
-needs to be in a real-time transport protocol, and you could probably
-find some more that could be added. The key idea here is to make life
-easier for application developers by giving them a useful set of
-abstractions and building blocks for their applications. For example, by
-putting a timestamping mechanism into RTP, we save every developer of a
-real-time application from inventing his own. We also increase the
-chances that two different real-time applications might interoperate.
-
-5.4.2 RTP Design
-----------------
-
-Now that we have seen the rather long list of requirements for our
-transport protocol for multimedia, we turn to the details of the
-protocol that has been specified to meet those requirements. This
-protocol, RTP, was developed in the IETF and is in widespread use. The
-RTP standard actually defines a pair of protocols, RTP and the Real-time
-Transport Control Protocol (RTCP). The former is used for the exchange
-of multimedia data, while the latter is used to periodically send
-control information associated with a certain data flow. When running
-over UDP, the RTP data stream and the associated RTCP control stream use
-consecutive transport-layer ports. The RTP data uses an even port number
-and the RTCP control information uses the next higher (odd) port number.
-
-Because RTP is designed to support a wide variety of applications, it
-provides a flexible mechanism by which new applications can be developed
-without repeatedly revising the RTP protocol itself. For each class of
-application (e.g., audio), RTP defines a *profile* and one or more
-*formats*. The profile provides a range of information that ensures a
-common understanding of the fields in the RTP header for that
-application class, as will be apparent when we examine the header in
-detail. The format specification explains how the data that follows the
-RTP header is to be interpreted. For example, the RTP header might just
-be followed by a sequence of bytes, each of which represents a single
-audio sample taken a defined interval after the previous one.
-Alternatively, the format of the data might be much more complex; an
-MPEG-encoded video stream, for example, would need to have a good deal
-of structure to represent all the different types of information.
+Vì RTP được thiết kế để hỗ trợ nhiều loại ứng dụng, nó cung cấp một cơ chế linh hoạt để các ứng dụng mới có thể được phát triển mà không phải sửa đổi lại giao thức RTP. Với mỗi lớp ứng dụng (ví dụ, âm thanh), RTP định nghĩa một *profile* và một hoặc nhiều *format*. Profile cung cấp một loạt thông tin đảm bảo sự hiểu biết chung về các trường trong phần đầu RTP cho lớp ứng dụng đó, như sẽ thấy rõ khi chúng ta xem xét phần đầu chi tiết. Đặc tả format giải thích cách dữ liệu theo sau phần đầu RTP sẽ được diễn giải. Ví dụ, phần đầu RTP có thể được theo sau bởi một chuỗi byte, mỗi byte đại diện cho một mẫu âm thanh lấy tại một khoảng thời gian xác định sau mẫu trước đó. Ngoài ra, format dữ liệu có thể phức tạp hơn nhiều; một luồng video mã hóa MPEG, chẳng hạn, sẽ cần có cấu trúc phức tạp để biểu diễn các loại thông tin khác nhau.
 
 .. _key-alf:
-.. admonition::  Key Takeaway
+.. admonition::  Bài học then chốt
 
-   The design of RTP embodies an architectural principle known as
-   *Application Level Framing* (ALF). This principle was put forward
-   by Clark and Tennenhouse in 1990 as a new way to design protocols
-   for emerging multimedia applications. They recognized that these
-   new applications were unlikely to be well served by existing
-   protocols such as TCP, and that furthermore they might not be well
-   served by any sort of “one-size-fits-all” protocol. At the heart of
-   this principle is the belief that an application understands its
-   own needs best. For example, an MPEG video application knows how
-   best to recover from lost frames and how to react differently if an
-   I frame or a B frame is lost. The same application also understands
-   best how to segment the data for transmission—for example, it’s
-   better to send the data from different frames in different
-   datagrams, so that a lost packet only corrupts a single frame, not
-   two. It is for this reason that RTP leaves so many of the protocol
-   details to the profile and format documents that are specific to an
-   application. :ref:`[Next] <key-congestion>`
+   Thiết kế của RTP thể hiện một nguyên lý kiến trúc gọi là *Application Level Framing* (ALF) – Đóng khung ở tầng ứng dụng. Nguyên lý này được Clark và Tennenhouse đề xuất năm 1990 như một cách tiếp cận mới để thiết kế giao thức cho các ứng dụng đa phương tiện mới nổi. Họ nhận ra rằng các ứng dụng này khó có thể được phục vụ tốt bởi các giao thức hiện có như TCP, và hơn nữa, có thể không phù hợp với bất kỳ giao thức “một cho tất cả” nào. Cốt lõi của nguyên lý này là niềm tin rằng ứng dụng hiểu rõ nhất nhu cầu của chính nó. Ví dụ, một ứng dụng video MPEG biết cách tốt nhất để phục hồi khi mất khung hình và phản ứng khác nhau nếu mất khung I hay khung B. Ứng dụng cũng hiểu rõ nhất cách phân mảnh dữ liệu để truyền—ví dụ, tốt hơn nên gửi dữ liệu từ các khung khác nhau trong các datagram khác nhau, để một gói bị mất chỉ làm hỏng một khung, không phải hai. Đó là lý do tại sao RTP để lại nhiều chi tiết giao thức cho các tài liệu profile và format đặc thù ứng dụng. :ref:`[Tiếp theo] <key-congestion>`
 
-Header Format
-~~~~~~~~~~~~~
+Định dạng phần đầu
+~~~~~~~~~~~~~~~~~
 
-:numref:`Figure %s <fig-rtp-hdr>` shows the header format used by
-RTP. The first 12 bytes are always present, whereas the contributing
-source identifiers are only used in certain circumstances. After this
-header there may be optional header extensions, as described
-below. Finally, the header is followed by the RTP payload, the format
-of which is determined by the application. The intention of this
-header is that it contain only the fields that are likely to be used
-by many different applications, since anything that is very specific
-to a single application would be more efficiently carried in the RTP
-payload for that application only.
+:numref:`Hình %s <fig-rtp-hdr>` cho thấy định dạng phần đầu được sử dụng bởi RTP. 12 byte đầu tiên luôn có mặt, trong khi các định danh nguồn đóng góp chỉ được sử dụng trong một số trường hợp nhất định. Sau phần đầu này có thể có các phần mở rộng tùy chọn, như mô tả bên dưới. Cuối cùng, phần đầu được theo sau bởi payload RTP, định dạng của nó do ứng dụng quyết định. Mục đích của phần đầu này là chỉ chứa các trường có khả năng được nhiều ứng dụng khác nhau sử dụng, vì bất cứ thứ gì quá đặc thù cho một ứng dụng sẽ hiệu quả hơn nếu được mang trong payload RTP chỉ cho ứng dụng đó.
 
 .. _fig-rtp-hdr:
 .. figure:: figures/f05-23-9780123850591.png
    :width: 500px
    :align: center
 
-   RTP header format.
+   Định dạng phần đầu RTP.
 
-The first two bits are a version identifier, which contains the value 2
-in the RTP version deployed at the time of writing. You might think that
-the designers of the protocol were rather bold to think that 2 bits
-would be enough to contain all future versions of RTP, but recall that
-bits are at a premium in the RTP header. Furthermore, the use of
-profiles for different applications makes it less likely that many
-revisions to the base RTP protocol would be needed. In any case, if it
-turns out that another version of RTP is needed beyond version 2, it
-would be possible to consider a change to the header format so that more
-than one future version would be possible. For example, a new RTP header
-with the value 3 in the version field could have a “subversion” field
-somewhere else in the header.
+Hai bit đầu là định danh phiên bản, chứa giá trị 2 trong phiên bản RTP được triển khai tại thời điểm viết sách. Bạn có thể nghĩ rằng các nhà thiết kế giao thức khá táo bạo khi cho rằng 2 bit là đủ cho tất cả các phiên bản RTP trong tương lai, nhưng hãy nhớ rằng từng bit đều quý giá trong phần đầu RTP. Hơn nữa, việc sử dụng profile cho các ứng dụng khác nhau làm giảm khả năng phải sửa đổi nhiều lần giao thức RTP gốc. Dù sao, nếu cần một phiên bản RTP khác ngoài phiên bản 2, có thể xem xét thay đổi định dạng phần đầu để có thể có nhiều phiên bản tương lai hơn. Ví dụ, một phần đầu RTP mới với giá trị 3 ở trường phiên bản có thể có một trường “subversion” ở nơi khác trong phần đầu.
 
-The next bit is the *padding* (``P``) bit, which is set in
-circumstances in which the RTP payload has been padded for some
-reason. RTP data might be padded to fill up a block of a certain size
-as required by an encryption algorithm, for example. In such a case,
-the complete length of the RTP header, data, and padding would be
-conveyed by the lower-layer protocol header (e.g., the UDP header),
-and the last byte of the padding would contain a count of how many
-bytes should be ignored.  This is illustrated in :numref:`Figure %s
-<fig-rtp-pad>`. Note that this approach to padding removes any need
-for a length field in the RTP header (thus serving the goal of keeping
-the header short); in the common case of no padding, the length is
-deduced from the lower-layer protocol.
+Bit tiếp theo là bit *padding* (``P``), được đặt trong trường hợp payload RTP được đệm thêm vì lý do nào đó. Dữ liệu RTP có thể được đệm để lấp đầy một khối có kích thước nhất định theo yêu cầu của thuật toán mã hóa, chẳng hạn. Trong trường hợp này, tổng độ dài của phần đầu RTP, dữ liệu và padding sẽ được truyền bởi phần đầu giao thức tầng dưới (ví dụ, phần đầu UDP), và byte cuối cùng của padding sẽ chứa số byte cần bỏ qua. Điều này được minh họa ở :numref:`Hình %s <fig-rtp-pad>`. Lưu ý rằng cách đệm này loại bỏ nhu cầu có trường độ dài trong phần đầu RTP (giúp giữ phần đầu ngắn); trong trường hợp phổ biến không có padding, độ dài được suy ra từ giao thức tầng dưới.
 
 .. _fig-rtp-pad:
 .. figure:: figures/f05-24-9780123850591.png
    :width: 600px
    :align: center
 
-   Padding of an RTP packet.
+   Đệm một gói RTP.
 
-The *extension* (``X``) bit is used to indicate the presence of an
-extension header, which would be defined for a specific application and
-follow the main header. Such headers are rarely used, since it is
-generally possible to define a payload-specific header as part of the
-payload format definition for a particular application.
+Bit *extension* (``X``) được dùng để chỉ sự hiện diện của phần đầu mở rộng, được định nghĩa cho một ứng dụng cụ thể và nằm sau phần đầu chính. Các phần đầu này hiếm khi được sử dụng, vì thường có thể định nghĩa một phần đầu đặc thù payload như một phần của định nghĩa format payload cho ứng dụng cụ thể.
 
-The ``X`` bit is followed by a 4-bit field that counts the number of
-*contributing sources*, if any are included in the header. Contributing
-sources are discussed below.
+Sau bit ``X`` là trường 4 bit đếm số *nguồn đóng góp* (contributing sources), nếu có, được đưa vào phần đầu. Các nguồn đóng góp sẽ được bàn ở phần dưới.
 
-We noted above the frequent need for some sort of frame indication; this
-is provided by the marker bit, which has a profile-specific use. For a
-voice application, it could be set at the beginning of a talkspurt, for
-example. The 7-bit payload type field follows; it indicates what type of
-multimedia data is carried in this packet. One possible use of this
-field would be to enable an application to switch from one coding scheme
-to another based on information about resource availability in the
-network or feedback on application quality. The exact usage of the
-payload type is also determined by the application profile.
+Chúng ta đã đề cập ở trên về nhu cầu thường xuyên phải chỉ báo khung; điều này được cung cấp bởi bit marker, có cách sử dụng phụ thuộc vào profile. Với ứng dụng thoại, nó có thể được đặt ở đầu một talkspurt, chẳng hạn. Trường loại payload 7 bit theo sau; nó chỉ ra loại dữ liệu đa phương tiện nào được mang trong gói này. Một cách sử dụng trường này là cho phép ứng dụng chuyển đổi giữa các phương pháp mã hóa dựa trên thông tin về tài nguyên mạng hoặc phản hồi về chất lượng ứng dụng. Cách sử dụng chính xác của loại payload cũng do profile ứng dụng quyết định.
 
-Note that the payload type is generally not used as a demultiplexing key
-to direct data to different applications (or to different streams within
-a single application, such as the audio and video stream for a
-videoconference). This is because such demultiplexing is typically
-provided at a lower layer (e.g., by UDP, as described in a previous
-section). Thus, two media streams using RTP would typically use
-different UDP port numbers.
+Lưu ý rằng loại payload thường không được dùng làm khóa phân kênh để chuyển dữ liệu đến các ứng dụng khác nhau (hoặc đến các luồng khác nhau trong cùng một ứng dụng, như luồng âm thanh và video cho hội nghị truyền hình). Điều này là vì việc phân kênh thường được cung cấp ở tầng dưới (ví dụ, bởi UDP, như đã mô tả ở phần trước). Do đó, hai luồng đa phương tiện sử dụng RTP thường dùng các số cổng UDP khác nhau.
 
-The sequence number is used to enable the receiver of an RTP stream to
-detect missing and misordered packets. The sender simply increments the
-value by one for each transmitted packet. Note that RTP does not do
-anything when it detects a lost packet, in contrast to TCP, which both
-corrects for the loss (by retransmission) and interprets the loss as a
-congestion indication (which may cause it to reduce its window size).
-Rather, it is left to the application to decide what to do when a packet
-is lost because this decision is likely to be highly application
-dependent. For example, a video application might decide that the best
-thing to do when a packet is lost is to replay the last frame that was
-correctly received. Some applications might also decide to modify their
-coding algorithms to reduce bandwidth needs in response to loss, but
-this is not a function of RTP. It would not be sensible for RTP to
-decide that the sending rate should be reduced, as this might make the
-application useless.
+Số thứ tự (sequence number) được dùng để cho phép bên nhận luồng RTP phát hiện các gói bị mất hoặc sai thứ tự. Bên gửi chỉ cần tăng giá trị này lên một cho mỗi gói gửi đi. Lưu ý rằng RTP không làm gì khi phát hiện gói bị mất, khác với TCP, vốn vừa sửa lỗi mất gói (bằng truyền lại) vừa coi mất gói là chỉ báo tắc nghẽn (có thể khiến nó giảm kích thước cửa sổ). Thay vào đó, ứng dụng sẽ quyết định phải làm gì khi mất gói vì quyết định này phụ thuộc rất nhiều vào ứng dụng. Ví dụ, một ứng dụng video có thể quyết định rằng tốt nhất khi mất gói là phát lại khung hình cuối cùng nhận đúng. Một số ứng dụng cũng có thể quyết định thay đổi thuật toán mã hóa để giảm băng thông khi mất gói, nhưng đây không phải là chức năng của RTP. Sẽ không hợp lý nếu RTP quyết định giảm tốc độ gửi, vì điều này có thể khiến ứng dụng trở nên vô dụng.
 
-The function of the timestamp field is to enable the receiver to play
-back samples at the appropriate intervals and to enable different media
-streams to be synchronized. Because different applications may require
-different granularities of timing, RTP itself does not specify the units
-in which time is measured. Instead, the timestamp is just a counter of
-“ticks,” where the time between ticks is dependent on the encoding in
-use. For example, an audio application that samples data once every
-125 μs could use that value as its clock resolution. The clock
-granularity is one of the details that is specified in the RTP profile
-or payload format for an application.
+Chức năng của trường timestamp là cho phép bên nhận phát lại các mẫu đúng khoảng thời gian và cho phép đồng bộ hóa các luồng đa phương tiện khác nhau. Vì các ứng dụng khác nhau có thể yêu cầu độ phân giải thời gian khác nhau, bản thân RTP không quy định đơn vị đo thời gian. Thay vào đó, timestamp chỉ là bộ đếm “tick”, trong đó thời gian giữa các tick phụ thuộc vào phương pháp mã hóa sử dụng. Ví dụ, một ứng dụng âm thanh lấy mẫu mỗi 125 μs có thể dùng giá trị đó làm độ phân giải đồng hồ. Độ phân giải đồng hồ là một trong những chi tiết được quy định trong profile hoặc format payload của ứng dụng.
 
-The timestamp value in the packet is a number representing the time at
-which the *first* sample in the packet was generated. The timestamp is
-not a reflection of the time of day; only the differences between
-timestamps are relevant. For example, if the sampling interval is
-125 μs and the first sample in packet n+1 was generated 10 ms after
-the first sample in packet n, then the number of sampling instants
-between these two samples is
+Giá trị timestamp trong gói là một số đại diện cho thời điểm *mẫu đầu tiên* trong gói được tạo ra. Timestamp không phản ánh thời gian thực trong ngày; chỉ sự chênh lệch giữa các timestamp mới quan trọng. Ví dụ, nếu khoảng lấy mẫu là 125 μs và mẫu đầu tiên trong gói n+1 được tạo ra 10 ms sau mẫu đầu tiên trong gói n, thì số lần lấy mẫu giữa hai mẫu này là
 
 .. centered:: TimeBetweenPackets / TimePerSample
 
 .. centered:: = (10 × 10\ :sup:`-3`\ ) / (125 × 10\ :sup:`-6`\ ) = 80
 
-Assuming the clock granularity is the same as the sampling interval,
-then the timestamp in packet n+1 would be greater than that in packet n
-by 80. Note that fewer than 80 samples might have been sent due to
-compression techniques such as silence detection, and yet the timestamp
-allows the receiver to play back the samples with the correct temporal
-relationship.
+Giả sử độ phân giải đồng hồ giống khoảng lấy mẫu, thì timestamp trong gói n+1 sẽ lớn hơn timestamp trong gói n là 80. Lưu ý rằng có thể gửi ít hơn 80 mẫu do các kỹ thuật nén như phát hiện im lặng, nhưng timestamp vẫn cho phép bên nhận phát lại các mẫu với mối quan hệ thời gian chính xác.
 
-The synchronization source (SSRC) is a 32-bit number that uniquely
-identifies a single source of an RTP stream. In a given multimedia
-conference, each sender picks a random SSRC and is expected to resolve
-conflicts in the unlikely event that two sources pick the same value. By
-making the source identifier something other than the network or
-transport address of the source, RTP ensures independence from the
-lower-layer protocol. It also enables a single node with multiple
-sources (e.g., several cameras) to distinguish those sources. When a
-single node generates different media streams (e.g., audio and video),
-it is not required to use the same SSRC in each stream, as there are
-mechanisms in RTCP (described below) to allow intermedia
-synchronization.
+Nguồn đồng bộ hóa (SSRC) là một số 32 bit xác định duy nhất một nguồn của luồng RTP. Trong một hội nghị đa phương tiện, mỗi bên gửi chọn ngẫu nhiên một SSRC và phải giải quyết xung đột trong trường hợp hiếm có hai nguồn chọn cùng giá trị. Bằng cách làm cho định danh nguồn khác với địa chỉ mạng hoặc vận chuyển của nguồn, RTP đảm bảo tính độc lập với giao thức tầng dưới. Nó cũng cho phép một nút duy nhất với nhiều nguồn (ví dụ, nhiều camera) phân biệt các nguồn đó. Khi một nút tạo ra các luồng đa phương tiện khác nhau (ví dụ, âm thanh và video), không bắt buộc phải dùng cùng SSRC cho mỗi luồng, vì có các cơ chế trong RTCP (mô tả dưới đây) cho phép đồng bộ hóa liên phương tiện.
 
-The contributing source (CSRC) is used only when a number of RTP streams
-pass through a mixer. A mixer can be used to reduce the bandwidth
-requirements for a conference by receiving data from many sources and
-sending it as a single stream. For example, the audio streams from
-several concurrent speakers could be decoded and recoded as a single
-audio stream. In this case, the mixer lists itself as the
-synchronization source but also lists the contributing sources—the SSRC
-values of the speakers who contributed to the packet in question.
+Nguồn đóng góp (CSRC) chỉ được dùng khi một số luồng RTP đi qua một bộ trộn (mixer). Bộ trộn có thể được dùng để giảm yêu cầu băng thông cho một hội nghị bằng cách nhận dữ liệu từ nhiều nguồn và gửi thành một luồng duy nhất. Ví dụ, các luồng âm thanh từ nhiều người nói cùng lúc có thể được giải mã và mã hóa lại thành một luồng âm thanh duy nhất. Trong trường hợp này, bộ trộn tự liệt kê mình là nguồn đồng bộ hóa nhưng cũng liệt kê các nguồn đóng góp—các giá trị SSRC của những người nói đã đóng góp vào gói đó.
 
-5.4.3 Control Protocol
-----------------------
+5.4.3 Giao thức điều khiển
+--------------------------
 
-RTCP provides a control stream that is associated with a data stream for
-a multimedia application. This control stream provides three main
-functions:
+RTCP cung cấp một luồng điều khiển liên kết với luồng dữ liệu cho một ứng dụng đa phương tiện. Luồng điều khiển này cung cấp ba chức năng chính:
 
-1. Feedback on the performance of the application and the network
+1. Phản hồi về hiệu năng của ứng dụng và mạng
 
-2. A way to correlate and synchronize different media streams that have
-   come from the same sender
+2. Cách liên kết và đồng bộ hóa các luồng đa phương tiện khác nhau xuất phát từ cùng một bên gửi
 
-3. A way to convey the identity of a sender for display on a user
-   interface.
+3. Cách truyền đạt định danh của bên gửi để hiển thị trên giao diện người dùng.
 
-The first function may be useful for detecting and responding to
-congestion. Some applications are able to operate at different rates and
-may use performance data to decide to use a more aggressive compression
-scheme to reduce congestion, for example, or to send a higher-quality
-stream when there is little congestion. Performance feedback can also be
-useful in diagnosing network problems.
+Chức năng đầu tiên có thể hữu ích để phát hiện và phản ứng với tắc nghẽn. Một số ứng dụng có thể hoạt động ở các tốc độ khác nhau và có thể sử dụng dữ liệu hiệu năng để quyết định sử dụng thuật toán nén mạnh hơn nhằm giảm tắc nghẽn, hoặc gửi luồng chất lượng cao hơn khi ít tắc nghẽn. Phản hồi hiệu năng cũng hữu ích trong việc chẩn đoán sự cố mạng.
 
-You might think that the second function is already provided by the
-synchronization source ID (SSRC) of RTP, but in fact it is not. As
-already noted, multiple cameras from a single node might have different
-SSRC values. Furthermore, there is no requirement that an audio and
-video stream from the same node use the same SSRC. Because collisions of
-SSRC values may occur, it may be necessary to change the SSRC value of a
-stream. To deal with this problem, RTCP uses the concept of a *canonical
-name* (CNAME) that is assigned to a sender, which is then associated
-with the various SSRC values that might be used by that sender using
-RTCP mechanisms.
+Bạn có thể nghĩ rằng chức năng thứ hai đã được cung cấp bởi định danh nguồn đồng bộ hóa (SSRC) của RTP, nhưng thực tế không phải vậy. Như đã đề cập, nhiều camera từ một nút có thể có các giá trị SSRC khác nhau. Hơn nữa, không có yêu cầu nào rằng luồng âm thanh và video từ cùng một nút phải dùng cùng SSRC. Vì có thể xảy ra xung đột giá trị SSRC, có thể cần thay đổi giá trị SSRC của một luồng. Để xử lý vấn đề này, RTCP sử dụng khái niệm *tên chuẩn* (CNAME) được gán cho bên gửi, sau đó liên kết với các giá trị SSRC khác nhau mà bên gửi đó có thể sử dụng thông qua các cơ chế RTCP.
 
-Simply correlating two streams is only part of the problem of intermedia
-synchronization. Because different streams may have completely different
-clocks (with different granularities and even different amounts of
-inaccuracy, or drift), there needs to be a way to accurately synchronize
-streams with each other. RTCP addresses this problem by conveying timing
-information that correlates actual time of day with the
-clock-rate-dependent timestamps that are carried in RTP data packets.
+Chỉ liên kết hai luồng chỉ là một phần của vấn đề đồng bộ hóa liên phương tiện. Vì các luồng khác nhau có thể có đồng hồ hoàn toàn khác nhau (với độ phân giải khác nhau và thậm chí sai số khác nhau), cần có cách đồng bộ hóa chính xác các luồng với nhau. RTCP giải quyết vấn đề này bằng cách truyền thông tin thời gian liên kết thời gian thực với các timestamp phụ thuộc tốc độ đồng hồ được mang trong các gói dữ liệu RTP.
 
-RTCP defines a number of different packet types, including
+RTCP định nghĩa một số loại gói khác nhau, bao gồm
 
--  Sender reports, which enable active senders to a session to report
-   transmission and reception statistics
+-  Báo cáo bên gửi, cho phép các bên gửi chủ động trong một phiên báo cáo thống kê truyền và nhận
 
--  Receiver reports, which receivers who are not senders use to report
-   reception statistics
+-  Báo cáo bên nhận, cho các bên nhận không phải là bên gửi dùng để báo cáo thống kê nhận
 
--  Source descriptions, which carry CNAMEs and other sender description
-   information
+-  Mô tả nguồn, mang CNAME và các thông tin mô tả bên gửi khác
 
--  Application-specific control packets
+-  Gói điều khiển đặc thù ứng dụng
 
-These different RTCP packet types are sent over the lower-layer
-protocol, which, as we have noted, is typically UDP. Several RTCP
-packets can be packed into a single PDU of the lower-level protocol. It
-is required that at least two RTCP packets are sent in every lower-level
-PDU: One of these is a report packet; the other is a source description
-packet. Other packets may be included up to the size limits imposed by
-the lower-layer protocols.
+Các loại gói RTCP này được gửi qua giao thức tầng dưới, thường là UDP. Nhiều gói RTCP có thể được đóng gói vào một PDU của giao thức tầng dưới. Yêu cầu là phải có ít nhất hai gói RTCP trong mỗi PDU tầng dưới: Một là gói báo cáo; cái còn lại là gói mô tả nguồn. Các gói khác có thể được thêm vào cho đến khi đạt giới hạn kích thước của giao thức tầng dưới.
 
-Before looking further at the contents of an RTCP packet, we note that
-there is a potential problem with every member of a multicast group
-sending periodic control traffic. Unless we take some steps to limit it,
-this control traffic has the potential to be a significant consumer of
-bandwidth. In an audioconference, for example, no more than two or three
-senders are likely to send audio data at any instant, since there is no
-point in everyone talking at once. But there is no such social limit on
-everyone sending control traffic, and this could be a severe problem in
-a conference with thousands of participants. To deal with this problem,
-RTCP has a set of mechanisms by which the participants scale back their
-reporting frequency as the number of participants increases. These rules
-are somewhat complex, but the basic goal is this: Limit the total amount
-of RTCP traffic to a small percentage (typically 5%) of the RTP data
-traffic. To accomplish this goal, the participants should know how much
-data bandwidth is likely to be in use (e.g., the amount to send three
-audio streams) and the number of participants. They learn the former
-from means outside RTP (known as *session management*, discussed at the
-end of this section), and they learn the latter from the RTCP reports of
-other participants. Because RTCP reports might be sent at a very low
-rate, it might only be possible to get an approximate count of the
-current number of recipients, but that is typically sufficient. Also, it
-is recommended to allocate more RTCP bandwidth to active senders, on the
-assumption that most participants would like to see reports from
-them—for example, to find out who is speaking.
+Trước khi xem xét sâu hơn nội dung của một gói RTCP, cần lưu ý rằng có một vấn đề tiềm ẩn khi mọi thành viên của một nhóm multicast đều gửi lưu lượng điều khiển định kỳ. Nếu không có biện pháp hạn chế, lưu lượng điều khiển này có thể tiêu tốn băng thông đáng kể. Trong một hội nghị âm thanh, ví dụ, thường chỉ có hai hoặc ba người nói cùng lúc, vì không ai nói cùng lúc với tất cả mọi người. Nhưng không có giới hạn xã hội nào đối với việc mọi người đều gửi lưu lượng điều khiển, và điều này có thể là vấn đề nghiêm trọng trong một hội nghị với hàng nghìn người tham gia. Để xử lý vấn đề này, RTCP có một tập hợp cơ chế cho phép các thành viên giảm tần suất báo cáo khi số lượng người tham gia tăng lên. Các quy tắc này khá phức tạp, nhưng mục tiêu cơ bản là: Giới hạn tổng lưu lượng RTCP ở một tỷ lệ nhỏ (thường là 5%) so với lưu lượng dữ liệu RTP. Để đạt mục tiêu này, các thành viên cần biết lượng băng thông dữ liệu có thể sử dụng (ví dụ, lượng cần để gửi ba luồng âm thanh) và số lượng người tham gia. Họ biết lượng băng thông từ các phương tiện ngoài RTP (gọi là *quản lý phiên*, sẽ bàn ở cuối phần này), và biết số lượng người tham gia từ các báo cáo RTCP của các thành viên khác. Vì các báo cáo RTCP có thể được gửi với tần suất rất thấp, có thể chỉ ước lượng được số người nhận hiện tại, nhưng thường là đủ. Ngoài ra, nên phân bổ nhiều băng thông RTCP hơn cho các bên gửi chủ động, vì hầu hết người tham gia muốn xem báo cáo từ họ—ví dụ, để biết ai đang nói.
 
-Once a participant has determined how much bandwidth it can consume with
-RTCP traffic, it sets about sending periodic reports at the appropriate
-rate. Sender reports and receiver reports differ only in that the former
-include some extra information about the sender. Both types of reports
-contain information about the data that was received from all sources in
-the most recent reporting period.
+Khi một thành viên đã xác định được lượng băng thông có thể dùng cho lưu lượng RTCP, họ sẽ gửi các báo cáo định kỳ với tốc độ phù hợp. Báo cáo bên gửi và bên nhận chỉ khác nhau ở chỗ báo cáo bên gửi có thêm một số thông tin về bên gửi. Cả hai loại báo cáo đều chứa thông tin về dữ liệu nhận được từ tất cả các nguồn trong kỳ báo cáo gần nhất.
 
-The extra information in a sender report consists of
+Thông tin bổ sung trong báo cáo bên gửi bao gồm
 
--  A timestamp containing the actual time of day when this report was
-   generated
+-  Một timestamp chứa thời gian thực khi báo cáo này được tạo
 
--  The RTP timestamp corresponding to the time when the report was
-   generated
+-  Timestamp RTP tương ứng với thời điểm báo cáo được tạo
 
--  Cumulative counts of the packets and bytes sent by this sender since
-   it began transmission
+-  Tổng số gói và byte đã gửi bởi bên gửi này kể từ khi bắt đầu truyền
 
-Note that the first two quantities can be used to enable synchronization
-of different media streams from the same source, even if those streams
-use different clock granularities in their RTP data streams, since it
-gives the key to convert time of day to the RTP timestamps.
+Lưu ý rằng hai giá trị đầu tiên có thể được dùng để đồng bộ hóa các luồng đa phương tiện khác nhau từ cùng một nguồn, ngay cả khi các luồng đó dùng độ phân giải đồng hồ khác nhau trong các luồng dữ liệu RTP, vì nó cung cấp khóa để chuyển đổi thời gian thực sang timestamp RTP.
 
-Both sender and receiver reports contain one block of data per source
-that has been heard from since the last report. Each block contains the
-following statistics for the source in question:
+Cả báo cáo bên gửi và bên nhận đều chứa một khối dữ liệu cho mỗi nguồn đã nghe kể từ báo cáo trước. Mỗi khối chứa các thống kê sau cho nguồn đó:
 
--  Its SSRC
+-  SSRC của nó
 
--  The fraction of data packets from this source that were lost since
-   the last report was sent (calculated by comparing the number of
-   packets received with the number of packets expected; this last value
-   can be determined from the RTP sequence numbers)
+-  Tỷ lệ gói dữ liệu từ nguồn này bị mất kể từ báo cáo trước (tính bằng cách so sánh số gói nhận được với số gói mong đợi; giá trị này xác định từ số thứ tự RTP)
 
--  Total number of packets lost from this source since the first time it
-   was heard from
+-  Tổng số gói bị mất từ nguồn này kể từ lần đầu tiên nghe thấy
 
--  Highest sequence number received from this source (extended to
-   32 bits to account for wrapping of the sequence number)
+-  Số thứ tự lớn nhất nhận được từ nguồn này (mở rộng thành 32 bit để xử lý trường hợp tràn số thứ tự)
 
--  Estimated interarrival jitter for the source (calculated by comparing
-   the interarrival spacing of received packets with the expected
-   spacing at transmission time)
+-  Độ lệch thời gian đến dự kiến (jitter) ước lượng cho nguồn này (tính bằng cách so sánh khoảng cách giữa các gói nhận được với khoảng cách dự kiến tại thời điểm truyền)
 
--  Last actual timestamp received via RTCP for this source
+-  Timestamp thực tế cuối cùng nhận được qua RTCP cho nguồn này
 
--  Delay since last sender report received via RTCP for this source
+-  Độ trễ kể từ báo cáo bên gửi cuối cùng nhận được qua RTCP cho nguồn này
 
-As you might imagine, the recipients of this information can learn all
-sorts of things about the state of the session. In particular, they can
-see if other recipients are getting much better quality from some sender
-than they are, which might be an indication that a resource reservation
-needs to be made, or that there is a problem in the network that needs
-to be attended to. In addition, if a sender notices that many receivers
-are experiencing high loss of its packets, it might decide that it
-should reduce its sending rate or use a coding scheme that is more
-resilient to loss.
+Như bạn có thể hình dung, người nhận thông tin này có thể biết được rất nhiều điều về trạng thái của phiên. Đặc biệt, họ có thể thấy nếu những người nhận khác nhận được chất lượng tốt hơn nhiều từ một bên gửi nào đó, điều này có thể là dấu hiệu cần đặt trước tài nguyên, hoặc có vấn đề trong mạng cần được xử lý. Ngoài ra, nếu một bên gửi nhận thấy nhiều người nhận bị mất nhiều gói của mình, họ có thể quyết định giảm tốc độ gửi hoặc sử dụng thuật toán mã hóa chống mất gói tốt hơn.
 
-The final aspect of RTCP that we will consider is the source
-description packet. Such a packet contains, at a minimum, the SSRC of
-the sender and the sender’s CNAME. The canonical name is derived in
-such a way that all applications that generate media streams that
-might need to be synchronized (e.g., separately generated audio and
-video streams from the same user) will choose the same CNAME even
-though they might choose different SSRC values. This enables a
-receiver to identify the media stream that came from the same
-sender. The most common format of the CNAME is ``user@host``, where
-``host`` is the fully qualified domain name of the sending machine.
-Thus, an application launched by the user whose user name is ``jdoe``
-running on the machine ``cicada.cs.princeton.edu`` would use the
-string ``jdoe@cicada.cs.princeton.edu`` as its CNAME. The large and
-variable number of bytes used in this representation would make it a
-bad choice for the format of an SSRC, since the SSRC is sent with
-every data packet and must be processed in real time. Allowing CNAMEs
-to be bound to SSRC values in periodic RTCP messages enables a compact
-and efficient format for the SSRC.
+Khía cạnh cuối cùng của RTCP mà chúng ta sẽ xem xét là gói mô tả nguồn. Gói này chứa tối thiểu SSRC của bên gửi và CNAME của bên gửi. Tên chuẩn được tạo ra sao cho tất cả các ứng dụng tạo ra các luồng đa phương tiện có thể cần đồng bộ hóa (ví dụ, các luồng âm thanh và video được tạo riêng biệt từ cùng một người dùng) sẽ chọn cùng một CNAME dù có thể chọn các giá trị SSRC khác nhau. Điều này cho phép bên nhận xác định các luồng đa phương tiện đến từ cùng một người gửi. Định dạng phổ biến nhất của CNAME là ``user@host``, trong đó ``host`` là tên miền đầy đủ của máy gửi. Do đó, một ứng dụng được khởi động bởi người dùng có tên đăng nhập là ``jdoe`` trên máy ``cicada.cs.princeton.edu`` sẽ dùng chuỗi ``jdoe@cicada.cs.princeton.edu`` làm CNAME của mình. Số byte lớn và biến đổi trong biểu diễn này khiến nó không phù hợp làm định dạng của SSRC, vì SSRC được gửi trong mọi gói dữ liệu và phải xử lý theo thời gian thực. Việc cho phép liên kết CNAME với SSRC trong các thông điệp RTCP định kỳ giúp định dạng SSRC ngắn gọn và hiệu quả.
 
-Other items may be included in the source description packet, such as
-the real name and email address of the user. These are used in user
-interface displays and to contact participants, but are less essential
-to the operation of RTP than the CNAME.
+Các mục khác có thể được đưa vào gói mô tả nguồn, như tên thật và địa chỉ email của người dùng. Chúng được dùng để hiển thị trên giao diện người dùng và liên hệ với người tham gia, nhưng không thiết yếu với hoạt động của RTP như CNAME.
 
-Like TCP, RTP and RTCP are a fairly complex pair of protocols. This
-complexity comes in large part from the desire to make life easier for
-application designers. Because there is an infinite number of possible
-applications, the challenge in designing a transport protocol is to make
-it general enough to meet the widely varying needs of many different
-applications without making the protocol itself impossible to implement.
-RTP has proven very successful in this regard, forming the basis for
-many real-time multimedia applications run over the Internet today.
+Giống như TCP, RTP và RTCP là một cặp giao thức khá phức tạp. Độ phức tạp này chủ yếu xuất phát từ mong muốn làm cho cuộc sống của lập trình viên ứng dụng dễ dàng hơn. Vì có vô số ứng dụng có thể có, thách thức khi thiết kế một giao thức vận chuyển là làm cho nó đủ tổng quát để đáp ứng nhu cầu rất đa dạng của nhiều ứng dụng khác nhau mà không khiến giao thức trở nên không thể triển khai. RTP đã chứng tỏ rất thành công về mặt này, trở thành nền tảng cho nhiều ứng dụng đa phương tiện thời gian thực chạy trên Internet ngày nay.
