@@ -1,7 +1,7 @@
-Chapter 4:  Advanced Internetworking
+Chương 4: Kết nối liên mạng nâng cao
 ====================================
 
-  Every seeming equality conceals a hierarchy.
+  Mọi sự bình đẳng đều ẩn chứa một hệ thứ bậc.
 
   *—Mason Cooley*
 
@@ -15,4 +15,3 @@ Chapter 4:  Advanced Internetworking
    scaling/mpls.rst
    scaling/mobile-ip.rst
    scaling/trend.rst
-
