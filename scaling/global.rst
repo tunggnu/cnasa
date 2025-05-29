@@ -1,622 +1,200 @@
-4.1 Global Internet
-===================
+4.1 Internet toàn cầu
+=====================
 
-At this point, we have seen how to connect a heterogeneous collection of
-networks to create an internetwork and how to use the simple hierarchy
-of the IP address to make routing in an internet somewhat scalable. We
-say “somewhat” scalable because, even though each router does not need
-to know about all the hosts connected to the internet, it does, in the
-model described so far, need to know about all the networks connected to
-the internet. Today’s Internet has hundreds of thousands of networks
-connected to it (or more, depending on how you count). Routing protocols
-such as those we have just discussed do not scale to those kinds of
-numbers. This section looks at a variety of techniques that greatly
-improve scalability and that have enabled the Internet to grow as far as
-it has.
+Tại thời điểm này, chúng ta đã thấy cách kết nối một tập hợp không đồng nhất các mạng để tạo thành một liên mạng (internetwork) và cách sử dụng hệ phân cấp đơn giản của địa chỉ IP để làm cho định tuyến trong một liên mạng có phần khả mở. Chúng tôi nói “có phần” khả mở bởi vì, mặc dù mỗi router không cần biết về tất cả các host kết nối vào Internet, nhưng trong mô hình đã mô tả cho đến nay, nó vẫn cần biết về tất cả các mạng kết nối vào Internet. Internet ngày nay có hàng trăm nghìn mạng được kết nối (hoặc nhiều hơn, tùy vào cách bạn đếm). Các giao thức định tuyến như chúng ta vừa thảo luận không thể mở rộng đến những con số như vậy. Phần này xem xét nhiều kỹ thuật giúp cải thiện đáng kể khả năng mở rộng và đã cho phép Internet phát triển như hiện nay.
 
 .. _fig-inet-tree:
 .. figure:: figures/f04-01-9780123850591.png
    :width: 600px
    :align: center
 
-   The tree structure of the Internet in 1990.
+   Cấu trúc cây của Internet năm 1990.
 
-Before getting to these techniques, we need to have a general picture in
-our heads of what the global Internet looks like. It is not just a
-random interconnection of Ethernets, but instead it takes on a shape
-that reflects the fact that it interconnects many different
-organizations. :numref:`Figure %s <fig-inet-tree>` gives a simple depiction of the
-state of the Internet in 1990. Since that time, the Internet’s topology
-has grown much more complex than this figure suggests—we present a
-slightly more accurate picture of the current Internet in a later
-section—but this picture will do for now.
+Trước khi đi vào các kỹ thuật này, chúng ta cần có một hình dung tổng quát về Internet toàn cầu trông như thế nào. Nó không chỉ là một tập hợp ngẫu nhiên các mạng Ethernet được kết nối với nhau, mà thay vào đó nó có một hình dạng phản ánh thực tế rằng nó kết nối nhiều tổ chức khác nhau. :numref:`Hình %s <fig-inet-tree>` đưa ra một mô tả đơn giản về trạng thái của Internet năm 1990. Kể từ đó, cấu trúc liên kết của Internet đã trở nên phức tạp hơn nhiều so với hình này—chúng tôi sẽ trình bày một bức tranh chính xác hơn về Internet hiện tại ở phần sau—nhưng hình này là đủ cho bây giờ.
 
-One of the salient features of this topology is that it consists of
-end-user sites (e.g., Stanford University) that connect to service
-provider networks (e.g., BARRNET was a provider network that served
-sites in the San Francisco Bay Area). In 1990, many providers served a
-limited geographic region and were thus known as *regional networks*.
-The regional networks were, in turn, connected by a nationwide backbone.
-In 1990, this backbone was funded by the National Science Foundation
-(NSF) and was therefore called the *NSFNET backbone*.
+Một trong những đặc điểm nổi bật của cấu trúc liên kết này là nó bao gồm các site người dùng cuối (ví dụ, Đại học Stanford) kết nối vào các mạng nhà cung cấp dịch vụ (ví dụ, BARRNET là một mạng nhà cung cấp phục vụ các site ở khu vực Vịnh San Francisco). Năm 1990, nhiều nhà cung cấp phục vụ một vùng địa lý giới hạn và do đó được gọi là *mạng vùng* (regional networks). Các mạng vùng này lại được kết nối bởi một backbone toàn quốc. Năm 1990, backbone này được tài trợ bởi Quỹ Khoa học Quốc gia Hoa Kỳ (NSF) và do đó được gọi là *backbone NSFNET*.
 
-NSFNET gave way to Internet2, which still runs a backbone on behalf of
-Research and Education institutions in the US (there are similar R&E
-networks in other countries), but of course most people get their
-Internet connectivity from commercial providers. Although the detail is
-not shown in the figure, today the largest provider networks (they are
-called tier-1) are typically built from dozens of high-end routers
-located in major metropolitan areas (colloquially referred to as “NFL
-cities”) connected by point-to-point links (often with 100 Gbps
-capacity). Similarly, each end-user site is typically not a single
-network but instead consists of multiple physical networks connected by
-switches and routers.
+NSFNET nhường chỗ cho Internet2, hiện vẫn vận hành một backbone thay mặt cho các tổ chức Nghiên cứu và Giáo dục ở Mỹ (có các mạng R&E tương tự ở các quốc gia khác), nhưng tất nhiên hầu hết mọi người lấy kết nối Internet từ các nhà cung cấp thương mại. Mặc dù chi tiết không được thể hiện trong hình, ngày nay các mạng nhà cung cấp lớn nhất (gọi là tier-1) thường được xây dựng từ hàng chục router cao cấp đặt tại các thành phố lớn (thường gọi là “thành phố NFL”) kết nối với nhau bằng các liên kết điểm-điểm (thường có băng thông 100 Gbps). Tương tự, mỗi site người dùng cuối thường không phải là một mạng đơn lẻ mà bao gồm nhiều mạng vật lý kết nối với nhau bằng switch và router.
 
-Notice that each provider and end-user is likely to be an
-administratively independent entity. This has some significant
-consequences on routing. For example, it is quite likely that different
-providers will have different ideas about the best routing protocol to
-use within their networks and on how metrics should be assigned to links
-in their network. Because of this independence, each provider’s network
-is usually a single *autonomous system* (AS). We will define this term
-more precisely in a later section, but for now it is adequate to think
-of an AS as a network that is administered independently of other ASs.
+Lưu ý rằng mỗi nhà cung cấp và người dùng cuối có khả năng là một thực thể độc lập về mặt quản trị. Điều này có một số hệ quả quan trọng đối với định tuyến. Ví dụ, rất có thể các nhà cung cấp khác nhau sẽ có ý tưởng khác nhau về giao thức định tuyến tốt nhất để sử dụng trong mạng của họ và về cách gán metric cho các liên kết trong mạng. Do sự độc lập này, mỗi mạng của nhà cung cấp thường là một *hệ tự trị* (autonomous system - AS). Chúng tôi sẽ định nghĩa thuật ngữ này chính xác hơn ở phần sau, nhưng hiện tại bạn có thể hiểu AS là một mạng được quản trị độc lập với các AS khác.
 
-The fact that the Internet has a discernible structure can be used to
-our advantage as we tackle the problem of scalability. In fact, we need
-to deal with two related scaling issues. The first is the scalability of
-routing. We need to find ways to minimize the number of network numbers
-that get carried around in routing protocols and stored in the routing
-tables of routers. The second is address utilization—that is, making
-sure that the IP address space does not get consumed too quickly.
+Thực tế là Internet có một cấu trúc có thể nhận biết được có thể được tận dụng khi chúng ta giải quyết vấn đề khả năng mở rộng. Thực tế, chúng ta cần đối mặt với hai vấn đề liên quan đến khả mở. Đầu tiên là khả mở của định tuyến. Chúng ta cần tìm cách giảm thiểu số lượng số mạng được mang theo trong các giao thức định tuyến và lưu trữ trong bảng định tuyến của các router. Thứ hai là sử dụng địa chỉ—tức là, đảm bảo không gian địa chỉ IP không bị tiêu tốn quá nhanh.
 
-Throughout this book, we see the principle of hierarchy used again and
-again to improve scalability. We saw in the previous chapter how the
-hierarchical structure of IP addresses, especially with the flexibility
-provided by Classless Interdomain Routing (CIDR) and subnetting, can
-improve the scalability of routing. In the next two sections, we’ll see
-further uses of hierarchy (and its partner, aggregation) to provide
-greater scalability, first in a single domain and then between domains.
-Our final subsection looks at IP version 6, the invention of which was
-largely the result of scalability concerns.
+Xuyên suốt cuốn sách này, chúng ta thấy nguyên lý phân cấp được sử dụng lặp đi lặp lại để cải thiện khả năng mở rộng. Chúng ta đã thấy ở chương trước cách cấu trúc phân cấp của địa chỉ IP, đặc biệt với sự linh hoạt do CIDR (Classless Interdomain Routing) và subnetting cung cấp, có thể cải thiện khả năng mở rộng của định tuyến. Ở hai phần tiếp theo, chúng ta sẽ thấy các cách sử dụng phân cấp (và đối tác của nó, gom nhóm - aggregation) để cung cấp khả năng mở rộng lớn hơn, trước tiên trong một miền đơn và sau đó giữa các miền. Phần cuối cùng của mục này xem xét IP phiên bản 6, phát minh chủ yếu xuất phát từ các mối quan tâm về khả năng mở rộng.
 
-4.1.1 Routing Areas
--------------------
+4.1.1 Khu vực định tuyến (Routing Areas)
+----------------------------------------
 
-As a first example of using hierarchy to scale up the routing system,
-we’ll examine how link-state routing protocols (such as OSPF and IS-IS)
-can be used to partition a routing domain into subdomains called
-*areas*. (The terminology varies somewhat among protocols—we use the
-OSPF terminology here.) By adding this extra level of hierarchy, we
-enable single domains to grow larger without overburdening the routing
-protocols or resorting to the more complex interdomain routing protocols
-described later.
+Là một ví dụ đầu tiên về việc sử dụng phân cấp để mở rộng hệ thống định tuyến, chúng ta sẽ xem xét cách các giao thức định tuyến trạng thái liên kết (như OSPF và IS-IS) có thể được sử dụng để phân chia một miền định tuyến thành các miền con gọi là *khu vực* (areas). (Thuật ngữ có thể khác nhau giữa các giao thức—ở đây chúng tôi dùng thuật ngữ của OSPF.) Bằng cách thêm một mức phân cấp này, chúng ta cho phép các miền đơn lẻ phát triển lớn hơn mà không làm quá tải các giao thức định tuyến hoặc phải dùng đến các giao thức định tuyến liên miền phức tạp hơn sẽ được mô tả sau.
 
-An area is a set of routers that are administratively configured to
-exchange link-state information with each other. There is one special
-area—the backbone area, also known as area 0. An example of a routing
-domain divided into areas is shown in :numref:`Figure %s <fig-ospf-area>` .
-Routers R1, R2, and R3 are members of the backbone area. They are also
-members of at least one nonbackbone area; R1 is actually a member of
-both area 1 and area 2. A router that is a member of both the backbone
-area and a nonbackbone area is an area border router (ABR). Note that
-these are distinct from the routers that are at the edge of an AS, which
-are referred to as AS border routers for clarity.
+Một khu vực là một tập các router được cấu hình quản trị để trao đổi thông tin trạng thái liên kết với nhau. Có một khu vực đặc biệt—khu vực backbone, còn gọi là khu vực 0. Một ví dụ về một miền định tuyến được chia thành các khu vực được thể hiện trong :numref:`Hình %s <fig-ospf-area>`. Các router R1, R2 và R3 là thành viên của khu vực backbone. Chúng cũng là thành viên của ít nhất một khu vực không phải backbone; R1 thực tế là thành viên của cả khu vực 1 và khu vực 2. Một router là thành viên của cả khu vực backbone và một khu vực không phải backbone được gọi là router biên khu vực (area border router - ABR). Lưu ý rằng đây là các router khác với các router ở rìa của một AS, vốn được gọi là router biên AS (AS border router) để rõ ràng.
 
 .. _fig-ospf-area:
 .. figure:: figures/f04-02-9780123850591.png
    :width: 500px
    :align: center
 
-   A domain divided into areas.
+   Một miền được chia thành các khu vực.
 
-Routing within a single area is exactly as described in the previous
-chapter. All the routers in the area send link-state advertisements to
-each other and thus develop a complete, consistent map of the area.
-However, the link-state advertisements of routers that are not area
-border routers do not leave the area in which they originated. This has
-the effect of making the flooding and route calculation processes
-considerably more scalable. For example, router R4 in area 3 will never
-see a link-state advertisement from router R8 in area 1. As a
-consequence, it will know nothing about the detailed topology of areas
-other than its own.
+Định tuyến trong một khu vực đơn lẻ diễn ra đúng như mô tả ở chương trước. Tất cả các router trong khu vực gửi quảng bá trạng thái liên kết cho nhau và do đó xây dựng một bản đồ đầy đủ, nhất quán về khu vực. Tuy nhiên, các quảng bá trạng thái liên kết của các router không phải router biên khu vực sẽ không rời khỏi khu vực nơi chúng được tạo ra. Điều này làm cho quá trình flooding và tính toán tuyến trở nên khả mở hơn nhiều. Ví dụ, router R4 ở khu vực 3 sẽ không bao giờ thấy quảng bá trạng thái liên kết từ router R8 ở khu vực 1. Do đó, nó sẽ không biết gì về cấu trúc liên kết chi tiết của các khu vực khác ngoài khu vực của nó.
 
-How, then, does a router in one area determine the right next hop for a
-packet destined to a network in another area? The answer to this becomes
-clear if we imagine the path of a packet that has to travel from one
-nonbackbone area to another as being split into three parts. First, it
-travels from its source network to the backbone area, then it crosses
-the backbone, then it travels from the backbone to the destination
-network. To make this work, the area border routers summarize routing
-information that they have learned from one area and make it available
-in their advertisements to other areas. For example, R1 receives
-link-state advertisements from all the routers in area 1 and can thus
-determine the cost of reaching any network in area 1. When R1 sends
-link-state advertisements into area 0, it advertises the costs of
-reaching the networks in area 1 much as if all those networks were
-directly connected to R1. This enables all the area 0 routers to learn
-the cost to reach all networks in area 1. The area border routers then
-summarize this information and advertise it into the nonbackbone areas.
-Thus, all routers learn how to reach all networks in the domain.
+Vậy làm thế nào để một router ở một khu vực xác định được next hop đúng cho một gói tin gửi đến một mạng ở khu vực khác? Câu trả lời sẽ rõ ràng nếu chúng ta hình dung đường đi của một gói tin phải đi từ một khu vực không phải backbone đến một khu vực khác như được chia thành ba phần. Đầu tiên, nó đi từ mạng nguồn đến khu vực backbone, sau đó băng qua backbone, rồi đi từ backbone đến mạng đích. Để làm được điều này, các router biên khu vực tổng hợp thông tin định tuyến mà chúng học được từ một khu vực và cung cấp nó trong các quảng bá của mình cho các khu vực khác. Ví dụ, R1 nhận các quảng bá trạng thái liên kết từ tất cả các router trong khu vực 1 và do đó có thể xác định chi phí đến bất kỳ mạng nào trong khu vực 1. Khi R1 gửi quảng bá trạng thái liên kết vào khu vực 0, nó quảng bá chi phí đến các mạng trong khu vực 1 như thể tất cả các mạng đó được kết nối trực tiếp với R1. Điều này cho phép tất cả các router khu vực 0 học được chi phí đến tất cả các mạng trong khu vực 1. Các router biên khu vực sau đó tổng hợp thông tin này và quảng bá vào các khu vực không phải backbone. Như vậy, tất cả các router đều học được cách đến tất cả các mạng trong miền.
 
-Note that, in the case of area 2, there are two ABRs and that routers in
-area 2 will thus have to make a choice as to which one they use to reach
-the backbone. This is easy enough, since both R1 and R2 will be
-advertising costs to various networks, so it will become clear which is
-the better choice as the routers in area 2 run their shortest-path
-algorithm. For example, it is pretty clear that R1 is going to be a
-better choice than R2 for destinations in area 1.
+Lưu ý rằng, trong trường hợp khu vực 2, có hai ABR và các router trong khu vực 2 sẽ phải chọn xem sử dụng router nào để đến backbone. Điều này khá dễ, vì cả R1 và R2 đều sẽ quảng bá chi phí đến các mạng khác nhau, nên sẽ rõ ràng router nào là lựa chọn tốt hơn khi các router trong khu vực 2 chạy thuật toán đường đi ngắn nhất. Ví dụ, khá rõ ràng rằng R1 sẽ là lựa chọn tốt hơn R2 cho các đích ở khu vực 1.
 
-When dividing a domain into areas, the network administrator makes a
-tradeoff between scalability and optimality of routing. The use of areas
-forces all packets traveling from one area to another to go via the
-backbone area, even if a shorter path might have been available. For
-example, even if R4 and R5 were directly connected, packets would not
-flow between them because they are in different nonbackbone areas. It
-turns out that the need for scalability is often more important than the
-need to use the absolute shortest path.
+Khi chia một miền thành các khu vực, quản trị viên mạng phải đánh đổi giữa khả năng mở rộng và tối ưu hóa định tuyến. Việc sử dụng các khu vực buộc tất cả các gói tin đi từ khu vực này sang khu vực khác phải đi qua khu vực backbone, ngay cả khi có thể có một đường đi ngắn hơn. Ví dụ, ngay cả khi R4 và R5 được kết nối trực tiếp, các gói tin sẽ không đi giữa chúng vì chúng ở các khu vực không phải backbone khác nhau. Hóa ra, nhu cầu về khả năng mở rộng thường quan trọng hơn nhu cầu sử dụng đường đi ngắn nhất tuyệt đối.
 
 .. _key-tradeoffs:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   This illustrates an important principle in network design. There is
-   frequently a trade-off between scalability and some sort of
-   optimality. When hierarchy is introduced, information is hidden
-   from some nodes in the network, hindering their ability to make
-   perfect decisions. However, information hiding is essential to
-   scaling a solution, since it saves all nodes from having global
-   knowledge. It is invariably true in large networks that scalability
-   is a more pressing design goal than selecting the optimal route.
-   :ref:`[Next] <key-scaling>`
+   Điều này minh họa một nguyên tắc quan trọng trong thiết kế mạng. Thường xuyên có sự đánh đổi giữa khả năng mở rộng và một dạng tối ưu nào đó. Khi phân cấp được đưa vào, thông tin sẽ bị ẩn khỏi một số nút trong mạng, làm giảm khả năng của chúng trong việc ra quyết định hoàn hảo. Tuy nhiên, việc ẩn thông tin là thiết yếu để mở rộng giải pháp, vì nó giúp tất cả các nút không phải biết thông tin toàn cục. Trong các mạng lớn, khả năng mở rộng luôn là mục tiêu thiết kế cấp bách hơn so với việc chọn tuyến tối ưu. :ref:`[Tiếp theo] <key-scaling>`
 
-Finally, we note that there is a trick by which network administrators
-can more flexibly decide which routers go in area 0. This trick uses the
-idea of a *virtual link* between routers. Such a virtual link is
-obtained by configuring a router that is not directly connected to
-area 0 to exchange backbone routing information with a router that is.
-For example, a virtual link could be configured from R8 to R1, thus
-making R8 part of the backbone. R8 would now participate in link-state
-advertisement flooding with the other routers in area 0. The cost of the
-virtual link from R8 to R1 is determined by the exchange of routing
-information that takes place in area 1. This technique can help to
-improve the optimality of routing.
+Cuối cùng, chúng tôi lưu ý rằng có một mẹo giúp quản trị viên mạng linh hoạt hơn trong việc quyết định router nào thuộc khu vực 0. Mẹo này sử dụng ý tưởng về một *liên kết ảo* (virtual link) giữa các router. Một liên kết ảo được thiết lập bằng cách cấu hình một router không kết nối trực tiếp với khu vực 0 để trao đổi thông tin định tuyến backbone với một router có kết nối. Ví dụ, có thể cấu hình một liên kết ảo từ R8 đến R1, biến R8 thành một phần của backbone. R8 giờ sẽ tham gia flooding quảng bá trạng thái liên kết với các router khác trong khu vực 0. Chi phí của liên kết ảo từ R8 đến R1 được xác định bởi việc trao đổi thông tin định tuyến diễn ra trong khu vực 1. Kỹ thuật này có thể giúp cải thiện tối ưu hóa định tuyến.
 
-4.1.2 Interdomain Routing (BGP)
--------------------------------
+4.1.2 Định tuyến liên miền (BGP)
+--------------------------------
 
-At the beginning of this chapter, we introduced the notion that the
-Internet is organized as autonomous systems, each of which is under
-the control of a single administrative entity. A corporation’s complex
-internal network might be a single AS, as may the national network of
-any single Internet Service Provider (ISP). :numref:`Figure %s
-<fig-autonomous>` shows a simple network with two autonomous systems.
+Ở đầu chương này, chúng tôi đã giới thiệu khái niệm rằng Internet được tổ chức thành các hệ tự trị (AS), mỗi hệ dưới sự kiểm soát của một thực thể quản trị duy nhất. Một mạng nội bộ phức tạp của một công ty có thể là một AS, cũng như mạng quốc gia của một nhà cung cấp dịch vụ Internet (ISP). :numref:`Hình %s <fig-autonomous>` cho thấy một mạng đơn giản với hai hệ tự trị.
 
 .. _fig-autonomous:
 .. figure:: figures/f04-03-9780123850591.png
    :width: 400px
    :align: center
 
-   A network with two autonomous systems.
+   Một mạng với hai hệ tự trị.
 
-The basic idea behind autonomous systems is to provide an additional way
-to hierarchically aggregate routing information in a large internet,
-thus improving scalability. We now divide the routing problem into two
-parts: routing within a single autonomous system and routing between
-autonomous systems. Since another name for autonomous systems in the
-Internet is routing *domains*, we refer to the two parts of the routing
-problem as interdomain routing and intradomain routing. In addition to
-improving scalability, the AS model decouples the intradomain routing
-that takes place in one AS from that taking place in another. Thus, each
-AS can run whatever intradomain routing protocols it chooses. It can
-even use static routes or multiple protocols, if desired. The
-interdomain routing problem is then one of having different ASs share
-reachability information—descriptions of the set of IP addresses that
-can be reached via a given AS—with each other.
+Ý tưởng cơ bản đằng sau các hệ tự trị là cung cấp một cách bổ sung để gom nhóm thông tin định tuyến theo phân cấp trong một liên mạng lớn, từ đó cải thiện khả năng mở rộng. Bây giờ chúng ta chia bài toán định tuyến thành hai phần: định tuyến trong một hệ tự trị đơn lẻ và định tuyến giữa các hệ tự trị. Vì một tên gọi khác của hệ tự trị trên Internet là *miền định tuyến* (routing domain), chúng tôi gọi hai phần của bài toán định tuyến là định tuyến liên miền (interdomain) và định tuyến nội miền (intradomain). Ngoài việc cải thiện khả năng mở rộng, mô hình AS còn tách biệt định tuyến nội miền diễn ra trong một AS với định tuyến nội miền diễn ra ở AS khác. Do đó, mỗi AS có thể chạy bất kỳ giao thức định tuyến nội miền nào nó muốn. Nó thậm chí có thể dùng các tuyến tĩnh hoặc nhiều giao thức khác nhau nếu muốn. Bài toán định tuyến liên miền khi đó là làm sao để các AS khác nhau chia sẻ thông tin về khả năng tiếp cận—mô tả tập các địa chỉ IP có thể đến được qua một AS nhất định—với nhau.
 
-Challenges in Interdomain Routing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Thách thức trong định tuyến liên miền
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Perhaps the most important challenge of interdomain routing today is the
-need for each AS to determine its own routing *policies*. A simple
-example routing policy implemented at a particular AS might look like
-this: “Whenever possible, I prefer to send traffic via AS X than via AS
-Y, but I’ll use AS Y if it is the only path, and I never want to carry
-traffic from AS X to AS Y or *vice versa*.” Such a policy would be
-typical when I have paid money to both AS X and AS Y to connect my AS to
-the rest of the Internet, and AS X is my preferred provider of
-connectivity, with AS Y being the fallback. Because I view both AS X and
-AS Y as providers (and presumably I paid them to play this role), I
-don’t expect to help them out by carrying traffic between them across my
-network (this is called *transit* traffic). The more autonomous systems
-I connect to, the more complex policies I might have, especially when
-you consider backbone providers, who may interconnect with dozens of
-other providers and hundreds of customers and have different economic
-arrangements (which affect routing policies) with each one.
+Có lẽ thách thức quan trọng nhất của định tuyến liên miền ngày nay là nhu cầu để mỗi AS xác định *chính sách* định tuyến của riêng mình. Một ví dụ đơn giản về chính sách định tuyến được hiện thực tại một AS cụ thể có thể như sau: “Bất cứ khi nào có thể, tôi thích gửi lưu lượng qua AS X hơn là qua AS Y, nhưng tôi sẽ dùng AS Y nếu đó là đường duy nhất, và tôi không bao giờ muốn chuyển lưu lượng từ AS X sang AS Y hoặc ngược lại.” Một chính sách như vậy là điển hình khi tôi đã trả tiền cho cả AS X và AS Y để kết nối AS của mình với phần còn lại của Internet, và AS X là nhà cung cấp ưu tiên, còn AS Y là dự phòng. Vì tôi coi cả AS X và AS Y là nhà cung cấp (và giả sử tôi đã trả tiền cho họ để đóng vai trò này), tôi không mong muốn giúp họ bằng cách chuyển lưu lượng giữa họ qua mạng của mình (điều này gọi là lưu lượng *transit*). Càng kết nối với nhiều hệ tự trị, tôi càng có thể có nhiều chính sách phức tạp hơn, đặc biệt khi bạn xét đến các nhà cung cấp backbone, những người có thể kết nối với hàng chục nhà cung cấp khác và hàng trăm khách hàng, với các thỏa thuận kinh tế khác nhau (ảnh hưởng đến chính sách định tuyến) với từng bên.
 
-A key design goal of interdomain routing is that policies like the
-example above, and much more complex ones, should be supported by the
-interdomain routing system. To make the problem harder, I need to be
-able to implement such a policy without any help from other autonomous
-systems, and in the face of possible misconfiguration or malicious
-behavior by other autonomous systems. Furthermore, there is often a
-desire to keep the policies *private*, because the entities that run the
-autonomous systems—mostly ISPs—are often in competition with each other
-and don’t want their economic arrangements made public.
+Một mục tiêu thiết kế then chốt của định tuyến liên miền là các chính sách như ví dụ trên, và còn phức tạp hơn nhiều, phải được hệ thống định tuyến liên miền hỗ trợ. Để làm vấn đề khó hơn, tôi cần có khả năng hiện thực chính sách như vậy mà không cần sự trợ giúp từ các hệ tự trị khác, và trong điều kiện có thể có cấu hình sai hoặc hành vi độc hại từ các hệ tự trị khác. Hơn nữa, thường có mong muốn giữ các chính sách này *riêng tư*, vì các thực thể vận hành hệ tự trị—chủ yếu là các ISP—thường cạnh tranh với nhau và không muốn các thỏa thuận kinh tế của mình bị công khai.
 
-There have been two major interdomain routing protocols in the history
-of the Internet. The first was the Exterior Gateway Protocol (EGP),
-which had a number of limitations, perhaps the most severe of which was
-that it constrained the topology of the Internet rather significantly.
-EGP was designed when the Internet had a treelike topology, such as that
-illustrated in :numref:`Figure %s <fig-inet-tree>`, and did not allow for the
-topology to become more general. Note that in this simple treelike
-structure there is a single backbone, and autonomous systems are
-connected only as parents and children and not as peers.
+Trong lịch sử Internet đã có hai giao thức định tuyến liên miền lớn. Đầu tiên là Exterior Gateway Protocol (EGP), vốn có nhiều hạn chế, nghiêm trọng nhất là nó giới hạn cấu trúc liên kết của Internet khá đáng kể. EGP được thiết kế khi Internet có cấu trúc cây, như minh họa ở :numref:`Hình %s <fig-inet-tree>`, và không cho phép cấu trúc liên kết trở nên tổng quát hơn. Lưu ý rằng trong cấu trúc cây đơn giản này chỉ có một backbone, và các hệ tự trị chỉ kết nối như cha-con chứ không phải ngang hàng.
 
-The replacement for EGP was the Border Gateway Protocol (BGP), which has
-iterated through four versions (BGP-4). BGP is often regarded as one of
-the more complex parts of the Internet. We’ll cover some of its high
-points here.
+Thay thế cho EGP là Border Gateway Protocol (BGP), đã trải qua bốn phiên bản (BGP-4). BGP thường được coi là một trong những phần phức tạp nhất của Internet. Chúng tôi sẽ trình bày một số điểm chính ở đây.
 
-Unlike its predecessor EGP, BGP makes virtually no assumptions about how
-autonomous systems are interconnected—they form an arbitrary graph. This
-model is clearly general enough to accommodate non-tree-structured
-internetworks, like the simplified picture of a multi-provider Internet
-shown in :numref:`Figure %s <fig-inet-1995>`. (It turns out there is still some
-sort of structure to the Internet, as we’ll see below, but it’s nothing
-like as simple as a tree, and BGP makes no assumptions about such
-structure.)
+Không giống như EGP, BGP hầu như không giả định gì về cách các hệ tự trị được kết nối với nhau—chúng tạo thành một đồ thị bất kỳ. Mô hình này rõ ràng đủ tổng quát để đáp ứng các liên mạng không có cấu trúc cây, như hình ảnh đơn giản hóa về Internet đa nhà cung cấp trong :numref:`Hình %s <fig-inet-1995>`. (Thực tế là Internet vẫn có một số cấu trúc, như sẽ thấy bên dưới, nhưng không đơn giản như cây, và BGP không giả định gì về cấu trúc đó.)
 
 .. _fig-inet-1995:
 .. figure:: figures/f04-04-9780123850591.png
    :width: 600px
    :align: center
 
-   A simple multi-provider Internet.
+   Một Internet đa nhà cung cấp đơn giản.
 
-Unlike the simple tree-structured Internet shown in :numref:`Figure
-%s <fig-inet-tree>`, or even the fairly simple picture in :numref:`Figure
-%s <fig-inet-1995>`, today’s Internet consists of a richly interconnected
-set of networks, mostly operated by private companies (ISPs) rather than
-governments. Many Internet Service Providers (ISPs) exist mainly to
-provide service to “consumers” (i.e., individuals with computers in
-their homes), while others offer something more like the old backbone
-service, interconnecting other providers and sometimes larger
-corporations. Often, many providers arrange to interconnect with each
-other at a single *peering point*.
+Không giống như Internet cấu trúc cây đơn giản trong :numref:`Hình %s <fig-inet-tree>`, hoặc thậm chí hình ảnh khá đơn giản trong :numref:`Hình %s <fig-inet-1995>`, Internet ngày nay bao gồm một tập hợp các mạng kết nối phong phú, chủ yếu do các công ty tư nhân (ISP) vận hành thay vì chính phủ. Nhiều nhà cung cấp dịch vụ Internet (ISP) tồn tại chủ yếu để cung cấp dịch vụ cho “người tiêu dùng” (tức là cá nhân có máy tính tại nhà), trong khi những nhà cung cấp khác cung cấp dịch vụ giống như backbone cũ, kết nối các nhà cung cấp khác và đôi khi cả các tập đoàn lớn. Thường thì nhiều nhà cung cấp sắp xếp để kết nối với nhau tại một *điểm peering* duy nhất.
 
-To get a better sense of how we might manage routing among this complex
-interconnection of autonomous systems, we can start by defining a few
-terms. We define *local traffic* as traffic that originates at or
-terminates on nodes within an AS, and *transit traffic* as traffic that
-passes through an AS. We can classify autonomous systems into three
-broad types:
+Để hiểu rõ hơn cách chúng ta có thể quản lý định tuyến giữa tập hợp phức tạp các hệ tự trị này, chúng ta có thể bắt đầu bằng cách định nghĩa một số thuật ngữ. Chúng ta định nghĩa *lưu lượng cục bộ* (local traffic) là lưu lượng bắt nguồn hoặc kết thúc tại các nút trong một AS, và *lưu lượng transit* (transit traffic) là lưu lượng đi qua một AS. Chúng ta có thể phân loại các hệ tự trị thành ba loại lớn:
 
--  Stub AS—an AS that only carries local traffic. The small corporation in
-   :numref:`Figure %s <fig-inet-1995>` is an example of a stub AS.
+-  Stub AS—một AS chỉ chuyển lưu lượng cục bộ. Công ty nhỏ trong :numref:`Hình %s <fig-inet-1995>` là ví dụ về stub AS.
 
--  Multihomed Stub AS—an AS that has connections to more than one other AS
-   but that refuses to carry transit traffic, such as the large
-   corporation at the top of :numref:`Figure %s <fig-inet-1995>`.
+-  Multihomed Stub AS—một AS có kết nối với nhiều AS khác nhưng từ chối chuyển lưu lượng transit, như công ty lớn ở đầu :numref:`Hình %s <fig-inet-1995>`.
 
--  Transit AS—an AS that has connections to more than one other AS and
-   that is designed to carry both transit and local traffic, such as the
-   backbone providers in :numref:`Figure %s <fig-inet-1995>`.
+-  Transit AS—một AS có kết nối với nhiều AS khác và được thiết kế để chuyển cả lưu lượng transit và cục bộ, như các nhà cung cấp backbone trong :numref:`Hình %s <fig-inet-1995>`.
 
-Whereas the discussion of routing in the previous chapter focused on
-finding optimal paths based on minimizing some sort of link metric, the
-goals of interdomain routing are rather more complex. First, it is
-necessary to find *some* path to the intended destination that is loop
-free. Second, paths must be compliant with the policies of the various
-autonomous systems along the path—and, as we have already seen, those
-policies might be almost arbitrarily complex. Thus, while intradomain
-focuses on a well-defined problem of optimizing the scalar cost of the
-path, interdomain focuses on finding a non-looping, *policy-compliant*
-path—a much more complex optimization problem.
+Trong khi phần thảo luận về định tuyến ở chương trước tập trung vào việc tìm đường đi tối ưu dựa trên việc tối thiểu hóa một loại metric liên kết nào đó, mục tiêu của định tuyến liên miền phức tạp hơn nhiều. Đầu tiên, cần tìm *một* đường đi đến đích mong muốn mà không có vòng lặp. Thứ hai, các đường đi phải tuân thủ các chính sách của các hệ tự trị dọc theo đường đi—và như đã thấy, các chính sách này có thể gần như tùy ý phức tạp. Do đó, trong khi nội miền tập trung vào bài toán tối ưu hóa scalar rõ ràng, liên miền tập trung vào việc tìm một đường đi không lặp, *tuân thủ chính sách*—một bài toán tối ưu hóa phức tạp hơn nhiều.
 
-There are additional factors that make interdomain routing hard. The
-first is simply a matter of scale. An Internet backbone router must be
-able to forward any packet destined anywhere in the Internet. That means
-having a routing table that will provide a match for any valid IP
-address. While CIDR has helped to control the number of distinct
-prefixes that are carried in the Internet’s backbone routing, there is
-inevitably a lot of routing information to pass around—roughly 700,000
-prefixes in mid-2018.
+Có thêm các yếu tố khác làm cho định tuyến liên miền trở nên khó khăn. Đầu tiên đơn giản là vấn đề quy mô. Một router backbone Internet phải có khả năng chuyển tiếp bất kỳ gói tin nào đến bất kỳ đâu trên Internet. Điều đó nghĩa là phải có một bảng định tuyến cung cấp khớp cho bất kỳ địa chỉ IP hợp lệ nào. Dù CIDR đã giúp kiểm soát số lượng prefix riêng biệt được mang trong định tuyến backbone Internet, vẫn còn rất nhiều thông tin định tuyến phải truyền đi—khoảng 700.000 prefix vào giữa năm 2018.
 
-A further challenge in interdomain routing arises from the autonomous
-nature of the domains. Note that each domain may run its own interior
-routing protocols and use any scheme it chooses to assign metrics to
-paths. This means that it is impossible to calculate meaningful path
-costs for a path that crosses multiple autonomous systems. A cost of
-1000 across one provider might imply a great path, but it might mean an
-unacceptably bad one from another provider. As a result, interdomain
-routing advertises only *reachability*. The concept of reachability is
-basically a statement that “you can reach this network through this AS.”
-This means that for interdomain routing to pick an optimal path is
-essentially impossible.
+Một thách thức nữa trong định tuyến liên miền xuất phát từ tính tự trị của các miền. Lưu ý rằng mỗi miền có thể chạy giao thức định tuyến nội bộ riêng và dùng bất kỳ cách nào nó muốn để gán metric cho các đường đi. Điều này nghĩa là không thể tính toán chi phí đường đi có ý nghĩa cho một đường đi băng qua nhiều hệ tự trị. Một chi phí 1000 qua một nhà cung cấp có thể là đường rất tốt, nhưng lại là đường rất tệ với nhà cung cấp khác. Do đó, định tuyến liên miền chỉ quảng bá *khả năng tiếp cận* (reachability). Khái niệm khả năng tiếp cận về cơ bản là một tuyên bố rằng “bạn có thể đến mạng này qua AS này.” Điều này nghĩa là việc định tuyến liên miền chọn đường đi tối ưu về bản chất là không thể.
 
-The autonomous nature of interdomain raises issue of trust. Provider A
-might be unwilling to believe certain advertisements from provider B for
-fear that provider B will advertise erroneous routing information. For
-example, trusting provider B when he advertises a great route to
-anywhere in the Internet can be a disastrous choice if provider B turns
-out to have made a mistake configuring his routers or to have
-insufficient capacity to carry the traffic.
+Tính tự trị của liên miền cũng đặt ra vấn đề về tin cậy. Nhà cung cấp A có thể không muốn tin vào một số quảng bá từ nhà cung cấp B vì sợ rằng B sẽ quảng bá thông tin định tuyến sai. Ví dụ, tin vào B khi anh ta quảng bá một đường đi tuyệt vời đến bất kỳ đâu trên Internet có thể là một lựa chọn thảm họa nếu B cấu hình router sai hoặc không đủ năng lực để chuyển lưu lượng.
 
-The issue of trust is also related to the need to support complex
-policies as noted above. For example, I might be willing to trust a
-particular provider only when he advertises reachability to certain
-prefixes, and thus I would have a policy that says, “Use AS X to reach
-only prefixes :math:`p` and :math:`q`, if and only if AS X advertises
-reachability to those prefixes.”
+Vấn đề tin cậy cũng liên quan đến nhu cầu hỗ trợ các chính sách phức tạp như đã nói ở trên. Ví dụ, tôi có thể chỉ muốn tin một nhà cung cấp khi anh ta quảng bá khả năng tiếp cận đến một số prefix nhất định, và do đó tôi sẽ có chính sách rằng, “Chỉ dùng AS X để đến các prefix :math:`p` và :math:`q`, nếu và chỉ nếu AS X quảng bá khả năng tiếp cận đến các prefix đó.”
 
-Basics of BGP
+Cơ bản về BGP
 ~~~~~~~~~~~~~
 
-Each AS has one or more *border routers* through which packets enter and
-leave the AS. In our simple example in :numref:`Figure %s <fig-autonomous>`,
-routers R2 and R4 would be border routers. (Over the years, routers have
-sometimes also been known as *gateways*, hence the names of the
-protocols BGP and EGP). A border router is simply an IP router that is
-charged with the task of forwarding packets between autonomous systems.
+Mỗi AS có một hoặc nhiều *router biên* (border router) qua đó các gói tin đi vào và ra khỏi AS. Trong ví dụ đơn giản ở :numref:`Hình %s <fig-autonomous>`, các router R2 và R4 là router biên. (Qua các năm, router đôi khi còn được gọi là *gateway*, do đó có tên các giao thức BGP và EGP). Một router biên đơn giản là một router IP chịu trách nhiệm chuyển tiếp các gói tin giữa các hệ tự trị.
 
-Each AS that participates in BGP must also have at least one *BGP*
-speaker, a router that “speaks” BGP to other BGP speakers in other
-autonomous systems. It is common to find that border routers are also
-BGP speakers, but that does not have to be the case.
+Mỗi AS tham gia BGP cũng phải có ít nhất một *BGP speaker*, một router “nói” BGP với các BGP speaker ở các hệ tự trị khác. Thông thường, router biên cũng là BGP speaker, nhưng không nhất thiết phải như vậy.
 
-BGP does not belong to either of the two main classes of routing
-protocols, distance-vector or link-state. Unlike these protocols, BGP
-advertises *complete paths* as an enumerated list of autonomous systems
-to reach a particular network. It is sometimes called a *path-vector*
-protocol for this reason. The advertisement of complete paths is
-necessary to enable the sorts of policy decisions described above to be
-made in accordance with the wishes of a particular AS. It also enables
-routing loops to be readily detected.
+BGP không thuộc một trong hai lớp giao thức định tuyến chính, vector khoảng cách hay trạng thái liên kết. Không giống các giao thức này, BGP quảng bá *đường đi đầy đủ* dưới dạng một danh sách liệt kê các hệ tự trị để đến một mạng cụ thể. Vì lý do này, nó đôi khi được gọi là giao thức *vector đường đi* (path-vector). Việc quảng bá đường đi đầy đủ là cần thiết để cho phép các quyết định chính sách như đã mô tả ở trên được thực hiện theo ý muốn của từng AS. Nó cũng cho phép dễ dàng phát hiện các vòng lặp định tuyến.
 
 .. _fig-bgpeg:
 .. figure:: figures/f04-05-9780123850591.png
    :width: 500px
    :align: center
 
-   Example of a network running BGP.
+   Ví dụ về một mạng chạy BGP.
 
-To see how this works, consider the very simple example network in
-:numref:`Figure %s <fig-bgpeg>`. Assume that the providers are transit
-networks, while the customer networks are stubs. A BGP speaker for the
-AS of provider A (AS 2) would be able to advertise reachability
-information for each of the network numbers assigned to customers P
-and Q. Thus, it would say, in effect, “The networks 128.96, 192.4.153,
-192.4.32, and 192.4.3 can be reached directly from AS 2.” The backbone
-network, on receiving this advertisement, can advertise, “The networks
-128.96, 192.4.153, 192.4.32, and 192.4.3 can be reached along the path
-(AS 1, AS 2).” Similarly, it could advertise, “The networks 192.12.69,
-192.4.54, and 192.4.23 can be reached along the path (AS 1, AS 3).”
+Để thấy cách hoạt động này, xét ví dụ mạng rất đơn giản trong :numref:`Hình %s <fig-bgpeg>`. Giả sử các nhà cung cấp là các mạng transit, còn các mạng khách hàng là stub. Một BGP speaker cho AS của nhà cung cấp A (AS 2) sẽ có thể quảng bá thông tin khả năng tiếp cận cho từng số mạng được gán cho khách hàng P và Q. Như vậy, nó sẽ nói, về cơ bản, “Các mạng 128.96, 192.4.153, 192.4.32, và 192.4.3 có thể đến trực tiếp từ AS 2.” Mạng backbone, khi nhận được quảng bá này, có thể quảng bá, “Các mạng 128.96, 192.4.153, 192.4.32, và 192.4.3 có thể đến qua đường đi (AS 1, AS 2).” Tương tự, nó có thể quảng bá, “Các mạng 192.12.69, 192.4.54, và 192.4.23 có thể đến qua đường đi (AS 1, AS 3).”
 
 .. _fig-aspath:
 .. figure:: figures/f04-06-9780123850591.png
    :width: 500px
    :align: center
 
-   Example of loop among autonomous systems.
+   Ví dụ về vòng lặp giữa các hệ tự trị.
 
-An important job of BGP is to prevent the establishment of looping
-paths. For example, consider the network illustrated in
-:numref:`Figure %s <fig-aspath>`. It differs from :numref:`Figure %s
-<fig-bgpeg>` only in the addition of an extra link between AS 2 and AS
-3, but the effect now is that the graph of autonomous systems has a
-loop in it. Suppose AS 1 learns that it can reach network 128.96
-through AS 2, so it advertises this fact to AS 3, who in turn
-advertises it back to AS 2. In the absence of any loop prevention
-mechanism, AS 2 could now decide that AS 3 was the preferred route for
-packets destined for 128.96. If AS 2 starts sending packets addressed
-to 128.96 to AS 3, AS 3 would send them to AS 1; AS 1 would send them
-back to AS 2; and they would loop forever.  This is prevented by
-carrying the complete AS path in the routing messages. In this case,
-the advertisement for a path to 128.96 received by AS 2 from AS 3
-would contain an AS path of (AS 3, AS 1, AS 2, AS 4).  AS 2 sees
-itself in this path, and thus concludes that this is not a useful path
-for it to use.
+Một nhiệm vụ quan trọng của BGP là ngăn chặn việc thiết lập các đường đi vòng lặp. Ví dụ, xét mạng minh họa trong :numref:`Hình %s <fig-aspath>`. Nó khác với :numref:`Hình %s <fig-bgpeg>` chỉ ở chỗ thêm một liên kết giữa AS 2 và AS 3, nhưng hiệu quả là đồ thị các hệ tự trị giờ có một vòng lặp. Giả sử AS 1 biết rằng nó có thể đến mạng 128.96 qua AS 2, nên nó quảng bá điều này cho AS 3, rồi AS 3 lại quảng bá ngược lại cho AS 2. Nếu không có cơ chế ngăn vòng lặp, AS 2 có thể quyết định rằng AS 3 là đường đi ưu tiên cho các gói đến 128.96. Nếu AS 2 bắt đầu gửi các gói địa chỉ đến 128.96 cho AS 3, AS 3 sẽ gửi chúng cho AS 1; AS 1 lại gửi về AS 2; và chúng sẽ lặp mãi mãi. Điều này được ngăn chặn bằng cách mang theo toàn bộ đường đi AS trong các thông điệp định tuyến. Trong trường hợp này, quảng bá đường đi đến 128.96 nhận được bởi AS 2 từ AS 3 sẽ chứa một đường đi AS là (AS 3, AS 1, AS 2, AS 4). AS 2 thấy mình trong đường đi này, và do đó kết luận đây không phải là đường đi hữu ích cho nó.
 
-In order for this loop prevention technique to work, the AS numbers
-carried in BGP clearly need to be unique. For example, AS 2 can only
-recognize itself in the AS path in the above example if no other AS
-identifies itself in the same way. AS numbers are now 32-bits long, and
-they are assigned by a central authority to assure uniqueness.
+Để kỹ thuật ngăn vòng lặp này hoạt động, các số AS mang trong BGP rõ ràng phải là duy nhất. Ví dụ, AS 2 chỉ có thể nhận ra mình trong đường đi AS ở ví dụ trên nếu không có AS nào khác nhận dạng giống như vậy. Số AS hiện nay dài 32 bit, và được gán bởi một cơ quan trung ương để đảm bảo tính duy nhất.
 
-A given AS will only advertise routes that it considers good enough for
-itself. That is, if a BGP speaker has a choice of several different
-routes to a destination, it will choose the best one according to its
-own local policies, and then that will be the route it advertises.
-Furthermore, a BGP speaker is under no obligation to advertise any route
-to a destination, even if it has one. This is how an AS can implement a
-policy of not providing transit—by refusing to advertise routes to
-prefixes that are not contained within that AS, even if it knows how to
-reach them.
+Một AS chỉ quảng bá các tuyến mà nó cho là đủ tốt cho chính nó. Tức là, nếu một BGP speaker có nhiều lựa chọn tuyến khác nhau đến một đích, nó sẽ chọn tuyến tốt nhất theo chính sách cục bộ của mình, và đó sẽ là tuyến nó quảng bá. Hơn nữa, một BGP speaker không có nghĩa vụ phải quảng bá bất kỳ tuyến nào đến một đích, ngay cả khi nó biết cách đến đó. Đây là cách một AS có thể hiện thực chính sách không cung cấp transit—bằng cách từ chối quảng bá các tuyến đến các prefix không nằm trong AS đó, dù nó biết cách đến.
 
-Given that links fail and policies change, BGP speakers need to be
-able to cancel previously advertised paths. This is done with a form
-of negative advertisement known as a *withdrawn route*. Both positive
-and negative reachability information are carried in a BGP update
-message, the format of which is shown in :numref:`Figure %s
-<fig-bgpup>`. (Note that the fields in this figure are multiples of
-16 bits, unlike other packet formats in this chapter.)
+Vì các liên kết có thể hỏng và chính sách có thể thay đổi, các BGP speaker cần có khả năng hủy các đường đi đã quảng bá trước đó. Điều này được thực hiện bằng một dạng quảng bá âm gọi là *withdrawn route* (tuyến bị rút lại). Cả thông tin khả năng tiếp cận dương và âm đều được mang trong một thông điệp cập nhật BGP, định dạng thể hiện trong :numref:`Hình %s <fig-bgpup>`. (Lưu ý rằng các trường trong hình này là bội số của 16 bit, không giống các định dạng gói khác trong chương này.)
 
 .. _fig-bgpup:
 .. figure:: figures/f04-07-9780123850591.png
    :width: 200px
    :align: center
 
-   BGP-4 update packet format.
+   Định dạng gói cập nhật BGP-4.
 
-Unlike the routing protocols described in the previous chapter, BGP is
-defined to run on top of TCP, the reliable transport protocol. Because
-BGP speakers can count on TCP to be reliable, this means that any
-information that has been sent from one speaker to another does not need
-to be sent again. Thus, as long as nothing has changed, a BGP speaker
-can simply send an occasional *keepalive* message that says, in effect,
-“I’m still here and nothing has changed.” If that router were to crash
-or become disconnected from its peer, it would stop sending the
-keepalives, and the other routers that had learned routes from it would
-assume that those routes were no longer valid.
+Không giống các giao thức định tuyến mô tả ở chương trước, BGP được định nghĩa để chạy trên TCP, giao thức truyền tải tin cậy. Vì các BGP speaker có thể tin tưởng TCP là tin cậy, điều này nghĩa là bất kỳ thông tin nào đã được gửi từ một speaker đến speaker khác không cần phải gửi lại. Do đó, miễn là không có gì thay đổi, một BGP speaker chỉ cần gửi một thông điệp *keepalive* định kỳ, về cơ bản nói rằng, “Tôi vẫn ở đây và không có gì thay đổi.” Nếu router đó bị crash hoặc mất kết nối với peer, nó sẽ ngừng gửi keepalive, và các router khác đã học các tuyến từ nó sẽ giả định các tuyến đó không còn hợp lệ.
 
-Common AS Relationships and Policies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Các mối quan hệ và chính sách AS phổ biến
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Having said that policies may be arbitrarily complex, there turn out
-to be a few common ones, reflecting common relationships between
-autonomous systems. The most common relationships are illustrated in
-:numref:`Figure %s <fig-as-rels>`. The three common relationships and
-the policies that go with them are as follows:
+Dù đã nói rằng các chính sách có thể tùy ý phức tạp, thực tế có một số chính sách phổ biến, phản ánh các mối quan hệ phổ biến giữa các hệ tự trị. Các mối quan hệ phổ biến nhất được minh họa trong :numref:`Hình %s <fig-as-rels>`. Ba mối quan hệ phổ biến và các chính sách đi kèm như sau:
 
 .. _fig-as-rels:
 .. figure:: figures/f04-08-9780123850591.png
    :width: 500px
    :align: center
 
-   Common AS relationships.
+   Các mối quan hệ AS phổ biến.
 
--  *Provider-Customer—*\ Providers are in the business of connecting
-   their customers to the rest of the Internet. A customer might be
-   a corporation, or it might be a smaller ISP (which may have customers
-   of its own). So the common policy is to advertise all the routes I
-   know about to my customer, and advertise routes I learn from my
-   customer to everyone.
+-  *Provider-Customer—* Nhà cung cấp kinh doanh việc kết nối khách hàng của mình với phần còn lại của Internet. Một khách hàng có thể là một công ty, hoặc một ISP nhỏ hơn (có thể có khách hàng riêng). Chính sách phổ biến là quảng bá tất cả các tuyến tôi biết cho khách hàng, và quảng bá các tuyến tôi học được từ khách hàng cho tất cả mọi người.
 
--  *Customer-Provider—*\ In the other direction, the customer wants to
-   get traffic directed to him (and his customers, if he has them) by
-   his provider, and he wants to be able to send traffic to the rest of
-   the Internet through his provider. So the common policy in this case
-   is to advertise my own prefixes and routes learned from my customers
-   to my provider, advertise routes learned from my provider to my
-   customers, but don’t advertise routes learned from one provider to
-   another provider. That last part is to make sure the customer doesn’t
-   find himself in the business of carrying traffic from one provider to
-   another, which isn’t in his interests if he is paying the providers
-   to carry traffic for him.
+-  *Customer-Provider—* Ở chiều ngược lại, khách hàng muốn nhận lưu lượng gửi đến mình (và khách hàng của mình, nếu có) qua nhà cung cấp, và muốn gửi lưu lượng đến phần còn lại của Internet qua nhà cung cấp. Chính sách phổ biến là quảng bá các prefix của mình và các tuyến học từ khách hàng cho nhà cung cấp, quảng bá các tuyến học từ nhà cung cấp cho khách hàng, nhưng không quảng bá các tuyến học từ nhà cung cấp này cho nhà cung cấp khác. Phần cuối này đảm bảo khách hàng không trở thành trung gian chuyển lưu lượng giữa các nhà cung cấp, điều không có lợi nếu họ phải trả tiền cho các nhà cung cấp để chuyển lưu lượng cho mình.
 
--  *Peer—*\ The third option is a symmetrical peering between autonomous
-   systems. Two providers who view themselves as equals usually peer so
-   that they can get access to each other’s customers without having to
-   pay another provider. The typical policy here is to advertise routes
-   learned from my customers to my peer, advertise routes learned from
-   my peer to my customers, but don’t advertise routes from my peer to
-   any provider or *vice versa*.
+-  *Peer—* Lựa chọn thứ ba là peering đối xứng giữa các hệ tự trị. Hai nhà cung cấp coi nhau là ngang hàng thường peer để có thể truy cập khách hàng của nhau mà không phải trả tiền cho nhà cung cấp khác. Chính sách điển hình là quảng bá các tuyến học từ khách hàng cho peer, quảng bá các tuyến học từ peer cho khách hàng, nhưng không quảng bá các tuyến từ peer cho bất kỳ nhà cung cấp nào hoặc ngược lại.
 
-One thing to note about this figure is the way it has brought back some
-structure to the apparently unstructured Internet. At the bottom of
-the hierarchy we have the stub networks that are customers of one or
-more providers, and as we move up the hierarchy we see providers who
-have other providers as their customers. At the top, we have providers
-who have customers and peers but are not customers of anyone. These
-providers are known as the *Tier-1* providers.
+Một điều cần lưu ý về hình này là cách nó đưa lại một số cấu trúc cho Internet tưởng như không có cấu trúc. Ở đáy của hệ phân cấp là các mạng stub là khách hàng của một hoặc nhiều nhà cung cấp, và khi lên cao hơn ta thấy các nhà cung cấp có khách hàng là các nhà cung cấp khác. Ở đỉnh, ta có các nhà cung cấp có khách hàng và peer nhưng không là khách hàng của ai. Các nhà cung cấp này được gọi là *nhà cung cấp Tier-1*.
 
 .. _key-scaling:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   Let’s return to the real question: How does all this help us to
-   build scalable networks? First, the number of nodes participating
-   in BGP is on the order of the number of autonomous systems, which
-   is much smaller than the number of networks. Second, finding a good
-   interdomain route is only a matter of finding a path to the right
-   border router, of which there are only a few per AS. Thus, we have
-   neatly subdivided the routing problem into manageable parts, once
-   again using a new level of hierarchy to increase scalability. The
-   complexity of interdomain routing is now on the order of the number
-   of autonomous systems, and the complexity of intradomain routing is
-   on the order of the number of networks in a single AS. :ref:`[Next]
-   <key-e2e>`
+   Quay lại câu hỏi thực sự: Tất cả điều này giúp chúng ta xây dựng mạng khả mở như thế nào? Đầu tiên, số lượng nút tham gia BGP vào cỡ số lượng hệ tự trị, nhỏ hơn nhiều so với số lượng mạng. Thứ hai, việc tìm một tuyến liên miền tốt chỉ là vấn đề tìm đường đến router biên phù hợp, mà mỗi AS chỉ có vài router như vậy. Như vậy, chúng ta đã chia nhỏ bài toán định tuyến thành các phần có thể quản lý, một lần nữa sử dụng một mức phân cấp mới để tăng khả năng mở rộng. Độ phức tạp của định tuyến liên miền giờ vào cỡ số lượng hệ tự trị, còn độ phức tạp của định tuyến nội miền vào cỡ số lượng mạng trong một AS. :ref:`[Tiếp theo] <key-e2e>`
 
-Integrating Interdomain and Intradomain Routing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tích hợp định tuyến liên miền và nội miền
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-While the preceding discussion illustrates how a BGP speaker learns
-interdomain routing information, the question still remains as to how
-all the other routers in a domain get this information. There are
-several ways this problem can be addressed.
+Trong khi phần thảo luận trước minh họa cách một BGP speaker học thông tin định tuyến liên miền, câu hỏi vẫn còn là làm thế nào các router khác trong một miền nhận được thông tin này. Có một số cách để giải quyết vấn đề này.
 
-Let’s start with a very simple situation, which is also very common. In
-the case of a stub AS that only connects to other autonomous systems at
-a single point, the border router is clearly the only choice for all
-routes that are outside the AS. Such a router can inject a *default
-route* into the intradomain routing protocol. In effect, this is a
-statement that any network that has not been explicitly advertised in
-the intradomain protocol is reachable through the border router. Recall
-from the discussion of IP forwarding in the previous chapter that the
-default entry in the forwarding table comes after all the more specific
-entries, and it matches anything that failed to match a specific entry.
+Hãy bắt đầu với một tình huống rất đơn giản, cũng rất phổ biến. Trong trường hợp một stub AS chỉ kết nối với các hệ tự trị khác tại một điểm duy nhất, router biên rõ ràng là lựa chọn duy nhất cho tất cả các tuyến ra ngoài AS. Router này có thể đưa vào giao thức định tuyến nội miền một *tuyến mặc định* (default route). Về cơ bản, đây là một tuyên bố rằng bất kỳ mạng nào chưa được quảng bá rõ ràng trong giao thức nội miền đều có thể đến qua router biên. Nhớ lại từ phần thảo luận về chuyển tiếp IP ở chương trước rằng mục mặc định trong bảng chuyển tiếp được xét sau tất cả các mục cụ thể hơn, và nó khớp với bất kỳ địa chỉ nào không khớp với mục cụ thể nào.
 
-The next step up in complexity is to have the border routers inject
-specific routes they have learned from outside the AS. Consider, for
-example, the border router of a provider AS that connects to a customer
-AS. That router could learn that the network prefix 192.4.54/24 is
-located inside the customer AS, either through BGP or because the
-information is configured into the border router. It could inject a
-route to that prefix into the routing protocol running inside the
-provider AS. This would be an advertisement of the sort, “I have a link
-to 192.4.54/24 of cost X.” This would cause other routers in the
-provider AS to learn that this border router is the place to send
-packets destined for that prefix.
+Bước tiếp theo về độ phức tạp là để các router biên đưa vào các tuyến cụ thể mà chúng học được từ bên ngoài AS. Xét ví dụ, router biên của một AS nhà cung cấp kết nối với một AS khách hàng. Router đó có thể học rằng prefix mạng 192.4.54/24 nằm trong AS khách hàng, hoặc qua BGP hoặc do thông tin được cấu hình vào router biên. Nó có thể đưa vào giao thức định tuyến nội miền của AS nhà cung cấp một tuyến đến prefix đó. Đây sẽ là một quảng bá kiểu, “Tôi có một liên kết đến 192.4.54/24 với chi phí X.” Điều này khiến các router khác trong AS nhà cung cấp biết rằng router biên này là nơi gửi các gói đến prefix đó.
 
-The final level of complexity comes in backbone networks, which learn so
-much routing information from BGP that it becomes too costly to inject
-it into the intradomain protocol. For example, if a border router wants
-to inject 10,000 prefixes that it learned about from another AS, it will
-have to send very big link-state packets to the other routers in that
-AS, and their shortest-path calculations are going to become very
-complex. For this reason, the routers in a backbone network use a
-variant of BGP called *interior BGP* (iBGP) to effectively redistribute
-the information that is learned by the BGP speakers at the edges of the
-AS to all the other routers in the AS. (The other variant of BGP,
-discussed above, runs between autonomous systems and is called *exterior
-BGP*, or eBGP). iBGP enables any router in the AS to learn the best
-border router to use when sending a packet to any address. At the same
-time, each router in the AS keeps track of how to get to each border
-router using a conventional intradomain protocol with no injected
-information. By combining these two sets of information, each router in
-the AS is able to determine the appropriate next hop for all prefixes.
+Mức độ phức tạp cuối cùng xuất hiện ở các mạng backbone, nơi học quá nhiều thông tin định tuyến từ BGP đến mức không thể đưa hết vào giao thức nội miền. Ví dụ, nếu một router biên muốn đưa vào 10.000 prefix mà nó học được từ một AS khác, nó sẽ phải gửi các gói trạng thái liên kết rất lớn cho các router khác trong AS, và các phép tính đường đi ngắn nhất của họ sẽ trở nên rất phức tạp. Vì lý do này, các router trong một mạng backbone sử dụng một biến thể của BGP gọi là *BGP nội bộ* (interior BGP - iBGP) để phân phối hiệu quả thông tin học được bởi các BGP speaker ở rìa AS cho tất cả các router khác trong AS. (Biến thể BGP khác, đã thảo luận ở trên, chạy giữa các hệ tự trị và gọi là *BGP ngoại bộ* - exterior BGP, hay eBGP). iBGP cho phép bất kỳ router nào trong AS học được router biên tốt nhất để gửi gói đến bất kỳ địa chỉ nào. Đồng thời, mỗi router trong AS theo dõi cách đến từng router biên bằng một giao thức nội miền thông thường mà không cần đưa thêm thông tin vào. Bằng cách kết hợp hai tập thông tin này, mỗi router trong AS có thể xác định next hop phù hợp cho tất cả các prefix.
 
 .. _fig-ibgp:
 .. figure:: figures/f04-09-9780123850591.png
    :width: 500px
    :align: center
 
-   Example of interdomain and intradomain routing. All
-   routers run iBGP and an intradomain routing protocol. Border
-   routers A, D, and E also run eBGP to other autonomous
-   systems.
+   Ví dụ về định tuyến liên miền và nội miền. Tất cả các router chạy iBGP và một giao thức định tuyến nội miền. Các router biên A, D, và E cũng chạy eBGP với các hệ tự trị khác.
 
-To see how this all works, consider the simple example network,
-representing a single AS, in :numref:`Figure %s <fig-ibgp>`. The three
-border routers, A, D, and E, speak eBGP to other autonomous systems
-and learn how to reach various prefixes. These three border routers
-communicate with each other and with the interior routers B and C by
-building a mesh of iBGP sessions among all the routers in the
-AS. Let’s now focus in on how router B builds up its complete view of
-how to forward packets to any prefix. Look at the top left of
-:numref:`Figure %s <fig-ibgptab>`, which shows the information that
-router B learns from its iBGP sessions. It learns that some prefixes
-are best reached via router A, some via D, and some via E. At the same
-time, all the routers in the AS are also running some intradomain
-routing protocol such as Routing Information Protocol (RIP) or Open
-Shortest Path First (OSPF). (A generic term for intradomain protocols
-is an interior gateway protocol, or IGP.) From this completely
-separate protocol, B learns how to reach other nodes *inside* the
-domain, as shown in the top right table. For example, to reach router
-E, B needs to send packets toward router C. Finally, in the bottom
-table, B puts the whole picture together, combining the information
-about external prefixes learned from iBGP with the information about
-interior routes to the border routers learned from the IGP. Thus, if a
-prefix like 18.0/16 is reachable via border router E, and the best
-interior path to E is via C, then it follows that any packet destined
-for 18.0/16 should be forwarded toward C. In this way, any router in
-the AS can build up a complete routing table for any prefix that is
-reachable via some border router of the AS.
+Để thấy tất cả điều này hoạt động như thế nào, xét ví dụ mạng đơn giản, đại diện cho một AS, trong :numref:`Hình %s <fig-ibgp>`. Ba router biên, A, D, và E, nói eBGP với các hệ tự trị khác và học cách đến các prefix khác nhau. Ba router biên này giao tiếp với nhau và với các router nội bộ B và C bằng cách xây dựng một mesh các phiên iBGP giữa tất cả các router trong AS. Bây giờ hãy tập trung vào cách router B xây dựng cái nhìn đầy đủ về cách chuyển tiếp gói đến bất kỳ prefix nào. Nhìn vào góc trên bên trái của :numref:`Hình %s <fig-ibgptab>`, thể hiện thông tin mà router B học được từ các phiên iBGP. Nó học được rằng một số prefix tốt nhất nên đến qua router A, một số qua D, và một số qua E. Đồng thời, tất cả các router trong AS cũng chạy một giao thức định tuyến nội miền nào đó như RIP hoặc OSPF. (Thuật ngữ chung cho các giao thức nội miền là interior gateway protocol, hay IGP.) Từ giao thức hoàn toàn riêng biệt này, B học cách đến các nút *bên trong* miền, như thể hiện ở bảng trên bên phải. Ví dụ, để đến router E, B cần gửi gói về phía router C. Cuối cùng, ở bảng dưới cùng, B tổng hợp toàn bộ bức tranh, kết hợp thông tin về các prefix ngoài học từ iBGP với thông tin về các tuyến nội bộ đến các router biên học từ IGP. Như vậy, nếu một prefix như 18.0/16 có thể đến qua router biên E, và đường đi nội bộ tốt nhất đến E là qua C, thì bất kỳ gói nào đến 18.0/16 nên được chuyển tiếp về phía C. Bằng cách này, bất kỳ router nào trong AS cũng có thể xây dựng bảng định tuyến đầy đủ cho bất kỳ prefix nào có thể đến qua một router biên nào đó của AS.
 
 .. _fig-ibgptab:
 .. figure:: figures/f04-10-9780123850591.png
    :width: 500px
    :align: center
 
-   BGP routing table, IGP routing table, and combined
-   table at router B.
+   Bảng định tuyến BGP, bảng định tuyến IGP, và bảng kết hợp tại router B.
