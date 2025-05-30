@@ -1,60 +1,10 @@
-Problem: Allocating Resources
------------------------------
+Vấn đề: Phân bổ Tài nguyên
+-------------------------
 
-By now we have seen enough layers of the network protocol hierarchy to
-understand how data can be transferred among processes across
-heterogeneous networks. We now turn to a problem that spans the entire
-protocol stack—how to effectively and fairly allocate resources among a
-collection of competing users. The resources being shared include the
-bandwidth of the links and the buffers on the routers or switches where
-packets are queued awaiting transmission. Packets *contend* at a router
-for the use of a link, with each contending packet placed in a queue
-waiting its turn to be transmitted over the link. When too many packets
-are contending for the same link, the queue fills and two undesirable
-things happen: packets experience increased end-to-end delay, and in the
-worst case, the queue overflows and packets have to be dropped. When
-long queues persist and drops become common, the network is said to be
-*congested*. Most networks provide a *congestion-control* mechanism to
-deal with just such a situation.
+Đến thời điểm này, chúng ta đã tìm hiểu đủ các lớp của hệ phân cấp giao thức mạng để hiểu cách dữ liệu có thể được truyền giữa các tiến trình qua các mạng không đồng nhất. Bây giờ, chúng ta chuyển sang một vấn đề bao trùm toàn bộ ngăn xếp giao thức—làm thế nào để phân bổ tài nguyên một cách hiệu quả và công bằng giữa một tập hợp người dùng cạnh tranh nhau. Các tài nguyên được chia sẻ bao gồm băng thông của các liên kết và bộ đệm trên các bộ định tuyến hoặc chuyển mạch, nơi các gói tin được xếp hàng chờ truyền đi. Các gói tin *cạnh tranh* tại một bộ định tuyến để sử dụng một liên kết, với mỗi gói cạnh tranh được đặt vào một hàng đợi chờ đến lượt mình được truyền qua liên kết đó. Khi có quá nhiều gói tin cùng cạnh tranh cho một liên kết, hàng đợi sẽ đầy và hai điều không mong muốn xảy ra: các gói tin sẽ bị tăng độ trễ đầu-cuối, và trong trường hợp xấu nhất, hàng đợi bị tràn và các gói tin phải bị loại bỏ. Khi các hàng đợi dài kéo dài và việc loại bỏ gói tin trở nên phổ biến, mạng được gọi là bị *tắc nghẽn*. Hầu hết các mạng đều cung cấp một cơ chế *kiểm soát tắc nghẽn* để xử lý tình huống như vậy.
 
-Congestion control and resource allocation are two sides of the same
-coin. On the one hand, if the network takes an active role in allocating
-resources—for example, scheduling which virtual circuit gets to use a
-given physical link during a certain period of time—then congestion may
-be avoided, thereby making congestion control unnecessary. Allocating
-network resources with any precision is difficult, however, because the
-resources in question are distributed throughout the network; multiple
-links connecting a series of routers need to be scheduled. On the other
-hand, you can always let packet sources send as much data as they want
-and then recover from congestion should it occur. This is the easier
-approach, but it can be disruptive because many packets may be discarded
-by the network before congestion can be controlled. Furthermore, it is
-precisely at those times when the network is congested—that is,
-resources have become scarce relative to demand—that the need for
-resource allocation among competing users is most keenly felt. There are
-also solutions in the middle, whereby inexact allocation decisions are
-made, but congestion can still occur and hence some mechanism is still
-needed to recover from it. Whether you call such a mixed solution
-congestion control or resource allocation does not really matter. In
-some sense, it is both.
+Kiểm soát tắc nghẽn và phân bổ tài nguyên là hai mặt của cùng một vấn đề. Một mặt, nếu mạng đóng vai trò chủ động trong việc phân bổ tài nguyên—ví dụ, lên lịch cho mạch ảo nào được sử dụng một liên kết vật lý nhất định trong một khoảng thời gian nhất định—thì tắc nghẽn có thể được tránh, nhờ đó làm cho kiểm soát tắc nghẽn trở nên không cần thiết. Tuy nhiên, việc phân bổ tài nguyên mạng một cách chính xác là rất khó, bởi vì các tài nguyên này được phân tán khắp mạng; nhiều liên kết kết nối một chuỗi các bộ định tuyến cần được lên lịch. Mặt khác, bạn luôn có thể để các nguồn phát gói tin gửi bao nhiêu dữ liệu tùy thích và sau đó xử lý tắc nghẽn nếu nó xảy ra. Đây là cách tiếp cận dễ dàng hơn, nhưng nó có thể gây gián đoạn vì nhiều gói tin có thể bị loại bỏ bởi mạng trước khi tắc nghẽn được kiểm soát. Hơn nữa, chính vào những thời điểm mạng bị tắc nghẽn—tức là, tài nguyên trở nên khan hiếm so với nhu cầu—thì nhu cầu phân bổ tài nguyên giữa các người dùng cạnh tranh càng trở nên cấp thiết. Cũng có những giải pháp ở giữa, trong đó các quyết định phân bổ không chính xác được đưa ra, nhưng tắc nghẽn vẫn có thể xảy ra và do đó vẫn cần một cơ chế để xử lý nó. Việc bạn gọi một giải pháp hỗn hợp như vậy là kiểm soát tắc nghẽn hay phân bổ tài nguyên thực ra không quan trọng. Ở một khía cạnh nào đó, nó là cả hai.
 
-Congestion control and resource allocation involve both hosts and
-network elements such as routers. In network elements, various queuing
-disciplines can be used to control the order in which packets get
-transmitted and which packets get dropped. The queuing discipline can
-also segregate traffic to keep one user’s packets from unduly affecting
-another user’s packets. At the end hosts, the congestion-control
-mechanism paces how fast sources are allowed to send packets. This is
-done in an effort to keep congestion from occurring in the first place
-and, should it occur, to help eliminate the congestion.
+Kiểm soát tắc nghẽn và phân bổ tài nguyên liên quan đến cả các máy chủ và các thành phần mạng như bộ định tuyến. Trong các thành phần mạng, có thể sử dụng nhiều kỷ luật xếp hàng khác nhau để kiểm soát thứ tự các gói tin được truyền đi và gói nào sẽ bị loại bỏ. Kỷ luật xếp hàng cũng có thể phân tách lưu lượng để giữ cho các gói tin của một người dùng không ảnh hưởng quá mức đến các gói tin của người dùng khác. Ở các máy chủ đầu cuối, cơ chế kiểm soát tắc nghẽn điều chỉnh tốc độ mà các nguồn phát được phép gửi gói tin. Điều này được thực hiện nhằm tránh để tắc nghẽn xảy ra ngay từ đầu và, nếu nó xảy ra, giúp loại bỏ tắc nghẽn.
 
-This chapter starts with an overview of congestion control and resource
-allocation. We then discuss different queuing disciplines that can be
-implemented on the routers inside the network, followed by a description
-of the congestion-control algorithm provided by TCP on the hosts. The
-fourth section explores various techniques involving both routers and
-hosts that aim to avoid congestion before it becomes a problem. Finally,
-we examine the broad area of *quality of service*. We consider the needs
-of applications to receive different levels of resource allocation in
-the network and describe a number of ways in which they can request
-these resources and the network can meet the requests.
+Chương này bắt đầu với tổng quan về kiểm soát tắc nghẽn và phân bổ tài nguyên. Sau đó, chúng ta sẽ thảo luận về các kỷ luật xếp hàng khác nhau có thể được triển khai trên các bộ định tuyến bên trong mạng, tiếp theo là mô tả thuật toán kiểm soát tắc nghẽn do TCP cung cấp trên các máy chủ. Phần thứ tư khám phá các kỹ thuật khác nhau liên quan đến cả bộ định tuyến và máy chủ nhằm tránh tắc nghẽn trước khi nó trở thành vấn đề. Cuối cùng, chúng ta sẽ xem xét lĩnh vực rộng lớn về *chất lượng dịch vụ*. Chúng ta sẽ xem xét nhu cầu của các ứng dụng về việc nhận các mức phân bổ tài nguyên khác nhau trong mạng và mô tả một số cách mà chúng có thể yêu cầu các tài nguyên này cũng như mạng có thể đáp ứng các yêu cầu đó.
