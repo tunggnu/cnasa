@@ -1,171 +1,60 @@
-6.4 Advanced Congestion Control
+6.4 Kiểm Soát Tắc Nghẽn Nâng Cao
 ===============================
 
-This section explores congestion control more deeply. In doing so, it is
-important to understand that the standard TCP’s strategy is to control
-congestion once it happens, as opposed to trying to avoid congestion in
-the first place. In fact, TCP repeatedly increases the load it imposes
-on the network in an effort to find the point at which congestion
-occurs, and then it backs off from this point. Said another way, TCP
-*needs* to create losses to find the available bandwidth of the
-connection. An appealing alternative is to predict when congestion is
-about to happen and then to reduce the rate at which hosts send data
-just before packets start being discarded. We call such a strategy
-*congestion avoidance* to distinguish it from *congestion control*, but
-it’s probably most accurate to think of “avoidance” as a subset of
-“control.”
+Phần này đi sâu hơn vào kiểm soát tắc nghẽn. Khi làm như vậy, điều quan trọng là phải hiểu rằng chiến lược tiêu chuẩn của TCP là kiểm soát tắc nghẽn sau khi nó xảy ra, thay vì cố gắng tránh tắc nghẽn ngay từ đầu. Thực tế, TCP liên tục tăng tải mà nó áp đặt lên mạng nhằm tìm ra điểm mà tại đó tắc nghẽn xảy ra, rồi sau đó nó lùi lại khỏi điểm này. Nói cách khác, TCP *cần* tạo ra mất mát để tìm ra băng thông khả dụng của kết nối. Một giải pháp thay thế hấp dẫn là dự đoán khi nào tắc nghẽn sắp xảy ra và sau đó giảm tốc độ gửi dữ liệu của các máy chủ ngay trước khi các gói bắt đầu bị loại bỏ. Chúng tôi gọi chiến lược này là *tránh tắc nghẽn* để phân biệt với *kiểm soát tắc nghẽn*, nhưng có lẽ chính xác nhất là coi “tránh” như một tập con của “kiểm soát”.
 
-We describe two different approaches to congestion-avoidance. The first
-puts a small amount of additional functionality into the router to
-assist the end node in the anticipation of congestion. This approach is
-often referred to as *Active Queue Management* (AQM). The second
-approach attempts to avoid congestion purely from the end hosts. This
-approach is implemented in TCP, making it variant of the congestion
-control mechanisms described in the previous section.
+Chúng tôi mô tả hai cách tiếp cận khác nhau để tránh tắc nghẽn. Cách tiếp cận đầu tiên bổ sung một lượng nhỏ chức năng vào bộ định tuyến để hỗ trợ nút đầu cuối trong việc dự đoán tắc nghẽn. Cách tiếp cận này thường được gọi là *Quản lý Hàng đợi Chủ động* (AQM). Cách tiếp cận thứ hai cố gắng tránh tắc nghẽn hoàn toàn từ các máy chủ đầu cuối. Cách tiếp cận này được triển khai trong TCP, khiến nó trở thành một biến thể của các cơ chế kiểm soát tắc nghẽn đã được mô tả ở phần trước.
 
-6.4.1 Active Queue Management (DECbit, RED, ECN)
-------------------------------------------------
+6.4.1 Quản lý Hàng đợi Chủ động (DECbit, RED, ECN)
+--------------------------------------------------
 
-The first approach requires changes to routers, which has never been the
-Internet’s preferred way of introducing new features, but nonetheless,
-has been a constant source of consternation over the last 20 years. The
-problem is that while it’s generally agreed that routers are in an ideal
-position to detect the onset of congestion—i.e., their queues start to
-fill up—there has not been a consensus on exactly what the best
-algorithm is. The following describes two of the classic mechanisms, and
-concludes with a brief discussion of where things stand today.
+Cách tiếp cận đầu tiên yêu cầu thay đổi các bộ định tuyến, điều mà chưa bao giờ là cách ưu tiên của Internet khi giới thiệu các tính năng mới, nhưng dù vậy, vẫn là một nguồn gây tranh cãi liên tục trong 20 năm qua. Vấn đề là mặc dù nhìn chung mọi người đồng ý rằng các bộ định tuyến là vị trí lý tưởng để phát hiện sự khởi đầu của tắc nghẽn—tức là, khi hàng đợi của chúng bắt đầu đầy lên—nhưng vẫn chưa có sự đồng thuận về chính xác thuật toán nào là tốt nhất. Sau đây mô tả hai cơ chế kinh điển, và kết thúc bằng một thảo luận ngắn về tình hình hiện nay.
 
 DECbit
 ~~~~~~
 
-The first mechanism was developed for use on the Digital Network
-Architecture (DNA), a connectionless network with a connection-oriented
-transport protocol. This mechanism could, therefore, also be applied to
-TCP and IP. As noted above, the idea here is to more evenly split the
-responsibility for congestion control between the routers and the end
-nodes. Each router monitors the load it is experiencing and explicitly
-notifies the end nodes when congestion is about to occur. This
-notification is implemented by setting a binary congestion bit in the
-packets that flow through the router, hence the name *DECbit*. The
-destination host then copies this congestion bit into the ACK it sends
-back to the source. Finally, the source adjusts its sending rate so as
-to avoid congestion. The following discussion describes the algorithm in
-more detail, starting with what happens in the router.
+Cơ chế đầu tiên được phát triển để sử dụng trên Kiến trúc Mạng Kỹ thuật số (DNA), một mạng không kết nối với giao thức vận chuyển hướng kết nối. Do đó, cơ chế này cũng có thể được áp dụng cho TCP và IP. Như đã đề cập ở trên, ý tưởng ở đây là chia đều hơn trách nhiệm kiểm soát tắc nghẽn giữa các bộ định tuyến và các nút đầu cuối. Mỗi bộ định tuyến giám sát tải mà nó đang trải qua và thông báo rõ ràng cho các nút đầu cuối khi tắc nghẽn sắp xảy ra. Thông báo này được thực hiện bằng cách đặt một bit tắc nghẽn nhị phân trong các gói đi qua bộ định tuyến, do đó có tên là *DECbit*. Máy chủ đích sau đó sao chép bit tắc nghẽn này vào ACK mà nó gửi lại cho nguồn. Cuối cùng, nguồn điều chỉnh tốc độ gửi của mình để tránh tắc nghẽn. Phần thảo luận sau đây mô tả thuật toán chi tiết hơn, bắt đầu từ những gì xảy ra trong bộ định tuyến.
 
-A single congestion bit is added to the packet header. A router sets
-this bit in a packet if its average queue length is greater than or
-equal to 1 at the time the packet arrives. This average queue length
-is measured over a time interval that spans the last busy+idle cycle,
-plus the current busy cycle. (The router is *busy* when it is
-transmitting and *idle* when it is not.) :numref:`Figure %s
-<fig-decbit>` shows the queue length at a router as a function of
-time. Essentially, the router calculates the area under the curve and
-divides this value by the time interval to compute the average queue
-length. Using a queue length of 1 as the trigger for setting the
-congestion bit is a trade-off between significant queuing (and hence
-higher throughput) and increased idle time (and hence lower delay). In
-other words, a queue length of 1 seems to optimize the power function.
+Một bit tắc nghẽn được thêm vào tiêu đề gói tin. Một bộ định tuyến đặt bit này trong một gói nếu độ dài hàng đợi trung bình của nó lớn hơn hoặc bằng 1 tại thời điểm gói đến. Độ dài hàng đợi trung bình này được đo trong một khoảng thời gian bao gồm chu kỳ bận+rảnh cuối cùng, cộng với chu kỳ bận hiện tại. (Bộ định tuyến *bận* khi nó đang truyền và *rảnh* khi nó không truyền.) :numref:`Hình %s <fig-decbit>` cho thấy độ dài hàng đợi tại một bộ định tuyến như một hàm của thời gian. Về cơ bản, bộ định tuyến tính diện tích dưới đường cong và chia giá trị này cho khoảng thời gian để tính độ dài hàng đợi trung bình. Sử dụng độ dài hàng đợi là 1 làm ngưỡng để đặt bit tắc nghẽn là một sự đánh đổi giữa việc xếp hàng đáng kể (và do đó thông lượng cao hơn) và tăng thời gian rảnh (và do đó độ trễ thấp hơn). Nói cách khác, độ dài hàng đợi là 1 dường như tối ưu hóa hàm công suất.
 
 .. _fig-decbit:
 .. figure:: figures/f06-14-9780123850591.png
    :width: 500px
    :align: center
 
-   Computing average queue length at a router.
+   Tính toán độ dài hàng đợi trung bình tại một bộ định tuyến.
 
-Now turning our attention to the host half of the mechanism, the source
-records how many of its packets resulted in some router setting the
-congestion bit. In particular, the source maintains a congestion window,
-just as in TCP, and watches to see what fraction of the last window’s
-worth of packets resulted in the bit being set. If less than 50% of the
-packets had the bit set, then the source increases its congestion window
-by one packet. If 50% or more of the last window’s worth of packets had
-the congestion bit set, then the source decreases its congestion window
-to 0.875 times the previous value. The value 50% was chosen as the
-threshold based on analysis that showed it to correspond to the peak of
-the power curve. The “increase by 1, decrease by 0.875” rule was
-selected because additive increase/multiplicative decrease makes the
-mechanism stable.
+Bây giờ chuyển sang phần cơ chế ở phía máy chủ, nguồn ghi lại bao nhiêu gói của nó dẫn đến việc một bộ định tuyến nào đó đặt bit tắc nghẽn. Cụ thể, nguồn duy trì một cửa sổ tắc nghẽn, giống như trong TCP, và theo dõi xem tỷ lệ bao nhiêu gói trong cửa sổ cuối cùng có bit này được đặt. Nếu ít hơn 50% số gói có bit được đặt, thì nguồn tăng cửa sổ tắc nghẽn lên một gói. Nếu 50% hoặc nhiều hơn số gói trong cửa sổ cuối cùng có bit tắc nghẽn được đặt, thì nguồn giảm cửa sổ tắc nghẽn xuống 0,875 lần giá trị trước đó. Giá trị 50% được chọn làm ngưỡng dựa trên phân tích cho thấy nó tương ứng với đỉnh của đường cong công suất. Quy tắc “tăng 1, giảm 0,875” được chọn vì tăng cộng và giảm nhân giúp cơ chế ổn định.
 
 Random Early Detection
 ~~~~~~~~~~~~~~~~~~~~~~
 
-A second mechanism, called *random early detection* (RED), is similar to
-the DECbit scheme in that each router is programmed to monitor its own
-queue length and, when it detects that congestion is imminent, to notify
-the source to adjust its congestion window. RED, invented by Sally Floyd
-and Van Jacobson in the early 1990s, differs from the DECbit scheme in
-two major ways.
+Cơ chế thứ hai, gọi là *phát hiện sớm ngẫu nhiên* (RED), tương tự như sơ đồ DECbit ở chỗ mỗi bộ định tuyến được lập trình để giám sát độ dài hàng đợi của chính nó và, khi phát hiện tắc nghẽn sắp xảy ra, sẽ thông báo cho nguồn điều chỉnh cửa sổ tắc nghẽn của mình. RED, do Sally Floyd và Van Jacobson phát minh vào đầu những năm 1990, khác với sơ đồ DECbit ở hai điểm chính.
 
-The first is that rather than explicitly sending a congestion
-notification message to the source, RED is most commonly implemented
-such that it *implicitly* notifies the source of congestion by dropping
-one of its packets. The source is, therefore, effectively notified by
-the subsequent timeout or duplicate ACK. In case you haven’t already
-guessed, RED is designed to be used in conjunction with TCP, which
-currently detects congestion by means of timeouts (or some other means
-of detecting packet loss such as duplicate ACKs). As the “early” part of
-the RED acronym suggests, the gateway drops the packet earlier than it
-would have to, so as to notify the source that it should decrease its
-congestion window sooner than it would normally have. In other words,
-the router drops a few packets before it has exhausted its buffer space
-completely, so as to cause the source to slow down, with the hope that
-this will mean it does not have to drop lots of packets later on.
+Điểm đầu tiên là thay vì gửi một thông báo tắc nghẽn rõ ràng cho nguồn, RED thường được triển khai sao cho nó *ngầm* thông báo cho nguồn về tắc nghẽn bằng cách loại bỏ một trong các gói của nó. Do đó, nguồn được thông báo hiệu quả bằng timeout hoặc ACK trùng lặp tiếp theo. Nếu bạn chưa đoán ra, RED được thiết kế để sử dụng cùng với TCP, vốn hiện tại phát hiện tắc nghẽn bằng các timeout (hoặc một số phương pháp khác như ACK trùng lặp). Như phần “sớm” trong tên RED gợi ý, gateway loại bỏ gói sớm hơn mức cần thiết, để thông báo cho nguồn rằng nó nên giảm cửa sổ tắc nghẽn sớm hơn bình thường. Nói cách khác, bộ định tuyến loại bỏ một vài gói trước khi hết hoàn toàn bộ đệm, nhằm khiến nguồn giảm tốc độ, với hy vọng rằng điều này sẽ giúp không phải loại bỏ nhiều gói về sau.
 
-The second difference between RED and DECbit is in the details of how
-RED decides when to drop a packet and what packet it decides to drop. To
-understand the basic idea, consider a simple FIFO queue. Rather than
-wait for the queue to become completely full and then be forced to drop
-each arriving packet (the tail drop policy of the previous section), we
-could decide to drop each arriving packet with some *drop probability*
-whenever the queue length exceeds some *drop level*. This idea is called
-*early random drop*. The RED algorithm defines the details of how to
-monitor the queue length and when to drop a packet.
+Điểm khác biệt thứ hai giữa RED và DECbit là ở chi tiết cách RED quyết định khi nào loại bỏ một gói và gói nào sẽ bị loại bỏ. Để hiểu ý tưởng cơ bản, hãy xem xét một hàng đợi FIFO đơn giản. Thay vì chờ hàng đợi đầy hoàn toàn rồi buộc phải loại bỏ từng gói đến (chính sách loại bỏ ở đuôi của phần trước), chúng ta có thể quyết định loại bỏ mỗi gói đến với một *xác suất loại bỏ* nào đó bất cứ khi nào độ dài hàng đợi vượt quá một *mức loại bỏ*. Ý tưởng này gọi là *loại bỏ ngẫu nhiên sớm*. Thuật toán RED định nghĩa chi tiết cách giám sát độ dài hàng đợi và khi nào loại bỏ một gói.
 
-In the following paragraphs, we describe the RED algorithm as originally
-proposed by Floyd and Jacobson. We note that several modifications have
-since been proposed both by the inventors and by other researchers.
-However, the key ideas are the same as those presented below, and most
-current implementations are close to the algorithm that follows.
+Trong các đoạn sau, chúng tôi mô tả thuật toán RED như được Floyd và Jacobson đề xuất ban đầu. Chúng tôi lưu ý rằng đã có nhiều sửa đổi được đề xuất bởi cả các tác giả và các nhà nghiên cứu khác. Tuy nhiên, các ý tưởng chính vẫn giống như trình bày dưới đây, và hầu hết các triển khai hiện tại đều gần với thuật toán này.
 
-First, RED computes an average queue length using a weighted running
-average similar to the one used in the original TCP timeout computation.
-That is, ``AvgLen`` is computed as
+Đầu tiên, RED tính toán độ dài hàng đợi trung bình bằng cách sử dụng trung bình động có trọng số tương tự như cách tính timeout TCP ban đầu. Tức là, ``AvgLen`` được tính như sau
 
 ::
 
    AvgLen = (1 - Weight) x AvgLen + Weight x SampleLen
 
-where 0 < ``Weight`` < 1 and ``SampleLen`` is the length of the queue
-when a sample measurement is made. In most software implementations, the
-queue length is measured every time a new packet arrives at the gateway.
-In hardware, it might be calculated at some fixed sampling interval.
+trong đó 0 < ``Weight`` < 1 và ``SampleLen`` là độ dài hàng đợi khi thực hiện phép đo mẫu. Trong hầu hết các triển khai phần mềm, độ dài hàng đợi được đo mỗi khi một gói mới đến gateway. Trong phần cứng, nó có thể được tính tại một khoảng lấy mẫu cố định.
 
-The reason for using an average queue length rather than an
-instantaneous one is that it more accurately captures the notion of
-congestion. Because of the bursty nature of Internet traffic, queues
-can become full very quickly and then become empty again. If a queue
-is spending most of its time empty, then it’s probably not appropriate
-to conclude that the router is congested and to tell the hosts to slow
-down. Thus, the weighted running average calculation tries to detect
-long-lived congestion, as indicated in the right-hand portion of
-:numref:`Figure %s <fig-red-avg>`, by filtering out short-term changes
-in the queue length. You can think of the running average as a
-low-pass filter, where ``Weight`` determines the time constant of the
-filter. The question of how we pick this time constant is discussed
-below.
+Lý do sử dụng độ dài hàng đợi trung bình thay vì tức thời là vì nó phản ánh chính xác hơn khái niệm tắc nghẽn. Do tính chất bùng nổ của lưu lượng Internet, hàng đợi có thể đầy rất nhanh rồi lại trống ngay sau đó. Nếu một hàng đợi dành phần lớn thời gian trống, thì có lẽ không nên kết luận rằng bộ định tuyến đang tắc nghẽn và yêu cầu các máy chủ giảm tốc độ. Do đó, phép tính trung bình động có trọng số cố gắng phát hiện tắc nghẽn kéo dài, như được chỉ ra ở phần bên phải của :numref:`Hình %s <fig-red-avg>`, bằng cách lọc bỏ các thay đổi ngắn hạn trong độ dài hàng đợi. Bạn có thể nghĩ về trung bình động như một bộ lọc thông thấp, trong đó ``Weight`` xác định hằng số thời gian của bộ lọc. Câu hỏi về cách chọn hằng số thời gian này sẽ được thảo luận bên dưới.
 
 .. _fig-red-avg:
 .. figure:: figures/f06-15-9780123850591.png
    :width: 500px
    :align: center
 
-   Weighted running average queue length.
+   Độ dài hàng đợi trung bình động có trọng số.
 
-Second, RED has two queue length thresholds that trigger certain
-activity: ``MinThreshold`` and ``MaxThreshold``. When a packet arrives
-at the gateway, RED compares the current ``AvgLen`` with these two
-thresholds, according to the following rules:
+Thứ hai, RED có hai ngưỡng độ dài hàng đợi kích hoạt các hoạt động nhất định: ``MinThreshold`` và ``MaxThreshold``. Khi một gói đến gateway, RED so sánh ``AvgLen`` hiện tại với hai ngưỡng này, theo các quy tắc sau:
 
 ::
 
@@ -177,492 +66,156 @@ thresholds, according to the following rules:
    if MaxThreshold <= AvgLen
        drop the arriving packet
 
-If the average queue length is smaller than the lower threshold, no
-action is taken, and if the average queue length is larger than the
-upper threshold, then the packet is always dropped. If the average
-queue length is between the two thresholds, then the newly arriving
-packet is dropped with some probability ``P``. This situation is
-depicted in :numref:`Figure %s <fig-red>`. The approximate
-relationship between ``P`` and ``AvgLen`` is shown in :numref:`Figure
-%s <fig-red-prob>`. Note that the probability of drop increases slowly
-when ``AvgLen`` is between the two thresholds, reaching ``MaxP`` at
-the upper threshold, at which point it jumps to unity. The rationale
-behind this is that, if ``AvgLen`` reaches the upper threshold, then
-the gentle approach (dropping a few packets) is not working and
-drastic measures are called for: dropping all arriving packets. Some
-research has suggested that a smoother transition from random dropping
-to complete dropping, rather than the discontinuous approach shown
-here, may be appropriate.
+Nếu độ dài hàng đợi trung bình nhỏ hơn ngưỡng dưới, không có hành động nào được thực hiện, và nếu độ dài hàng đợi trung bình lớn hơn ngưỡng trên, thì gói luôn bị loại bỏ. Nếu độ dài hàng đợi trung bình nằm giữa hai ngưỡng, thì gói mới đến sẽ bị loại bỏ với xác suất ``P`` nào đó. Tình huống này được minh họa trong :numref:`Hình %s <fig-red>`. Mối quan hệ xấp xỉ giữa ``P`` và ``AvgLen`` được thể hiện trong :numref:`Hình %s <fig-red-prob>`. Lưu ý rằng xác suất loại bỏ tăng dần khi ``AvgLen`` nằm giữa hai ngưỡng, đạt ``MaxP`` tại ngưỡng trên, tại đó nó nhảy lên 1. Lý do là, nếu ``AvgLen`` đạt ngưỡng trên, thì cách tiếp cận nhẹ nhàng (loại bỏ một vài gói) không hiệu quả và cần biện pháp mạnh: loại bỏ tất cả các gói đến. Một số nghiên cứu cho rằng một chuyển tiếp mượt mà hơn từ loại bỏ ngẫu nhiên sang loại bỏ hoàn toàn, thay vì cách tiếp cận gián đoạn như trên, có thể phù hợp hơn.
 
 .. _fig-red:
 .. figure:: figures/f06-16-9780123850591.png
    :width: 300px
    :align: center
 
-   RED thresholds on a FIFO queue.
+   Các ngưỡng RED trên một hàng đợi FIFO.
 
 .. _fig-red-prob:
 .. figure:: figures/f06-17-9780123850591.png
    :width: 400px
    :align: center
 
-   Drop probability function for RED.
+   Hàm xác suất loại bỏ cho RED.
 
-Although :numref:`Figure %s <fig-red-prob>` shows the probability of
-drop as a function only of ``AvgLen``, the situation is actually a
-little more complicated. In fact, ``P`` is a function of both
-``AvgLen`` and how long it has been since the last packet was
-dropped. Specifically, it is computed as follows:
+Mặc dù :numref:`Hình %s <fig-red-prob>` cho thấy xác suất loại bỏ là hàm chỉ của ``AvgLen``, nhưng thực tế phức tạp hơn một chút. Thực ra, ``P`` là hàm của cả ``AvgLen`` và thời gian kể từ lần loại bỏ gói trước đó. Cụ thể, nó được tính như sau:
 
 ::
 
    TempP = MaxP x (AvgLen - MinThreshold) / (MaxThreshold - MinThreshold)
    P = TempP/(1 - count x TempP)
 
-``TempP`` is the variable that is plotted on the y-axis in :numref:`Figure
-%s <fig-red-prob>`, ``count`` keeps track of how many newly arriving
-packets have been queued (not dropped), and ``AvgLen`` has been between
-the two thresholds. ``P`` increases slowly as ``count`` increases,
-thereby making a drop increasingly likely as the time since the last
-drop increases. This makes closely spaced drops relatively less likely
-than widely spaced drops. This extra step in calculating ``P`` was
-introduced by the inventors of RED when they observed that, without it,
-the packet drops were not well distributed in time but instead tended to
-occur in clusters. Because packet arrivals from a certain connection are
-likely to arrive in bursts, this clustering of drops is likely to cause
-multiple drops in a single connection. This is not desirable, since only
-one drop per round-trip time is enough to cause a connection to reduce
-its window size, whereas multiple drops might send it back into slow
-start.
+``TempP`` là biến được vẽ trên trục y trong :numref:`Hình %s <fig-red-prob>`, ``count`` theo dõi số gói mới đến đã được xếp hàng (không bị loại bỏ), và ``AvgLen`` nằm giữa hai ngưỡng. ``P`` tăng dần khi ``count`` tăng, do đó làm cho việc loại bỏ trở nên ngày càng có khả năng xảy ra khi thời gian kể từ lần loại bỏ trước tăng lên. Điều này làm cho các lần loại bỏ gần nhau ít có khả năng xảy ra hơn so với các lần loại bỏ cách xa nhau. Bước bổ sung này trong tính toán ``P`` được các tác giả RED đưa vào khi họ nhận thấy rằng, nếu không có nó, các lần loại bỏ gói không được phân bố đều theo thời gian mà có xu hướng xảy ra thành cụm. Vì các gói từ một kết nối nhất định có khả năng đến theo từng đợt, việc loại bỏ thành cụm này có thể gây ra nhiều lần loại bỏ trong một kết nối. Điều này không mong muốn, vì chỉ cần một lần loại bỏ mỗi thời gian khứ hồi là đủ để khiến một kết nối giảm kích thước cửa sổ, trong khi nhiều lần loại bỏ có thể khiến nó quay lại chế độ khởi động chậm.
 
-As an example, suppose that we set ``MaxP`` to 0.02 and ``count`` is
-initialized to zero. If the average queue length were halfway between
-the two thresholds, then ``TempP``, and the initial value of ``P``,
-would be half of ``MaxP``, or 0.01. An arriving packet, of course, has a
-99 in 100 chance of getting into the queue at this point. With each
-successive packet that is not dropped, ``P`` slowly increases, and by
-the time 50 packets have arrived without a drop, ``P`` would have
-doubled to 0.02. In the unlikely event that 99 packets arrived without
-loss, ``P`` reaches 1, guaranteeing that the next packet is dropped. The
-important thing about this part of the algorithm is that it ensures a
-roughly even distribution of drops over time.
+Ví dụ, giả sử chúng ta đặt ``MaxP`` là 0,02 và ``count`` được khởi tạo bằng 0. Nếu độ dài hàng đợi trung bình nằm giữa hai ngưỡng, thì ``TempP``, và giá trị ban đầu của ``P``, sẽ bằng một nửa ``MaxP``, tức là 0,01. Một gói đến, tất nhiên, có 99 trong 100 cơ hội được xếp vào hàng đợi tại thời điểm này. Với mỗi gói liên tiếp không bị loại bỏ, ``P`` tăng dần, và đến khi 50 gói đến mà không bị loại bỏ, ``P`` sẽ tăng gấp đôi lên 0,02. Trong trường hợp hiếm hoi 99 gói đến mà không bị mất, ``P`` đạt 1, đảm bảo rằng gói tiếp theo sẽ bị loại bỏ. Điều quan trọng của phần thuật toán này là nó đảm bảo phân bố các lần loại bỏ đều theo thời gian.
 
-The intent is that, if RED drops a small percentage of packets when
-``AvgLen`` exceeds ``MinThreshold``, this will cause a few TCP
-connections to reduce their window sizes, which in turn will reduce the
-rate at which packets arrive at the router. All going well, ``AvgLen``
-will then decrease and congestion is avoided. The queue length can be
-kept short, while throughput remains high since few packets are dropped.
+Ý định là, nếu RED loại bỏ một tỷ lệ nhỏ các gói khi ``AvgLen`` vượt quá ``MinThreshold``, điều này sẽ khiến một vài kết nối TCP giảm kích thước cửa sổ, từ đó giảm tốc độ các gói đến bộ định tuyến. Nếu mọi việc suôn sẻ, ``AvgLen`` sẽ giảm và tắc nghẽn được tránh. Độ dài hàng đợi có thể được giữ ngắn, trong khi thông lượng vẫn cao vì ít gói bị loại bỏ.
 
-Note that, because RED is operating on a queue length averaged over
-time, it is possible for the instantaneous queue length to be much
-longer than ``AvgLen``. In this case, if a packet arrives and there is
-nowhere to put it, then it will have to be dropped. When this happens,
-RED is operating in tail drop mode. One of the goals of RED is to
-prevent tail drop behavior if possible.
+Lưu ý rằng, vì RED hoạt động trên độ dài hàng đợi trung bình theo thời gian, nên có thể độ dài hàng đợi tức thời dài hơn nhiều so với ``AvgLen``. Trong trường hợp này, nếu một gói đến mà không còn chỗ để đặt, thì nó sẽ bị loại bỏ. Khi điều này xảy ra, RED hoạt động ở chế độ loại bỏ ở đuôi. Một trong những mục tiêu của RED là ngăn chặn hành vi loại bỏ ở đuôi nếu có thể.
 
-The random nature of RED confers an interesting property on the
-algorithm. Because RED drops packets randomly, the probability that RED
-decides to drop a particular flow’s packet(s) is roughly proportional to
-the share of the bandwidth that flow is currently getting at that
-router. This is because a flow that is sending a relatively large number
-of packets is providing more candidates for random dropping. Thus, there
-is some sense of fair resource allocation built into RED, although it is
-by no means precise. While arguably fair, because RED punishes
-high-bandwidth flows more than low-bandwidth flows, it increases the
-probability of a TCP restart, which is doubly painful for those
-high-bandwidth flows.
+Tính chất ngẫu nhiên của RED mang lại một đặc điểm thú vị cho thuật toán. Vì RED loại bỏ các gói một cách ngẫu nhiên, xác suất RED quyết định loại bỏ gói của một luồng nào đó xấp xỉ tỷ lệ với phần băng thông mà luồng đó đang nhận tại bộ định tuyến đó. Điều này là vì một luồng gửi nhiều gói hơn sẽ cung cấp nhiều ứng viên hơn cho việc loại bỏ ngẫu nhiên. Do đó, có một mức độ phân bổ tài nguyên công bằng nhất định được tích hợp trong RED, mặc dù không chính xác tuyệt đối. Mặc dù có thể coi là công bằng, vì RED trừng phạt các luồng băng thông cao nhiều hơn các luồng băng thông thấp, nhưng nó cũng làm tăng xác suất TCP phải khởi động lại, điều này càng gây bất lợi cho các luồng băng thông cao.
 
 .. _key-red:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   Note that a fair amount of analysis has gone into setting the
-   various RED parameters—for example, ``MaxThreshold``,
-   ``MinThreshold``, ``MaxP`` and ``Weight``—all in the name of
-   optimizing the power function (throughput-to-delay ratio). The
-   performance of these parameters has also been confirmed through
-   simulation, and the algorithm has been shown not to be overly
-   sensitive to them. It is important to keep in mind, however, that
-   all of this analysis and simulation hinges on a particular
-   characterization of the network workload. The real contribution of
-   RED is a mechanism by which the router can more accurately manage
-   its queue length. Defining precisely what constitutes an optimal
-   queue length depends on the traffic mix and is still a subject of
-   research, with real information now being gathered from operational
-   deployment of RED in the Internet. :ref:`[Next] <key-layering>`
+   Lưu ý rằng đã có khá nhiều phân tích về việc thiết lập các tham số RED—ví dụ, ``MaxThreshold``, ``MinThreshold``, ``MaxP`` và ``Weight``—tất cả nhằm tối ưu hóa hàm công suất (tỷ lệ thông lượng trên độ trễ). Hiệu suất của các tham số này cũng đã được xác nhận qua mô phỏng, và thuật toán đã được chứng minh là không quá nhạy cảm với chúng. Tuy nhiên, điều quan trọng là phải nhớ rằng tất cả các phân tích và mô phỏng này đều dựa trên một đặc trưng cụ thể của tải mạng. Đóng góp thực sự của RED là một cơ chế giúp bộ định tuyến quản lý độ dài hàng đợi chính xác hơn. Việc xác định chính xác độ dài hàng đợi tối ưu phụ thuộc vào hỗn hợp lưu lượng và vẫn là chủ đề nghiên cứu, với thông tin thực tế hiện đang được thu thập từ việc triển khai RED trong Internet. :ref:`[Tiếp theo] <key-layering>`
 
-Consider the setting of the two thresholds, ``MinThreshold`` and
-``MaxThreshold``. If the traffic is fairly bursty, then ``MinThreshold``
-should be sufficiently large to allow the link utilization to be
-maintained at an acceptably high level. Also, the difference between the
-two thresholds should be larger than the typical increase in the
-calculated average queue length in one RTT. Setting ``MaxThreshold`` to
-twice ``MinThreshold`` seems to be a reasonable rule of thumb given the
-traffic mix on today’s Internet. In addition, since we expect the
-average queue length to hover between the two thresholds during periods
-of high load, there should be enough free buffer space *above*
-``MaxThreshold`` to absorb the natural bursts that occur in Internet
-traffic without forcing the router to enter tail drop mode.
+Xem xét việc thiết lập hai ngưỡng, ``MinThreshold`` và ``MaxThreshold``. Nếu lưu lượng khá bùng nổ, thì ``MinThreshold`` nên đủ lớn để duy trì mức sử dụng liên kết ở mức chấp nhận được. Ngoài ra, sự khác biệt giữa hai ngưỡng nên lớn hơn mức tăng điển hình của độ dài hàng đợi trung bình tính toán trong một RTT. Đặt ``MaxThreshold`` gấp đôi ``MinThreshold`` dường như là một quy tắc hợp lý với hỗn hợp lưu lượng trên Internet ngày nay. Ngoài ra, vì chúng ta kỳ vọng độ dài hàng đợi trung bình sẽ dao động giữa hai ngưỡng trong thời kỳ tải cao, nên cần có đủ không gian bộ đệm *trên* ``MaxThreshold`` để hấp thụ các đợt bùng nổ tự nhiên trong lưu lượng Internet mà không buộc bộ định tuyến phải chuyển sang chế độ loại bỏ ở đuôi.
 
-We noted above that ``Weight`` determines the time constant for the
-running average low-pass filter, and this gives us a clue as to how we
-might pick a suitable value for it. Recall that RED is trying to send
-signals to TCP flows by dropping packets during times of congestion.
-Suppose that a router drops a packet from some TCP connection and then
-immediately forwards some more packets from the same connection. When
-those packets arrive at the receiver, it starts sending duplicate ACKs
-to the sender. When the sender sees enough duplicate ACKs, it will
-reduce its window size. So, from the time the router drops a packet
-until the time when the same router starts to see some relief from the
-affected connection in terms of a reduced window size, at least one
-round-trip time must elapse for that connection. There is probably not
-much point in having the router respond to congestion on time scales
-much less than the round-trip time of the connections passing through
-it. As noted previously, 100 ms is not a bad estimate of average
-round-trip times in the Internet. Thus, ``Weight`` should be chosen such
-that changes in queue length over time scales much less than 100 ms are
-filtered out.
+Chúng tôi đã lưu ý ở trên rằng ``Weight`` xác định hằng số thời gian cho bộ lọc thông thấp trung bình động, và điều này cho chúng ta một gợi ý về cách chọn giá trị phù hợp cho nó. Hãy nhớ rằng RED cố gắng gửi tín hiệu đến các luồng TCP bằng cách loại bỏ các gói trong thời gian tắc nghẽn. Giả sử một bộ định tuyến loại bỏ một gói từ một kết nối TCP nào đó và sau đó ngay lập tức chuyển tiếp thêm một số gói từ cùng kết nối đó. Khi các gói đó đến bộ nhận, nó bắt đầu gửi các ACK trùng lặp cho bộ gửi. Khi bộ gửi thấy đủ số ACK trùng lặp, nó sẽ giảm kích thước cửa sổ. Vì vậy, từ lúc bộ định tuyến loại bỏ một gói cho đến khi cùng bộ định tuyến đó bắt đầu thấy sự giảm tải từ kết nối bị ảnh hưởng (về mặt giảm kích thước cửa sổ), ít nhất phải trôi qua một thời gian khứ hồi cho kết nối đó. Có lẽ không có nhiều ý nghĩa khi để bộ định tuyến phản ứng với tắc nghẽn ở các thang thời gian nhỏ hơn nhiều so với thời gian khứ hồi của các kết nối đi qua nó. Như đã đề cập trước đó, 100 ms là một ước lượng không tồi cho thời gian khứ hồi trung bình trên Internet. Do đó, ``Weight`` nên được chọn sao cho các thay đổi về độ dài hàng đợi trong các thang thời gian nhỏ hơn nhiều so với 100 ms sẽ bị lọc bỏ.
 
-Since RED works by sending signals to TCP flows to tell them to slow
-down, you might wonder what would happen if those signals are ignored.
-This is often called the *unresponsive flow* problem. Unresponsive flows
-use more than their fair share of network resources and could cause
-congestive collapse if there were enough of them, just as in the days
-before TCP congestion control. Some of the techniques described in the
-next section can help with this problem by isolating certain classes of
-traffic from others. There is also the possibility that a variant of RED
-could drop more heavily from flows that are unresponsive to the initial
-hints that it sends.
+Vì RED hoạt động bằng cách gửi tín hiệu cho các luồng TCP để yêu cầu chúng giảm tốc độ, bạn có thể tự hỏi điều gì sẽ xảy ra nếu các tín hiệu đó bị bỏ qua. Điều này thường được gọi là vấn đề *luồng không phản hồi*. Các luồng không phản hồi sử dụng nhiều tài nguyên mạng hơn phần công bằng của chúng và có thể gây ra sụp đổ tắc nghẽn nếu có đủ nhiều luồng như vậy, giống như thời kỳ trước khi có kiểm soát tắc nghẽn TCP. Một số kỹ thuật được mô tả ở phần tiếp theo có thể giúp giải quyết vấn đề này bằng cách cô lập một số lớp lưu lượng khỏi các lớp khác. Ngoài ra còn có khả năng một biến thể của RED có thể loại bỏ mạnh hơn từ các luồng không phản hồi với các tín hiệu ban đầu mà nó gửi.
 
 Explicit Congestion Notification
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RED is the most extensively studied AQM mechanism, but it has not been
-widely deployed, due in part to the fact that it does not result in
-ideal behavior in all circumstances. It is, however, the benchmark for
-understanding AQM behavior. The other thing that came out of RED is the
-recognition that TCP could do a better job if routers were to send a
-more explicit congestion signal.
+RED là cơ chế AQM được nghiên cứu nhiều nhất, nhưng nó chưa được triển khai rộng rãi, một phần do nó không mang lại hành vi lý tưởng trong mọi trường hợp. Tuy nhiên, nó là chuẩn mực để hiểu hành vi của AQM. Điều khác nữa xuất phát từ RED là nhận thức rằng TCP có thể làm tốt hơn nếu các bộ định tuyến gửi tín hiệu tắc nghẽn rõ ràng hơn.
 
-That is, instead of *dropping* a packet and assuming TCP will eventually
-notice (e.g., due to the arrival of a duplicate ACK), RED (or any AQM
-algorithm for that matter) can do a better job if it instead *marks* the
-packet and continues to send it along its way to the destination. This
-idea was codified in changes to the IP and TCP headers known as
-*Explicit Congestion Notification* (ECN).
+Tức là, thay vì *loại bỏ* một gói và giả định TCP cuối cùng sẽ nhận ra (ví dụ, do nhận được một ACK trùng lặp), RED (hoặc bất kỳ thuật toán AQM nào) có thể làm tốt hơn nếu thay vào đó *đánh dấu* gói và tiếp tục gửi nó đến đích. Ý tưởng này đã được chuẩn hóa trong các thay đổi đối với tiêu đề IP và TCP được gọi là *Thông báo Tắc nghẽn Rõ ràng* (ECN).
 
-Specifically, this feedback is implemented by treating two bits in the
-IP ``TOS`` field as ECN bits. One bit is set by the source to indicate
-that it is ECN-capable, that is, able to react to a congestion
-notification. This is called the ``ECT`` bit (ECN-Capable Transport).
-The other bit is set by routers along the end-to-end path when
-congestion is encountered, as computed by whatever AQM algorithm it is
-running. This is called the ``CE`` bit (Congestion Encountered).
+Cụ thể, phản hồi này được thực hiện bằng cách sử dụng hai bit trong trường ``TOS`` của IP làm các bit ECN. Một bit được đặt bởi nguồn để chỉ ra rằng nó có khả năng ECN, tức là có thể phản ứng với thông báo tắc nghẽn. Bit này gọi là ``ECT`` (ECN-Capable Transport). Bit còn lại được đặt bởi các bộ định tuyến dọc theo đường đi đầu-cuối khi gặp tắc nghẽn, như được tính bởi bất kỳ thuật toán AQM nào mà nó đang chạy. Bit này gọi là ``CE`` (Congestion Encountered).
 
-In addition to these two bits in the IP header (which are
-transport-agnostic), ECN also includes the addition of two optional
-flags to the TCP header. The first, ``ECE`` (ECN-Echo), communicates
-from the receiver to the sender that it has received a packet with the
-``CE`` bit set. The second, ``CWR`` (Congestion Window Reduced)
-communicates from the sender to the receiver that it has reduced the
-congestion window.
+Ngoài hai bit này trong tiêu đề IP (không phụ thuộc vào giao thức vận chuyển), ECN còn bổ sung hai cờ tùy chọn vào tiêu đề TCP. Đầu tiên, ``ECE`` (ECN-Echo), truyền đạt từ bộ nhận đến bộ gửi rằng nó đã nhận được một gói có bit ``CE`` được đặt. Thứ hai, ``CWR`` (Congestion Window Reduced) truyền đạt từ bộ gửi đến bộ nhận rằng nó đã giảm cửa sổ tắc nghẽn.
 
-While ECN is now the standard interpretation of two of the eight bits in
-the ``TOS`` field of the IP header and support for ECN is highly
-recommended, it is not required. Moreover, there is no single
-recommended AQM algorithm, but instead, there is a list of requirements
-a good AQM algorithm should meet. Like TCP congestion control
-algorithms, every AQM algorithm has its advantages and disadvantages,
-and so we need a lot of them. There is one particular scenario, however,
-where the TCP congestion control algorithm and AQM algorithm are
-designed to work in concert: the datacenter. We return to this use case
-at the end of this section.
+Mặc dù ECN hiện là cách diễn giải tiêu chuẩn của hai trong tám bit trong trường ``TOS`` của tiêu đề IP và việc hỗ trợ ECN được khuyến nghị cao, nhưng nó không bắt buộc. Hơn nữa, không có một thuật toán AQM nào được khuyến nghị duy nhất, mà thay vào đó là một danh sách các yêu cầu mà một thuật toán AQM tốt nên đáp ứng. Giống như các thuật toán kiểm soát tắc nghẽn TCP, mỗi thuật toán AQM đều có ưu và nhược điểm riêng, vì vậy chúng ta cần nhiều loại khác nhau. Tuy nhiên, có một kịch bản cụ thể mà thuật toán kiểm soát tắc nghẽn TCP và thuật toán AQM được thiết kế để phối hợp với nhau: trung tâm dữ liệu. Chúng tôi sẽ quay lại trường hợp sử dụng này ở cuối phần này.
 
-6.4.2 Source-Based Approaches (Vegas, BBR, DCTCP)
--------------------------------------------------
+6.4.2 Các Phương Pháp Dựa Trên Nguồn (Vegas, BBR, DCTCP)
+--------------------------------------------------------
 
-Unlike the previous congestion-avoidance schemes, which depended on
-cooperation from routers, we now describe a strategy for detecting the
-incipient stages of congestion—before losses occur—from the end hosts.
-We first give a brief overview of a collection of related mechanisms
-that use different information to detect the early stages of congestion,
-and then we describe two specific mechanisms in more detail.
+Không giống như các sơ đồ tránh tắc nghẽn trước đó, vốn phụ thuộc vào sự hợp tác từ các bộ định tuyến, chúng tôi bây giờ mô tả một chiến lược phát hiện các giai đoạn đầu của tắc nghẽn—trước khi xảy ra mất mát—từ các máy chủ đầu cuối. Trước tiên, chúng tôi đưa ra tổng quan ngắn gọn về một tập hợp các cơ chế liên quan sử dụng các thông tin khác nhau để phát hiện các giai đoạn đầu của tắc nghẽn, sau đó mô tả chi tiết hai cơ chế cụ thể.
 
-The general idea of these techniques is to watch for a sign from the
-network that some router’s queue is building up and that congestion will
-happen soon if nothing is done about it. For example, the source might
-notice that as packet queues build up in the network’s routers, there is
-a measurable increase in the RTT for each successive packet it sends.
-One particular algorithm exploits this observation as follows: The
-congestion window normally increases as in TCP, but every two round-trip
-delays the algorithm checks to see if the current RTT is greater than
-the average of the minimum and maximum RTTs seen so far. If it is, then
-the algorithm decreases the congestion window by one-eighth.
+Ý tưởng chung của các kỹ thuật này là theo dõi một dấu hiệu từ mạng cho thấy hàng đợi của một bộ định tuyến nào đó đang tăng lên và tắc nghẽn sẽ xảy ra sớm nếu không có biện pháp gì. Ví dụ, nguồn có thể nhận thấy rằng khi các hàng đợi gói tăng lên trong các bộ định tuyến của mạng, có sự gia tăng có thể đo được về RTT cho mỗi gói liên tiếp mà nó gửi. Một thuật toán cụ thể khai thác quan sát này như sau: Cửa sổ tắc nghẽn thường tăng như trong TCP, nhưng cứ hai lần trễ khứ hồi thuật toán kiểm tra xem RTT hiện tại có lớn hơn trung bình của RTT nhỏ nhất và lớn nhất đã thấy cho đến nay không. Nếu có, thuật toán giảm cửa sổ tắc nghẽn đi một phần tám.
 
-A second algorithm does something similar. The decision as to whether or
-not to change the current window size is based on changes to both the
-RTT and the window size. The window is adjusted once every two
-round-trip delays based on the product
+Một thuật toán thứ hai làm điều tương tự. Quyết định có thay đổi kích thước cửa sổ hiện tại hay không dựa trên cả thay đổi về RTT và kích thước cửa sổ. Cửa sổ được điều chỉnh một lần mỗi hai lần trễ khứ hồi dựa trên tích
 
 ::
 
    (CurrentWindow - OldWindow) x (CurrentRTT - OldRTT)
 
-If the result is positive, the source decreases the window size by
-one-eighth; if the result is negative or 0, the source increases the
-window by one maximum packet size. Note that the window changes during
-every adjustment; that is, it oscillates around its optimal point.
+Nếu kết quả dương, nguồn giảm kích thước cửa sổ đi một phần tám; nếu kết quả âm hoặc bằng 0, nguồn tăng cửa sổ lên một kích thước gói tối đa. Lưu ý rằng cửa sổ thay đổi trong mỗi lần điều chỉnh; tức là nó dao động quanh điểm tối ưu.
 
-Another change seen as the network approaches congestion is the
-flattening of the sending rate. A third scheme takes advantage of this
-fact. Every RTT, it increases the window size by one packet and compares
-the throughput achieved to the throughput when the window was one packet
-smaller. If the difference is less than one-half the throughput achieved
-when only one packet was in transit—as was the case at the beginning of
-the connection—the algorithm decreases the window by one packet. This
-scheme calculates the throughput by dividing the number of bytes
-outstanding in the network by the RTT.
+Một thay đổi khác được quan sát khi mạng tiến gần đến tắc nghẽn là tốc độ gửi bị “phẳng” lại. Một sơ đồ thứ ba tận dụng thực tế này. Mỗi RTT, nó tăng kích thước cửa sổ lên một gói và so sánh thông lượng đạt được với thông lượng khi cửa sổ nhỏ hơn một gói. Nếu sự khác biệt nhỏ hơn một nửa thông lượng đạt được khi chỉ có một gói đang truyền—như ở đầu kết nối—thuật toán giảm cửa sổ đi một gói. Sơ đồ này tính toán thông lượng bằng cách chia số byte outstanding trong mạng cho RTT.
 
 TCP Vegas
 ~~~~~~~~~
 
-The mechanism we are going to describe in more detail is similar to the
-last algorithm in that it looks at changes in the throughput rate or,
-more specifically, changes in the sending rate. However, it differs from
-the previous algorithm in the way it calculates throughput, and instead
-of looking for a change in the slope of the throughput it compares the
-measured throughput rate with an expected throughput rate. The
-algorithm, TCP Vegas, is not widely deployed in the Internet today, but
-the strategy it uses has been adopted by other implementations that are
-now being deployed.
+Cơ chế mà chúng tôi sẽ mô tả chi tiết tương tự như thuật toán cuối cùng ở chỗ nó xem xét thay đổi tốc độ thông lượng, hoặc cụ thể hơn, thay đổi tốc độ gửi. Tuy nhiên, nó khác với thuật toán trước ở cách tính toán thông lượng, và thay vì tìm kiếm sự thay đổi độ dốc của thông lượng, nó so sánh tốc độ thông lượng đo được với tốc độ thông lượng kỳ vọng. Thuật toán này, TCP Vegas, hiện không được triển khai rộng rãi trên Internet, nhưng chiến lược mà nó sử dụng đã được các triển khai khác áp dụng và hiện đang được triển khai.
 
-The intuition behind the Vegas algorithm can be seen in the trace of
-standard TCP given in :numref:`Figure %s <fig-trace3>`. The top graph
-shown in :numref:`Figure %s <fig-trace3>` traces the connection’s
-congestion window; it shows the same information as the traces given
-earlier in this section.  The middle and bottom graphs depict new
-information: The middle graph shows the average sending rate as
-measured at the source, and the bottom graph shows the average queue
-length as measured at the bottleneck router. All three graphs are
-synchronized in time. In the period between 4.5 and 6.0 seconds
-(shaded region), the congestion window increases (top graph). We
-expect the observed throughput to also increase, but instead it stays
-flat (middle graph). This is because the throughput cannot increase
-beyond the available bandwidth. Beyond this point, any increase in the
-window size only results in packets taking up buffer space at the
-bottleneck router (bottom graph).
+Trực giác đằng sau thuật toán Vegas có thể thấy trong biểu đồ TCP tiêu chuẩn ở :numref:`Hình %s <fig-trace3>`. Biểu đồ trên cùng trong :numref:`Hình %s <fig-trace3>` vẽ cửa sổ tắc nghẽn của kết nối; nó cho thấy cùng thông tin như các biểu đồ trước đó trong phần này. Biểu đồ giữa và dưới cùng thể hiện thông tin mới: Biểu đồ giữa cho thấy tốc độ gửi trung bình đo tại nguồn, và biểu đồ dưới cùng cho thấy độ dài hàng đợi trung bình đo tại bộ định tuyến nút cổ chai. Cả ba biểu đồ đều được đồng bộ theo thời gian. Trong khoảng thời gian từ 4,5 đến 6,0 giây (vùng tô bóng), cửa sổ tắc nghẽn tăng (biểu đồ trên cùng). Chúng ta kỳ vọng thông lượng quan sát được cũng tăng, nhưng thay vào đó nó lại giữ nguyên (biểu đồ giữa). Điều này là vì thông lượng không thể tăng vượt quá băng thông khả dụng. Vượt qua điểm này, bất kỳ sự tăng nào của kích thước cửa sổ chỉ dẫn đến các gói chiếm không gian bộ đệm tại bộ định tuyến nút cổ chai (biểu đồ dưới cùng).
 
 .. _fig-trace3:
 .. figure:: figures/f06-18-9780123850591.png
    :width: 600px
    :align: center
 
-   Congestion window versus observed throughput rate (the
-   three graphs are synchronized). Top, congestion window; middle,
-   observed throughput; bottom, buffer space taken up at the
-   router. Colored line = `CongestionWindow`; solid bullet = timeout;
-   hash marks = time when each packet is transmitted; vertical bars =
-   time when a packet that was eventually retransmitted was first
-   transmitted.
+   Cửa sổ tắc nghẽn so với tốc độ thông lượng quan sát được (ba biểu đồ được đồng bộ). Trên cùng, cửa sổ tắc nghẽn; giữa, thông lượng quan sát được; dưới cùng, không gian bộ đệm bị chiếm tại bộ định tuyến. Đường màu = `CongestionWindow`; chấm tròn = timeout; dấu gạch = thời điểm mỗi gói được truyền; vạch dọc = thời điểm một gói cuối cùng bị truyền lại được truyền lần đầu.
 
-A useful metaphor that describes the phenomenon illustrated in
-:numref:`Figure %s <fig-trace3>` is driving on ice. The speedometer
-(congestion window) may say that you are going 30 miles an hour, but
-by looking out the car window and seeing people pass you on foot
-(measured sending rate) you know that you are going no more than 5
-miles an hour. The extra energy is being absorbed by the car’s tires
-(router buffers).
+Một phép ẩn dụ hữu ích mô tả hiện tượng minh họa trong :numref:`Hình %s <fig-trace3>` là lái xe trên băng. Đồng hồ tốc độ (cửa sổ tắc nghẽn) có thể báo bạn đang đi 30 dặm/giờ, nhưng nhìn ra cửa sổ xe và thấy người đi bộ vượt qua bạn (tốc độ gửi đo được) bạn biết rằng bạn chỉ đi được 5 dặm/giờ. Năng lượng dư thừa bị hấp thụ bởi lốp xe (bộ đệm bộ định tuyến).
 
-TCP Vegas uses this idea to measure and control the amount of extra data
-this connection has in transit, where by “extra data” we mean data that
-the source would not have transmitted had it been trying to match
-exactly the available bandwidth of the network. The goal of TCP Vegas is
-to maintain the “right” amount of extra data in the network. Obviously,
-if a source is sending too much extra data, it will cause long delays
-and possibly lead to congestion. Less obviously, if a connection is
-sending too little extra data, it cannot respond rapidly enough to
-transient increases in the available network bandwidth. TCP Vegas’s
-congestion-avoidance actions are based on changes in the estimated
-amount of extra data in the network, not only on dropped packets. We now
-describe the algorithm in detail.
+TCP Vegas sử dụng ý tưởng này để đo và kiểm soát lượng dữ liệu dư thừa mà kết nối này có trong mạng, trong đó “dữ liệu dư thừa” là dữ liệu mà nguồn sẽ không truyền nếu nó cố gắng khớp chính xác với băng thông khả dụng của mạng. Mục tiêu của TCP Vegas là duy trì lượng dữ liệu dư thừa “đúng” trong mạng. Rõ ràng, nếu một nguồn gửi quá nhiều dữ liệu dư thừa, nó sẽ gây ra độ trễ lớn và có thể dẫn đến tắc nghẽn. Ít rõ ràng hơn, nếu một kết nối gửi quá ít dữ liệu dư thừa, nó không thể phản ứng đủ nhanh với các đợt tăng băng thông khả dụng tạm thời. Hành động tránh tắc nghẽn của TCP Vegas dựa trên thay đổi lượng dữ liệu dư thừa ước tính trong mạng, không chỉ dựa trên các gói bị loại bỏ. Chúng tôi sẽ mô tả thuật toán chi tiết dưới đây.
 
-First, define a given flow’s ``BaseRTT`` to be the RTT of a packet when
-the flow is not congested. In practice, TCP Vegas sets ``BaseRTT`` to
-the minimum of all measured round-trip times; it is commonly the RTT of
-the first packet sent by the connection, before the router queues
-increase due to traffic generated by this flow. If we assume that we are
-not overflowing the connection, then the expected throughput is given by
+Đầu tiên, định nghĩa ``BaseRTT`` của một luồng là RTT của một gói khi luồng không bị tắc nghẽn. Trong thực tế, TCP Vegas đặt ``BaseRTT`` là giá trị nhỏ nhất của tất cả các thời gian khứ hồi đo được; thường là RTT của gói đầu tiên được gửi bởi kết nối, trước khi hàng đợi bộ định tuyến tăng lên do lưu lượng do luồng này tạo ra. Nếu chúng ta giả định rằng chúng ta không làm tràn kết nối, thì thông lượng kỳ vọng được cho bởi
 
 ::
 
    ExpectedRate = CongestionWindow / BaseRTT
 
-where ``CongestionWindow`` is the TCP congestion window, which we
-assume (for the purpose of this discussion) to be equal to the number
-of bytes in transit.
+trong đó ``CongestionWindow`` là cửa sổ tắc nghẽn TCP, mà chúng ta giả định (cho mục đích thảo luận này) bằng với số byte đang truyền.
 
-Second, TCP Vegas calculates the current sending rate, ``ActualRate``.
-This is done by recording the sending time for a distinguished packet,
-recording how many bytes are transmitted between the time that packet
-is sent and when its acknowledgment is received, computing the sample
-RTT for the distinguished packet when its acknowledgment arrives, and
-dividing the number of bytes transmitted by the sample RTT. This
-calculation is done once per round-trip time.
+Thứ hai, TCP Vegas tính toán tốc độ gửi hiện tại, ``ActualRate``. Điều này được thực hiện bằng cách ghi lại thời gian gửi của một gói đặc biệt, ghi lại số byte được truyền giữa thời điểm gói đó được gửi và khi ACK của nó được nhận, tính toán RTT mẫu cho gói đặc biệt khi ACK của nó đến, và chia số byte truyền cho RTT mẫu. Phép tính này được thực hiện một lần mỗi thời gian khứ hồi.
 
-Third, TCP Vegas compares ``ActualRate`` to ``ExpectedRate`` and
-adjusts the window accordingly. We let ``Diff = ExpectedRate -
-ActualRate``.  Note that ``Diff`` is positive or 0 by definition,
-since ``ActualRate >ExpectedRate`` implies that we need to change
-``BaseRTT`` to the latest sampled RTT. We also define two thresholds,
-*α < β*, roughly corresponding to having too little and too much extra
-data in the network, respectively. When ``Diff`` < *α*, TCP Vegas
-increases the congestion window linearly during the next RTT, and when
-``Diff`` > *β*, TCP Vegas decreases the congestion window linearly
-during the next RTT.  TCP Vegas leaves the congestion window unchanged
-when *α* < ``Diff`` < *β*.
+Thứ ba, TCP Vegas so sánh ``ActualRate`` với ``ExpectedRate`` và điều chỉnh cửa sổ tương ứng. Ta đặt ``Diff = ExpectedRate - ActualRate``. Lưu ý rằng ``Diff`` luôn dương hoặc bằng 0 theo định nghĩa, vì ``ActualRate > ExpectedRate`` ngụ ý rằng chúng ta cần thay đổi ``BaseRTT`` thành RTT mẫu mới nhất. Chúng ta cũng định nghĩa hai ngưỡng, *α < β*, xấp xỉ tương ứng với việc có quá ít và quá nhiều dữ liệu dư thừa trong mạng. Khi ``Diff`` < *α*, TCP Vegas tăng cửa sổ tắc nghẽn tuyến tính trong RTT tiếp theo, và khi ``Diff`` > *β*, TCP Vegas giảm cửa sổ tắc nghẽn tuyến tính trong RTT tiếp theo. TCP Vegas giữ nguyên cửa sổ tắc nghẽn khi *α* < ``Diff`` < *β*.
 
-Intuitively, we can see that the farther away the actual throughput
-gets from the expected throughput, the more congestion there is in the
-network, which implies that the sending rate should be reduced. The
-*β* threshold triggers this decrease. On the other hand, when the
-actual throughput rate gets too close to the expected throughput, the
-connection is in danger of not utilizing the available bandwidth. The
-*α* threshold triggers this increase. The overall goal is to keep
-between *α* and *β* extra bytes in the network.
+Trực giác, chúng ta thấy rằng càng xa nhau giữa thông lượng thực tế và thông lượng kỳ vọng, thì càng có nhiều tắc nghẽn trong mạng, điều này ngụ ý rằng tốc độ gửi nên giảm. Ngưỡng *β* kích hoạt việc giảm này. Ngược lại, khi tốc độ thông lượng thực tế tiến gần đến tốc độ kỳ vọng, kết nối có nguy cơ không tận dụng hết băng thông khả dụng. Ngưỡng *α* kích hoạt việc tăng này. Mục tiêu tổng thể là giữ giữa *α* và *β* byte dư thừa trong mạng.
 
 .. _fig-vegas:
 .. figure:: figures/f06-19-9780123850591.png
    :width: 600px
    :align: center
 
-   Trace of TCP Vegas congestion-avoidance mechanism.
-   Top, congestion window; bottom, expected (colored line) and actual
-   (black line) throughput. The shaded area is the region between the
-   *α* and *β* thresholds.
+   Biểu đồ thuật toán tránh tắc nghẽn TCP Vegas.
+   Trên cùng, cửa sổ tắc nghẽn; dưới cùng, thông lượng kỳ vọng (đường màu) và thực tế (đường đen). Vùng tô bóng là vùng giữa các ngưỡng *α* và *β*.
 
-:numref:`Figure %s <fig-vegas>` traces the TCP Vegas
-congestion-avoidance algorithm. The top graph traces the congestion
-window, showing the same information as the other traces given
-throughout this chapter. The bottom graph traces the expected and
-actual throughput rates that govern how the congestion window is
-set. It is this bottom graph that best illustrates how the algorithm
-works. The colored line tracks the ``ExpectedRate``, while the black
-line tracks the ``ActualRate``. The wide shaded strip gives the region
-between the *α* and *β* thresholds; the top of the shaded strip is
-*α* KBps away from ``ExpectedRate``, and the bottom of the shaded
-strip is *β* KBps away from ``ExpectedRate``.  The goal is to keep the
-``ActualRate`` between these two thresholds, within the shaded
-region. Whenever ``ActualRate`` falls below the shaded region (i.e.,
-gets too far from ``ExpectedRate``), TCP Vegas decreases the
-congestion window because it fears that too many packets are being
-buffered in the network. Likewise, whenever ``ActualRate`` goes above
-the shaded region (i.e., gets too close to the ``ExpectedRate``), TCP
-Vegas increases the congestion window because it fears that it is
-underutilizing the network.
+:numref:`Hình %s <fig-vegas>` vẽ thuật toán tránh tắc nghẽn TCP Vegas. Biểu đồ trên cùng vẽ cửa sổ tắc nghẽn, cho thấy cùng thông tin như các biểu đồ khác trong chương này. Biểu đồ dưới cùng vẽ tốc độ thông lượng kỳ vọng và thực tế quyết định cách đặt cửa sổ tắc nghẽn. Chính biểu đồ dưới cùng này minh họa rõ nhất cách thuật toán hoạt động. Đường màu theo dõi ``ExpectedRate``, trong khi đường đen theo dõi ``ActualRate``. Dải tô bóng rộng là vùng giữa các ngưỡng *α* và *β*; đỉnh của dải tô bóng cách ``ExpectedRate`` *α* KBps, và đáy cách *β* KBps. Mục tiêu là giữ ``ActualRate`` giữa hai ngưỡng này, trong vùng tô bóng. Bất cứ khi nào ``ActualRate`` rơi xuống dưới vùng tô bóng (tức là, cách quá xa ``ExpectedRate``), TCP Vegas giảm cửa sổ tắc nghẽn vì lo ngại quá nhiều gói đang bị đệm trong mạng. Tương tự, khi ``ActualRate`` vượt lên trên vùng tô bóng (tức là, tiến quá gần ``ExpectedRate``), TCP Vegas tăng cửa sổ tắc nghẽn vì lo ngại không tận dụng hết băng thông mạng.
 
-Because the algorithm, as just presented, compares the difference
-between the actual and expected throughput rates to the *α* and *β*
-thresholds, these two thresholds are defined in terms of KBps. However,
-it is perhaps more accurate to think in terms of how many extra
-*buffers* the connection is occupying in the network. For example, on a
-connection with a ``BaseRTT`` of 100 ms and a packet size of 1 KB, if
-*α* = 30 KBps and *β* = 60 KBps, then we can think of *α* as specifying
-that the connection needs to be occupying at least 3 extra buffers in
-the network and *β* as specifying that the connection should occupy no
-more than 6 extra buffers in the network. In practice, a setting of *α*
-to 1 buffer and *β* to 3 buffers works well.
+Vì thuật toán, như vừa trình bày, so sánh sự khác biệt giữa tốc độ thông lượng thực tế và kỳ vọng với các ngưỡng *α* và *β*, nên hai ngưỡng này được định nghĩa theo KBps. Tuy nhiên, có lẽ chính xác hơn là nghĩ theo số *bộ đệm* mà kết nối chiếm trong mạng. Ví dụ, trên một kết nối có ``BaseRTT`` là 100 ms và kích thước gói là 1 KB, nếu *α* = 30 KBps và *β* = 60 KBps, thì chúng ta có thể coi *α* là quy định kết nối cần chiếm ít nhất 3 bộ đệm dư thừa trong mạng và *β* là không nên chiếm quá 6 bộ đệm dư thừa. Trong thực tế, đặt *α* là 1 bộ đệm và *β* là 3 bộ đệm hoạt động tốt.
 
-Finally, you will notice that TCP Vegas decreases the congestion window
-linearly, seemingly in conflict with the rule that multiplicative
-decrease is needed to ensure stability. The explanation is that TCP
-Vegas does use multiplicative decrease when a timeout occurs; the linear
-decrease just described is an *early* decrease in the congestion window
-that should happen before congestion occurs and packets start being
-dropped.
+Cuối cùng, bạn sẽ nhận thấy rằng TCP Vegas giảm cửa sổ tắc nghẽn tuyến tính, dường như mâu thuẫn với quy tắc rằng giảm nhân là cần thiết để đảm bảo ổn định. Giải thích là TCP Vegas thực sự sử dụng giảm nhân khi xảy ra timeout; việc giảm tuyến tính vừa mô tả là một *giảm sớm* cửa sổ tắc nghẽn nên xảy ra trước khi tắc nghẽn xảy ra và các gói bắt đầu bị loại bỏ.
 
 TCP BBR
 ~~~~~~~
 
-BBR (Bottleneck Bandwidth and RTT) is a new TCP congestion control
-algorithm developed by researchers at Google. Like Vegas, BBR is delay
-based, which means it tries to detect buffer growth so as to avoid
-congestion and packet loss. Both BBR and Vegas use the minimum RTT and
-maximum RTT, as calculated over some time interval, as their main
-control signals.
+BBR (Bottleneck Bandwidth and RTT) là một thuật toán kiểm soát tắc nghẽn TCP mới do các nhà nghiên cứu tại Google phát triển. Giống như Vegas, BBR dựa trên độ trễ, nghĩa là nó cố gắng phát hiện sự tăng bộ đệm để tránh tắc nghẽn và mất gói. Cả BBR và Vegas đều sử dụng RTT nhỏ nhất và RTT lớn nhất, được tính toán trong một khoảng thời gian nhất định, làm tín hiệu điều khiển chính.
 
-BBR also introduces new mechanisms to improve performance, including
-packet pacing, bandwidth probing, and RTT probing. Packet pacing spaces
-the packets based on the estimate of the available bandwidth. This
-eliminates bursts and unnecessary queuing, which results in a better
-feedback signal. BBR also periodically increases its rate, thereby
-probing the available bandwidth. Similarly, BBR periodically decreases
-its rate, thereby probing for a new minimum RTT. The RTT probing
-mechanism attempts to be self-synchronizing, which is to say, when there
-are multiple BBR flows, their respective RTT probes happen at the same
-time. This gives a more accurate view of the actual uncongested path
-RTT, which solves one of the major issues with delay-based congestion
-control mechanisms: having accurate knowledge of the uncongested path
-RTT.
+BBR cũng giới thiệu các cơ chế mới để cải thiện hiệu suất, bao gồm pacing gói, dò băng thông và dò RTT. Pacing gói phân bổ các gói dựa trên ước lượng băng thông khả dụng. Điều này loại bỏ các đợt bùng nổ và xếp hàng không cần thiết, dẫn đến tín hiệu phản hồi tốt hơn. BBR cũng định kỳ tăng tốc độ, từ đó dò tìm băng thông khả dụng. Tương tự, BBR định kỳ giảm tốc độ, từ đó dò tìm RTT nhỏ nhất mới. Cơ chế dò RTT cố gắng tự đồng bộ, nghĩa là, khi có nhiều luồng BBR, các lần dò RTT của chúng xảy ra cùng lúc. Điều này cho cái nhìn chính xác hơn về RTT đường đi thực sự không tắc nghẽn, giải quyết một trong những vấn đề lớn của các cơ chế kiểm soát tắc nghẽn dựa trên độ trễ: có kiến thức chính xác về RTT đường đi không tắc nghẽn.
 
-BBR is actively being worked on and rapidly evolving. One major focus is
-fairness. For example, some experiments show CUBIC flows get 100× less
-bandwidth when competing with BBR flows, and other experiments show that
-unfairness among BBR flows is even possible. Another major focus is
-avoiding high retransmission rates, where in some cases as many as 10%
-of packets are retransmitted.
+BBR đang được phát triển tích cực và thay đổi nhanh chóng. Một trọng tâm lớn là tính công bằng. Ví dụ, một số thí nghiệm cho thấy các luồng CUBIC nhận được băng thông ít hơn 100 lần khi cạnh tranh với các luồng BBR, và các thí nghiệm khác cho thấy thậm chí có thể xảy ra sự không công bằng giữa các luồng BBR. Một trọng tâm lớn khác là tránh tỷ lệ truyền lại cao, trong một số trường hợp lên tới 10% số gói bị truyền lại.
 
 DCTCP
 ~~~~~
 
-We conclude with an example of a situation where a variant of the TCP
-congestion control algorithm has been designed to work in concert with
-ECN: in cloud datacenters. The combination is called DCTCP, which stands
-for *Data Center TCP*. The situation is unique in that a datacenter is
-self-contained, and so it is possible to deploy a tailor-made version of
-TCP that does not need to worry about treating other TCP flows fairly.
-Datacenters are also unique in that they are built using commodity
-switches, and because there is no need to worry about long-fat
-pipes spanning a continent, the switches are typically provisioned
-without an excess of buffers.
+Chúng tôi kết thúc với một ví dụ về tình huống mà một biến thể của thuật toán kiểm soát tắc nghẽn TCP được thiết kế để phối hợp với ECN: trong các trung tâm dữ liệu đám mây. Sự kết hợp này gọi là DCTCP, viết tắt của *Data Center TCP*. Tình huống này là duy nhất vì một trung tâm dữ liệu là một hệ thống khép kín, do đó có thể triển khai một phiên bản TCP được thiết kế riêng mà không cần lo lắng về việc đối xử công bằng với các luồng TCP khác. Các trung tâm dữ liệu cũng đặc biệt ở chỗ chúng được xây dựng bằng các switch thương mại, và vì không cần lo lắng về các đường truyền dài rộng khắp lục địa, các switch thường được trang bị mà không dư thừa bộ đệm.
 
-The idea is straightforward. DCTCP adapts ECN by estimating the fraction
-of bytes that encounter congestion rather than simply detecting that
-some congestion is about to occur. At the end hosts, DCTCP then scales
-the congestion window based on this estimate. The standard TCP algorithm
-still kicks in should a packet actually be lost. The approach is
-designed to achieve high-burst tolerance, low latency, and high
-throughput with shallow-buffered switches.
+Ý tưởng rất đơn giản. DCTCP điều chỉnh ECN bằng cách ước lượng tỷ lệ byte gặp tắc nghẽn thay vì chỉ phát hiện rằng có tắc nghẽn sắp xảy ra. Tại các máy chủ đầu cuối, DCTCP sau đó điều chỉnh cửa sổ tắc nghẽn dựa trên ước lượng này. Thuật toán TCP tiêu chuẩn vẫn được áp dụng nếu một gói thực sự bị mất. Cách tiếp cận này được thiết kế để đạt khả năng chịu bùng nổ cao, độ trễ thấp và thông lượng cao với các switch có bộ đệm nông.
 
-The key challenge DCTCP faces is to estimate the fraction of bytes
-encountering congestion. Each switch is simple. If a packet arrives and
-the switch sees the queue length (K) is above some threshold; e.g.,
+Thách thức chính mà DCTCP đối mặt là ước lượng tỷ lệ byte gặp tắc nghẽn. Mỗi switch rất đơn giản. Nếu một gói đến và switch thấy độ dài hàng đợi (K) vượt quá một ngưỡng nào đó; ví dụ,
 
 .. centered:: K > (RTT × C)/7
 
-where C is the link rate in packets per second, then the switch sets the
-CE bit in the IP header. The complexity of RED is not required.
+trong đó C là tốc độ liên kết tính bằng gói mỗi giây, thì switch đặt bit CE trong tiêu đề IP. Sự phức tạp của RED không cần thiết.
 
-The receiver then maintains a boolean variable for every flow, which
-we’ll denote ``SeenCE``, and implements the following state machine in
-response to every received packet:
+Bộ nhận sau đó duy trì một biến boolean cho mỗi luồng, chúng tôi ký hiệu là ``SeenCE``, và thực hiện máy trạng thái sau cho mỗi gói nhận được:
 
--  If the CE bit is set and ``SeenCE=False``, set ``SeenCE`` to True and
-   send an immediate ACK.
+-  Nếu bit CE được đặt và ``SeenCE=False``, đặt ``SeenCE`` thành True và gửi một ACK ngay lập tức.
 
--  If the CE bit is not set and ``SeenCE=True``, set ``SeenCE`` to False
-   and send an immediate ACK.
+-  Nếu bit CE không được đặt và ``SeenCE=True``, đặt ``SeenCE`` thành False và gửi một ACK ngay lập tức.
 
--  Otherwise, ignore the CE bit.
+-  Ngược lại, bỏ qua bit CE.
 
-The non-obvious consequence of the “otherwise” case is that the receiver
-continues to send delayed ACKs once every *n* packets, whether or not
-the CE bit is set. This has proven important to maintaining high
-performance.
+Hệ quả không rõ ràng của trường hợp “ngược lại” là bộ nhận tiếp tục gửi các ACK trễ sau mỗi *n* gói, bất kể bit CE có được đặt hay không. Điều này đã được chứng minh là quan trọng để duy trì hiệu suất cao.
 
-Finally, the sender computes the fraction of bytes that encountered
-congestion during the previous observation window (usually chosen to be
-approximately the RTT), as the ratio of the total bytes transmitted and
-the bytes acknowledged with the ECE flag set. DCTCP grows the congestion
-window in exactly the same way as the standard algorithm, but it reduces
-the window in proportion to how many bytes encountered congestion during
-the last observation window.
+Cuối cùng, bộ gửi tính toán tỷ lệ byte gặp tắc nghẽn trong cửa sổ quan sát trước đó (thường chọn xấp xỉ RTT), là tỷ số giữa tổng số byte truyền và số byte được xác nhận với cờ ECE được đặt. DCTCP tăng cửa sổ tắc nghẽn giống hệt như thuật toán tiêu chuẩn, nhưng giảm cửa sổ tỷ lệ thuận với số byte gặp tắc nghẽn trong cửa sổ quan sát trước đó.
