@@ -1,7 +1,7 @@
-Chapter 7: End-to-End Data
+Chương 7: Dữ liệu Đầu-Cuối
 ==========================
 
-  It is a capital mistake to theorize before one has data.
+  Thật là một sai lầm nghiêm trọng khi suy đoán trước khi có dữ liệu.
 
   *—Sir Arthur Conan Doyle*
 
