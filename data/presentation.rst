@@ -1,319 +1,128 @@
-7.1 Presentation Formatting
-===========================
+7.1 Định dạng trình bày
+=======================
 
-One of the most common transformations of network data is from the
-representation used by the application program into a form that is
-suitable for transmission over a network and *vice versa*. This
-transformation is typically called *presentation formatting*. As
-illustrated in :numref:`Figure %s <fig-marshal1>`, the sending program
-translates the data it wants to transmit from the representation it
-uses internally into a message that can be transmitted over the
-network; that is, the data is *encoded* in a message. On the receiving
-side, the application translates this arriving message into a
-representation that it can then process; that is, the message is
-*decoded*. This process is sometimes called *argument marshalling* or
-*serialization*. This terminology comes from the Remote Procedure Call
-(RPC) world, where the client thinks it is invoking a procedure with a
-set of arguments, but these arguments are then “brought together and
-ordered in an appropriate and effective way” to form a network
-message.
+Một trong những phép biến đổi phổ biến nhất của dữ liệu mạng là chuyển đổi từ biểu diễn mà chương trình ứng dụng sử dụng sang một dạng phù hợp để truyền qua mạng và *ngược lại*. Phép biến đổi này thường được gọi là *định dạng trình bày* (presentation formatting). Như minh họa ở :numref:`Hình %s <fig-marshal1>`, chương trình gửi sẽ chuyển đổi dữ liệu mà nó muốn truyền từ biểu diễn nội bộ sang một thông điệp có thể truyền qua mạng; tức là, dữ liệu được *mã hóa* vào thông điệp. Ở phía nhận, ứng dụng sẽ chuyển đổi thông điệp nhận được thành một biểu diễn mà nó có thể xử lý; tức là, thông điệp được *giải mã*. Quá trình này đôi khi còn gọi là *đóng gói đối số* (argument marshalling) hoặc *tuần tự hóa* (serialization). Thuật ngữ này xuất phát từ thế giới Gọi thủ tục từ xa (RPC), nơi phía khách nghĩ rằng nó đang gọi một thủ tục với một tập các đối số, nhưng các đối số này sau đó được “gom lại và sắp xếp theo cách phù hợp và hiệu quả” để tạo thành một thông điệp mạng.
 
 .. _fig-marshal1:
 .. figure:: figures/f07-01-9780123850591.png
    :width: 400px
    :align: center
 
-   Presentation formatting involves encoding and decoding application data.
+   Định dạng trình bày liên quan đến việc mã hóa và giải mã dữ liệu ứng dụng.
 
-You might ask what makes this problem challenging. One reason is that
-computers represent data in different ways. For example, some
-computers represent floating-point numbers in IEEE standard 754
-format, while some older machines still use their own nonstandard
-format. Even for something as simple as integers, different
-architectures use different sizes (e.g., 16-bit, 32-bit, 64-bit). To
-make matters worse, on some machines integers are represented in
-*big-endian* form (the most significant bit of a word—the "big end"—is
-in the byte with the lowest address), while on other machines integers
-are represented in *little-endian* form (the least significant bit—the
-"little end"—is in the byte with the lowest address). For example,
-PowerPC processors are big-endian machines, and the Intel x86 family
-is a little-endian architecture. Today, many architectures (e.g., ARM)
-support both representations (and so are called *bi-endian*), but the
-point is that you can never be sure how the host you are communicating
-with stores integers. The big-endian and little-endian representations
-of the integer 34,677,374 are given in :numref:`Figure %s <fig-endian>`.
+Bạn có thể hỏi điều gì làm cho vấn đề này trở nên thách thức. Một lý do là các máy tính biểu diễn dữ liệu theo những cách khác nhau. Ví dụ, một số máy tính biểu diễn số thực dấu phẩy động theo chuẩn IEEE 754, trong khi một số máy cũ vẫn sử dụng định dạng không chuẩn riêng. Ngay cả với những thứ đơn giản như số nguyên, các kiến trúc khác nhau sử dụng các kích thước khác nhau (ví dụ: 16-bit, 32-bit, 64-bit). Tệ hơn nữa, trên một số máy, số nguyên được biểu diễn theo dạng *big-endian* (bit quan trọng nhất của một từ—“đầu lớn”—nằm ở byte có địa chỉ thấp nhất), trong khi trên các máy khác, số nguyên được biểu diễn theo dạng *little-endian* (bit ít quan trọng nhất—“đầu nhỏ”—nằm ở byte có địa chỉ thấp nhất). Ví dụ, bộ xử lý PowerPC là máy big-endian, còn họ Intel x86 là kiến trúc little-endian. Ngày nay, nhiều kiến trúc (ví dụ: ARM) hỗ trợ cả hai cách biểu diễn (và do đó gọi là *bi-endian*), nhưng vấn đề là bạn không bao giờ chắc chắn máy mà bạn giao tiếp lưu trữ số nguyên như thế nào. Biểu diễn big-endian và little-endian của số nguyên 34.677.374 được minh họa ở :numref:`Hình %s <fig-endian>`.
 
 .. _fig-endian:
 .. figure:: figures/f07-02-9780123850591.png
    :width: 500px
    :align: center
 
-   Big-endian and little-endian byte order for the integer 34,677,374
+   Thứ tự byte big-endian và little-endian cho số nguyên 34.677.374
 
-Another reason that marshalling is difficult is that application
-programs are written in different languages, and even when you are using
-a single language there may be more than one compiler. For example,
-compilers have a fair amount of latitude in how they lay out structures
-(records) in memory, such as how much padding they put between the
-fields that make up the structure. Thus, you could not simply transmit a
-structure from one machine to another, even if both machines were of the
-same architecture and the program was written in the same language,
-because the compiler on the destination machine might align the fields
-in the structure differently.
+Một lý do khác khiến đóng gói đối số trở nên khó khăn là các chương trình ứng dụng được viết bằng các ngôn ngữ khác nhau, và ngay cả khi bạn dùng một ngôn ngữ thì có thể có nhiều trình biên dịch khác nhau. Ví dụ, các trình biên dịch có khá nhiều quyền tự do trong cách bố trí các cấu trúc (record) trong bộ nhớ, như việc chèn bao nhiêu padding giữa các trường tạo nên cấu trúc. Do đó, bạn không thể đơn giản truyền một cấu trúc từ máy này sang máy khác, ngay cả khi cả hai máy cùng kiến trúc và chương trình được viết cùng một ngôn ngữ, vì trình biên dịch trên máy đích có thể căn chỉnh các trường trong cấu trúc khác đi.
 
-7.1.1 Taxonomy
+7.1.1 Phân loại
 ---------------
 
-Although argument marshalling is not rocket science—it is a small matter
-of bit twiddling—there are a surprising number of design choices that
-you must address. We begin by giving a simple taxonomy for argument
-marshalling systems. The following is by no means the only viable
-taxonomy, but it is sufficient to cover most of the interesting
-alternatives.
+Mặc dù đóng gói đối số không phải là khoa học tên lửa—chỉ là vấn đề thao tác bit—nhưng có một số lượng đáng ngạc nhiên các lựa chọn thiết kế mà bạn phải giải quyết. Chúng ta bắt đầu bằng cách đưa ra một phân loại đơn giản cho các hệ thống đóng gói đối số. Đây không phải là phân loại duy nhất khả thi, nhưng đủ để bao quát hầu hết các lựa chọn thú vị.
 
-Data Types
-~~~~~~~~~~
+Kiểu dữ liệu
+~~~~~~~~~~~
 
-The first question is what data types the system is going to support. In
-general, we can classify the types supported by an argument marshalling
-mechanism at three levels. Each level complicates the task faced by the
-marshalling system.
+Câu hỏi đầu tiên là hệ thống sẽ hỗ trợ những kiểu dữ liệu nào. Nói chung, chúng ta có thể phân loại các kiểu được hỗ trợ bởi một cơ chế đóng gói đối số ở ba cấp độ. Mỗi cấp độ làm phức tạp thêm nhiệm vụ của hệ thống đóng gói.
 
-At the lowest level, a marshalling system operates on some set of *base
-types*. Typically, the base types include integers, floating-point
-numbers, and characters. The system might also support ordinal types and
-Booleans. As described above, the implication of the set of base types
-is that the encoding process must be able to convert each base type from
-one representation to another—for example, convert an integer from
-big-endian to little-endian.
+Ở cấp thấp nhất, một hệ thống đóng gói hoạt động trên một tập các *kiểu cơ bản*. Thông thường, các kiểu cơ bản bao gồm số nguyên, số thực dấu phẩy động và ký tự. Hệ thống cũng có thể hỗ trợ kiểu thứ tự (ordinal) và Boolean. Như đã mô tả ở trên, ý nghĩa của tập kiểu cơ bản là quá trình mã hóa phải có khả năng chuyển đổi mỗi kiểu cơ bản từ một biểu diễn sang biểu diễn khác—ví dụ, chuyển đổi số nguyên từ big-endian sang little-endian.
 
-At the next level are *flat types*—structures and arrays. While flat
-types might at first not appear to complicate argument marshalling, the
-reality is that they do. The problem is that the compilers used to
-compile application programs sometimes insert padding between the fields
-that make up the structure so as to align these fields on word
-boundaries. The marshalling system typically *packs* structures so that
-they contain no padding.
+Ở cấp tiếp theo là các *kiểu phẳng*—cấu trúc và mảng. Mặc dù ban đầu các kiểu phẳng có vẻ không làm phức tạp đóng gói đối số, thực tế là có. Vấn đề là các trình biên dịch dùng để biên dịch chương trình ứng dụng đôi khi chèn padding giữa các trường tạo nên cấu trúc để căn chỉnh các trường này theo biên từ. Hệ thống đóng gói thường sẽ *đóng gói* (pack) các cấu trúc sao cho chúng không có padding.
 
-At the highest level, the marshalling system might have to deal with
-*complex types*—those types that are built using pointers. That is, the
-data structure that one program wants to send to another might not be
-contained in a single structure, but might instead involve pointers from
-one structure to another. A tree is a good example of a complex type
-that involves pointers. Clearly, the data encoder must prepare the data
-structure for transmission over the network because pointers are
-implemented by memory addresses, and just because a structure lives at a
-certain memory address on one machine does not mean it will live at the
-same address on another machine. In other words, the marshalling system
-must *serialize* (flatten) complex data structures.
+Ở cấp cao nhất, hệ thống đóng gói có thể phải xử lý các *kiểu phức tạp*—những kiểu được xây dựng bằng con trỏ. Tức là, cấu trúc dữ liệu mà một chương trình muốn gửi cho chương trình khác có thể không nằm gọn trong một cấu trúc, mà có thể liên quan đến các con trỏ từ cấu trúc này sang cấu trúc khác. Một cây là ví dụ điển hình về kiểu phức tạp liên quan đến con trỏ. Rõ ràng, bộ mã hóa dữ liệu phải chuẩn bị cấu trúc dữ liệu để truyền qua mạng vì con trỏ được cài đặt bằng địa chỉ bộ nhớ, và chỉ vì một cấu trúc nằm ở một địa chỉ bộ nhớ nhất định trên một máy không có nghĩa là nó sẽ nằm ở cùng địa chỉ đó trên máy khác. Nói cách khác, hệ thống đóng gói phải *tuần tự hóa* (serialize) các cấu trúc dữ liệu phức tạp.
 
-In summary, depending on how complicated the type system is, the task
-of argument marshalling usually involves converting the base types,
-packing the structures, and linearizing the complex data structures,
-all to form a contiguous message that can be transmitted over the
-network. :numref:`Figure %s <fig-marshal2>` illustrates this task.
+Tóm lại, tùy vào mức độ phức tạp của hệ kiểu, nhiệm vụ đóng gói đối số thường bao gồm chuyển đổi các kiểu cơ bản, đóng gói các cấu trúc, và tuyến tính hóa các cấu trúc dữ liệu phức tạp, tất cả để tạo thành một thông điệp liên tục có thể truyền qua mạng. :numref:`Hình %s <fig-marshal2>` minh họa nhiệm vụ này.
 
 .. _fig-marshal2:
 .. figure:: figures/f07-03-9780123850591.png
    :width: 400px
    :align: center
 
-   Argument marshalling: converting, packing, and linearizing
+   Đóng gói đối số: chuyển đổi, đóng gói, và tuyến tính hóa
 
-Conversion Strategy
-~~~~~~~~~~~~~~~~~~~
+Chiến lược chuyển đổi
+~~~~~~~~~~~~~~~~~~~~
 
-Once the type system is established, the next issue is what conversion
-strategy the argument marshaller will use. There are two general
-options: *canonical intermediate form* and *receiver-makes-right*. We
-consider each, in turn.
+Khi hệ kiểu đã được xác định, vấn đề tiếp theo là hệ thống đóng gói đối số sẽ sử dụng chiến lược chuyển đổi nào. Có hai lựa chọn chung: *dạng trung gian chuẩn* (canonical intermediate form) và *bên nhận tự xử lý* (receiver-makes-right). Chúng ta sẽ lần lượt xem xét từng cái.
 
-The idea of canonical intermediate form is to settle on an external
-representation for each type; the sending host translates from its
-internal representation to this external representation before sending
-data, and the receiver translates from this external representation into
-its local representation when receiving data. To illustrate the idea,
-consider integer data; other types are treated in a similar manner. You
-might declare that the big-endian format will be used as the external
-representation for integers. The sending host must translate each
-integer it sends into big-endian form, and the receiving host must
-translate big-endian integers into whatever representation it uses.
-(This is what is done in the Internet for protocol headers.) Of course,
-a given host might already use big-endian form, in which case no
-conversion is necessary.
+Ý tưởng của dạng trung gian chuẩn là thống nhất một biểu diễn ngoài cho mỗi kiểu; máy gửi chuyển đổi từ biểu diễn nội bộ sang biểu diễn ngoài này trước khi gửi dữ liệu, và máy nhận chuyển đổi từ biểu diễn ngoài này sang biểu diễn cục bộ khi nhận dữ liệu. Để minh họa ý tưởng, hãy xét dữ liệu số nguyên; các kiểu khác cũng được xử lý tương tự. Bạn có thể quy định rằng định dạng big-endian sẽ được dùng làm biểu diễn ngoài cho số nguyên. Máy gửi phải chuyển đổi mỗi số nguyên nó gửi sang dạng big-endian, và máy nhận phải chuyển đổi số nguyên big-endian sang biểu diễn mà nó sử dụng. (Đây là cách làm trong Internet cho các tiêu đề giao thức.) Tất nhiên, một máy có thể đã dùng dạng big-endian, khi đó không cần chuyển đổi.
 
-The alternative, receiver-makes-right, has the sender transmit data in
-its own internal format; the sender does not convert the base types, but
-usually has to pack and flatten more complex data structures. The
-receiver is then responsible for translating the data from the sender’s
-format into its own local format. The problem with this strategy is that
-every host must be prepared to convert data from all other machine
-architectures. In networking, this is known as an *N-by-N solution*:
-Each of N machine architectures must be able to handle all N
-architectures. In contrast, in a system that uses a canonical
-intermediate form, each host needs to know only how to convert between
-its own representation and a single other representation—the external
-one.
+Lựa chọn thay thế, bên nhận tự xử lý, là máy gửi truyền dữ liệu theo định dạng nội bộ của nó; máy gửi không chuyển đổi các kiểu cơ bản, nhưng thường phải đóng gói và tuyến tính hóa các cấu trúc dữ liệu phức tạp hơn. Máy nhận sau đó chịu trách nhiệm chuyển đổi dữ liệu từ định dạng của máy gửi sang định dạng cục bộ của nó. Vấn đề với chiến lược này là mỗi máy phải sẵn sàng chuyển đổi dữ liệu từ tất cả các kiến trúc máy khác. Trong mạng, điều này gọi là giải pháp *N nhân N*: Mỗi trong N kiến trúc máy phải có khả năng xử lý tất cả N kiến trúc. Ngược lại, trong hệ thống dùng dạng trung gian chuẩn, mỗi máy chỉ cần biết cách chuyển đổi giữa biểu diễn của nó và một biểu diễn khác—biểu diễn ngoài.
 
-Using a common external format is clearly the correct thing to do,
-right? This has certainly been the conventional wisdom in the networking
-community for over 30 years. The answer is not cut and dried, however.
-It turns out that there are not that many different representations for
-the various base classes, or, said another way, N is not that large. In
-addition, the most common case is for two machines of the same type to
-be communicating with each other. In this situation, it seems silly to
-translate data from that architecture’s representation into some foreign
-external representation, only to have to translate the data back into
-the same architecture’s representation on the receiver.
+Rõ ràng, dùng một định dạng ngoài chung là điều đúng đắn, phải không? Điều này chắc chắn là quan điểm truyền thống trong cộng đồng mạng suốt hơn 30 năm qua. Tuy nhiên, câu trả lời không hoàn toàn rõ ràng. Thực tế là không có quá nhiều biểu diễn khác nhau cho các lớp kiểu cơ bản, hay nói cách khác, N không quá lớn. Ngoài ra, trường hợp phổ biến nhất là hai máy cùng loại giao tiếp với nhau. Trong tình huống này, có vẻ ngớ ngẩn khi chuyển đổi dữ liệu từ biểu diễn của kiến trúc đó sang một biểu diễn ngoài xa lạ, chỉ để rồi lại phải chuyển đổi dữ liệu về biểu diễn của cùng kiến trúc đó ở phía nhận.
 
-A third option, although we know of no existing system that exploits it,
-is to use receiver-makes-right if the sender knows that the destination
-has the same architecture; the sender would use some canonical
-intermediate form if the two machines use different architectures. How
-would a sender learn the receiver’s architecture? It could learn this
-information either from a name server or by first using a simple test
-case to see if the appropriate result occurs.
+Một lựa chọn thứ ba, dù chúng tôi chưa biết hệ thống nào hiện tại sử dụng, là dùng bên nhận tự xử lý nếu máy gửi biết đích có cùng kiến trúc; máy gửi sẽ dùng dạng trung gian chuẩn nếu hai máy dùng kiến trúc khác nhau. Làm sao máy gửi biết kiến trúc của máy nhận? Nó có thể biết thông tin này từ một máy chủ tên hoặc bằng cách thử một trường hợp đơn giản để xem kết quả có đúng không.
 
-Tags
-~~~~
+Thẻ (Tags)
+~~~~~~~~~~
 
-The third issue in argument marshalling is how the receiver knows what
-kind of data is contained in the message it receives. There are two
-common approaches: *tagged* and *untagged* data. The tagged approach is
-more intuitive, so we describe it first.
+Vấn đề thứ ba trong đóng gói đối số là làm sao phía nhận biết loại dữ liệu nào có trong thông điệp nó nhận được. Có hai cách tiếp cận phổ biến: dữ liệu *có thẻ* (tagged) và *không thẻ* (untagged). Cách có thẻ trực quan hơn, nên chúng ta mô tả trước.
 
-A tag is any additional information included in a message—beyond the
-concrete representation of the base types—that helps the receiver
-decode the message. There are several possible tags that might be
-included in a message. For example, each data item might be augmented
-with a *type* tag. A type tag indicates that the value that follows is
-an integer, a floating-point number, or whatever. Another example is a
-*length* tag.  Such a tag is used to indicate the number of elements
-in an array or the size of an integer. A third example is an
-*architecture* tag, which might be used in conjunction with the
-receiver-makes-right strategy to specify the architecture on which the
-data contained in the message was generated. :numref:`Figure %s
-<fig-tags>` depicts how a simple 32-bit integer might be encoded in a
-tagged message.
+Một thẻ là bất kỳ thông tin bổ sung nào được đưa vào thông điệp—ngoài biểu diễn cụ thể của các kiểu cơ bản—giúp phía nhận giải mã thông điệp. Có một số loại thẻ có thể được đưa vào thông điệp. Ví dụ, mỗi mục dữ liệu có thể được bổ sung một thẻ *kiểu*. Thẻ kiểu cho biết giá trị tiếp theo là số nguyên, số thực dấu phẩy động, hay gì khác. Một ví dụ khác là thẻ *độ dài*. Thẻ này dùng để chỉ số phần tử trong một mảng hoặc kích thước của một số nguyên. Một ví dụ thứ ba là thẻ *kiến trúc*, có thể dùng cùng với chiến lược bên nhận tự xử lý để chỉ rõ kiến trúc mà dữ liệu trong thông điệp được tạo ra. :numref:`Hình %s <fig-tags>` minh họa cách một số nguyên 32-bit có thể được mã hóa trong một thông điệp có thẻ.
 
 .. _fig-tags:
 .. figure:: figures/f07-04-9780123850591.png
    :width: 400px
    :align: center
 
-   A 32-bit integer encoded in a tagged message.
+   Một số nguyên 32-bit được mã hóa trong thông điệp có thẻ.
 
-The alternative, of course, is not to use tags. How does the receiver
-know how to decode the data in this case? It knows because it was
-programmed to know. In other words, if you call a remote procedure that
-takes two integers and a floating-point number as arguments, then there
-is no reason for the remote procedure to inspect tags to know what it
-has just received. It simply assumes that the message contains two
-integers and a float and decodes it accordingly. Note that, while this
-works for most cases, the one place it breaks down is when sending
-variable-length arrays. In such a case, a length tag is commonly used to
-indicate how long the array is.
+Lựa chọn thay thế, tất nhiên, là không dùng thẻ. Làm sao phía nhận biết cách giải mã dữ liệu trong trường hợp này? Nó biết vì nó được lập trình để biết. Nói cách khác, nếu bạn gọi một thủ tục từ xa nhận hai số nguyên và một số thực dấu phẩy động làm đối số, thì không có lý do gì để thủ tục từ xa phải kiểm tra thẻ để biết nó vừa nhận gì. Nó chỉ đơn giản giả định rằng thông điệp chứa hai số nguyên và một số thực, và giải mã tương ứng. Lưu ý rằng, mặc dù cách này phù hợp với hầu hết trường hợp, nhưng sẽ gặp vấn đề khi gửi mảng có độ dài thay đổi. Trong trường hợp này, thường dùng thẻ độ dài để chỉ mảng dài bao nhiêu.
 
-It is also worth noting that the untagged approach means that the
-presentation formatting is truly end to end. It is not possible for some
-intermediate agent to interpret the message unless the data is tagged.
-Why would an intermediate agent need to interpret a message, you might
-ask? Stranger things have happened, mostly resulting from *ad hoc*
-solutions to unexpected problems that the system was not engineered to
-handle. Poor network design is beyond the scope of this book.
+Cũng cần lưu ý rằng cách không thẻ nghĩa là định dạng trình bày thực sự là đầu-cuối. Không thể có một tác nhân trung gian nào diễn giải thông điệp trừ khi dữ liệu có thẻ. Tại sao một tác nhân trung gian lại cần diễn giải thông điệp, bạn có thể hỏi? Đã từng có những trường hợp như vậy, chủ yếu do các giải pháp *ad hoc* cho các vấn đề bất ngờ mà hệ thống không được thiết kế để xử lý. Thiết kế mạng kém nằm ngoài phạm vi cuốn sách này.
 
-Stubs
-~~~~~
+Stub
+~~~~
 
-A stub is the piece of code that implements argument marshalling. Stubs
-are typically used to support RPC. On the client side, the stub marshals
-the procedure arguments into a message that can be transmitted by means
-of the RPC protocol. On the server side, the stub converts the message
-back into a set of variables that can be used as arguments to call the
-remote procedure. Stubs can either be interpreted or compiled.
+Stub là đoạn mã thực hiện đóng gói đối số. Stub thường được dùng để hỗ trợ RPC. Ở phía khách, stub đóng gói các đối số thủ tục thành một thông điệp có thể truyền bằng giao thức RPC. Ở phía máy chủ, stub chuyển đổi thông điệp trở lại thành một tập biến có thể dùng làm đối số để gọi thủ tục từ xa. Stub có thể là dạng thông dịch hoặc biên dịch.
 
-In a compilation-based approach, each procedure has a customized client
-and server stub. While it is possible to write stubs by hand, they are
-typically generated by a stub compiler, based on a description of the
-procedure’s interface. This situation is illustrated in :numref:`Figure
-%s <fig-stubs>`. Since the stub is compiled, it is usually very efficient.
-In an interpretation-based approach, the system provides generic client
-and server stubs that have their parameters set by a description of the
-procedure’s interface. Because it is easy to change this description,
-interpreted stubs have the advantage of being flexible. Compiled stubs
-are more common in practice.
+Với cách tiếp cận dựa trên biên dịch, mỗi thủ tục có một stub khách và stub máy chủ tùy chỉnh. Mặc dù có thể viết stub thủ công, chúng thường được sinh tự động bởi một trình biên dịch stub, dựa trên mô tả giao diện thủ tục. Tình huống này được minh họa ở :numref:`Hình %s <fig-stubs>`. Vì stub được biên dịch, nó thường rất hiệu quả. Với cách tiếp cận dựa trên thông dịch, hệ thống cung cấp các stub khách và máy chủ tổng quát, các tham số của chúng được thiết lập bởi mô tả giao diện thủ tục. Vì dễ thay đổi mô tả này, stub thông dịch có ưu điểm là linh hoạt. Tuy nhiên, stub biên dịch phổ biến hơn trong thực tế.
 
 .. _fig-stubs:
 .. figure:: figures/f07-05-9780123850591.png
    :width: 500px
    :align: center
 
-   Stub compiler takes interface description as input and outputs client
-   and server stubs.
+   Trình biên dịch stub nhận mô tả giao diện làm đầu vào và xuất ra stub khách và máy chủ.
 
-7.1.2 Examples (XDR, ASN.1, NDR, ProtoBufs)
--------------------------------------------
+7.1.2 Ví dụ (XDR, ASN.1, NDR, ProtoBufs)
+----------------------------------------
 
-We now briefly describe four popular network data representations in
-terms of this taxonomy. We use the integer base type to illustrate how
-each system works.
+Chúng ta sẽ mô tả ngắn gọn bốn biểu diễn dữ liệu mạng phổ biến theo phân loại này. Chúng ta dùng kiểu cơ bản số nguyên để minh họa cách mỗi hệ thống hoạt động.
 
 XDR
 ~~~
 
-External Data Representation (XDR) is the network format used with
-SunRPC. In the taxonomy just introduced, XDR
+External Data Representation (XDR) là định dạng mạng dùng với SunRPC. Theo phân loại vừa giới thiệu, XDR
 
--  Supports the entire C-type system with the exception of function
-   pointers
+-  Hỗ trợ toàn bộ hệ kiểu C, trừ con trỏ hàm
 
--  Defines a canonical intermediate form
+-  Định nghĩa một dạng trung gian chuẩn
 
--  Does not use tags (except to indicate array lengths)
+-  Không dùng thẻ (trừ khi chỉ độ dài mảng)
 
--  Uses compiled stubs
+-  Dùng stub biên dịch
 
-An XDR integer is a 32-bit data item that encodes a C integer. It is
-represented in twos’ complement notation, with the most significant byte
-of the C integer in the first byte of the XDR integer and the least
-significant byte of the C integer in the fourth byte of the XDR integer.
-That is, XDR uses big-endian format for integers. XDR supports both
-signed and unsigned integers, just as C does.
+Một số nguyên XDR là một mục dữ liệu 32-bit mã hóa một số nguyên C. Nó được biểu diễn theo dạng bù hai, với byte quan trọng nhất của số nguyên C nằm ở byte đầu tiên của số nguyên XDR và byte ít quan trọng nhất nằm ở byte thứ tư. Tức là, XDR dùng định dạng big-endian cho số nguyên. XDR hỗ trợ cả số nguyên có dấu và không dấu, giống như C.
 
-XDR represents variable-length arrays by first specifying an unsigned
-integer (4 bytes) that gives the number of elements in the array,
-followed by that many elements of the appropriate type. XDR encodes the
-components of a structure in the order of their declaration in the
-structure. For both arrays and structures, the size of each
-element/component is represented in a multiple of 4 bytes. Smaller data
-types are padded out to 4 bytes with 0s. The exception to this “pad to
-4 bytes” rule is made for characters, which are encoded one per byte.
+XDR biểu diễn mảng có độ dài thay đổi bằng cách đầu tiên chỉ định một số nguyên không dấu (4 byte) cho biết số phần tử trong mảng, sau đó là từng phần tử của kiểu phù hợp. XDR mã hóa các thành phần của một cấu trúc theo thứ tự khai báo trong cấu trúc. Với cả mảng và cấu trúc, kích thước mỗi phần tử/thành phần được biểu diễn theo bội số của 4 byte. Các kiểu dữ liệu nhỏ hơn được padding thành 4 byte bằng các số 0. Ngoại lệ cho quy tắc “padding thành 4 byte” là ký tự, được mã hóa một ký tự trên mỗi byte.
 
 .. _fig-xdr:
 .. figure:: figures/f07-06-9780123850591.png
    :width: 500px
    :align: center
 
-   Example encoding of a structure in XDR.
+   Ví dụ mã hóa một cấu trúc trong XDR.
 
-The following code fragment gives an example C structure (``item``) and
-the XDR routine that encodes/decodes this structure (``xdr_item``).
-:numref:`Figure %s <fig-xdr>` schematically depicts XDR’s on-the-wire
-representation of this structure when the field ``name`` is seven
-characters long and the array ``list`` has three values in it.
+Đoạn mã sau là ví dụ về một cấu trúc C (``item``) và hàm XDR mã hóa/giải mã cấu trúc này (``xdr_item``). :numref:`Hình %s <fig-xdr>` mô tả sơ đồ biểu diễn trên đường truyền của cấu trúc này khi trường ``name`` dài bảy ký tự và mảng ``list`` có ba giá trị.
 
-In this example, ``xdr_array``, ``xdr_int``, and ``xdr_string`` are
-three primitive functions provided by XDR to encode and decode arrays,
-integers, and character strings, respectively. Argument ``xdrs`` is a
-context variable that XDR uses to keep track of where it is in the
-message being processed; it includes a flag that indicates whether this
-routine is being used to encode or decode the message. In other words,
-routines like ``xdr_item`` are used on both the client and the server.
-Note that the application programmer can either write the routine
-``xdr_item`` by hand or use a stub compiler called ``rpcgen`` (not
-shown) to generate this encoding/decoding routine. In the latter case,
-``rpcgen`` takes the remote procedure that defines the data structure
-``item`` as input and outputs the corresponding stub.
+Trong ví dụ này, ``xdr_array``, ``xdr_int`` và ``xdr_string`` là ba hàm nguyên thủy do XDR cung cấp để mã hóa và giải mã mảng, số nguyên và chuỗi ký tự. Đối số ``xdrs`` là biến ngữ cảnh mà XDR dùng để theo dõi vị trí hiện tại trong thông điệp đang xử lý; nó bao gồm một cờ cho biết hàm này đang được dùng để mã hóa hay giải mã thông điệp. Nói cách khác, các hàm như ``xdr_item`` được dùng cả ở phía khách và phía máy chủ. Lưu ý rằng lập trình viên ứng dụng có thể tự viết hàm ``xdr_item`` hoặc dùng trình biên dịch stub gọi là ``rpcgen`` (không hiển thị ở đây) để sinh hàm mã hóa/giải mã này. Trong trường hợp sau, ``rpcgen`` nhận thủ tục từ xa định nghĩa cấu trúc dữ liệu ``item`` làm đầu vào và xuất ra stub tương ứng.
 
 .. code-block:: c
 
@@ -335,130 +144,64 @@ shown) to generate this encoding/decoding routine. In the latter case,
                     sizeof(int), xdr_int));
    }
 
-Exactly how XDR performs depends, of course, on the complexity of the
-data. In a simple case of an array of integers, where each integer has
-to be converted from one byte order to another, an average of three
-instructions are required for each byte, meaning that converting the
-whole array is likely to be limited by the memory bandwidth of the
-machine. More complex conversions that require significantly more
-instructions per byte will be CPU limited and thus perform at a data
-rate less than the memory bandwidth.
+Chính xác XDR thực hiện như thế nào tất nhiên phụ thuộc vào độ phức tạp của dữ liệu. Trong trường hợp đơn giản là mảng số nguyên, mỗi số nguyên phải chuyển đổi từ một thứ tự byte sang thứ tự khác, trung bình cần ba lệnh cho mỗi byte, nghĩa là chuyển đổi toàn bộ mảng có thể bị giới hạn bởi băng thông bộ nhớ của máy. Các chuyển đổi phức tạp hơn đòi hỏi nhiều lệnh trên mỗi byte sẽ bị giới hạn bởi CPU và do đó tốc độ thấp hơn băng thông bộ nhớ.
 
 ASN.1
 ~~~~~
 
-Abstract Syntax Notation One (ASN.1) is an ISO standard that defines,
-among other things, a representation for data sent over a network. The
-representation-specific part of ASN.1 is called the *Basic Encoding
-Rules* (BER). ASN.1 supports the C-type system without function
-pointers, defines a canonical intermediate form, and uses type tags. Its
-stubs can be either interpreted or compiled. One of the claims to fame
-of ASN.1 BER is that it is used by the Internet standard Simple Network
-Management Protocol (SNMP).
+Abstract Syntax Notation One (ASN.1) là một chuẩn ISO định nghĩa, trong số những thứ khác, một biểu diễn cho dữ liệu gửi qua mạng. Phần đặc tả biểu diễn của ASN.1 gọi là *Quy tắc mã hóa cơ bản* (Basic Encoding Rules, BER). ASN.1 hỗ trợ hệ kiểu C không có con trỏ hàm, định nghĩa một dạng trung gian chuẩn, và dùng thẻ kiểu. Stub của nó có thể là thông dịch hoặc biên dịch. Một điểm nổi bật của ASN.1 BER là nó được dùng bởi giao thức chuẩn Internet SNMP.
 
-ASN.1 represents each data item with a triple of the form
+ASN.1 biểu diễn mỗi mục dữ liệu bằng một bộ ba dạng
 
 ::
 
    (tag, length, value)
 
-The ``tag`` is typically an 8-bit field, although ASN.1 allows for the
-definition of multibyte tags. The ``length`` field specifies how many
-bytes make up the ``value``; we discuss ``length`` more
-below. Compound data types, such as structures, can be constructed by
-nesting primitive types, as illustrated in :numref:`Figure %s <fig-ber1>`.
+``tag`` thường là trường 8-bit, mặc dù ASN.1 cho phép định nghĩa thẻ nhiều byte. Trường ``length`` chỉ số byte tạo nên ``value``; chúng ta sẽ bàn thêm về ``length`` bên dưới. Các kiểu dữ liệu phức hợp, như cấu trúc, có thể được xây dựng bằng cách lồng các kiểu nguyên thủy, như minh họa ở :numref:`Hình %s <fig-ber1>`.
 
 .. _fig-ber1:
 .. figure:: figures/f07-07-9780123850591.png
    :width: 600px
    :align: center
 
-   Compound types created by means of nesting in ASN.1 BER.
+   Kiểu phức hợp tạo bằng lồng nhau trong ASN.1 BER.
 
 .. _fig-ber2:
 .. figure:: figures/f07-08-9780123850591.png
    :width: 400px
    :align: center
 
-   ASN.1 BER representation for a 4-byte integer.
+   Biểu diễn ASN.1 BER cho một số nguyên 4 byte.
 
-If the ``value`` is 127 or fewer bytes long, then the ``length`` is
-specified in a single byte. Thus, for example, a 32-bit integer is
-encoded as a 1-byte ``type``, a 1-byte ``length``, and the 4 bytes that
-encode the integer, as illustrated in :numref:`Figure %s <fig-ber2>`. The
-``value`` itself, in the case of an integer, is represented in twos’
-complement notation and big-endian form, just as in XDR. Keep in mind
-that, even though the ``value`` of the integer is represented in exactly
-the same way in both XDR and ASN.1, the XDR representation has neither
-the ``type`` nor the ``length`` tags associated with that integer. These
-two tags both take up space in the message and, more importantly,
-require processing during marshalling and unmarshalling. This is one
-reason why ASN.1 is not as efficient as XDR. Another is that the very
-fact that each data value is preceded by a ``length`` field means that
-the data value is unlikely to fall on a natural byte boundary (e.g., an
-integer beginning on a word boundary). This complicates the
-encoding/decoding process.
+Nếu ``value`` dài 127 byte hoặc ít hơn, thì ``length`` được chỉ định bằng một byte. Ví dụ, một số nguyên 32-bit được mã hóa thành một byte ``type``, một byte ``length``, và 4 byte mã hóa số nguyên, như minh họa ở :numref:`Hình %s <fig-ber2>`. Bản thân ``value``, trong trường hợp số nguyên, được biểu diễn theo dạng bù hai và big-endian, giống như XDR. Lưu ý rằng, mặc dù ``value`` của số nguyên được biểu diễn giống hệt nhau trong XDR và ASN.1, biểu diễn XDR không có thẻ ``type`` hay ``length`` đi kèm số nguyên đó. Hai thẻ này vừa chiếm chỗ trong thông điệp, vừa đòi hỏi xử lý khi đóng gói và giải gói. Đây là một lý do tại sao ASN.1 không hiệu quả bằng XDR. Một lý do khác là việc mỗi giá trị dữ liệu đều có trường ``length`` đi trước nghĩa là giá trị dữ liệu khó có thể rơi vào biên byte tự nhiên (ví dụ, số nguyên bắt đầu ở biên từ). Điều này làm phức tạp quá trình mã hóa/giải mã.
 
-If the ``value`` is 128 or more bytes long, then multiple bytes are
-used to specify its ``length``. At this point you may be asking why a
-byte can specify a length of up to 127 bytes rather than 256. The
-reason is that 1 bit of the ``length`` field is used to denote how
-long the ``length`` field is. A 0 in the eighth bit indicates a 1-byte
-``length`` field. To specify a longer ``length``, the eighth bit is
-set to 1, and the other 7 bits indicate how many additional bytes make
-up the ``length``. :numref:`Figure %s <fig-ber3>` illustrates a simple
-1-byte ``length`` and a multibyte ``length``.
+Nếu ``value`` dài từ 128 byte trở lên, thì nhiều byte được dùng để chỉ ``length``. Lúc này bạn có thể hỏi tại sao một byte chỉ độ dài tối đa 127 byte thay vì 256. Lý do là 1 bit của trường ``length`` dùng để chỉ độ dài của trường ``length``. Bit thứ 8 bằng 0 nghĩa là trường ``length`` dài 1 byte. Để chỉ độ dài lớn hơn, bit thứ 8 được đặt là 1, và 7 bit còn lại chỉ số byte bổ sung tạo nên trường ``length``. :numref:`Hình %s <fig-ber3>` minh họa một trường hợp ``length`` 1 byte và một trường hợp nhiều byte.
 
 .. _fig-ber3:
 .. figure:: figures/f07-09-9780123850591.png
    :width: 400px
    :align: center
 
-   ASN.1 BER representation for length: (a) 1 byte; (b) multibyte.
+   Biểu diễn ASN.1 BER cho độ dài: (a) 1 byte; (b) nhiều byte.
 
 NDR
 ~~~
 
-Network Data Representation (NDR) is the data-encoding standard used in
-the Distributed Computing Environment (DCE). Unlike XDR and ASN.1, NDR
-uses receiver-makes-right. It does this by inserting an architecture tag
-at the front of each message; individual data items are untagged. NDR
-uses a compiler to generate stubs. This compiler takes a description of
-a program written in the Interface Definition Language (IDL) and
-generates the necessary stubs. IDL looks pretty much like C, and so
-essentially supports the C-type system.
+Network Data Representation (NDR) là chuẩn mã hóa dữ liệu dùng trong Môi trường Tính toán Phân tán (DCE). Khác với XDR và ASN.1, NDR dùng chiến lược bên nhận tự xử lý. Nó làm điều này bằng cách chèn một thẻ kiến trúc ở đầu mỗi thông điệp; các mục dữ liệu riêng lẻ không có thẻ. NDR dùng trình biên dịch để sinh stub. Trình biên dịch này nhận mô tả chương trình viết bằng Ngôn ngữ Định nghĩa Giao diện (IDL) và sinh các stub cần thiết. IDL trông khá giống C, nên về cơ bản hỗ trợ hệ kiểu C.
 
 .. _fig-ndr:
 .. figure:: figures/f07-10-9780123850591.png
    :width: 600px
    :align: center
 
-   NDR’s architecture tag.
+   Thẻ kiến trúc của NDR.
 
-:numref:`Figure %s <fig-ndr>` illustrates the 4-byte architecture
-definition tag that is included at the front of each NDR-encoded
-message. The first byte contains two 4-bit fields. The first field,
-``IntegrRep``, defines the format for all integers contained in the
-message. A 0 in this field indicates big-endian integers, and a 1
-indicates little-endian integers.  The ``CharRep`` field indicates
-what character format is used: 0 means ASCII (American Standard Code
-for Information Interchange) and 1 means EBCDIC (an older, IBM-defined
-alternative to ASCII). Next, the ``FloatRep`` byte defines which
-floating-point representation is being used: 0 means IEEE 754, 1 means
-VAX, 2 means Cray, and 3 means IBM. The final 2 bytes are reserved for
-future use. Note that, in simple cases such as arrays of integers, NDR
-does the same amount of work as XDR, and so it is able to achieve the
-same performance.
+:numref:`Hình %s <fig-ndr>` minh họa thẻ định nghĩa kiến trúc 4 byte được chèn ở đầu mỗi thông điệp mã hóa theo NDR. Byte đầu tiên chứa hai trường 4-bit. Trường đầu, ``IntegrRep``, xác định định dạng cho tất cả số nguyên trong thông điệp. 0 nghĩa là số nguyên big-endian, 1 nghĩa là little-endian. Trường ``CharRep`` chỉ định định dạng ký tự: 0 là ASCII, 1 là EBCDIC (một chuẩn cũ của IBM thay thế cho ASCII). Tiếp theo, byte ``FloatRep`` xác định định dạng số thực dấu phẩy động: 0 là IEEE 754, 1 là VAX, 2 là Cray, 3 là IBM. Hai byte cuối dành cho sử dụng trong tương lai. Lưu ý rằng, trong các trường hợp đơn giản như mảng số nguyên, NDR làm việc tương đương XDR, nên đạt hiệu năng tương đương.
 
 ProtoBufs
 ~~~~~~~~~
 
-Protocol Buffers (Protobufs, for short) provide a language-neutral and
-platform-neutral way of serializing structured data, commonly used with
-gRPC. They use a tagged strategy with a canonical intermediate form,
-where the stub on both sides is generated from a shared ``.proto`` file.
-This specification uses a simple C-like syntax, as the following example
-illustrates:
+Protocol Buffers (ProtoBufs) cung cấp một cách tuần tự hóa dữ liệu có cấu trúc độc lập ngôn ngữ và nền tảng, thường dùng với gRPC. Chúng dùng chiến lược có thẻ với dạng trung gian chuẩn, trong đó stub ở cả hai phía được sinh từ một file ``.proto`` chung. Đặc tả này dùng cú pháp đơn giản giống C, như ví dụ sau:
 
 .. code-block:: c
 
@@ -481,41 +224,24 @@ illustrates:
        required PhoneNumber phone = 4;
    }
 
-where ``message`` could roughly be interpreted as equivalent to
-``typedef struct`` in C. The rest of the example is fairly intuitive,
-except that every field is given a numeric identifier to ensure
-uniqueness should the specification change over time, and each field can
-be annotated as being either ``required`` or ``optional``.
+trong đó ``message`` có thể hiểu tương đương với ``typedef struct`` trong C. Phần còn lại khá trực quan, ngoại trừ việc mỗi trường được gán một định danh số để đảm bảo duy nhất nếu đặc tả thay đổi theo thời gian, và mỗi trường có thể được chú thích là ``required`` hoặc ``optional``.
 
-The way Protobufs encode integers is novel. They use a technique called
-*varints* (variable length integers) in which each 8-bit byte uses the
-most significant bit to indicate whether there are more bytes in the
-integer, and the lower seven bits to encode the two’s complement
-representation of the next group of seven bits in the value. The least
-significant group is first in the serialization.
+Cách ProtoBufs mã hóa số nguyên là mới lạ. Chúng dùng kỹ thuật gọi là *varints* (số nguyên độ dài biến đổi), trong đó mỗi byte 8-bit dùng bit quan trọng nhất để chỉ còn byte nào nữa trong số nguyên không, và 7 bit thấp hơn để mã hóa biểu diễn bù hai của nhóm 7 bit tiếp theo trong giá trị. Nhóm ít quan trọng nhất đứng trước trong chuỗi tuần tự hóa.
 
-This means a small integer (less than 128) can be encoded in a single
-byte (e.g., the integer 2 is encoded as ``0000 0010``), while for an
-integer bigger than 128, more bytes are needed. For example, 365 would
-be encoded as
+Điều này nghĩa là một số nguyên nhỏ (dưới 128) có thể được mã hóa trong một byte (ví dụ, số 2 được mã hóa là ``0000 0010``), còn số nguyên lớn hơn 128 cần nhiều byte hơn. Ví dụ, 365 sẽ được mã hóa là
 
 ::
 
    1110 1101 0000 0010
 
-To see this, first drop the most significant bit from each byte, as it
-is there to tell us whether we’ve reached the end of the integer. In
-this example, the ``1`` in the most significant bit of the first byte
-indicates there is more than one byte in the varint:
+Để thấy điều này, đầu tiên bỏ bit quan trọng nhất ở mỗi byte, vì nó dùng để báo đã hết số nguyên chưa. Trong ví dụ này, ``1`` ở bit quan trọng nhất của byte đầu cho biết còn nhiều hơn một byte trong varint:
 
 ::
 
    1110 1101 0000 0010
    → 110 1101  000 0010
 
-Since varints store numbers with the least significant group first, you
-next reverse the two groups of seven bits. Then you concatenate them to
-get your final value:
+Vì varint lưu số với nhóm ít quan trọng nhất trước, bạn đảo ngược hai nhóm 7 bit. Sau đó nối chúng lại để được giá trị cuối cùng:
 
 ::
 
@@ -524,73 +250,20 @@ get your final value:
    →  101101101
    →  256 + 64 + 32 + 8 + 4 + 1 = 365
 
-For the larger message specification, you can think of the serialized
-byte stream as a collection of key/value pairs, where the key (i.e.,
-tag) has two sub-parts: the unique identifier for the field (i.e., those
-extra numbers in the example ``.proto`` file) and the *wire type* of the
-value (e.g., ``Varint`` is the one example wire type we have seen so
-far). Other supported wire types include ``32-bit`` and ``64-bit`` (for
-fixed-length integers), and ``length-delimited`` (for strings and
-embedded messages). The latter tells you how many bytes long the
-embedded message (structure) is, but it’s another ``message``
-specification in the ``.proto`` file that tells you how to interpret
-those bytes.
+Với đặc tả thông điệp lớn hơn, bạn có thể coi chuỗi byte tuần tự hóa là tập hợp các cặp khóa/giá trị, trong đó khóa (tức là tag) có hai phần: định danh duy nhất cho trường (tức là các số trong file ``.proto``) và *kiểu truyền* (wire type) của giá trị (ví dụ, ``Varint`` là một kiểu truyền đã thấy). Các kiểu truyền khác gồm ``32-bit`` và ``64-bit`` (cho số nguyên độ dài cố định), và ``length-delimited`` (cho chuỗi và thông điệp lồng nhau). Kiểu cuối cùng cho biết thông điệp lồng nhau dài bao nhiêu byte, nhưng chính đặc tả ``message`` trong file ``.proto`` mới cho biết cách diễn giải các byte đó.
 
-7.1.3 Markup Languages (XML)
-----------------------------
+7.1.3 Ngôn ngữ đánh dấu (XML)
+-----------------------------
 
-Although we have been discussing the presentation formatting problem
-from the perspective of RPC—that is, how does one encode primitive data
-types and compound data structures so they can be sent from a client
-program to a server program—the same basic problem occurs in other
-settings. For example, how does a web server describe a Web page so that
-any number of different browsers know what to display on the screen? In
-this specific case, the answer is the HyperText Markup Language (HTML),
-which indicates that certain character strings should be displayed in
-bold or italics, what font type and size should be used, and where
-images should be positioned.
+Mặc dù chúng ta đã bàn về vấn đề định dạng trình bày từ góc nhìn RPC—tức là, làm sao mã hóa kiểu dữ liệu nguyên thủy và cấu trúc dữ liệu phức hợp để gửi từ chương trình khách đến chương trình máy chủ—vấn đề cơ bản này cũng xuất hiện ở các bối cảnh khác. Ví dụ, làm sao một máy chủ web mô tả một trang web để bất kỳ trình duyệt nào cũng biết hiển thị gì trên màn hình? Trong trường hợp này, câu trả lời là HyperText Markup Language (HTML), chỉ định rằng một số chuỗi ký tự nên được hiển thị đậm hoặc nghiêng, dùng font và cỡ nào, và vị trí hình ảnh ở đâu.
 
-The availability of all sorts of Web applications and data have also
-created a situation in which different Web applications need to
-communicate with each other and understand each other’s data. For
-example, an e-commerce website might need to talk to a shipping
-company’s website to allow a customer to track a package without ever
-leaving the e-commerce website. This quickly starts to look a lot like
-RPC, and the approach taken in the Web today to enable such
-communication among web servers is based on the *Extensible Markup
-Language* (XML)—a way to describe the data being exchanged between Web
-apps.
+Sự xuất hiện của đủ loại ứng dụng và dữ liệu web cũng tạo ra tình huống trong đó các ứng dụng web khác nhau cần giao tiếp và hiểu dữ liệu của nhau. Ví dụ, một trang thương mại điện tử có thể cần nói chuyện với trang của công ty vận chuyển để khách hàng tra cứu đơn hàng mà không rời khỏi trang thương mại điện tử. Điều này nhanh chóng trở nên giống RPC, và cách tiếp cận hiện nay trên web để cho phép các máy chủ web giao tiếp như vậy dựa trên *Ngôn ngữ đánh dấu mở rộng* (XML)—một cách để mô tả dữ liệu được trao đổi giữa các ứng dụng web.
 
-Markup languages, of which HTML and XML are both examples, take the
-tagged data approach to the extreme. Data is represented as text, and
-text tags known as *markup* are intermingled with the data text to
-express information about the data. In the case of HTML, markup
-indicates how the text should be displayed; other markup languages like
-XML can express the type and structure of the data.
+Các ngôn ngữ đánh dấu, mà HTML và XML đều là ví dụ, đẩy cách tiếp cận dữ liệu có thẻ lên mức cực đoan. Dữ liệu được biểu diễn dưới dạng văn bản, và các thẻ văn bản gọi là *markup* được xen kẽ với dữ liệu để biểu đạt thông tin về dữ liệu. Với HTML, markup chỉ cách hiển thị văn bản; các ngôn ngữ đánh dấu khác như XML có thể biểu đạt kiểu và cấu trúc dữ liệu.
 
-XML is actually a framework for defining different markup languages for
-different kinds of data. For example, XML has been used to define a
-markup language that is roughly equivalent to HTML called *Extensible
-HyperText Markup Language* (XHTML). XML defines a basic syntax for
-mixing markup with data text, but the designer of a specific markup
-language has to name and define its markup. It is common practice to
-refer to individual XML-based languages simply as XML, but we will
-emphasize the distinction in this introductory material.
+XML thực chất là một khung để định nghĩa các ngôn ngữ đánh dấu khác nhau cho các loại dữ liệu khác nhau. Ví dụ, XML đã được dùng để định nghĩa một ngôn ngữ đánh dấu gần tương đương với HTML gọi là *Extensible HyperText Markup Language* (XHTML). XML định nghĩa cú pháp cơ bản để trộn markup với dữ liệu, nhưng người thiết kế ngôn ngữ đánh dấu cụ thể phải đặt tên và định nghĩa markup của nó. Thông thường, người ta gọi các ngôn ngữ dựa trên XML đơn giản là XML, nhưng ở đây chúng ta sẽ nhấn mạnh sự khác biệt này.
 
-XML syntax looks much like HTML. For example, an employee record in a
-hypothetical XML-based language might look like the following XML
-*document*, which might be stored in a file named ``employee.xml``. The
-first line indicates the version of XML being used, and the remaining
-lines represent four fields that make up the employee record, the last
-of which (``hiredate``) contains three subfields. In other words, XML
-syntax provides for a nested structure of tag/value pairs, which is
-equivalent to a tree structure for the represented data (with
-``employee`` as the root). This is similar to XDR, ASN.1, and NDR’s
-ability to represent compound types, but in a format that can be both
-processed by programs and read by humans. More importantly, programs
-such as parsers can be used across different XML-based languages,
-because the definitions of those languages are themselves expressed as
-machine-readable data that can be input to the programs.
+Cú pháp XML trông rất giống HTML. Ví dụ, một bản ghi nhân viên trong một ngôn ngữ dựa trên XML giả định có thể trông như tài liệu XML sau, có thể lưu trong file ``employee.xml``. Dòng đầu chỉ phiên bản XML, các dòng còn lại là bốn trường tạo nên bản ghi nhân viên, trường cuối (``hiredate``) chứa ba trường con. Nói cách khác, cú pháp XML cho phép cấu trúc lồng nhau của các cặp thẻ/giá trị, tương đương với cấu trúc cây cho dữ liệu biểu diễn (với ``employee`` là gốc). Điều này giống khả năng của XDR, ASN.1 và NDR trong việc biểu diễn kiểu phức hợp, nhưng ở định dạng vừa có thể xử lý bằng chương trình vừa đọc được bởi con người. Quan trọng hơn, các chương trình như parser có thể dùng cho nhiều ngôn ngữ dựa trên XML khác nhau, vì định nghĩa các ngôn ngữ đó cũng được biểu diễn dưới dạng dữ liệu máy có thể đọc được để nhập vào chương trình.
 
 .. code:: xml
 
@@ -606,23 +279,9 @@ machine-readable data that can be input to the programs.
       </hiredate>
    </employee>
 
-Although the markup and the data in this document are highly suggestive
-to the human reader, it is the definition of the employee record
-language that actually determines what tags are legal, what they mean,
-and what data types they imply. Without some formal definition of the
-tags, a human reader (or a computer) can’t tell whether ``1986`` in the
-``year`` field, for example, is a string, an integer, an unsigned
-integer, or a floating point number.
+Mặc dù markup và dữ liệu trong tài liệu này rất gợi ý cho người đọc, chính định nghĩa ngôn ngữ bản ghi nhân viên mới quyết định thẻ nào hợp lệ, ý nghĩa của chúng là gì, và chúng ngụ ý kiểu dữ liệu nào. Nếu không có định nghĩa chính thức về các thẻ, người đọc (hoặc máy tính) không thể biết ``1986`` trong trường ``year`` là chuỗi, số nguyên, số nguyên không dấu hay số thực dấu phẩy động.
 
-The definition of a specific XML-based language is given by a *schema*,
-which is a database term for a specification of how to interpret a
-collection of data. Several schema languages have been defined for XML;
-we will focus here on the leading standard, known by the
-none-too-surprising name *XML Schema*. An individual schema defined
-using XML Schema is known as an *XML Schema Document* (XSD). The
-following is an XSD specification for the example; in other words, it
-defines the language to which the example document conforms. It might be
-stored in a file named ``employee.xsd``.
+Định nghĩa một ngôn ngữ dựa trên XML cụ thể được cho bởi một *schema* (lược đồ), là thuật ngữ cơ sở dữ liệu chỉ đặc tả cách diễn giải một tập dữ liệu. Có nhiều ngôn ngữ schema cho XML; ở đây chúng ta tập trung vào chuẩn chính, gọi là *XML Schema*. Một schema cá nhân định nghĩa bằng XML Schema gọi là *Tài liệu XML Schema* (XSD). Sau đây là một đặc tả XSD cho ví dụ trên; tức là, nó định nghĩa ngôn ngữ mà tài liệu ví dụ tuân theo. Nó có thể lưu trong file ``employee.xsd``.
 
 .. code:: xml
 
@@ -648,94 +307,45 @@ stored in a file named ``employee.xsd``.
      </element>
    </schema>
 
-This XSD looks superficially similar to our example document
-``employee.xml``, and for good reason: XML Schema is itself an XML-based
-language. There is an obvious relationship between this XSD and the
-document defined above. For example,
+XSD này trông khá giống tài liệu ví dụ ``employee.xml``, và điều đó có lý do: XML Schema bản thân là một ngôn ngữ dựa trên XML. Có mối liên hệ rõ ràng giữa XSD này và tài liệu định nghĩa ở trên. Ví dụ,
 
 .. code:: xml
 
    <element name="title" type="string"/>
 
-indicates that the value bracketed by the markup ``title`` is to be
-interpreted as a string. The sequence and nesting of that line in the
-XSD indicate that a ``title`` field must be the second item in an
-employee record.
+chỉ ra rằng giá trị nằm giữa thẻ ``title`` sẽ được diễn giải là chuỗi. Thứ tự và lồng nhau của dòng này trong XSD chỉ rằng trường ``title`` phải là mục thứ hai trong bản ghi nhân viên.
 
-Unlike some schema languages, XML Schema provides datatypes such as
-string, integer, decimal, and Boolean. It allows the datatypes to be
-combined in sequences or nested, as in ``employee.xsd``, to create
-compound data types. So an XSD defines more than a syntax; it defines
-its own abstract data model. A document that conforms to the XSD
-represents a collection of data that conforms to the data model.
+Khác với một số ngôn ngữ schema, XML Schema cung cấp các kiểu dữ liệu như string, integer, decimal và Boolean. Nó cho phép kết hợp các kiểu dữ liệu thành chuỗi hoặc lồng nhau, như trong ``employee.xsd``, để tạo kiểu dữ liệu phức hợp. Vậy một XSD định nghĩa nhiều hơn cú pháp; nó định nghĩa mô hình dữ liệu trừu tượng của riêng nó. Một tài liệu tuân theo XSD đại diện cho một tập dữ liệu tuân theo mô hình dữ liệu đó.
 
-The significance of an XSD defining an abstract data model and not just
-a syntax is that there can be other ways besides XML of representing
-data that conforms to the model. And XML does, after all, have some
-shortcomings as an on-the-wire representation: it is not as compact as
-other data representations, and it is relatively slow to parse. A number
-of alternative representations described as binary are in use. The
-International Standards Organization (ISO) has published one called
-*Fast Infoset*, while the World Wide Web Consortium (W3C) has produced
-the *Efficient XML Interchange* (EXI) proposal. Binary representations
-sacrifice human readability for greater compactness and faster parsing.
+Ý nghĩa của việc XSD định nghĩa mô hình dữ liệu trừu tượng chứ không chỉ cú pháp là có thể có các cách khác ngoài XML để biểu diễn dữ liệu tuân theo mô hình đó. Và XML thực ra có một số hạn chế khi dùng làm biểu diễn trên đường truyền: nó không gọn như các biểu diễn dữ liệu khác, và khá chậm để phân tích cú pháp. Có một số biểu diễn thay thế dạng nhị phân đang được sử dụng. Tổ chức Tiêu chuẩn Quốc tế (ISO) đã công bố một chuẩn gọi là *Fast Infoset*, còn World Wide Web Consortium (W3C) đưa ra đề xuất *Efficient XML Interchange* (EXI). Các biểu diễn nhị phân hy sinh khả năng đọc của con người để đổi lấy độ gọn và tốc độ phân tích cú pháp cao hơn.
 
-XML Namespaces
-~~~~~~~~~~~~~~
+Không gian tên XML
+~~~~~~~~~~~~~~~~~
 
-XML has to solve a common problem, that of name clashes. The problem
-arises because schema languages such as XML Schema support modularity in
-the sense that a schema can be reused as part of another schema. Suppose
-two XSDs are defined independently, and both happen to define the markup
-name *idNumber*. Perhaps one XSD uses that name to identify employees of
-a company, and the other XSD uses it to identify laptop computers owned
-by the company. We might like to reuse those two XSDs in a third XSD for
-describing which assets are associated with which employees, but to do
-that we need some mechanism for distinguishing employees’ idNumbers from
-laptop idNumbers.
+XML phải giải quyết một vấn đề phổ biến, đó là xung đột tên. Vấn đề phát sinh vì các ngôn ngữ schema như XML Schema hỗ trợ tính mô-đun ở chỗ một schema có thể được tái sử dụng như một phần của schema khác. Giả sử hai XSD được định nghĩa độc lập, và cả hai đều định nghĩa tên markup *idNumber*. Có thể một XSD dùng tên đó để nhận diện nhân viên công ty, còn XSD kia dùng để nhận diện máy tính xách tay của công ty. Chúng ta có thể muốn tái sử dụng hai XSD đó trong một XSD thứ ba để mô tả tài sản nào gắn với nhân viên nào, nhưng để làm vậy cần một cơ chế phân biệt idNumber của nhân viên với idNumber của laptop.
 
-XML’s solution to this problem is *XML namespaces*. A namespace is a
-collection of names. Each XML namespace is identified by a Uniform
-Resource Identifier (URI). URIs will be described in some detail in a
-later chapter; for now, all you really need to know is that URIs are a
-form of globally unique identifier. (An HTTP URL is a particular type of
-UNI.) A simple markup name like *idNumber* can be added to a namespace
-as long as it is unique within that namespace. Since the namespace is
-globally unique and the simple name is unique within the namespace, the
-combination of the two is a globally unique *qualified name* that cannot
-clash.
+Giải pháp của XML cho vấn đề này là *không gian tên XML* (XML namespaces). Một không gian tên là một tập hợp các tên. Mỗi không gian tên XML được nhận diện bằng một Uniform Resource Identifier (URI). URI sẽ được mô tả chi tiết ở chương sau; hiện tại, bạn chỉ cần biết URI là một dạng định danh toàn cục duy nhất. (Một HTTP URL là một loại URI cụ thể.) Một tên markup đơn giản như *idNumber* có thể được thêm vào một không gian tên miễn là nó là duy nhất trong không gian tên đó. Vì không gian tên là duy nhất toàn cục và tên đơn giản là duy nhất trong không gian tên, kết hợp hai cái sẽ tạo thành một *tên đủ điều kiện* duy nhất toàn cục, không thể xung đột.
 
-An XSD usually specifies a *target namespace* with a line like the
-following:
+Một XSD thường chỉ định *không gian tên đích* bằng một dòng như sau:
 
 .. code:: xml
 
    targetNamespace="http://www.example.com/employee"
 
-is a Uniform Resource Identifier, identifying a made-up namespace. All
-the new markup defined in that XSD will belong to that namespace.
+là một Uniform Resource Identifier, nhận diện một không gian tên giả định. Tất cả markup mới định nghĩa trong XSD đó sẽ thuộc về không gian tên đó.
 
-Now, if an XSD wants to reference names that have been defined in other
-XSDs, it can do so by qualifying those names with a namespace prefix.
-This prefix is a short abbreviation for the full URI that actually
-identifies the namespace. For example, the following line assigns
-``emp`` as the namespace prefix for the employee namespace:
+Bây giờ, nếu một XSD muốn tham chiếu các tên đã được định nghĩa trong XSD khác, nó có thể làm vậy bằng cách gán tiền tố không gian tên cho các tên đó. Tiền tố này là viết tắt ngắn cho URI đầy đủ thực sự nhận diện không gian tên. Ví dụ, dòng sau gán ``emp`` làm tiền tố không gian tên cho không gian tên nhân viên:
 
 .. code:: xml
 
    xmlns:emp="http://www.example.com/employee"
 
-Any markup from that namespace would be qualified by prefixing it with
-``emp:`` , as is ``title`` in the following line:
+Bất kỳ markup nào từ không gian tên đó sẽ được định danh bằng cách thêm tiền tố ``emp:`` , như ``title`` trong dòng sau:
 
 .. code:: xml
 
    <emp:title>Head Bottle Washer</emp:title>
 
-In other words, ``emp:title`` is a qualified name, which will not clash
-with the name ``title`` from some other namespace.
+Nói cách khác, ``emp:title`` là một tên đủ điều kiện, sẽ không xung đột với tên ``title`` từ không gian tên khác.
 
-It is remarkable how widely XML is now used in applications that range
-from RPC-style communication among Web-based services to office
-productivity tools to instant messaging. It is certainly one of the core
-protocols on which the upper layers of the Internet now depend.
+Thật đáng chú ý là XML hiện được sử dụng rộng rãi trong các ứng dụng từ giao tiếp kiểu RPC giữa các dịch vụ web đến công cụ văn phòng và nhắn tin tức thời. Nó chắc chắn là một trong những giao thức cốt lõi mà các tầng trên của Internet hiện nay phụ thuộc vào.
