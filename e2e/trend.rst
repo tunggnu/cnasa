@@ -1,91 +1,39 @@
-Perspective: HTTP is the New Narrow Waist
-=========================================
+Góc nhìn: HTTP là “eo hẹp” mới của Internet
+===========================================
 
-The Internet has been described as having a *narrow waist* architecture,
-with one universal protocol in the middle (IP), widening to support many
-transport and application protocols above it (e.g., TCP, UDP, RTP,
-SunRPC, DCE-RPC, gRPC, SMTP, HTTP, SNMP) and able to run on top of many
-network technologies below (e.g., Ethernet, PPP, WiFi, SONET, ATM). This
-general structure has been a key to the Internet becoming ubiquitous: by
-keeping the IP layer that everyone has to agree to minimal, a thousand
-flowers were allowed to bloom both above and below. This is now a widely
-understood strategy for any platform trying to achieve universal
-adoption.
+Internet đã từng được mô tả là có kiến trúc *eo hẹp*, với một giao thức phổ quát ở giữa (IP), mở rộng ra để hỗ trợ nhiều giao thức truyền tải và ứng dụng phía trên (ví dụ: TCP, UDP, RTP, SunRPC, DCE-RPC, gRPC, SMTP, HTTP, SNMP) và có thể chạy trên nhiều công nghệ mạng phía dưới (ví dụ: Ethernet, PPP, WiFi, SONET, ATM). Cấu trúc tổng thể này là chìa khóa giúp Internet trở nên phổ biến: bằng cách giữ cho lớp IP mà mọi người phải đồng thuận ở mức tối thiểu, hàng ngàn “bông hoa” đã được phép nở rộ cả ở phía trên lẫn phía dưới. Đây hiện là một chiến lược được hiểu rộng rãi cho bất kỳ nền tảng nào muốn đạt được sự phổ cập.
 
-But something else has happened over the last 30 years. By not
-addressing all the issues the Internet would eventually face as it grew
-(e.g., security, congestion, mobility, real-time responsiveness, and so
-on) it became necessary to introduce a series of additional features
-into the Internet architecture. Having IP’s universal addresses and
-best-effort service model was a necessary condition for adoption, but
-not a sufficient foundation for all the applications people wanted to
-build.
+Nhưng đã có điều gì đó khác xảy ra trong 30 năm qua. Khi không giải quyết tất cả các vấn đề mà Internet cuối cùng sẽ phải đối mặt khi phát triển (ví dụ: bảo mật, kiểm soát tắc nghẽn, di động, đáp ứng thời gian thực, v.v.), đã trở nên cần thiết phải bổ sung một loạt các tính năng mới vào kiến trúc Internet. Việc có địa chỉ phổ quát của IP và mô hình dịch vụ “best-effort” là điều kiện cần để được chấp nhận, nhưng chưa đủ để làm nền tảng cho tất cả các ứng dụng mà con người muốn xây dựng.
 
-We’re yet to see some of these solutions—future chapters will describe
-how the Internet manages congestion (:ref:`Chapter 6 <Chapter 6:
-Congestion Control>`), provides security (:ref:`Chapter 8 <Chapter 8:
-Network Security>`), and supports real-time multimedia
-applications (:ref:`Chapters 7 <Chapter 7: End-to-End Data>` and
-:ref:`9 <Chapter 9: Applications>`)—but it is informative to take this
-opportunity to reconcile the value of a universal narrow waist with the
-evolution that inevitably happens in any long-lived system: the “fixed
-point” around which the rest of the architecture evolves has moved to a
-new spot in the software stack. In short, HTTP has become the new narrow
-waist; the one shared/assumed piece of the global infrastructure that
-makes everything else possible. This didn’t happen overnight or by
-proclamation, although some did anticipate it would happen. The narrow
-waist drifted slowly up the protocol stack as a consequence of an
-evolution (to mix geoscience and biological metaphors).
+Chúng ta vẫn chưa thấy hết các giải pháp này—các chương sau sẽ mô tả cách Internet quản lý tắc nghẽn (:ref:`Chương 6 <Chapter 6: Congestion Control>`), cung cấp bảo mật (:ref:`Chương 8 <Chapter 8: Network Security>`), và hỗ trợ các ứng dụng đa phương tiện thời gian thực (:ref:`Chương 7 <Chapter 7: End-to-End Data>` và :ref:`9 <Chapter 9: Applications>`)—nhưng đây là thời điểm thích hợp để nhìn nhận lại giá trị của một “eo hẹp” phổ quát với sự tiến hóa tất yếu trong bất kỳ hệ thống lâu dài nào: “điểm cố định” mà xung quanh đó kiến trúc còn lại phát triển đã chuyển lên một vị trí mới trong ngăn xếp phần mềm. Nói ngắn gọn, HTTP đã trở thành “eo hẹp” mới; là phần chung/giả định của hạ tầng toàn cầu giúp mọi thứ khác trở nên khả thi. Điều này không xảy ra trong một đêm hay do một tuyên bố chính thức, mặc dù một số người đã dự đoán nó sẽ xảy ra. “Eo hẹp” này đã từ từ dịch chuyển lên ngăn xếp giao thức như một hệ quả của quá trình tiến hóa (để pha trộn ẩn dụ địa chất và sinh học).
 
 .. _fig-waist:
 .. figure:: figures/rpc/Slide3.png
    :width: 500px
    :align: center
 
-   HTTP (plus TLS, TCP, and IP) forming the narrow
-   waist of today's Internet architecture.
+   HTTP (cùng với TLS, TCP và IP) tạo thành “eo hẹp” của kiến trúc Internet ngày nay.
 
-Putting the narrow waist label purely on HTTP is an over simplification.
-It’s actually a team effort, with the HTTP/TLS/TCP/IP combination now
-serving as the Internet’s common platform.
+Gán nhãn “eo hẹp” chỉ cho HTTP là một sự đơn giản hóa quá mức. Thực tế, đây là nỗ lực của cả một nhóm, với sự kết hợp HTTP/TLS/TCP/IP hiện đang đóng vai trò là nền tảng chung của Internet.
 
--  HTTP provides global object identifiers (URIs) and a simple GET/PUT
-   interface.
+-  HTTP cung cấp các định danh đối tượng toàn cầu (URI) và giao diện GET/PUT đơn giản.
 
--  TLS provides end-to-end communication security.
+-  TLS cung cấp bảo mật truyền thông đầu-cuối.
 
--  TCP provides connection management, reliable transmission, and
-   congestion control.
+-  TCP cung cấp quản lý kết nối, truyền tải tin cậy và kiểm soát tắc nghẽn.
 
--  IP provides global host addresses and a network abstraction layer.
+-  IP cung cấp địa chỉ máy chủ toàn cầu và một lớp trừu tượng mạng.
 
-In other words, even though you are free to invent your own congestion
-control algorithm, TCP solves this problem quite well, so it makes sense
-to reuse that solution. Similarly, even though you are free to invent
-your own RPC protocol, HTTP provides a perfectly serviceable one (which
-because it comes bundled with proven security, has the added feature of
-not being blocked by enterprise firewalls), so again, it makes sense to
-reuse it rather than reinvent the wheel.
+Nói cách khác, mặc dù bạn có thể tự phát minh thuật toán kiểm soát tắc nghẽn của riêng mình, TCP đã giải quyết vấn đề này khá tốt, nên hợp lý khi tái sử dụng giải pháp đó. Tương tự, dù bạn có thể tự tạo giao thức RPC riêng, HTTP đã cung cấp một giao thức hoàn toàn phù hợp (và vì đi kèm với bảo mật đã được kiểm chứng, nó còn có ưu điểm là không bị tường lửa doanh nghiệp chặn), nên một lần nữa, hợp lý hơn khi tái sử dụng thay vì phát minh lại bánh xe.
 
-Somewhat less obviously, HTTP also provides a good foundation for
-dealing with mobility. If the resource you want to access has moved,
-you can have HTTP return a *redirect response* that points the client
-to a new location. Similarly, HTTP enables injecting *caching proxies*
-between the client and server, making it possible to replicate popular
-content in multiple locations and save clients the delay of going all
-the way across the Internet to retrieve some piece of
-information. (Both of these capabilities are discussed in
-:ref:`Section 9.1 <9.1 Traditional Applications>`.) Finally, HTTP has
-been used to deliver real-time multimedia, in an approach known as
-*adaptive streaming*. (See how in :ref:`Section 7.2 <7.2 Multimedia
-Data>`.)
+Ít rõ ràng hơn, HTTP cũng là nền tảng tốt để xử lý vấn đề di động. Nếu tài nguyên bạn muốn truy cập đã di chuyển, HTTP có thể trả về *phản hồi chuyển hướng* chỉ cho client đến vị trí mới. Tương tự, HTTP cho phép chèn *proxy lưu trữ* giữa client và server, giúp sao chép nội dung phổ biến ở nhiều vị trí và tiết kiệm thời gian cho client thay vì phải truy xuất dữ liệu từ xa trên Internet. (Cả hai khả năng này sẽ được bàn trong :ref:`Mục 9.1 <9.1 Traditional Applications>`.) Cuối cùng, HTTP còn được dùng để truyền tải đa phương tiện thời gian thực, theo cách gọi là *adaptive streaming* (truyền phát thích ứng). (Xem chi tiết trong :ref:`Mục 7.2 <7.2 Multimedia Data>`.)
 
-.. admonition:: Broader Perspective
+.. admonition:: Góc nhìn rộng hơn
 
-   To continue reading about the cloudification of the Internet, see
-   :ref:`Perspective: Software-Defined Traffic Engineering`.
+   Để tiếp tục đọc về quá trình “đám mây hóa” của Internet, xem
+   :ref:`Góc nhìn: Điều phối lưu lượng dựa trên phần mềm (Software-Defined Traffic Engineering)`.
 
-   To learn more about the centrality of HTTP, we recommend: `HTTP:
+   Để tìm hiểu thêm về vai trò trung tâm của HTTP, chúng tôi khuyến nghị: `HTTP:
    An Evolvable Narrow Waist for the Future
    Internet <https://www2.eecs.berkeley.edu/Pubs/TechRpts/2012/EECS-2012-5.pdf>`__,
-   January 2012.
+   Tháng 1 năm 2012.
