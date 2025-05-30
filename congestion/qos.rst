@@ -1,992 +1,268 @@
-6.5 Quality of Service
-======================
+6.5 Chất lượng dịch vụ (Quality of Service)
+===========================================
 
-The promise of general-purpose packet-switched networks is that they
-support all kinds of applications and data, including multimedia
-applications that transmit digitized audio and video streams. In the
-early days, one obstacle to the fulfillment of this promise was the need
-for higher-bandwidth links. That is no longer an issue, but there is
-more to transmitting audio and video over a network than just providing
-sufficient bandwidth.
+Lời hứa của các mạng chuyển mạch gói đa dụng là chúng hỗ trợ mọi loại ứng dụng và dữ liệu, bao gồm cả các ứng dụng đa phương tiện truyền tải các luồng âm thanh và video số hóa. Trong những ngày đầu, một trở ngại để thực hiện lời hứa này là nhu cầu về các liên kết băng thông cao hơn. Đó không còn là vấn đề nữa, nhưng việc truyền âm thanh và video qua mạng còn nhiều điều hơn chỉ là cung cấp đủ băng thông.
 
-Participants in a telephone conversation, for example, expect to be able
-to converse in such a way that one person can respond to something said
-by the other and be heard almost immediately. Thus, the timeliness of
-delivery can be very important. We refer to applications that are
-sensitive to the timeliness of data as *real-time applications*. Voice
-and video applications tend to be the canonical examples, but there are
-others such as industrial control—you would like a command sent to a
-robot arm to reach it before the arm crashes into something. Even file
-transfer applications can have timeliness constraints, such as a
-requirement that a database update complete overnight before the
-business that needs the data resumes on the next day.
+Ví dụ, những người tham gia một cuộc trò chuyện điện thoại mong muốn có thể trò chuyện sao cho một người có thể đáp lại điều người kia vừa nói và được nghe gần như ngay lập tức. Do đó, tính kịp thời của việc truyền dữ liệu có thể rất quan trọng. Chúng ta gọi các ứng dụng nhạy cảm với tính kịp thời của dữ liệu là *ứng dụng thời gian thực* (real-time applications). Các ứng dụng thoại và video thường là ví dụ điển hình, nhưng còn có các ứng dụng khác như điều khiển công nghiệp—bạn muốn lệnh gửi đến cánh tay robot phải đến trước khi cánh tay đó va vào vật gì đó. Ngay cả các ứng dụng truyền tệp cũng có thể có ràng buộc về thời gian, ví dụ như yêu cầu cập nhật cơ sở dữ liệu phải hoàn thành qua đêm trước khi doanh nghiệp cần dữ liệu đó hoạt động trở lại vào ngày hôm sau.
 
-The distinguishing characteristic of real-time applications is that they
-need some sort of assurance *from the network* that data is likely to
-arrive on time (for some definition of “on time”). Whereas a
-non-real-time application can use an end-to-end retransmission strategy
-to make sure that data arrives *correctly*, such a strategy cannot
-provide timeliness: Retransmission only adds to total latency if data
-arrives late. Timely arrival must be provided by the network itself (the
-routers), not just at the network edges (the hosts). We therefore
-conclude that the best-effort model, in which the network tries to
-deliver your data but makes no promises and leaves the cleanup operation
-to the edges, is not sufficient for real-time applications. What we need
-is a new service model, in which applications that need higher
-assurances can ask the network for them. The network may then respond by
-providing an assurance that it will do better or perhaps by saying that
-it cannot promise anything better at the moment. Note that such a
-service model is a superset of the original model: Applications that are
-happy with best-effort service should be able to use the new service
-model; their requirements are just less stringent. This implies that the
-network will treat some packets differently from others—something that
-is not done in the best-effort model. A network that can provide these
-different levels of service is often said to support quality of
-service (QoS).
+Đặc điểm nổi bật của các ứng dụng thời gian thực là chúng cần một số đảm bảo *từ mạng* rằng dữ liệu có khả năng đến đúng lúc (theo một định nghĩa nào đó về “đúng lúc”). Trong khi một ứng dụng không thời gian thực có thể sử dụng chiến lược truyền lại đầu-cuối để đảm bảo dữ liệu đến *chính xác*, thì chiến lược này không thể đảm bảo tính kịp thời: Việc truyền lại chỉ làm tăng tổng độ trễ nếu dữ liệu đến muộn. Việc đến đúng lúc phải được cung cấp bởi chính mạng (các bộ định tuyến), không chỉ ở các đầu mạng (các máy chủ). Do đó, chúng ta kết luận rằng mô hình best-effort, trong đó mạng cố gắng truyền dữ liệu của bạn nhưng không hứa hẹn gì và để việc xử lý lỗi cho các đầu mạng, là không đủ cho các ứng dụng thời gian thực. Điều chúng ta cần là một mô hình dịch vụ mới, trong đó các ứng dụng cần đảm bảo cao hơn có thể yêu cầu mạng cung cấp. Mạng sau đó có thể đáp lại bằng cách đảm bảo sẽ làm tốt hơn hoặc có thể nói rằng hiện tại không thể hứa hẹn gì tốt hơn. Lưu ý rằng mô hình dịch vụ như vậy là một tập siêu của mô hình ban đầu: Các ứng dụng hài lòng với dịch vụ best-effort vẫn có thể sử dụng mô hình dịch vụ mới; chỉ là yêu cầu của chúng ít nghiêm ngặt hơn. Điều này ngụ ý rằng mạng sẽ xử lý một số gói tin khác với những gói khác—điều không có trong mô hình best-effort. Một mạng có thể cung cấp các mức dịch vụ khác nhau như vậy thường được nói là hỗ trợ chất lượng dịch vụ (QoS).
 
-6.5.1 Application Requirements
-------------------------------
+6.5.1 Yêu cầu của ứng dụng
+--------------------------
 
-Before looking at the various protocols and mechanisms that may be used
-to provide quality of service to applications, we should try to
-understand what the needs of those applications are. To begin, we can
-divide applications into two types: real-time and non-real-time. The
-latter are sometimes called *traditional data* applications, since they
-have traditionally been the major applications found on data networks.
-They include most popular applications like SSH, file transfer, email,
-web browsing, and so on. All of these applications can work without
-guarantees of timely delivery of data. Another term for this
-non-real-time class of applications is *elastic*, since they are able to
-stretch gracefully in the face of increased delay. Note that these
-applications can benefit from shorter-length delays, but they do not
-become unusable as delays increase. Also note that their delay
-requirements vary from the interactive applications like SSH to more
-asynchronous ones like email, with interactive bulk transfers like file
-transfer in the middle.
+Trước khi xem xét các giao thức và cơ chế khác nhau có thể được sử dụng để cung cấp chất lượng dịch vụ cho các ứng dụng, chúng ta nên cố gắng hiểu nhu cầu của các ứng dụng đó là gì. Đầu tiên, chúng ta có thể chia ứng dụng thành hai loại: thời gian thực và không thời gian thực. Loại sau đôi khi được gọi là *ứng dụng dữ liệu truyền thống* (traditional data applications), vì chúng thường là các ứng dụng chính trên các mạng dữ liệu. Chúng bao gồm hầu hết các ứng dụng phổ biến như SSH, truyền tệp, email, duyệt web, v.v. Tất cả các ứng dụng này đều có thể hoạt động mà không cần đảm bảo về việc truyền dữ liệu đúng lúc. Một thuật ngữ khác cho lớp ứng dụng không thời gian thực này là *co giãn* (elastic), vì chúng có thể “giãn” một cách linh hoạt khi độ trễ tăng lên. Lưu ý rằng các ứng dụng này có thể hưởng lợi từ độ trễ ngắn hơn, nhưng chúng không trở nên không sử dụng được khi độ trễ tăng. Ngoài ra, yêu cầu về độ trễ của chúng cũng khác nhau, từ các ứng dụng tương tác như SSH đến các ứng dụng không đồng bộ như email, với các ứng dụng truyền tải lớn tương tác như truyền tệp ở giữa.
 
 .. _fig-audio:
 .. figure:: figures/f06-20-9780123850591.png
    :width: 600px
    :align: center
 
-   An audio application.
+   Một ứng dụng âm thanh.
 
-Real-Time Audio Example
-~~~~~~~~~~~~~~~~~~~~~~~
+Ví dụ về âm thanh thời gian thực
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As a concrete example of a real-time application, consider an audio
-application similar to the one illustrated in :numref:`Figure %s <fig-audio>`.
-Data is generated by collecting samples from a microphone and digitizing
-them using an analog-to-digital (A-to-D) converter. The digital samples
-are placed in packets, which are transmitted across the network and
-received at the other end. At the receiving host, the data must be
-*played back* at some appropriate rate. For example, if the voice
-samples were collected at a rate of one per 125 μs, they should be
-played back at the same rate. Thus, we can think of each sample as
-having a particular *playback time*: the point in time at which it is
-needed in the receiving host. In the voice example, each sample has a
-playback time that is 125 μs later than the preceding sample. If data
-arrives after its appropriate playback time, either because it was
-delayed in the network or because it was dropped and subsequently
-retransmitted, it is essentially useless. It is the complete
-worthlessness of late data that characterizes real-time applications. In
-elastic applications, it might be nice if data turns up on time, but we
-can still use it when it does not.
+Lấy ví dụ cụ thể về một ứng dụng thời gian thực, hãy xem xét một ứng dụng âm thanh tương tự như minh họa ở :numref:`Hình %s <fig-audio>`. Dữ liệu được tạo ra bằng cách thu thập các mẫu từ micro và số hóa chúng bằng bộ chuyển đổi tương tự-số (A-to-D). Các mẫu số được đặt vào các gói tin, truyền qua mạng và nhận ở đầu bên kia. Ở máy chủ nhận, dữ liệu phải được *phát lại* ở tốc độ phù hợp. Ví dụ, nếu các mẫu thoại được thu thập với tốc độ một mẫu mỗi 125 μs, chúng cũng phải được phát lại với tốc độ đó. Do đó, chúng ta có thể coi mỗi mẫu có một *thời điểm phát lại* cụ thể: thời điểm mà nó cần thiết ở máy chủ nhận. Trong ví dụ thoại, mỗi mẫu có thời điểm phát lại cách mẫu trước đó 125 μs. Nếu dữ liệu đến sau thời điểm phát lại phù hợp, dù do bị trễ trong mạng hay bị mất và truyền lại sau đó, thì về cơ bản nó trở nên vô dụng. Chính sự vô dụng hoàn toàn của dữ liệu đến muộn là đặc trưng của các ứng dụng thời gian thực. Với các ứng dụng co giãn, sẽ tốt hơn nếu dữ liệu đến đúng lúc, nhưng chúng ta vẫn có thể sử dụng khi nó đến muộn.
 
-One way to make our voice application work would be to make sure all
-samples take exactly the same amount of time to traverse the network.
-Then, since samples are injected at a rate of one per 125 μs, they will
-appear at the receiver at the same rate, ready to be played back.
-However, it is generally difficult to guarantee that all data traversing
-a packet-switched network will experience exactly the same delay.
-Packets encounter queues in switches or routers, and the lengths of
-these queues vary with time, meaning that the delays tend to vary with
-time and, as a consequence, are potentially different for each packet in
-the audio stream. The way to deal with this at the receiver end is to
-buffer up some amount of data in reserve, thereby always providing a
-store of packets waiting to be played back at the right time. If a
-packet is delayed a short time, it goes in the buffer until its playback
-time arrives. If it gets delayed a long time, then it will not need to
-be stored for very long in the receiver’s buffer before being played
-back. Thus, we have effectively added a constant offset to the playback
-time of all packets as a form of insurance. We call this offset the
-*playback point.* The only time we run into trouble is if packets get
-delayed in the network for such a long time that they arrive after their
-playback time, causing the playback buffer to be drained.
+Một cách để làm cho ứng dụng thoại hoạt động là đảm bảo tất cả các mẫu mất cùng một lượng thời gian để đi qua mạng. Khi đó, vì các mẫu được đưa vào với tốc độ một mẫu mỗi 125 μs, chúng sẽ xuất hiện ở phía nhận với cùng tốc độ, sẵn sàng để phát lại. Tuy nhiên, nhìn chung rất khó đảm bảo tất cả dữ liệu đi qua mạng chuyển mạch gói đều trải qua cùng một độ trễ. Các gói gặp hàng đợi trong các switch hoặc router, và độ dài các hàng đợi này thay đổi theo thời gian, nghĩa là độ trễ cũng thay đổi theo thời gian và do đó có thể khác nhau với mỗi gói trong luồng âm thanh. Cách xử lý ở phía nhận là đệm một lượng dữ liệu dự phòng, nhờ đó luôn có một kho gói chờ được phát lại đúng lúc. Nếu một gói bị trễ ngắn, nó sẽ nằm trong bộ đệm cho đến khi đến thời điểm phát lại. Nếu nó bị trễ lâu, thì nó sẽ không cần lưu trong bộ đệm lâu trước khi được phát lại. Như vậy, chúng ta đã thêm một độ trễ cố định vào thời điểm phát lại của tất cả các gói như một hình thức bảo hiểm. Chúng ta gọi độ trễ này là *điểm phát lại* (playback point). Chỉ khi các gói bị trễ quá lâu trong mạng đến mức đến sau thời điểm phát lại thì bộ đệm phát lại mới bị cạn.
 
-The operation of a playback buffer is illustrated in :numref:`Figure
-%s <fig-playback>`. The left-hand diagonal line shows packets being
-generated at a steady rate. The wavy line shows when the packets arrive,
-some variable amount of time after they were sent, depending on what
-they encountered in the network. The right-hand diagonal line shows the
-packets being played back at a steady rate, after sitting in the
-playback buffer for some period of time. As long as the playback line is
-far enough to the right in time, the variation in network delay is never
-noticed by the application. However, if we move the playback line a
-little to the left, then some packets will begin to arrive too late to
-be useful.
+Hoạt động của bộ đệm phát lại được minh họa ở :numref:`Hình %s <fig-playback>`. Đường chéo bên trái cho thấy các gói được tạo ra với tốc độ đều đặn. Đường lượn sóng cho thấy khi các gói đến, với một lượng thời gian thay đổi sau khi được gửi, tùy thuộc vào những gì chúng gặp trong mạng. Đường chéo bên phải cho thấy các gói được phát lại với tốc độ đều đặn, sau khi nằm trong bộ đệm phát lại một thời gian. Miễn là đường phát lại đủ xa về bên phải theo thời gian, sự biến đổi độ trễ mạng sẽ không bị ứng dụng nhận biết. Tuy nhiên, nếu chúng ta di chuyển đường phát lại sang trái một chút, một số gói sẽ bắt đầu đến quá muộn để sử dụng.
 
 .. _fig-playback:
 .. figure:: figures/f06-21-9780123850591.png
    :width: 500px
    :align: center
 
-   A playback buffer.
+   Bộ đệm phát lại.
 
-For our audio application, there are limits to how far we can delay
-playing back data. It is hard to carry on a conversation if the time
-between when you speak and when your listener hears you is more than
-300 ms. Thus, what we want from the network in this case is a guarantee
-that all our data will arrive within 300 ms. If data arrives early, we
-buffer it until its correct playback time. If it arrives late, we have
-no use for it and must discard it.
+Với ứng dụng âm thanh của chúng ta, có giới hạn về việc trì hoãn phát lại dữ liệu. Rất khó để trò chuyện nếu thời gian giữa lúc bạn nói và lúc người nghe nghe được vượt quá 300 ms. Do đó, điều chúng ta muốn từ mạng trong trường hợp này là đảm bảo tất cả dữ liệu sẽ đến trong vòng 300 ms. Nếu dữ liệu đến sớm, chúng ta đệm lại cho đến thời điểm phát lại phù hợp. Nếu đến muộn, chúng ta không sử dụng được và phải loại bỏ.
 
 .. _fig-jitter2:
 .. figure:: figures/f06-22-9780123850591.png
    :width: 500px
    :align: center
 
-   Example distribution of delays for an Internet
-   connection.
+   Ví dụ về phân bố độ trễ cho một kết nối Internet.
 
-To get a better appreciation of how variable network delay can be,
-:numref:`Figure %s <fig-jitter2>` shows the one-way delay measured
-over a certain path across the Internet over the course of one
-particular day. While the exact numbers would vary depending on the
-path and the date, the key factor here is the *variability* of the
-delay, which is consistently found on almost any path at any time. As
-denoted by the cumulative percentages given across the top of the
-graph, 97% of the packets in this case had a latency of 100 ms or
-less. This means that if our example audio application were to set the
-playback point at 100 ms, then, on average, 3 out of every 100 packets
-would arrive too late to be of any use. One important thing to notice
-about this graph is that the tail of the curve—how far it extends to
-the right—is very long. We would have to set the playback point at
-over 200 ms to ensure that all packets arrived in time.
+Để hiểu rõ hơn về sự biến đổi độ trễ mạng, :numref:`Hình %s <fig-jitter2>` cho thấy độ trễ một chiều đo được trên một đường đi nhất định qua Internet trong một ngày cụ thể. Dù các con số cụ thể sẽ thay đổi tùy đường đi và ngày đo, yếu tố chính ở đây là *sự biến đổi* của độ trễ, điều này luôn xuất hiện trên hầu hết mọi đường đi vào bất kỳ thời điểm nào. Như thể hiện qua tỷ lệ phần trăm tích lũy ở phía trên đồ thị, 97% các gói trong trường hợp này có độ trễ không quá 100 ms. Điều này có nghĩa là nếu ứng dụng âm thanh ví dụ của chúng ta đặt điểm phát lại ở 100 ms, thì trung bình cứ 100 gói sẽ có 3 gói đến quá muộn để sử dụng. Một điều quan trọng cần chú ý là phần đuôi của đường cong—nó kéo dài rất xa về bên phải. Chúng ta sẽ phải đặt điểm phát lại trên 200 ms để đảm bảo tất cả các gói đến kịp thời.
 
-Taxonomy of Real-Time Applications
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Phân loại các ứng dụng thời gian thực
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now that we have a concrete idea of how real-time applications work, we
-can look at some different classes of applications that serve to
-motivate our service model. The following taxonomy owes much to the work
-of Clark, Braden, Shenker, and Zhang, whose papers on this subject can
-be found in the Further Reading section for this chapter. The taxonomy
-of applications is summarized in :numref:`Figure %s <fig-taxonomy>`.
+Bây giờ chúng ta đã có ý tưởng cụ thể về cách các ứng dụng thời gian thực hoạt động, hãy xem xét một số lớp ứng dụng khác nhau để làm động lực cho mô hình dịch vụ của chúng ta. Phân loại này dựa nhiều vào công trình của Clark, Braden, Shenker và Zhang, các bài báo của họ có thể tìm thấy ở phần Đọc thêm của chương này. Phân loại ứng dụng được tóm tắt ở :numref:`Hình %s <fig-taxonomy>`.
 
 .. _fig-taxonomy:
 .. figure:: figures/f06-23-9780123850591.png
    :width: 500px
    :align: center
 
-   Taxonomy of applications.
+   Phân loại ứng dụng.
 
-The first characteristic by which we can categorize applications is
-their tolerance of loss of data, where “loss” might occur because a
-packet arrived too late to be played back as well as arising from the
-usual causes in the network. On the one hand, one lost audio sample can
-be interpolated from the surrounding samples with relatively little
-effect on the perceived audio quality. It is only as more and more
-samples are lost that quality declines to the point that the speech
-becomes incomprehensible. On the other hand, a robot control program is
-likely to be an example of a real-time application that cannot tolerate
-loss—losing the packet that contains the command instructing the robot
-arm to stop is unacceptable. Thus, we can categorize real-time
-applications as *tolerant* or *intolerant* depending on whether they can
-tolerate occasional loss. (As an aside, note that many real-time
-applications are more tolerant of occasional loss than non-real-time
-applications; for example, compare our audio application to file
-transfer, where the uncorrected loss of one bit might render a file
-completely useless.)
+Đặc điểm đầu tiên để phân loại ứng dụng là khả năng chịu mất dữ liệu, trong đó “mất” có thể xảy ra vì một gói đến quá muộn để phát lại cũng như do các nguyên nhân thông thường trong mạng. Một mặt, một mẫu âm thanh bị mất có thể được nội suy từ các mẫu xung quanh mà ít ảnh hưởng đến chất lượng âm thanh cảm nhận. Chỉ khi mất nhiều mẫu thì chất lượng mới giảm đến mức lời nói trở nên không thể hiểu được. Mặt khác, một chương trình điều khiển robot có thể là ví dụ về ứng dụng thời gian thực không thể chịu mất dữ liệu—mất gói chứa lệnh dừng cánh tay robot là không chấp nhận được. Do đó, chúng ta có thể phân loại ứng dụng thời gian thực là *chịu lỗi* (tolerant) hoặc *không chịu lỗi* (intolerant) tùy vào việc chúng có thể chịu mất dữ liệu thỉnh thoảng hay không. (Lưu ý rằng nhiều ứng dụng thời gian thực chịu mất dữ liệu tốt hơn các ứng dụng không thời gian thực; ví dụ, so sánh ứng dụng âm thanh với truyền tệp, nơi mất một bit không được sửa có thể làm tệp hoàn toàn vô dụng.)
 
-A second way to characterize real-time applications is by their
-adaptability. For example, an audio application might be able to adapt
-to the amount of delay that packets experience as they traverse the
-network. If we notice that packets are almost always arriving within
-300 ms of being sent, then we can set our playback point accordingly,
-buffering any packets that arrive in less than 300 ms. Suppose that we
-subsequently observe that all packets are arriving within 100 ms of
-being sent. If we moved up our playback point to 100 ms, then the users
-of the application would probably perceive an improvement. The process
-of shifting the playback point would actually require us to play out
-samples at an increased rate for some period of time. With a voice
-application, this can be done in a way that is barely perceptible,
-simply by shortening the silences between words. Thus, playback point
-adjustment is fairly easy in this case, and it has been effectively
-implemented for several voice applications such as the audio
-teleconferencing program known as ``vat``. Note that playback point
-adjustment can happen in either direction, but that doing so actually
-involves distorting the played-back signal during the period of
-adjustment, and that the effects of this distortion will very much
-depend on how the end user uses the data.
+Cách thứ hai để phân loại ứng dụng thời gian thực là theo khả năng thích nghi. Ví dụ, một ứng dụng âm thanh có thể thích nghi với độ trễ mà các gói gặp phải khi đi qua mạng. Nếu chúng ta nhận thấy các gói gần như luôn đến trong vòng 300 ms kể từ khi gửi, chúng ta có thể đặt điểm phát lại tương ứng, đệm các gói đến sớm hơn 300 ms. Giả sử sau đó chúng ta quan sát thấy tất cả các gói đều đến trong vòng 100 ms kể từ khi gửi. Nếu chúng ta chuyển điểm phát lại lên 100 ms, người dùng ứng dụng có thể cảm nhận được sự cải thiện. Quá trình điều chỉnh điểm phát lại thực tế sẽ yêu cầu phát các mẫu với tốc độ tăng lên trong một thời gian. Với ứng dụng thoại, điều này có thể thực hiện mà người dùng hầu như không nhận ra, chỉ bằng cách rút ngắn các khoảng lặng giữa các từ. Do đó, điều chỉnh điểm phát lại khá dễ dàng trong trường hợp này, và đã được triển khai hiệu quả cho một số ứng dụng thoại như chương trình hội nghị âm thanh ``vat``. Lưu ý rằng điều chỉnh điểm phát lại có thể theo cả hai hướng, nhưng thực tế sẽ làm méo tín hiệu phát lại trong thời gian điều chỉnh, và mức độ ảnh hưởng sẽ phụ thuộc vào cách người dùng sử dụng dữ liệu.
 
-Observe that if we set our playback point on the assumption that all
-packets will arrive within 100 ms and then find that some packets are
-arriving slightly late, we will have to drop them, whereas we would not
-have had to drop them if we had left the playback point at 300 ms. Thus,
-we should advance the playback point only when it provides a perceptible
-advantage and only when we have some evidence that the number of late
-packets will be acceptably small. We may do this because of observed
-recent history or because of some assurance from the network.
+Lưu ý rằng nếu chúng ta đặt điểm phát lại dựa trên giả định tất cả các gói sẽ đến trong vòng 100 ms và sau đó phát hiện một số gói đến hơi muộn, chúng ta sẽ phải loại bỏ chúng, trong khi nếu giữ điểm phát lại ở 300 ms thì không cần loại bỏ. Do đó, chỉ nên điều chỉnh điểm phát lại khi thực sự mang lại lợi ích cảm nhận được và khi có bằng chứng rằng số gói đến muộn sẽ đủ nhỏ. Chúng ta có thể làm điều này dựa trên lịch sử quan sát gần đây hoặc dựa vào đảm bảo từ mạng.
 
-We call applications that can adjust their playback point
-*delay-adaptive* applications. Another class of adaptive applications is
-*rate adaptive*. For example, many video coding algorithms can trade off
-bit rate versus quality. Thus, if we find that the network can support a
-certain bandwidth, we can set our coding parameters accordingly. If more
-bandwidth becomes available later, we can change parameters to increase
-the quality.
+Chúng ta gọi các ứng dụng có thể điều chỉnh điểm phát lại là *ứng dụng thích nghi độ trễ* (delay-adaptive). Một lớp ứng dụng thích nghi khác là *thích nghi tốc độ* (rate adaptive). Ví dụ, nhiều thuật toán mã hóa video có thể đánh đổi giữa tốc độ bit và chất lượng. Do đó, nếu chúng ta thấy mạng hỗ trợ một băng thông nhất định, chúng ta có thể đặt tham số mã hóa tương ứng. Nếu sau này có thêm băng thông, chúng ta có thể thay đổi tham số để tăng chất lượng.
 
-Approaches to QoS Support
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Các cách tiếp cận hỗ trợ QoS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Considering this rich space of application requirements, what we need is
-a richer service model that meets the needs of any application. This
-leads us to a service model with not just one class (best effort), but
-with several classes, each available to meet the needs of some set of
-applications. Towards this end, we are now ready to look at some of the
-approaches that have been developed to provide a range of qualities of
-service. These can be divided into two broad categories:
+Xét không gian yêu cầu ứng dụng đa dạng này, điều chúng ta cần là một mô hình dịch vụ phong phú hơn đáp ứng nhu cầu của mọi ứng dụng. Điều này dẫn đến một mô hình dịch vụ không chỉ có một lớp (best effort), mà có nhiều lớp, mỗi lớp đáp ứng nhu cầu của một nhóm ứng dụng. Để làm được điều này, chúng ta sẽ xem xét một số cách tiếp cận đã được phát triển để cung cấp nhiều mức chất lượng dịch vụ. Chúng có thể chia thành hai loại lớn:
 
--  *Fine-grained* approaches, which provide QoS to individual
-   applications or flows
+-  Cách tiếp cận *tinh* (fine-grained), cung cấp QoS cho từng ứng dụng hoặc luồng riêng lẻ
 
--  *Coarse-grained* approaches, which provide QoS to large classes of
-   data or aggregated traffic
+-  Cách tiếp cận *thô* (coarse-grained), cung cấp QoS cho các lớp dữ liệu lớn hoặc lưu lượng tổng hợp
 
-In the first category, we find *Integrated Services*, a QoS architecture
-developed in the IETF and often associated with the Resource Reservation
-Protocol (RSVP). In the second category lies *Differentiated Services*,
-which is probably the most widely deployed QoS mechanism today. We
-discuss these in turn in the next two subsections.
+Ở loại đầu tiên, chúng ta có *Dịch vụ tích hợp* (Integrated Services), một kiến trúc QoS do IETF phát triển và thường gắn với Giao thức Đặt trước Tài nguyên (RSVP). Ở loại thứ hai là *Dịch vụ phân biệt* (Differentiated Services), có lẽ là cơ chế QoS được triển khai rộng rãi nhất hiện nay. Chúng ta sẽ lần lượt thảo luận về chúng ở hai phần tiếp theo.
 
-Finally, as we suggested at the start of this section, adding QoS
-support to the network isn’t necessarily the entire story about
-supporting real-time applications. We conclude our discussion by
-revisiting what the end-host might do to better support real-time
-streams, independent of how widely deployed QoS mechanisms like
-Integrated or Differentiated Services become.
+Cuối cùng, như đã đề cập ở đầu mục này, việc bổ sung hỗ trợ QoS cho mạng không nhất thiết là toàn bộ câu chuyện về hỗ trợ ứng dụng thời gian thực. Chúng ta sẽ kết thúc phần này bằng cách xem xét lại những gì máy chủ đầu cuối có thể làm để hỗ trợ tốt hơn các luồng thời gian thực, bất kể các cơ chế QoS như Integrated hay Differentiated Services được triển khai rộng rãi đến đâu.
 
-6.5.2 Integrated Services (RSVP)
---------------------------------
+6.5.2 Dịch vụ tích hợp (RSVP)
+-----------------------------
 
-The term *Integrated Services* (often called IntServ for short) refers
-to a body of work that was produced by the IETF around 1995-97. The
-IntServ working group developed specifications of a number of *service
-classes* designed to meet the needs of some of the application types
-described above. It also defined how RSVP could be used to make
-reservations using these service classes. The following paragraphs
-provide an overview of these specifications and the mechanisms that are
-used to implement them.
+Thuật ngữ *Dịch vụ tích hợp* (Integrated Services, thường gọi tắt là IntServ) đề cập đến một loạt công trình do IETF thực hiện khoảng năm 1995-97. Nhóm làm việc IntServ đã phát triển các đặc tả cho một số *lớp dịch vụ* nhằm đáp ứng nhu cầu của các loại ứng dụng đã mô tả ở trên. Họ cũng định nghĩa cách RSVP có thể được sử dụng để đặt trước tài nguyên bằng các lớp dịch vụ này. Các đoạn sau đây cung cấp tổng quan về các đặc tả và cơ chế được sử dụng để triển khai chúng.
 
-Service Classes
+Các lớp dịch vụ
 ~~~~~~~~~~~~~~~
 
-One of the service classes is designed for intolerant applications.
-These applications require that a packet never arrive late. The network
-should guarantee that the maximum delay that any packet will experience
-has some specified value; the application can then set its playback
-point so that no packet will ever arrive after its playback time. We
-assume that early arrival of packets can always be handled by buffering.
-This service is referred to as the *guaranteed* service.
+Một trong các lớp dịch vụ được thiết kế cho các ứng dụng không chịu lỗi. Các ứng dụng này yêu cầu một gói không bao giờ được đến muộn. Mạng nên đảm bảo độ trễ tối đa mà bất kỳ gói nào gặp phải có một giá trị xác định; ứng dụng sau đó có thể đặt điểm phát lại sao cho không gói nào đến sau thời điểm phát lại. Chúng ta giả định rằng các gói đến sớm luôn có thể xử lý bằng cách đệm. Dịch vụ này được gọi là *dịch vụ đảm bảo* (guaranteed service).
 
-In addition to the guaranteed service, the IETF considered several other
-services, but eventually settled on one to meet the needs of tolerant,
-adaptive applications. The service is known as *controlled load* and was
-motivated by the observation that existing applications of this type run
-quite well on networks that are not heavily loaded. Audio
-applications, for example, adjust their playback point as network
-delay varies and produces reasonable audio quality as long as loss rates
-remain on the order of 10% or less.
+Ngoài dịch vụ đảm bảo, IETF đã xem xét một số dịch vụ khác, nhưng cuối cùng chọn một dịch vụ để đáp ứng nhu cầu của các ứng dụng chịu lỗi, thích nghi. Dịch vụ này gọi là *tải có kiểm soát* (controlled load) và được thúc đẩy bởi quan sát rằng các ứng dụng loại này hiện tại hoạt động khá tốt trên các mạng không bị tải nặng. Ví dụ, các ứng dụng âm thanh điều chỉnh điểm phát lại khi độ trễ mạng thay đổi và tạo ra chất lượng âm thanh hợp lý miễn là tỷ lệ mất gói ở mức khoảng 10% trở xuống.
 
-The aim of the controlled load service is to emulate a lightly loaded
-network for those applications that request the service, even though the
-network as a whole may in fact be heavily loaded. The trick to this is
-to use a queuing mechanism such as WFQ to isolate the controlled load
-traffic from the other traffic and some form of admission control to
-limit the total amount of controlled load traffic on a link such that
-the load is kept reasonably low. We discuss admission control in more
-detail below.
+Mục tiêu của dịch vụ tải có kiểm soát là mô phỏng một mạng tải nhẹ cho các ứng dụng yêu cầu dịch vụ này, ngay cả khi toàn mạng thực tế có thể đang bị tải nặng. Bí quyết là sử dụng một cơ chế xếp hàng như WFQ để tách biệt lưu lượng tải có kiểm soát khỏi các lưu lượng khác và một hình thức kiểm soát truy cập để giới hạn tổng lưu lượng tải có kiểm soát trên một liên kết sao cho tải được giữ ở mức hợp lý. Chúng ta sẽ bàn chi tiết về kiểm soát truy cập ở phần sau.
 
-Clearly, these two service classes are a subset of all the classes that
-might be provided. In fact, other services were specified but never
-standardized as part of the IETF’s work. So far, the two services
-described above (along with traditional best effort) have proven
-flexible enough to meet the needs of a wide range of applications.
+Rõ ràng, hai lớp dịch vụ này chỉ là một tập con của tất cả các lớp có thể cung cấp. Thực tế, các dịch vụ khác đã được đặc tả nhưng chưa bao giờ được chuẩn hóa trong công việc của IETF. Cho đến nay, hai dịch vụ trên (cùng với best effort truyền thống) đã chứng tỏ đủ linh hoạt để đáp ứng nhu cầu của nhiều loại ứng dụng.
 
-Overview of Mechanisms
+Tổng quan về các cơ chế
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Now that we have augmented our best-effort service model with some new
-service classes, the next question is how we implement a network that
-provides these services to applications. This section outlines the key
-mechanisms. Keep in mind while reading this section that the mechanisms
-being described are still being hammered out by the Internet design
-community. The main thing to take away from the discussion is a general
-understanding of the pieces involved in supporting the service model
-outlined above.
+Bây giờ chúng ta đã bổ sung một số lớp dịch vụ mới vào mô hình best-effort, câu hỏi tiếp theo là làm thế nào để triển khai một mạng cung cấp các dịch vụ này cho ứng dụng. Phần này phác thảo các cơ chế chính. Lưu ý khi đọc phần này rằng các cơ chế được mô tả vẫn đang được cộng đồng thiết kế Internet hoàn thiện. Điều quan trọng là hiểu tổng thể các thành phần liên quan đến việc hỗ trợ mô hình dịch vụ đã nêu.
 
-First, whereas with a best-effort service we can just tell the network
-where we want our packets to go and leave it at that, a real-time
-service involves telling the network something more about the type of
-service we require. We may give it qualitative information such as “use
-a controlled load service” or quantitative information such as “I need a
-maximum delay of 100 ms.” In addition to describing what we want, we
-need to tell the network something about what we are going to inject
-into it, since a low-bandwidth application is going to require fewer
-network resources than a high-bandwidth application. The set of
-information that we provide to the network is referred to as a
-*flowspec*. This name comes from the idea that a set of packets
-associated with a single application and that share common requirements
-is called a *flow*, consistent with our use of the term in the earlier
-section outlining the relevant issues.
+Đầu tiên, với dịch vụ best-effort, chúng ta chỉ cần nói cho mạng biết nơi muốn gửi gói và để mặc nó, còn với dịch vụ thời gian thực, chúng ta phải nói cho mạng biết thêm về loại dịch vụ mình cần. Chúng ta có thể cung cấp thông tin định tính như “sử dụng dịch vụ tải có kiểm soát” hoặc thông tin định lượng như “tôi cần độ trễ tối đa 100 ms”. Ngoài việc mô tả nhu cầu, chúng ta cần nói cho mạng biết về những gì sẽ đưa vào, vì một ứng dụng băng thông thấp sẽ cần ít tài nguyên mạng hơn ứng dụng băng thông cao. Tập hợp thông tin cung cấp cho mạng được gọi là *flowspec*. Tên này xuất phát từ ý tưởng rằng một tập hợp các gói liên quan đến một ứng dụng và có yêu cầu chung được gọi là *luồng* (flow), phù hợp với cách dùng thuật ngữ ở phần trước.
 
-Second, when we ask the network to provide us with a particular service,
-the network needs to decide if it can in fact provide that service. For
-example, if 10 users ask for a service in which each will consistently
-use 2 Mbps of link capacity, and they all share a link with 10-Mbps
-capacity, the network will have to say no to some of them. The process
-of deciding when to say no is called *admission control*.
+Thứ hai, khi chúng ta yêu cầu mạng cung cấp một dịch vụ cụ thể, mạng cần quyết định xem có thực sự cung cấp được không. Ví dụ, nếu 10 người dùng yêu cầu dịch vụ mà mỗi người sẽ sử dụng liên tục 2 Mbps băng thông, và tất cả cùng dùng một liên kết 10 Mbps, mạng sẽ phải từ chối một số người. Quá trình quyết định khi nào nên từ chối gọi là *kiểm soát truy cập* (admission control).
 
-Third, we need a mechanism by which the users of the network and the
-components of the network itself exchange information such as requests
-for service, flowspecs, and admission control decisions. This is
-sometimes called *signalling*, but since that word has several meanings,
-we refer to this process as *resource reservation*, and it is achieved
-using a resource reservation protocol.
+Thứ ba, chúng ta cần một cơ chế để người dùng mạng và các thành phần mạng trao đổi thông tin như yêu cầu dịch vụ, flowspec và quyết định kiểm soát truy cập. Điều này đôi khi gọi là *báo hiệu* (signalling), nhưng vì từ này có nhiều nghĩa, chúng ta gọi quá trình này là *đặt trước tài nguyên* (resource reservation), và nó được thực hiện bằng một giao thức đặt trước tài nguyên.
 
-Finally, when flows and their requirements have been described, and
-admission control decisions have been made, the network switches and
-routers need to meet the requirements of the flows. A key part of
-meeting these requirements is managing the way packets are queued and
-scheduled for transmission in the switches and routers. This last
-mechanism is *packet scheduling*.
+Cuối cùng, khi các luồng và yêu cầu của chúng đã được mô tả, quyết định kiểm soát truy cập đã được đưa ra, các switch và router trong mạng cần đáp ứng yêu cầu của các luồng. Một phần quan trọng của việc này là quản lý cách các gói được xếp hàng và lập lịch truyền trong switch và router. Cơ chế cuối cùng này là *lập lịch gói* (packet scheduling).
 
 Flowspecs
 ~~~~~~~~~
 
-There are two separable parts to the flowspec: the part that describes
-the flow’s traffic characteristics (called the *TSpec*) and the part
-that describes the service requested from the network (the *RSpec*). The
-RSpec is very service specific and relatively easy to describe. For
-example, with a controlled load service, the RSpec is trivial: The
-application just requests controlled load service with no additional
-parameters. With a guaranteed service, you could specify a delay target
-or bound. (In the IETF’s guaranteed service specification, you specify
-not a delay but another quantity from which delay can be calculated.)
+Flowspec có hai phần tách biệt: phần mô tả đặc tính lưu lượng của luồng (gọi là *TSpec*) và phần mô tả dịch vụ yêu cầu từ mạng (gọi là *RSpec*). RSpec rất đặc thù cho từng dịch vụ và khá dễ mô tả. Ví dụ, với dịch vụ tải có kiểm soát, RSpec rất đơn giản: Ứng dụng chỉ yêu cầu dịch vụ tải có kiểm soát mà không cần tham số bổ sung. Với dịch vụ đảm bảo, bạn có thể chỉ định mục tiêu hoặc giới hạn độ trễ. (Trong đặc tả dịch vụ đảm bảo của IETF, bạn chỉ định một đại lượng khác từ đó có thể tính ra độ trễ.)
 
-The TSpec is a little more complicated. As our example above showed, we
-need to give the network enough information about the bandwidth used by
-the flow to allow intelligent admission control decisions to be made.
-For most applications, however, the bandwidth is not a single number; it
-is something that varies constantly. A video application, for example,
-will generally generate more bits per second when the scene is changing
-rapidly than when it is still. Just knowing the long-term average
-bandwidth is not enough, as the following example illustrates. Suppose
-that we have 10 flows that arrive at a switch on separate input ports
-and that all leave on the same 10-Mbps link. Assume that over some
-suitably long interval each flow can be expected to send no more than
-1 Mbps. You might think that this presents no problem. However, if these
-are variable bit rate applications, such as compressed video, then they
-will occasionally send more than their average rates. If enough sources
-send at above their average rates, then the total rate at which data
-arrives at the switch will be greater than 10 Mbps. This excess data
-will be queued before it can be sent on the link. The longer this
-condition persists, the longer the queue will get. Packets might have to
-be dropped and, even if it doesn’t come to that, data sitting in the
-queue is being delayed. If packets are delayed long enough, the service
-that was requested will not be provided.
+TSpec phức tạp hơn một chút. Như ví dụ trên đã chỉ ra, chúng ta cần cung cấp cho mạng đủ thông tin về băng thông sử dụng của luồng để có thể đưa ra quyết định kiểm soát truy cập hợp lý. Tuy nhiên, với hầu hết ứng dụng, băng thông không phải là một con số cố định; nó thay đổi liên tục. Ví dụ, một ứng dụng video thường tạo ra nhiều bit mỗi giây hơn khi cảnh thay đổi nhanh so với khi cảnh tĩnh. Chỉ biết băng thông trung bình dài hạn là không đủ, như ví dụ sau minh họa. Giả sử có 10 luồng đến một switch qua các cổng vào riêng biệt và tất cả rời đi qua một liên kết 10 Mbps. Giả sử trong một khoảng thời gian đủ dài, mỗi luồng không gửi quá 1 Mbps. Bạn có thể nghĩ rằng điều này không có vấn đề gì. Tuy nhiên, nếu đây là các ứng dụng tốc độ bit thay đổi, như video nén, thì đôi khi chúng sẽ gửi nhiều hơn tốc độ trung bình. Nếu đủ nguồn gửi vượt quá tốc độ trung bình, tổng tốc độ dữ liệu đến switch sẽ vượt quá 10 Mbps. Dữ liệu dư thừa này sẽ bị xếp hàng trước khi có thể gửi qua liên kết. Tình trạng này kéo dài càng lâu, hàng đợi càng dài. Các gói có thể bị loại bỏ và, ngay cả khi không đến mức đó, dữ liệu nằm trong hàng đợi sẽ bị trễ. Nếu các gói bị trễ đủ lâu, dịch vụ yêu cầu sẽ không được cung cấp.
 
-Exactly how we manage our queues to control delay and avoid dropping
-packets is something we discuss below. However, note here that we need
-to know something about how the bandwidth of our sources varies with
-time. One way to describe the bandwidth characteristics of sources is
-called a *token bucket* filter. Such a filter is described by two
-parameters: a token rate *r*, and a bucket depth *B*. It works as
-follows. To be able to send a byte, I must have a token. To send a
-packet of length *n*, I need *n* tokens. I start with no
-tokens and I accumulate them at a rate of *r*
-per second. I can accumulate no more than *B* tokens. What this means is
-that I can send a burst of as many as *B* bytes into the network as fast
-as I want, but over a sufficiently long interval I can’t send more than
-*r* bytes per second. It turns out that this information is very helpful
-to the admission control algorithm when it tries to figure out whether
-it can accommodate a new request for service.
+Chính xác cách quản lý hàng đợi để kiểm soát độ trễ và tránh mất gói sẽ được bàn ở phần sau. Tuy nhiên, lưu ý rằng chúng ta cần biết đặc tính băng thông của nguồn thay đổi theo thời gian như thế nào. Một cách để mô tả đặc tính băng thông của nguồn là bộ lọc *token bucket*. Bộ lọc này được mô tả bởi hai tham số: tốc độ token *r* và độ sâu bucket *B*. Cách hoạt động như sau. Để gửi một byte, tôi phải có một token. Để gửi một gói dài *n*, tôi cần *n* token. Tôi bắt đầu không có token và tích lũy chúng với tốc độ *r* mỗi giây. Tôi không thể tích lũy quá *B* token. Điều này có nghĩa là tôi có thể gửi một burst tối đa *B* byte vào mạng nhanh nhất có thể, nhưng trong một khoảng thời gian đủ dài tôi không thể gửi quá *r* byte mỗi giây. Thông tin này rất hữu ích cho thuật toán kiểm soát truy cập khi quyết định có thể đáp ứng yêu cầu dịch vụ mới hay không.
 
 .. _fig-token:
 .. figure:: figures/f06-24-9780123850591.png
    :width: 300px
    :align: center
 
-   Two flows with equal average rates but different token
-   bucket descriptions.
+   Hai luồng có tốc độ trung bình bằng nhau nhưng mô tả token bucket khác nhau.
 
-:numref:`Figure %s <fig-token>` illustrates how a token bucket can be
-used to characterize a flow’s bandwidth requirements. For simplicity,
-assume that each flow can send data as individual bytes rather than as
-packets.  Flow A generates data at a steady rate of 1 MBps, so it can
-be described by a token bucket filter with a rate *r = 1* MBps and a
-bucket depth of 1 byte. This means that it receives tokens at a rate
-of 1 MBps but that it cannot store more than 1 token—it spends them
-immediately. Flow B also sends at a rate that averages out to 1 MBps
-over the long term, but does so by sending at 0.5 MBps for 2 seconds
-and then at 2 MBps for 1 second. Since the token bucket rate *r* is,
-in a sense, a long-term average rate, flow B can be described by a
-token bucket with a rate of 1 MBps. Unlike flow A, however, flow B
-needs a bucket depth *B* of at least 1 MB, so that it can store up
-tokens while it sends at less than 1 MBps to be used when it sends at
-2 MBps. For the first 2 seconds in this example, it receives tokens at
-a rate of 1 MBps but spends them at only 0.5 MBps, so it can save up 2
-× 0.5 = 1 MB of tokens, which it then spends in the third second
-(along with the new tokens that continue to accrue in that second) to
-send data at 2 MBps. At the end of the third second, having spent the
-excess tokens, it starts to save them up again by sending at 0.5 MBps
-again.
+:numref:`Hình %s <fig-token>` minh họa cách token bucket có thể được dùng để mô tả yêu cầu băng thông của một luồng. Để đơn giản, giả sử mỗi luồng có thể gửi dữ liệu dưới dạng từng byte thay vì từng gói. Luồng A tạo dữ liệu với tốc độ đều 1 MBps, nên có thể mô tả bằng token bucket với tốc độ *r = 1* MBps và độ sâu bucket 1 byte. Điều này nghĩa là nó nhận token với tốc độ 1 MBps nhưng không thể lưu quá 1 token—nó dùng ngay lập tức. Luồng B cũng gửi với tốc độ trung bình 1 MBps trong dài hạn, nhưng làm như vậy bằng cách gửi 0,5 MBps trong 2 giây rồi 2 MBps trong 1 giây. Vì tốc độ token bucket *r* là tốc độ trung bình dài hạn, luồng B có thể mô tả bằng token bucket với tốc độ 1 MBps. Tuy nhiên, khác với luồng A, luồng B cần độ sâu bucket *B* ít nhất 1 MB, để có thể tích lũy token khi gửi dưới 1 MBps để dùng khi gửi 2 MBps. Trong 2 giây đầu, nó nhận token với tốc độ 1 MBps nhưng chỉ dùng 0,5 MBps, nên có thể tích lũy 2 × 0,5 = 1 MB token, sau đó dùng trong giây thứ ba (cùng với token mới tiếp tục nhận trong giây đó) để gửi dữ liệu với tốc độ 2 MBps. Kết thúc giây thứ ba, sau khi dùng hết token dư, nó lại bắt đầu tích lũy bằng cách gửi 0,5 MBps.
 
-It is interesting to note that a single flow can be described by many
-different token buckets. As a trivial example, flow A could be described
-by the same token bucket as flow B, with a rate of 1 MBps and a bucket
-depth of 1 MB. The fact that it never actually needs to accumulate
-tokens does not make that an inaccurate description, but it does mean
-that we have failed to convey some useful information to the network—the
-fact that flow A is actually very consistent in its bandwidth needs. In
-general, it is good to be as explicit about the bandwidth needs of an
-application as possible to avoid over-allocation of resources in the
-network.
+Điều thú vị là một luồng có thể được mô tả bằng nhiều token bucket khác nhau. Ví dụ đơn giản, luồng A có thể mô tả bằng token bucket giống luồng B, với tốc độ 1 MBps và độ sâu bucket 1 MB. Việc nó không cần tích lũy token không làm cho mô tả đó sai, nhưng có nghĩa là chúng ta không truyền đạt được thông tin hữu ích cho mạng—rằng luồng A thực sự rất ổn định về nhu cầu băng thông. Nói chung, nên mô tả càng rõ nhu cầu băng thông của ứng dụng càng tốt để tránh phân bổ quá mức tài nguyên mạng.
 
-Admission Control
-~~~~~~~~~~~~~~~~~
+Kiểm soát truy cập
+~~~~~~~~~~~~~~~~~~
 
-The idea behind admission control is simple: When some new flow wants to
-receive a particular level of service, admission control looks at the
-TSpec and RSpec of the flow and tries to decide if the desired service
-can be provided to that amount of traffic, given the currently available
-resources, without causing any previously admitted flow to receive worse
-service than it had requested. If it can provide the service, the flow
-is admitted; if not, then it is denied. The hard part is figuring out
-when to say yes and when to say no.
+Ý tưởng kiểm soát truy cập rất đơn giản: Khi một luồng mới muốn nhận một mức dịch vụ cụ thể, kiểm soát truy cập sẽ xem xét TSpec và RSpec của luồng và cố gắng quyết định liệu có thể cung cấp dịch vụ mong muốn cho lượng lưu lượng đó, với tài nguyên hiện có, mà không làm bất kỳ luồng nào đã được chấp nhận trước đó nhận dịch vụ kém hơn yêu cầu. Nếu có thể cung cấp dịch vụ, luồng được chấp nhận; nếu không, bị từ chối. Phần khó là xác định khi nào nên đồng ý và khi nào nên từ chối.
 
-Admission control is very dependent on the type of requested service and
-on the queuing discipline employed in the routers; we discuss the latter
-topic later in this section. For a guaranteed service, you need to have
-a good algorithm to make a definitive yes/no decision. The decision is
-fairly straightforward if weighted fair queuing is used at each router.
-For a controlled load service, the decision may be based on heuristics,
-such as “The last time I allowed a flow with this TSpec into this class,
-the delays for the class exceeded the acceptable bound, so I’d better
-say no” or “My current delays are so far inside the bounds that I should
-be able to admit another flow without difficulty.”
+Kiểm soát truy cập phụ thuộc nhiều vào loại dịch vụ yêu cầu và kỷ luật xếp hàng được sử dụng trong router; chúng ta sẽ bàn về chủ đề sau ở phần sau. Với dịch vụ đảm bảo, bạn cần một thuật toán tốt để đưa ra quyết định đồng ý/từ chối dứt khoát. Quyết định khá đơn giản nếu sử dụng xếp hàng công bằng có trọng số (weighted fair queuing) ở mỗi router. Với dịch vụ tải có kiểm soát, quyết định có thể dựa trên kinh nghiệm, như “Lần trước tôi cho phép một luồng với TSpec này vào lớp này, độ trễ vượt quá giới hạn chấp nhận được, nên lần này tôi nên từ chối” hoặc “Độ trễ hiện tại còn rất xa giới hạn nên tôi có thể chấp nhận thêm một luồng nữa mà không gặp khó khăn.”
 
-Admission control should not be confused with *policing*. The former is
-a per-flow decision to admit a new flow or not. The latter is a function
-applied on a per-packet basis to make sure that a flow conforms to the
-TSpec that was used to make the reservation. If a flow does not conform
-to its TSpec—for example, because it is sending twice as many bytes per
-second as it said it would—then it is likely to interfere with the
-service provided to other flows, and some corrective action must be
-taken. There are several options, the obvious one being to drop
-offending packets. However, another option would be to check if the
-packets really are interfering with the service of other flows. If they
-are not interfering, the packets could be sent on after being marked
-with a tag that says, in effect, “This is a nonconforming packet. Drop
-it first if you need to drop any packets.”
+Kiểm soát truy cập không nên nhầm lẫn với *kiểm soát* (policing). Kiểm soát truy cập là quyết định theo từng luồng để chấp nhận hay không một luồng mới. Kiểm soát là chức năng áp dụng cho từng gói để đảm bảo một luồng tuân thủ TSpec đã dùng để đặt trước. Nếu một luồng không tuân thủ TSpec—ví dụ, gửi gấp đôi số byte mỗi giây so với khai báo—thì có thể ảnh hưởng đến dịch vụ của các luồng khác, và cần có biện pháp xử lý. Có nhiều lựa chọn, rõ ràng nhất là loại bỏ các gói vi phạm. Tuy nhiên, một lựa chọn khác là kiểm tra xem các gói đó có thực sự ảnh hưởng đến dịch vụ của luồng khác không. Nếu không ảnh hưởng, có thể gửi tiếp sau khi đánh dấu gói với một thẻ kiểu “Đây là gói không tuân thủ. Nếu cần loại bỏ gói, hãy loại bỏ nó trước.”
 
-Admission control is closely related to the important issue of *policy*.
-For example, a network administrator might wish to allow reservations
-made by his company’s CEO to be admitted while rejecting reservations
-made by more lowly employees. Of course, the CEO’s reservation request
-might still fail if the requested resources aren’t available, so we see
-that issues of policy and resource availability may both be addressed
-when admission control decisions are made. The application of policy to
-networking is an area receiving much attention at the time of writing.
+Kiểm soát truy cập liên quan chặt chẽ đến vấn đề *chính sách* (policy). Ví dụ, quản trị viên mạng có thể muốn cho phép các đặt trước do CEO công ty thực hiện được chấp nhận, trong khi từ chối các đặt trước của nhân viên cấp thấp hơn. Tất nhiên, yêu cầu của CEO vẫn có thể bị từ chối nếu tài nguyên không đủ, nên cả vấn đề chính sách và tài nguyên đều có thể được xem xét khi quyết định kiểm soát truy cập. Việc áp dụng chính sách vào mạng là lĩnh vực đang được quan tâm nhiều vào thời điểm viết sách này.
 
-Reservation Protocol
-~~~~~~~~~~~~~~~~~~~~
+Giao thức đặt trước
+~~~~~~~~~~~~~~~~~~
 
-While connection-oriented networks have always needed some sort of setup
-protocol to establish the necessary virtual circuit state in the
-switches, connectionless networks like the Internet have had no such
-protocols. As this section has indicated, however, we need to provide a
-lot more information to our network when we want a real-time service
-from it. While there have been a number of setup protocols proposed for
-the Internet, the one on which most current attention is focused is the
-RSVP. It is particularly interesting because it differs so substantially
-from conventional signalling protocols for connection-oriented networks.
+Trong khi các mạng hướng kết nối luôn cần một giao thức thiết lập để tạo trạng thái mạch ảo cần thiết trong switch, các mạng không kết nối như Internet không có các giao thức như vậy. Tuy nhiên, như đã trình bày ở phần này, chúng ta cần cung cấp nhiều thông tin hơn cho mạng khi muốn nhận dịch vụ thời gian thực. Dù đã có nhiều giao thức thiết lập được đề xuất cho Internet, giao thức được chú ý nhiều nhất hiện nay là RSVP. Nó đặc biệt thú vị vì khác biệt đáng kể với các giao thức báo hiệu truyền thống cho mạng hướng kết nối.
 
-One of the key assumptions underlying RSVP is that it should not detract
-from the robustness that we find in today’s connectionless networks.
-Because connectionless networks rely on little or no state being stored
-in the network itself, it is possible for routers to crash and reboot
-and for links to go up and down while end-to-end connectivity is still
-maintained. RSVP tries to maintain this robustness by using the idea of
-*soft state* in the routers. Soft state—in contrast to the hard state
-found in connection-oriented networks—does not need to be explicitly
-deleted when it is no longer needed. Instead, it times out after some
-fairly short period (say, a minute) if it is not periodically refreshed.
-We will see later how this helps robustness.
+Một giả định then chốt của RSVP là nó không làm giảm tính bền vững vốn có của các mạng không kết nối ngày nay. Vì các mạng không kết nối dựa vào rất ít hoặc không lưu trạng thái trong mạng, nên các router có thể bị treo và khởi động lại, các liên kết có thể lên/xuống mà kết nối đầu-cuối vẫn được duy trì. RSVP cố gắng duy trì tính bền vững này bằng cách sử dụng ý tưởng *trạng thái mềm* (soft state) trong router. Trạng thái mềm—trái ngược với trạng thái cứng trong mạng hướng kết nối—không cần xóa tường minh khi không còn cần thiết. Thay vào đó, nó sẽ hết hạn sau một khoảng thời gian ngắn (ví dụ, một phút) nếu không được làm mới định kỳ. Chúng ta sẽ thấy sau cách điều này giúp tăng tính bền vững.
 
-Another important characteristic of RSVP is that it aims to support
-multicast flows just as effectively as unicast flows. This is not
-surprising, since many of the first applications that could benefit
-from improved quality of service were also multicast
-applications—video conferencing tools, for example. One of the
-insights of RSVP’s designers is that most multicast applications have
-many more receivers than senders, as typified by the large audience
-and one speaker for a lecture. Also, receivers may have different
-requirements. For example, one receiver might want to receive data
-from only one sender, while others might wish to receive data from all
-senders. Rather than having the senders keep track of a potentially
-large number of receivers, it makes more sense to let the receivers
-keep track of their own needs. This suggests the *receiver-oriented*
-approach adopted by RSVP. In contrast, connection-oriented networks
-usually leave resource reservation to the sender, just as it is
-normally the originator of a phone call who causes resources to be
-allocated in the phone network.
+Một đặc điểm quan trọng khác của RSVP là nó hướng đến hỗ trợ các luồng multicast hiệu quả như các luồng unicast. Điều này không ngạc nhiên, vì nhiều ứng dụng đầu tiên có thể hưởng lợi từ QoS cải tiến cũng là ứng dụng multicast—ví dụ, công cụ hội nghị truyền hình. Một nhận định của các nhà thiết kế RSVP là hầu hết ứng dụng multicast có nhiều người nhận hơn người gửi, như một buổi giảng với đông người nghe và một người nói. Ngoài ra, người nhận có thể có yêu cầu khác nhau. Ví dụ, một người nhận chỉ muốn nhận dữ liệu từ một người gửi, trong khi người khác muốn nhận từ tất cả người gửi. Thay vì để người gửi theo dõi số lượng lớn người nhận, hợp lý hơn là để người nhận tự theo dõi nhu cầu của mình. Điều này dẫn đến cách tiếp cận *hướng người nhận* (receiver-oriented) của RSVP. Ngược lại, mạng hướng kết nối thường để việc đặt trước tài nguyên cho người gửi, giống như người gọi điện thoại là người khởi tạo việc phân bổ tài nguyên trong mạng điện thoại.
 
-The soft state and receiver-oriented nature of RSVP give it a number of
-good properties. One such property is that it is very straightforward to
-increase or decrease the level of resource allocation provided to a
-receiver. Since each receiver periodically sends refresh messages to
-keep the soft state in place, it is easy to send a new reservation that
-asks for a new level of resources. Further, soft state deals gracefully
-with the possibility of network or node failures. In the event of a host
-crash, resources allocated by that host to a flow will naturally time
-out and be released. To see what happens in the event of a router or
-link failure, we need to look a little more closely at the mechanics of
-making a reservation.
+Tính trạng thái mềm và hướng người nhận của RSVP mang lại nhiều ưu điểm. Một trong số đó là rất dễ tăng hoặc giảm mức phân bổ tài nguyên cho người nhận. Vì mỗi người nhận định kỳ gửi thông điệp làm mới để giữ trạng thái mềm, nên dễ dàng gửi một đặt trước mới yêu cầu mức tài nguyên mới. Ngoài ra, trạng thái mềm xử lý tốt khả năng xảy ra lỗi mạng hoặc nút. Nếu máy chủ bị treo, tài nguyên do máy chủ đó đặt trước cho một luồng sẽ tự động hết hạn và được giải phóng. Để xem điều gì xảy ra khi router hoặc liên kết bị lỗi, chúng ta cần xem kỹ hơn về cơ chế đặt trước.
 
-Initially, consider the case of one sender and one receiver trying to
-get a reservation for traffic flowing between them. There are two things
-that need to happen before a receiver can make the reservation. First,
-the receiver needs to know what traffic the sender is likely to send so
-that it can make an appropriate reservation. That is, it needs to know
-the sender’s TSpec. Second, it needs to know what path the packets will
-follow from sender to receiver, so that it can establish a resource
-reservation at each router on the path. Both of these requirements can
-be met by sending a message from the sender to the receiver that
-contains the TSpec. Obviously, this gets the TSpec to the receiver. The
-other thing that happens is that each router looks at this message
-(called a PATH message) as it goes past, and it figures out the *reverse
-path* that will be used to send reservations from the receiver back to
-the sender in an effort to get the reservation to each router on the
-path. Building the multicast tree in the first place is done by
-mechanisms such as those described in another chapter.
+Ban đầu, xét trường hợp một người gửi và một người nhận cố gắng đặt trước tài nguyên cho lưu lượng giữa họ. Có hai việc cần làm trước khi người nhận có thể đặt trước. Đầu tiên, người nhận cần biết lưu lượng mà người gửi sẽ gửi để có thể đặt trước phù hợp, tức là cần biết TSpec của người gửi. Thứ hai, cần biết đường đi mà các gói sẽ theo từ người gửi đến người nhận, để có thể đặt trước tài nguyên tại mỗi router trên đường đi. Cả hai yêu cầu này đều có thể đáp ứng bằng cách gửi một thông điệp từ người gửi đến người nhận chứa TSpec. Rõ ràng, điều này chuyển TSpec đến người nhận. Ngoài ra, mỗi router xem thông điệp này (gọi là thông điệp PATH) khi nó đi qua, và xác định *đường ngược* sẽ dùng để gửi đặt trước từ người nhận về người gửi nhằm đặt trước tài nguyên tại mỗi router trên đường đi. Việc xây dựng cây multicast ban đầu được thực hiện bằng các cơ chế như mô tả ở chương khác.
 
-Having received a PATH message, the receiver sends a reservation back up
-the multicast tree in a RESV message. This message contains the sender’s
-TSpec and an RSpec describing the requirements of this receiver. Each
-router on the path looks at the reservation request and tries to
-allocate the necessary resources to satisfy it. If the reservation can
-be made, the RESV request is passed on to the next router. If not, an
-error message is returned to the receiver who made the request. If all
-goes well, the correct reservation is installed at every router between
-the sender and the receiver. As long as the receiver wants to retain the
-reservation, it sends the same RESV message about once every 30 seconds.
+Sau khi nhận được thông điệp PATH, người nhận gửi một đặt trước ngược lên cây multicast bằng thông điệp RESV. Thông điệp này chứa TSpec của người gửi và một RSpec mô tả yêu cầu của người nhận này. Mỗi router trên đường đi xem xét yêu cầu đặt trước và cố gắng phân bổ tài nguyên cần thiết để đáp ứng. Nếu đặt trước thành công, yêu cầu RESV được chuyển tiếp đến router tiếp theo. Nếu không, một thông điệp lỗi được trả về cho người nhận đã gửi yêu cầu. Nếu mọi việc suôn sẻ, đặt trước đúng sẽ được cài đặt tại mọi router giữa người gửi và người nhận. Miễn là người nhận muốn giữ đặt trước, nó sẽ gửi lại thông điệp RESV khoảng mỗi 30 giây.
 
-Now we can see what happens when a router or link fails. Routing
-protocols will adapt to the failure and create a new path from sender to
-receiver. PATH messages are sent about every 30 seconds, and may be sent
-sooner if a router detects a change in its forwarding table, so the
-first one after the new route stabilizes will reach the receiver over
-the new path. The receiver’s next RESV message will follow the new path
-and, if all goes well, establish a new reservation on the new path.
-Meanwhile, the routers that are no longer on the path will stop getting
-RESV messages, and these reservations will time out and be released.
-Thus, RSVP deals quite well with changes in topology, as long as routing
-changes are not excessively frequent.
+Bây giờ chúng ta có thể thấy điều gì xảy ra khi router hoặc liên kết bị lỗi. Các giao thức định tuyến sẽ thích nghi với lỗi và tạo đường đi mới từ người gửi đến người nhận. Thông điệp PATH được gửi khoảng mỗi 30 giây, và có thể gửi sớm hơn nếu router phát hiện thay đổi bảng chuyển tiếp, nên thông điệp đầu tiên sau khi đường đi mới ổn định sẽ đến người nhận qua đường mới. Thông điệp RESV tiếp theo của người nhận sẽ theo đường mới và, nếu mọi việc suôn sẻ, sẽ đặt trước tài nguyên mới trên đường mới. Trong khi đó, các router không còn trên đường đi sẽ không nhận được thông điệp RESV nữa, và các đặt trước này sẽ hết hạn và được giải phóng. Như vậy, RSVP xử lý khá tốt các thay đổi về cấu trúc mạng, miễn là thay đổi định tuyến không quá thường xuyên.
 
 .. _fig-pathmsg:
 .. figure:: figures/f06-25-9780123850591.png
    :width: 500px
    :align: center
 
-   Making reservations on a multicast tree.
+   Đặt trước tài nguyên trên cây multicast.
 
-The next thing we need to consider is how to cope with multicast,
-where there may be multiple senders to a group and multiple
-receivers. This situation is illustrated in :numref:`Figure %s
-<fig-pathmsg>`. First, let’s deal with multiple receivers for a single
-sender. As a RESV message travels up the multicast tree, it is likely
-to hit a piece of the tree where some other receiver’s reservation has
-already been established. It may be the case that the resources
-reserved upstream of this point are adequate to serve both
-receivers. For example, if receiver A has already made a reservation
-that provides for a guaranteed delay of less than 100 ms, and the new
-request from receiver B is for a delay of less than 200 ms, then no
-new reservation is required. On the other hand, if the new request
-were for a delay of less than 50 ms, then the router would first need
-to see if it could accept the request; if so, it would send the
-request on upstream. The next time receiver A asked for a minimum of a
-100-ms delay, the router would not need to pass this request on. In
-general, reservations can be merged in this way to meet the needs of
-all receivers downstream of the merge point.
+Tiếp theo, chúng ta cần xem xét cách xử lý multicast, nơi có thể có nhiều người gửi đến một nhóm và nhiều người nhận. Tình huống này được minh họa ở :numref:`Hình %s <fig-pathmsg>`. Đầu tiên, xét trường hợp nhiều người nhận cho một người gửi. Khi một thông điệp RESV đi lên cây multicast, nó có thể gặp một đoạn cây nơi đặt trước của người nhận khác đã được thiết lập. Có thể tài nguyên đặt trước ở phía trên điểm này đủ để phục vụ cả hai người nhận. Ví dụ, nếu người nhận A đã đặt trước đảm bảo độ trễ dưới 100 ms, và yêu cầu mới từ người nhận B là độ trễ dưới 200 ms, thì không cần đặt trước mới. Ngược lại, nếu yêu cầu mới là độ trễ dưới 50 ms, router cần kiểm tra xem có thể đáp ứng không; nếu có, sẽ gửi yêu cầu lên phía trên. Lần tiếp theo người nhận A yêu cầu độ trễ tối thiểu 100 ms, router không cần chuyển tiếp yêu cầu này. Nói chung, các đặt trước có thể được gộp lại theo cách này để đáp ứng nhu cầu của tất cả người nhận phía dưới điểm gộp.
 
-If there are also multiple senders in the tree, receivers need to
-collect the TSpecs from all senders and make a reservation that is large
-enough to accommodate the traffic from all senders. However, this may
-not mean that the TSpecs need to be added up. For example, in an
-audioconference with 10 speakers, there is not much point in allocating
-enough resources to carry 10 audio streams, since the result of 10
-people speaking at once would be incomprehensible. Thus, we could
-imagine a reservation that is large enough to accommodate two speakers
-and no more. Calculating the correct overall TSpec from all of the
-sender TSpecs is clearly application specific. Also, we may only be
-interested in hearing from a subset of all possible speakers; RSVP has
-different reservation styles to deal with such options as “Reserve
-resources for all speakers,” “Reserve resources for any :math:`n`
-speakers,” and “Reserve resources for speakers A and B only.”
+Nếu cũng có nhiều người gửi trong cây, người nhận cần thu thập TSpec từ tất cả người gửi và đặt trước đủ lớn để chứa lưu lượng từ tất cả người gửi. Tuy nhiên, điều này không có nghĩa là phải cộng tất cả TSpec lại. Ví dụ, trong một hội nghị âm thanh với 10 người nói, không cần thiết phải phân bổ đủ tài nguyên cho 10 luồng âm thanh, vì nếu 10 người nói cùng lúc thì kết quả sẽ không thể nghe được. Do đó, có thể đặt trước đủ lớn cho hai người nói là đủ. Việc tính toán TSpec tổng hợp đúng từ tất cả TSpec của người gửi rõ ràng là phụ thuộc vào ứng dụng. Ngoài ra, có thể chỉ quan tâm đến một tập con người nói; RSVP có các kiểu đặt trước khác nhau để xử lý các lựa chọn như “Đặt trước cho tất cả người nói”, “Đặt trước cho bất kỳ :math:`n` người nói”, và “Đặt trước cho người nói A và B”.
 
-Packet Classifying and Scheduling
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Phân loại và lập lịch gói
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once we have described our traffic and our desired network service and
-have installed a suitable reservation at all the routers on the path,
-the only thing that remains is for the routers to actually deliver the
-requested service to the data packets. There are two things that need to
-be done:
+Khi chúng ta đã mô tả lưu lượng và dịch vụ mạng mong muốn, đã cài đặt đặt trước phù hợp tại tất cả router trên đường đi, việc còn lại là các router thực sự cung cấp dịch vụ yêu cầu cho các gói dữ liệu. Có hai việc cần làm:
 
--  Associate each packet with the appropriate reservation so that it can
-   be handled correctly, a process known as *classifying* packets.
+-  Gán mỗi gói với đặt trước phù hợp để xử lý đúng, gọi là *phân loại* (classifying) gói.
 
--  Manage the packets in the queues so that they receive the service
-   that has been requested, a process known as packet *scheduling*.
+-  Quản lý các gói trong hàng đợi để nhận được dịch vụ đã yêu cầu, gọi là *lập lịch* (scheduling) gói.
 
-The first part is done by examining up to five fields in the packet: the
-source address, destination address, protocol number, source port, and
-destination port. (In IPv6, it is possible that the ``FlowLabel`` field
-in the header could be used to enable the lookup to be done based on a
-single, shorter key.) Based on this information, the packet can be
-placed in the appropriate class. For example, it may be classified into
-the controlled load classes, or it may be part of a guaranteed flow that
-needs to be handled separately from all other guaranteed flows. In
-short, there is a mapping from the flow-specific information in the
-packet header to a single class identifier that determines how the
-packet is handled in the queue. For guaranteed flows this might be a
-one-to-one mapping, while for other services it might be many to one.
-The details of classification are closely related to the details of
-queue management.
+Phần đầu tiên được thực hiện bằng cách kiểm tra tối đa năm trường trong gói: địa chỉ nguồn, địa chỉ đích, số hiệu giao thức, cổng nguồn và cổng đích. (Trong IPv6, trường ``FlowLabel`` trong tiêu đề có thể được dùng để tra cứu dựa trên một khóa ngắn hơn.) Dựa trên thông tin này, gói có thể được xếp vào lớp phù hợp. Ví dụ, nó có thể được phân loại vào lớp tải có kiểm soát, hoặc là một phần của luồng đảm bảo cần xử lý riêng biệt với các luồng đảm bảo khác. Nói ngắn gọn, có một ánh xạ từ thông tin đặc trưng luồng trong tiêu đề gói đến một mã lớp xác định cách gói được xử lý trong hàng đợi. Với luồng đảm bảo, có thể là ánh xạ một-một, còn với dịch vụ khác có thể là nhiều-một. Chi tiết phân loại liên quan chặt chẽ đến chi tiết quản lý hàng đợi.
 
-It should be clear that something as simple as a FIFO queue in a router
-will be inadequate to provide many different services and to provide
-different levels of delay within each service. Several more
-sophisticated queue management disciplines were discussed in an earlier
-section, and some combination of these is likely to be used in a router.
+Rõ ràng, một hàng đợi FIFO đơn giản trong router sẽ không đủ để cung cấp nhiều dịch vụ khác nhau và các mức độ trễ khác nhau trong mỗi dịch vụ. Một số kỷ luật quản lý hàng đợi tinh vi hơn đã được thảo luận ở phần trước, và có thể kết hợp một số trong số này trong router.
 
-The details of packet scheduling ideally should not be specified in the
-service model. Instead, this is an area where implementors can try to do
-creative things to realize the service model efficiently. In the case of
-guaranteed service, it has been established that a weighted fair queuing
-discipline, in which each flow gets its own individual queue with a
-certain share of the link, will provide a guaranteed end-to-end delay
-bound that can readily be calculated. For controlled load, simpler
-schemes may be used. One possibility includes treating all the
-controlled load traffic as a single, aggregated flow (as far as the
-scheduling mechanism is concerned), with the weight for that flow being
-set based on the total amount of traffic admitted in the controlled load
-class. The problem is made harder when you consider that, in a single
-router, many different services are likely to be provided concurrently
-and that each of these services may require a different scheduling
-algorithm. Thus, some overall queue management algorithm is needed to
-manage the resources between the different services.
+Chi tiết lập lịch gói lý tưởng không nên quy định trong mô hình dịch vụ. Thay vào đó, đây là lĩnh vực mà các nhà triển khai có thể sáng tạo để hiện thực hóa mô hình dịch vụ hiệu quả. Với dịch vụ đảm bảo, đã xác định rằng kỷ luật xếp hàng công bằng có trọng số, trong đó mỗi luồng có hàng đợi riêng với một phần băng thông nhất định, sẽ cung cấp giới hạn trễ đầu-cuối có thể tính toán được. Với tải có kiểm soát, có thể dùng các phương án đơn giản hơn. Một khả năng là coi toàn bộ lưu lượng tải có kiểm soát như một luồng tổng hợp (về mặt cơ chế lập lịch), với trọng số cho luồng này được đặt dựa trên tổng lưu lượng đã được chấp nhận trong lớp tải có kiểm soát. Vấn đề trở nên khó hơn khi xét rằng trong một router, nhiều dịch vụ khác nhau có thể được cung cấp đồng thời và mỗi dịch vụ có thể yêu cầu thuật toán lập lịch khác nhau. Do đó, cần một thuật toán quản lý hàng đợi tổng thể để quản lý tài nguyên giữa các dịch vụ khác nhau.
 
-Scalability Issues
-~~~~~~~~~~~~~~~~~~
+Vấn đề mở rộng quy mô
+~~~~~~~~~~~~~~~~~~~~
 
-Although the Integrated Services architecture and RSVP represented a
-significant enhancement of the best-effort service model of IP, many
-Internet service providers felt that it was not the right model for them
-to deploy. The reason for this reticence relates to one of the
-fundamental design goals of IP: scalability. In the best-effort service
-model, routers in the Internet store little or no state about the
-individual flows passing through them. Thus, as the Internet grows, the
-only thing routers have to do to keep up with that growth is to move
-more bits per second and to deal with larger routing tables, but RSVP
-raises the possibility that every flow passing through a router might
-have a corresponding reservation. To understand the severity of this
-problem, suppose that every flow on an OC-48 (2.5-Gbps) link represents
-a 64-kbps audio stream. The number of such flows is
+Dù kiến trúc Dịch vụ tích hợp và RSVP là một cải tiến đáng kể so với mô hình best-effort của IP, nhiều nhà cung cấp dịch vụ Internet cảm thấy nó không phù hợp để triển khai. Lý do liên quan đến một trong những mục tiêu thiết kế cơ bản của IP: khả năng mở rộng. Trong mô hình best-effort, các router trong Internet lưu rất ít hoặc không lưu trạng thái về các luồng riêng lẻ đi qua. Do đó, khi Internet phát triển, điều duy nhất router cần làm để theo kịp là truyền nhiều bit hơn mỗi giây và xử lý bảng định tuyến lớn hơn, nhưng RSVP đặt ra khả năng mỗi luồng đi qua router có một đặt trước tương ứng. Để hiểu mức độ nghiêm trọng của vấn đề, giả sử mỗi luồng trên một liên kết OC-48 (2,5 Gbps) là một luồng âm thanh 64 kbps. Số luồng như vậy là
 
-.. centered:: 2.5 × 10\ :sup:`9` / 64 × 10\ :sup:`3` = 39,000
+.. centered:: 2,5 × 10\ :sup:`9` / 64 × 10\ :sup:`3` = 39.000
 
-Each of those reservations needs some amount of state that needs to be
-stored in memory and refreshed periodically. The router needs to
-classify, police, and queue each of those flows. Admission control
-decisions need to be made every time such a flow requests a
-reservation, and some mechanism is needed to “push back” on users
-(e.g., charge their credit cards) so that they don’t make arbitrarily
-large reservations for long periods of time.
+Mỗi đặt trước đó cần một lượng trạng thái lưu trong bộ nhớ và làm mới định kỳ. Router cần phân loại, kiểm soát và xếp hàng cho từng luồng. Quyết định kiểm soát truy cập cần thực hiện mỗi khi một luồng yêu cầu đặt trước, và cần có cơ chế “đẩy lùi” người dùng (ví dụ, tính phí thẻ tín dụng) để họ không đặt trước tùy tiện với thời gian dài.
 
-These scalability concerns have limited widespread deployment of
-IntServ. Because of these concerns, other approaches that do not require
-so much “per-flow” state have been developed. The next section discusses
-a number of such approaches.
+Những lo ngại về khả năng mở rộng này đã hạn chế việc triển khai rộng rãi IntServ. Vì lý do này, các cách tiếp cận khác không yêu cầu lưu trạng thái “theo luồng” nhiều như vậy đã được phát triển. Phần tiếp theo sẽ thảo luận về các cách tiếp cận này.
 
-6.5.3 Differentiated Services (EF, AF)
---------------------------------------
+6.5.3 Dịch vụ phân biệt (EF, AF)
+--------------------------------
 
-Whereas the Integrated Services architecture allocates resources to
-individual flows, the Differentiated Services model (often called
-DiffServ for short) allocates resources to a small number of classes of
-traffic. In fact, some proposed approaches to DiffServ simply divide
-traffic into two classes. This is an eminently sensible approach to
-take: If you consider the difficulty that network operators experience
-just trying to keep a best-effort internet running smoothly, it makes
-sense to add to the service model in small increments.
+Trong khi kiến trúc Dịch vụ tích hợp phân bổ tài nguyên cho từng luồng riêng lẻ, mô hình Dịch vụ phân biệt (Differentiated Services, thường gọi tắt là DiffServ) phân bổ tài nguyên cho một số ít lớp lưu lượng. Thực tế, một số cách tiếp cận DiffServ chỉ chia lưu lượng thành hai lớp. Đây là một cách tiếp cận hợp lý: Nếu bạn xem xét khó khăn mà các nhà vận hành mạng gặp phải chỉ để duy trì một Internet best-effort hoạt động trơn tru, thì việc bổ sung mô hình dịch vụ theo từng bước nhỏ là hợp lý.
 
-Suppose that we have decided to enhance the best-effort service model by
-adding just one new class, which we’ll call “premium.” Clearly, we will
-need some way to figure out which packets are premium and which are
-regular old best effort. Rather than using a protocol like RSVP to tell
-all the routers that some flow is sending premium packets, it would be
-much easier if the packets could just identify themselves to the router
-when they arrive. This could obviously be done by using a bit in the
-packet header—if that bit is a 1, the packet is a premium packet; if
-it’s a 0, the packet is best effort. With this in mind, there are two
-questions we need to address:
+Giả sử chúng ta quyết định nâng cao mô hình best-effort bằng cách thêm một lớp mới, gọi là “cao cấp” (premium). Rõ ràng, chúng ta cần một cách để xác định gói nào là cao cấp và gói nào là best-effort thông thường. Thay vì dùng một giao thức như RSVP để báo cho tất cả router biết một luồng đang gửi gói cao cấp, sẽ dễ dàng hơn nếu các gói tự nhận diện khi đến router. Điều này có thể thực hiện bằng cách dùng một bit trong tiêu đề gói—nếu bit đó là 1, gói là cao cấp; nếu là 0, gói là best-effort. Với ý tưởng này, có hai câu hỏi cần giải quyết:
 
--  Who sets the premium bit and under what circumstances?
+-  Ai đặt bit cao cấp và trong trường hợp nào?
 
--  What does a router do differently when it sees a packet with the bit
-   set?
+-  Router sẽ xử lý khác biệt thế nào khi thấy gói có bit này?
 
-There are many possible answers to the first question, but a common
-approach is to set the bit at an administrative boundary. For example,
-the router at the edge of an Internet service provider’s network might
-set the bit for packets arriving on an interface that connects to a
-particular company’s network. The Internet service provider might do
-this because that company has paid for a higher level of service than
-best effort. It is also possible that not all packets would be marked as
-premium; for example, the router might be configured to mark packets as
-premium up to some maximum rate and to leave all excess packets as best
-effort.
+Có nhiều câu trả lời cho câu hỏi đầu tiên, nhưng cách phổ biến là đặt bit ở ranh giới quản trị. Ví dụ, router ở biên của mạng nhà cung cấp dịch vụ Internet có thể đặt bit cho các gói đến từ một giao diện kết nối với mạng của một công ty cụ thể. Nhà cung cấp dịch vụ Internet có thể làm vậy vì công ty đó đã trả tiền cho mức dịch vụ cao hơn best-effort. Cũng có thể không phải tất cả các gói đều được đánh dấu cao cấp; ví dụ, router có thể cấu hình để đánh dấu gói là cao cấp đến một tốc độ tối đa nào đó, các gói vượt quá sẽ là best-effort.
 
-Assuming that packets have been marked in some way, what do the routers
-that encounter marked packets do with them? Here again there are many
-answers. In fact, the IETF standardized a set of router behaviors to be
-applied to marked packets. These are called *per-hop behaviors* (PHBs),
-a term that indicates that they define the behavior of individual
-routers rather than end-to-end services. Because there is more than one
-new behavior, there is also a need for more than 1 bit in the packet
-header to tell the routers which behavior to apply. The IETF decided to
-take the old ``TOS`` byte from the IP header, which had not been widely
-used, and redefine it. Six bits of this byte have been allocated for
-DiffServ code points (DSCPs), where each DSCP is a 6-bit value that
-identifies a particular PHB to be applied to a packet. (The remaining
-two bits are used by ECN.)
+Giả sử các gói đã được đánh dấu, router gặp gói đánh dấu sẽ xử lý thế nào? Ở đây cũng có nhiều câu trả lời. Thực tế, IETF đã chuẩn hóa một tập các hành vi router áp dụng cho các gói đánh dấu. Chúng gọi là *hành vi từng bước* (per-hop behaviors, PHBs), nghĩa là xác định hành vi của từng router thay vì dịch vụ đầu-cuối. Vì có nhiều hành vi mới, cần nhiều hơn 1 bit trong tiêu đề gói để báo cho router biết áp dụng hành vi nào. IETF quyết định lấy byte ``TOS`` cũ trong tiêu đề IP, vốn ít được dùng, và định nghĩa lại. Sáu bit của byte này được dành cho các điểm mã DiffServ (DSCP), mỗi DSCP là một giá trị 6 bit xác định một PHB cụ thể áp dụng cho gói. (Hai bit còn lại dùng cho ECN.)
 
-The Expedited Forwarding (EF) PHB
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Chuyển tiếp ưu tiên (Expedited Forwarding, EF) PHB
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One of the simplest PHBs to explain is known as *expedited forwarding*
-(EF). Packets marked for EF treatment should be forwarded by the router
-with minimal delay and loss. The only way that a router can guarantee
-this to all EF packets is if the arrival rate of EF packets at the
-router is strictly limited to be less than the rate at which the router
-can forward EF packets. For example, a router with a 100-Mbps interface
-needs to be sure that the arrival rate of EF packets destined for that
-interface never exceeds 100 Mbps. It might also want to be sure that the
-rate will be somewhat below 100 Mbps, so that it occasionally has time
-to send other packets such as routing updates.
+Một trong những PHB đơn giản nhất là *chuyển tiếp ưu tiên* (expedited forwarding, EF). Các gói đánh dấu EF nên được router chuyển tiếp với độ trễ và mất mát tối thiểu. Cách duy nhất để router đảm bảo điều này cho tất cả gói EF là giới hạn nghiêm ngặt tốc độ gói EF đến router nhỏ hơn tốc độ router có thể chuyển tiếp gói EF. Ví dụ, một router với giao diện 100 Mbps cần đảm bảo tốc độ gói EF đến giao diện đó không vượt quá 100 Mbps. Có thể cũng muốn đảm bảo tốc độ này thấp hơn 100 Mbps để thỉnh thoảng còn thời gian gửi các gói khác như cập nhật định tuyến.
 
-The rate limiting of EF packets is achieved by configuring the routers
-at the edge of an administrative domain to allow a certain maximum rate
-of EF packet arrivals into the domain. A simple, albeit conservative,
-approach would be to ensure that the sum of the rates of all EF packets
-entering the domain is less than the bandwidth of the slowest link in
-the domain. This would ensure that, even in the worst case where all EF
-packets converge on the slowest link, it is not overloaded and can
-provide the correct behavior.
+Việc giới hạn tốc độ gói EF được thực hiện bằng cách cấu hình các router ở biên miền quản trị để cho phép tốc độ tối đa nhất định của gói EF vào miền. Một cách đơn giản, dù bảo thủ, là đảm bảo tổng tốc độ tất cả gói EF vào miền nhỏ hơn băng thông của liên kết chậm nhất trong miền. Điều này đảm bảo rằng, ngay cả trong trường hợp xấu nhất khi tất cả gói EF hội tụ về liên kết chậm nhất, nó không bị quá tải và có thể cung cấp hành vi đúng.
 
-There are several possible implementation strategies for the EF
-behavior. One is to give EF packets strict priority over all other
-packets. Another is to perform weighted fair queuing between EF packets
-and other packets, with the weight of EF set sufficiently high that all
-EF packets can be delivered quickly. This has an advantage over strict
-priority: The non-EF packets can be assured of getting some access to
-the link, even if the amount of EF traffic is excessive. This might mean
-that the EF packets fail to get exactly the specified behavior, but it
-could also prevent essential routing traffic from being locked out of
-the network in the event of an excessive load of EF traffic.
+Có nhiều chiến lược triển khai hành vi EF. Một là cho gói EF ưu tiên tuyệt đối so với tất cả gói khác. Một cách khác là thực hiện xếp hàng công bằng có trọng số giữa gói EF và các gói khác, với trọng số EF đủ cao để tất cả gói EF được chuyển nhanh. Cách này có ưu điểm hơn ưu tiên tuyệt đối: Các gói không phải EF vẫn được đảm bảo truy cập liên kết, ngay cả khi lưu lượng EF vượt mức. Điều này có thể khiến gói EF không nhận được hành vi đúng như quy định, nhưng cũng ngăn lưu lượng định tuyến thiết yếu bị loại khỏi mạng khi lưu lượng EF quá tải.
 
-The Assured Forwarding (AF) PHB
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Chuyển tiếp đảm bảo (Assured Forwarding, AF) PHB
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The *assured forwarding* (AF) PHB has its roots in an approach known
-as *RED* with In and Out (RIO) or Weighted RED, both of which are
-enhancements to the basic RED algorithm described in an earlier
-section.  :numref:`Figure %s <fig-rio-prob>` shows how RIO works; as
-with RED, we see drop probability on the :math:`y`\ -axis increasing as
-average queue length increases along the :math:`x`\ -axis. But now, for
-our two classes of traffic, we have two separate drop probability
-curves.  RIO calls the two classes “in” and “out” for reasons that
-will become clear shortly. Because the “out” curve has a lower
-``MinThreshold`` than the “in” curve, it is clear that, under low
-levels of congestion, only packets marked “out” will be discarded by
-the RED algorithm. If the congestion becomes more serious, a higher
-percentage of “out” packets are dropped, and then if the average queue
-length exceeds Min\ :sub:`in`, RED starts to drop “in” packets as well.
+*Chuyển tiếp đảm bảo* (assured forwarding, AF) PHB bắt nguồn từ cách tiếp cận gọi là *RED với In và Out* (RIO) hoặc RED có trọng số (Weighted RED), đều là các cải tiến của thuật toán RED cơ bản đã mô tả ở phần trước. :numref:`Hình %s <fig-rio-prob>` cho thấy cách RIO hoạt động; giống như RED, trục y là xác suất loại bỏ tăng khi độ dài hàng đợi trung bình tăng trên trục x. Nhưng bây giờ, với hai lớp lưu lượng, ta có hai đường xác suất loại bỏ riêng. RIO gọi hai lớp là “in” và “out” vì lý do sẽ rõ ngay sau đây. Vì đường “out” có ``MinThreshold`` thấp hơn đường “in”, nên khi tắc nghẽn nhẹ, chỉ các gói “out” bị loại bỏ bởi thuật toán RED. Nếu tắc nghẽn nghiêm trọng hơn, tỷ lệ loại bỏ gói “out” tăng, và khi độ dài hàng đợi trung bình vượt qua Min_in, RED bắt đầu loại bỏ cả gói “in”.
 
 .. _fig-rio-prob:
 .. figure:: figures/f06-26-9780123850591.png
    :width: 400px
    :align: center
 
-   RED with In and Out drop probabilities.
+   RED với xác suất loại bỏ In và Out.
 
-The reason for calling the two classes of packets “in” and “out” stems
-from the way the packets are marked. We already noted that packet
-marking can be performed by a router at the edge of an administrative
-domain. We can think of this router as being at the boundary between a
-network service provider and some customer of that network. The customer
-might be any other network—for example, the network of a corporation or
-of another network service provider. The customer and the network
-service provider agree on some sort of profile for the assured service
-(and perhaps the customer pays the network service provider for this
-profile). The profile might be something like “Customer X is allowed to
-send up to :math:`y` Mbps of assured traffic,”
-or it could be significantly more complex.
-Whatever the profile is, the edge router can clearly mark the packets
-that arrive from this customer as being either in or out of profile. In
-the example just mentioned, as long as the customer sends less than
-:math:`y` Mbps, all his packets will be marked “in,” but once he exceeds that
-rate the excess packets will be marked “out.”
+Lý do gọi hai lớp gói là “in” và “out” xuất phát từ cách đánh dấu gói. Như đã nói, việc đánh dấu gói có thể thực hiện bởi router ở biên miền quản trị. Có thể coi router này là ranh giới giữa nhà cung cấp dịch vụ mạng và khách hàng. Khách hàng có thể là bất kỳ mạng nào khác—ví dụ, mạng của một công ty hoặc một nhà cung cấp dịch vụ khác. Khách hàng và nhà cung cấp thỏa thuận một hồ sơ dịch vụ đảm bảo (và có thể khách hàng trả tiền cho hồ sơ này). Hồ sơ có thể là “Khách hàng X được phép gửi tối đa :math:`y` Mbps lưu lượng đảm bảo”, hoặc phức tạp hơn. Dù hồ sơ thế nào, router biên có thể đánh dấu các gói đến từ khách hàng là “in” hoặc “out” theo hồ sơ. Trong ví dụ trên, miễn là khách hàng gửi dưới :math:`y` Mbps, tất cả gói sẽ được đánh dấu “in”, nhưng khi vượt quá tốc độ đó, các gói dư sẽ là “out”.
 
-The combination of a profile meter at the edge and RIO in all the
-routers of the service provider’s network should provide the customer
-with a high assurance (but not a guarantee) that packets within his
-profile can be delivered. In particular, if the majority of packets,
-including those sent by customers who have not paid extra to establish a
-profile, are “out” packets, then it should usually be the case that the
-RIO mechanism will act to keep congestion low enough that “in” packets
-are rarely dropped. Clearly, there must be enough bandwidth in the
-network so that the “in” packets alone are rarely able to congest a link
-to the point where RIO starts dropping “in” packets.
+Kết hợp bộ đo hồ sơ ở biên và RIO trong tất cả router của nhà cung cấp dịch vụ nên cung cấp cho khách hàng sự đảm bảo cao (nhưng không phải tuyệt đối) rằng các gói trong hồ sơ sẽ được chuyển đi. Đặc biệt, nếu phần lớn các gói, bao gồm cả của khách hàng không trả thêm phí để có hồ sơ, là gói “out”, thì cơ chế RIO sẽ giữ tắc nghẽn đủ thấp để gói “in” hiếm khi bị loại bỏ. Rõ ràng, phải có đủ băng thông trong mạng để chỉ riêng gói “in” hiếm khi gây tắc nghẽn đến mức RIO bắt đầu loại bỏ gói “in”.
 
-Just like RED, the effectiveness of a mechanism like RIO depends to some
-extent on correct parameter choices, and there are considerably more
-parameters to set for RIO. Exactly how well the scheme will work in
-production networks is not known at the time of writing.
+Giống như RED, hiệu quả của cơ chế như RIO phụ thuộc phần nào vào việc chọn tham số đúng, và có nhiều tham số hơn cho RIO. Chính xác cơ chế này hoạt động tốt thế nào trong mạng thực tế chưa rõ tại thời điểm viết sách này.
 
-One interesting property of RIO is that it does not change the order of
-“in” and “out” packets. For example, if a TCP connection is sending
-packets through a profile meter, and some packets are being marked “in”
-while others are marked “out,” those packets will receive different drop
-probabilities in the router queues, but they will be delivered to the
-receiver in the same order in which they were sent. This is important
-for most TCP implementations, which perform much better when packets
-arrive in order, even if they are designed to cope with misordering.
-Note also that mechanisms such as fast retransmit can be falsely
-triggered when misordering happens.
+Một đặc điểm thú vị của RIO là nó không thay đổi thứ tự gói “in” và “out”. Ví dụ, nếu một kết nối TCP gửi gói qua bộ đo hồ sơ, và một số gói được đánh dấu “in” còn lại là “out”, các gói này sẽ nhận xác suất loại bỏ khác nhau trong hàng đợi router, nhưng sẽ được chuyển đến máy nhận theo đúng thứ tự gửi. Điều này quan trọng với hầu hết các triển khai TCP, vốn hoạt động tốt hơn khi gói đến đúng thứ tự, dù có thể xử lý sai thứ tự. Lưu ý rằng các cơ chế như fast retransmit có thể bị kích hoạt sai khi xảy ra sai thứ tự.
 
-The idea of RIO can be generalized to provide more than two drop
-probability curves, and this is the idea behind the approach known as
-*weighted RED* (WRED). In this case, the value of the DSCP field is used
-to pick one of several drop probability curves, so that several
-different classes of service can be provided.
+Ý tưởng RIO có thể tổng quát hóa để cung cấp nhiều hơn hai đường xác suất loại bỏ, và đây là ý tưởng đằng sau cách tiếp cận gọi là *RED có trọng số* (WRED). Trong trường hợp này, giá trị trường DSCP được dùng để chọn một trong nhiều đường xác suất loại bỏ, nhờ đó cung cấp nhiều lớp dịch vụ khác nhau.
 
-A third way to provide Differentiated Services is to use the DSCP value
-to determine which queue to put a packet into in a weighted fair queuing
-scheduler. As a very simple case, we might use one code point to
-indicate the *best-effort* queue and a second code point to select the
-*premium* queue. We then need to choose a weight for the premium queue
-that makes the premium packets get better service than the best-effort
-packets. This depends on the offered load of premium packets. For
-example, if we give the premium queue a weight of 1 and the best-effort
-queue a weight of 4, that ensures that the bandwidth available to
-premium packets is
+Cách thứ ba để cung cấp Dịch vụ phân biệt là dùng giá trị DSCP để xác định gói sẽ vào hàng đợi nào trong bộ lập lịch xếp hàng công bằng có trọng số. Đơn giản nhất, có thể dùng một điểm mã để chỉ hàng đợi *best-effort* và một điểm mã khác cho hàng đợi *cao cấp* (premium). Sau đó cần chọn trọng số cho hàng đợi cao cấp sao cho gói cao cấp nhận dịch vụ tốt hơn gói best-effort. Điều này phụ thuộc vào tải gói cao cấp. Ví dụ, nếu cho hàng đợi cao cấp trọng số 1 và best-effort trọng số 4, điều này đảm bảo băng thông cho gói cao cấp là
 
-.. centered:: B\ :sub:`premium` = W\ :sub:`premium` / (W\ :sub:`premium`
-              + W\ :sub:`best-effort`\ ) = 1/(1 + 4) = 0.2
+.. centered:: B\ :sub:`cao cấp` = W\ :sub:`cao cấp` / (W\ :sub:`cao cấp`
+              + W\ :sub:`best-effort`\ ) = 1/(1 + 4) = 0,2
 
-That is, we have effectively reserved 20% of the link for premium
-packets, so if the offered load of premium traffic is only 10% of the
-link on average, then the premium traffic will behave as if it is
-running on a very underloaded network and the service will be very good.
-In particular, the delay experienced by the premium class can be kept
-low, since WFQ will try to transmit premium packets as soon as they
-arrive in this scenario. On the other hand, if the premium traffic load
-were 30%, it would behave like a highly loaded network, and delay could
-be very high for the premium packets—even worse than for the so-called
-best-effort packets. Thus, knowledge of the offered load and careful
-setting of weights is important for this type of service. However, note
-that the safe approach is to be very conservative in setting the weight
-for the premium queue. If this weight is made very high relative to the
-expected load, it provides a margin of error and yet does not prevent
-the best-effort traffic from using any bandwidth that has been reserved
-for premium but is not used by premium packets.
+Tức là, đã dành 20% băng thông cho gói cao cấp, nên nếu tải trung bình của lưu lượng cao cấp chỉ là 10% băng thông, thì lưu lượng cao cấp sẽ hoạt động như trên một mạng rất nhẹ tải và dịch vụ sẽ rất tốt. Đặc biệt, độ trễ của lớp cao cấp có thể giữ thấp, vì WFQ sẽ cố gắng truyền gói cao cấp ngay khi đến trong trường hợp này. Ngược lại, nếu tải lưu lượng cao cấp là 30%, nó sẽ hoạt động như một mạng tải nặng, và độ trễ cho gói cao cấp có thể rất cao—thậm chí còn tệ hơn gói best-effort. Do đó, cần biết tải và cẩn thận khi đặt trọng số cho loại dịch vụ này. Tuy nhiên, cách an toàn là đặt trọng số cho hàng đợi cao cấp bảo thủ. Nếu trọng số này cao hơn nhiều so với tải dự kiến, nó tạo ra biên an toàn và không ngăn lưu lượng best-effort sử dụng băng thông đã dành cho cao cấp nhưng không dùng hết.
 
-Just as in WRED, we can generalize this WFQ-based approach to allow more
-than two classes represented by different code points. Furthermore, we
-can combine the idea of a queue selector with a drop preference. For
-example, with 12 code points we can have four queues with different
-weights, each of which has three drop preferences. This is exactly what
-the IETF has done in the definition of “assured service.”
+Giống như WRED, có thể tổng quát hóa cách tiếp cận dựa trên WFQ này để cho phép nhiều hơn hai lớp đại diện bởi các điểm mã khác nhau. Hơn nữa, có thể kết hợp ý tưởng chọn hàng đợi với ưu tiên loại bỏ. Ví dụ, với 12 điểm mã có thể có bốn hàng đợi với trọng số khác nhau, mỗi hàng đợi có ba mức ưu tiên loại bỏ. Đây chính là cách IETF đã định nghĩa “dịch vụ đảm bảo”.
 
-6.5.4 Equation-Based Congestion Control
----------------------------------------
+6.5.4 Điều khiển tắc nghẽn dựa trên phương trình
+-----------------------------------------------
 
-We conclude our discussion of QoS by returning full circle to TCP
-congestion control, but this time in the context of real-time
-applications. Recall that TCP adjusts the sender’s congestion window
-(and, hence, the rate at which it can transmit) in response to ACK and
-timeout events. One of the strengths of this approach is that it does
-not require cooperation from the network’s routers; it is a purely
-host-based strategy. Such a strategy complements the QoS mechanisms
-we’ve been considering, because (1) applications can use host-based
-solutions without depending on router support, and (2) even with
-DiffServ fully deployed, it is still possible for a router queue to be
-oversubscribed, and we would like real-time applications to react in a
-reasonable way should this happen.
+Chúng ta kết thúc phần bàn về QoS bằng cách quay lại điều khiển tắc nghẽn TCP, nhưng lần này trong bối cảnh ứng dụng thời gian thực. Nhớ rằng TCP điều chỉnh cửa sổ tắc nghẽn của máy gửi (và do đó tốc độ truyền) dựa trên các sự kiện ACK và timeout. Một điểm mạnh của cách tiếp cận này là không cần sự hợp tác từ router mạng; đây là chiến lược hoàn toàn dựa trên máy chủ. Chiến lược này bổ sung cho các cơ chế QoS đã bàn, vì (1) ứng dụng có thể dùng giải pháp dựa trên máy chủ mà không phụ thuộc vào hỗ trợ của router, và (2) ngay cả khi DiffServ được triển khai đầy đủ, vẫn có thể xảy ra hàng đợi router bị quá tải, và chúng ta muốn ứng dụng thời gian thực phản ứng hợp lý khi điều này xảy ra.
 
-While we would like to take advantage of TCP’s congestion control
-algorithm, TCP itself is not appropriate for real-time applications. One
-reason is that TCP is a reliable protocol, and real-time applications
-often cannot afford the delays introduced by retransmission. However,
-what if we were to decouple TCP from its congestion control mechanism,
-to add TCP-like congestion control to an unreliable protocol like UDP?
-Could real-time applications make use of such a protocol?
+Dù muốn tận dụng thuật toán điều khiển tắc nghẽn của TCP, bản thân TCP không phù hợp cho ứng dụng thời gian thực. Một lý do là TCP là giao thức tin cậy, và ứng dụng thời gian thực thường không thể chịu được độ trễ do truyền lại. Tuy nhiên, nếu tách TCP khỏi cơ chế điều khiển tắc nghẽn, thêm điều khiển tắc nghẽn kiểu TCP vào một giao thức không tin cậy như UDP thì sao? Ứng dụng thời gian thực có thể sử dụng giao thức như vậy không?
 
-On the one hand, this is an appealing idea because it would cause
-real-time streams to compete fairly with TCP streams. The alternative
-(which happens today) is that video applications use UDP without any
-form of congestion control and, as a consequence, steal bandwidth away
-from TCP flows that back off in the presence of congestion. On the other
-hand, the sawtooth behavior of TCP’s congestion-control algorithm is not
-appropriate for real-time applications; it means that the rate at which
-the application transmits is constantly going up and down. In contrast,
-real-time applications work best when they are able to sustain a smooth
-transmission rate over a relatively long period of time.
+Một mặt, đây là ý tưởng hấp dẫn vì nó khiến các luồng thời gian thực cạnh tranh công bằng với luồng TCP. Ngược lại (như hiện nay), các ứng dụng video dùng UDP không có điều khiển tắc nghẽn, và do đó “cướp” băng thông của các luồng TCP vốn giảm tốc khi tắc nghẽn. Mặt khác, hành vi răng cưa của thuật toán điều khiển tắc nghẽn TCP không phù hợp với ứng dụng thời gian thực; nó khiến tốc độ truyền của ứng dụng liên tục tăng giảm. Trong khi đó, ứng dụng thời gian thực hoạt động tốt nhất khi duy trì tốc độ truyền ổn định trong thời gian dài.
 
-Is it possible to achieve the best of both worlds: compatibility with
-TCP congestion control for the sake of fairness, while sustaining a
-smooth transmission rate for the sake of the application? Recent work
-suggests that the answer is yes. Specifically, several so called
-TCP-friendly congestion-control algorithms have been proposed. These
-algorithms have two main goals. One is to slowly adapt the congestion
-window. This is done by adapting over relatively longer time periods
-(e.g., an RTT) rather than on a per-packet basis. This smooths out the
-transmission rate. The second is to be TCP friendly in the sense of
-being fair to competing TCP flows. This property is often enforced by
-ensuring that the flow’s behavior adheres to an equation that models
-TCP’s behavior. Hence, this approach is sometimes called *equation-based
-congestion control*.
+Có thể đạt được cả hai mục tiêu: tương thích với điều khiển tắc nghẽn TCP để đảm bảo công bằng, đồng thời duy trì tốc độ truyền ổn định cho ứng dụng? Các nghiên cứu gần đây cho thấy câu trả lời là có. Cụ thể, một số thuật toán điều khiển tắc nghẽn “thân thiện với TCP” đã được đề xuất. Các thuật toán này có hai mục tiêu chính. Một là điều chỉnh cửa sổ tắc nghẽn chậm. Điều này thực hiện bằng cách điều chỉnh theo các khoảng thời gian dài hơn (ví dụ, một RTT) thay vì từng gói. Điều này làm mượt tốc độ truyền. Thứ hai là thân thiện với TCP theo nghĩa công bằng với các luồng TCP cạnh tranh. Tính chất này thường được đảm bảo bằng cách đảm bảo hành vi của luồng tuân theo một phương trình mô hình hóa hành vi TCP. Do đó, cách tiếp cận này đôi khi gọi là *điều khiển tắc nghẽn dựa trên phương trình* (equation-based congestion control).
 
-We saw a simplified form of the TCP rate equation in an earlier section.
-For our purposes, it is sufficient to note that the equation takes
-this general form:
+Chúng ta đã thấy dạng đơn giản của phương trình tốc độ TCP ở phần trước. Ở đây, chỉ cần lưu ý rằng phương trình có dạng tổng quát:
 
 .. math::
 
    Rate \propto \left(\frac{1}{RTT \times \sqrt{\rho}}\right)
 
-which says that to be TCP-friendly, the transmission rate must be
-inversely proportional to the round-trip time (RTT) and the square
-root of the loss rate (:math:`\rho`).  In other words, to build a
-congestion control mechanism out of this relationship, the receiver
-must periodically report the loss rate it is experiencing back to the
-sender (e.g., it might report that it failed to receive 10% of the
-last 100 packets), and the sender then adjusts its sending rate up or
-down, such that this relationship continues to hold.  Of course, it is
-still up to the application to adapt to these changes in the available
-rate, but as we will see in the next chapter, many real-time
-applications are quite adaptable.
+nghĩa là để thân thiện với TCP, tốc độ truyền phải tỉ lệ nghịch với thời gian khứ hồi (RTT) và căn bậc hai của tỷ lệ mất gói (:math:`\rho`). Nói cách khác, để xây dựng cơ chế điều khiển tắc nghẽn dựa trên mối quan hệ này, máy nhận phải định kỳ báo cáo tỷ lệ mất gói cho máy gửi (ví dụ, có thể báo không nhận được 10% trong 100 gói gần nhất), và máy gửi điều chỉnh tốc độ truyền lên hoặc xuống sao cho mối quan hệ này luôn đúng. Tất nhiên, ứng dụng vẫn phải thích nghi với thay đổi tốc độ khả dụng, nhưng như sẽ thấy ở chương sau, nhiều ứng dụng thời gian thực khá thích nghi.
