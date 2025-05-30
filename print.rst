@@ -1,23 +1,21 @@
 .. role:: pop
 
-:pop:`Print Copies`
+:pop:`Bản In`
 ===========================
 
-We make all books in the *Systems Approach* series available as both
-print and e-books. This book is available via Amazon: `Computer Networks: A Systems Approach <https://amzn.to/3CtG81U>`__
+Chúng tôi cung cấp tất cả các cuốn sách trong bộ *Phương pháp Tiếp cận Hệ thống* dưới dạng cả bản in và sách điện tử. Cuốn sách này có thể mua qua Amazon: `Mạng Máy tính: Một Phương pháp Tiếp cận Hệ thống <https://amzn.to/3CtG81U>`__
 
-`Book Series: <https://systemsapproach.org/books/>`__ Also check out
-our companion books that cover emerging topics in more depth.
+`Bộ sách: <https://systemsapproach.org/books/>`__ Hãy xem thêm
+các cuốn sách đồng hành của chúng tôi, nơi đề cập sâu hơn đến các chủ đề mới nổi.
 
 
-* `What We Talk About When We Talk About Systems: Essays on the
-  Systems Approach <https://systemsapproach.org/books/#essaybook>`__
+* `Chúng Ta Nói Gì Khi Nói Về Hệ Thống: Các tiểu luận về Phương pháp Tiếp cận Hệ thống <https://systemsapproach.org/books/#essaybook>`__
 
-* `Private 5G: A Systems Approach <https://systemsapproach.org/books/#5gbook>`__
+* `Mạng 5G Riêng: Một Phương pháp Tiếp cận Hệ thống <https://systemsapproach.org/books/#5gbook>`__
 
-* `Software-Defined Networks: A Systems Approach <https://systemsapproach.org/books/#sdnbook>`__
+* `Mạng Định nghĩa bằng Phần mềm: Một Phương pháp Tiếp cận Hệ thống <https://systemsapproach.org/books/#sdnbook>`__
 
-* `Edge Cloud Operations: A Systems Approach
+* `Vận hành Đám mây Biên: Một Phương pháp Tiếp cận Hệ thống
   <https://systemsapproach.org/books/#opsbook>`__
   
-* `TCP Congestion Control: A Systems Approach <https://systemsapproach.org/books/#tcpbook>`__
+* `Điều khiển tắc nghẽn TCP: Một Phương pháp Tiếp cận Hệ thống <https://systemsapproach.org/books/#tcpbook>`__
