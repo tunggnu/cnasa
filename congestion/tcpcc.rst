@@ -1,261 +1,85 @@
-6.3 TCP Congestion Control
+6.3 Kiểm soát tắc nghẽn TCP
 ==========================
 
-This section describes the predominant example of end-to-end congestion
-control in use today, which is implemented by TCP. The essential strategy of
-TCP is to send packets into the network without a reservation and then
-to react to observable events that occur. TCP assumes only FIFO queuing
-in the network’s routers, but also works with other queuing strategies.
+Phần này mô tả ví dụ nổi bật nhất về kiểm soát tắc nghẽn đầu-cuối đang được sử dụng hiện nay, được triển khai bởi TCP. Chiến lược cốt lõi của TCP là gửi các gói vào mạng mà không cần đặt trước và sau đó phản ứng với các sự kiện quan sát được xảy ra. TCP chỉ giả định hàng đợi FIFO trong các bộ định tuyến của mạng, nhưng cũng hoạt động với các chiến lược xếp hàng khác.
 
-TCP congestion control was introduced into the Internet in the late
-1980s by Van Jacobson, roughly eight years after the TCP/IP protocol
-stack had become operational. Immediately preceding this time, the
-Internet was suffering from congestion collapse—hosts would send their
-packets into the Internet as fast as the advertised window would allow,
-congestion would occur at some router (causing packets to be dropped),
-and the hosts would time out and retransmit their packets, resulting in
-even more congestion.
+Kiểm soát tắc nghẽn TCP được giới thiệu vào Internet vào cuối những năm 1980 bởi Van Jacobson, khoảng tám năm sau khi ngăn xếp giao thức TCP/IP bắt đầu hoạt động. Ngay trước thời điểm này, Internet đang phải chịu cảnh sụp đổ do tắc nghẽn—các máy chủ sẽ gửi các gói của họ vào Internet nhanh nhất có thể theo cửa sổ quảng bá, tắc nghẽn sẽ xảy ra tại một bộ định tuyến nào đó (dẫn đến các gói bị loại bỏ), và các máy chủ sẽ hết thời gian chờ và truyền lại các gói của họ, dẫn đến tắc nghẽn càng nghiêm trọng hơn.
 
-Broadly speaking, the idea of TCP congestion control is for each source
-to determine how much capacity is available in the network, so that it
-knows how many packets it can safely have in transit. Once a given
-source has this many packets in transit, it uses the arrival of an ACK
-as a signal that one of its packets has left the network and that it is
-therefore safe to insert a new packet into the network without adding to
-the level of congestion. By using ACKs to pace the transmission of
-packets, TCP is said to be *self-clocking*. Of course, determining the
-available capacity in the first place is no easy task. To make matters
-worse, because other connections come and go, the available bandwidth
-changes over time, meaning that any given source must be able to adjust
-the number of packets it has in transit. This section describes the
-algorithms used by TCP to address these and other problems.
+Nói chung, ý tưởng của kiểm soát tắc nghẽn TCP là mỗi nguồn xác định bao nhiêu dung lượng có sẵn trong mạng, để nó biết có bao nhiêu gói có thể an toàn đang trong quá trình truyền. Khi một nguồn đã có số lượng gói này đang truyền, nó sử dụng sự xuất hiện của một ACK như một tín hiệu rằng một trong các gói của nó đã rời khỏi mạng và do đó an toàn để chèn một gói mới vào mạng mà không làm tăng mức độ tắc nghẽn. Bằng cách sử dụng các ACK để điều tiết việc truyền các gói, TCP được gọi là *tự đồng bộ*. Tất nhiên, việc xác định dung lượng có sẵn ban đầu không phải là nhiệm vụ dễ dàng. Tệ hơn nữa, vì các kết nối khác đến và đi, băng thông có sẵn thay đổi theo thời gian, nghĩa là bất kỳ nguồn nào cũng phải có khả năng điều chỉnh số lượng gói mà nó đang truyền. Phần này mô tả các thuật toán mà TCP sử dụng để giải quyết những vấn đề này và các vấn đề khác.
 
-Note that, although we describe the TCP congestion-control mechanisms
-one at a time, thereby giving the impression that we are talking about
-three independent mechanisms, it is only when they are taken as a whole
-that we have TCP congestion control. Also, while we are going to begin
-here with the variant of TCP congestion control most often referred to
-as *standard TCP*, we will see that there are actually quite a few
-variants of TCP congestion control in use today, and researchers
-continue to explore new approaches to addressing this problem. Some of
-these new approaches are discussed below.
+Lưu ý rằng, mặc dù chúng tôi mô tả các cơ chế kiểm soát tắc nghẽn TCP từng cái một, tạo cảm giác như chúng tôi đang nói về ba cơ chế độc lập, nhưng chỉ khi chúng được kết hợp lại thì mới có kiểm soát tắc nghẽn TCP. Ngoài ra, mặc dù chúng tôi sẽ bắt đầu ở đây với biến thể kiểm soát tắc nghẽn TCP thường được gọi là *TCP tiêu chuẩn*, chúng ta sẽ thấy rằng thực tế có khá nhiều biến thể kiểm soát tắc nghẽn TCP đang được sử dụng ngày nay, và các nhà nghiên cứu vẫn tiếp tục khám phá các cách tiếp cận mới để giải quyết vấn đề này. Một số cách tiếp cận mới này sẽ được thảo luận bên dưới.
 
-6.3.1 Additive Increase/Multiplicative Decrease
------------------------------------------------
+6.3.1 Tăng tuyến tính/Giảm bội số
+---------------------------------
 
-TCP maintains a new state variable for each connection, called
-``CongestionWindow``, which is used by the source to limit how much data
-it is allowed to have in transit at a given time. The congestion window
-is congestion control’s counterpart to flow control’s advertised window.
-TCP is modified such that the maximum number of bytes of unacknowledged
-data allowed is now the minimum of the congestion window and the
-advertised window. Thus, using the variables defined in the previous
-chapter, TCP’s effective window is revised as follows:
+TCP duy trì một biến trạng thái mới cho mỗi kết nối, gọi là ``CongestionWindow``, được nguồn sử dụng để giới hạn lượng dữ liệu được phép truyền tại một thời điểm nhất định. Cửa sổ tắc nghẽn là đối trọng của kiểm soát tắc nghẽn với cửa sổ quảng bá của kiểm soát luồng. TCP được sửa đổi sao cho số byte dữ liệu chưa được xác nhận tối đa được phép là giá trị nhỏ nhất giữa cửa sổ tắc nghẽn và cửa sổ quảng bá. Do đó, sử dụng các biến đã được định nghĩa trong chương trước, cửa sổ hiệu quả của TCP được sửa đổi như sau:
 
 ::
 
    MaxWindow = MIN(CongestionWindow, AdvertisedWindow)
    EffectiveWindow = MaxWindow -  (LastByteSent - LastByteAcked)
 
-That is, ``MaxWindow`` replaces ``AdvertisedWindow`` in the calculation
-of ``EffectiveWindow``. Thus, a TCP source is allowed to send no
-faster than the slowest component—the network or the destination
-host—can accommodate.
+Nghĩa là, ``MaxWindow`` thay thế ``AdvertisedWindow`` trong phép tính ``EffectiveWindow``. Do đó, một nguồn TCP chỉ được phép gửi không nhanh hơn thành phần chậm nhất—mạng hoặc máy đích—có thể xử lý.
 
-The problem, of course, is how TCP comes to learn an appropriate value
-for ``CongestionWindow``. Unlike the ``AdvertisedWindow``, which is sent
-by the receiving side of the connection, there is no one to send a
-suitable ``CongestionWindow`` to the sending side of TCP. The answer is
-that the TCP source sets the ``CongestionWindow`` based on the level of
-congestion it perceives to exist in the network. This involves
-decreasing the congestion window when the level of congestion goes up
-and increasing the congestion window when the level of congestion goes
-down. Taken together, the mechanism is commonly called *additive
-increase/multiplicative decrease* (AIMD); the reason for this mouthful
-of a name will become apparent below.
+Vấn đề, tất nhiên, là làm thế nào để TCP biết được giá trị phù hợp cho ``CongestionWindow``. Không giống như ``AdvertisedWindow``, được gửi bởi phía nhận của kết nối, không ai gửi một ``CongestionWindow`` phù hợp cho phía gửi của TCP. Câu trả lời là nguồn TCP đặt ``CongestionWindow`` dựa trên mức độ tắc nghẽn mà nó cảm nhận được trong mạng. Điều này bao gồm việc giảm cửa sổ tắc nghẽn khi mức độ tắc nghẽn tăng lên và tăng cửa sổ tắc nghẽn khi mức độ tắc nghẽn giảm xuống. Kết hợp lại, cơ chế này thường được gọi là *tăng tuyến tính/giảm bội số* (AIMD); lý do cho cái tên dài dòng này sẽ trở nên rõ ràng bên dưới.
 
-The key question, then, is how does the source determine that the
-network is congested and that it should decrease the congestion window?
-The answer is based on the observation that the main reason packets are
-not delivered, and a timeout results, is that a packet was dropped due
-to congestion. It is rare that a packet is dropped because of an error
-during transmission. Therefore, TCP interprets timeouts as a sign of
-congestion and reduces the rate at which it is transmitting.
-Specifically, each time a timeout occurs, the source sets
-``CongestionWindow`` to half of its previous value. This halving of the
-``CongestionWindow`` for each timeout corresponds to the “multiplicative
-decrease” part of AIMD.
+Câu hỏi then chốt là, làm thế nào nguồn xác định được rằng mạng đang tắc nghẽn và nó nên giảm cửa sổ tắc nghẽn? Câu trả lời dựa trên quan sát rằng lý do chính khiến các gói không được chuyển giao, và dẫn đến hết thời gian chờ, là do một gói đã bị loại bỏ do tắc nghẽn. Hiếm khi một gói bị loại bỏ do lỗi trong quá trình truyền. Do đó, TCP coi hết thời gian chờ là dấu hiệu của tắc nghẽn và giảm tốc độ truyền. Cụ thể, mỗi khi xảy ra hết thời gian chờ, nguồn đặt ``CongestionWindow`` bằng một nửa giá trị trước đó. Việc giảm một nửa ``CongestionWindow`` cho mỗi lần hết thời gian chờ tương ứng với phần “giảm bội số” của AIMD.
 
-Although ``CongestionWindow`` is defined in terms of bytes, it is
-easiest to understand multiplicative decrease if we think in terms of
-whole packets. For example, suppose the ``CongestionWindow`` is
-currently set to 16 packets. If a loss is detected, ``CongestionWindow``
-is set to 8. (Normally, a loss is detected when a timeout occurs, but as
-we see below, TCP has another mechanism to detect dropped packets.)
-Additional losses cause ``CongestionWindow`` to be reduced to 4, then 2,
-and finally to 1 packet. ``CongestionWindow`` is not allowed to fall
-below the size of a single packet, or in TCP terminology, the *maximum
-segment size* .
+Mặc dù ``CongestionWindow`` được định nghĩa theo byte, nhưng dễ hiểu hơn về giảm bội số nếu chúng ta nghĩ theo đơn vị gói. Ví dụ, giả sử ``CongestionWindow`` hiện được đặt là 16 gói. Nếu phát hiện mất gói, ``CongestionWindow`` được đặt thành 8. (Thông thường, mất gói được phát hiện khi xảy ra hết thời gian chờ, nhưng như chúng ta sẽ thấy bên dưới, TCP có một cơ chế khác để phát hiện gói bị loại bỏ.) Các lần mất gói bổ sung sẽ khiến ``CongestionWindow`` giảm xuống 4, sau đó là 2, và cuối cùng là 1 gói. ``CongestionWindow`` không được phép nhỏ hơn kích thước của một gói, hoặc theo thuật ngữ của TCP, là *kích thước đoạn tối đa*.
 
 .. _fig-linear:
 .. figure:: figures/f06-08-9780123850591.png
    :width: 200px
    :align: center
 
-   Packets in transit during additive increase, with one
-   packet being added each RTT.
+   Các gói đang truyền trong quá trình tăng tuyến tính, với mỗi
+   gói được thêm vào mỗi RTT.
 
-A congestion-control strategy that only decreases the window size is
-obviously too conservative. We also need to be able to increase the
-congestion window to take advantage of newly available capacity in the
-network. This is the “additive increase” part of AIMD, and it works as
-follows. Every time the source successfully sends a
-``CongestionWindow``\ ’s worth of packets—that is, each packet sent
-out during the last round-trip time (RTT) has been ACKed—it adds the
-equivalent of 1 packet to ``CongestionWindow``. This linear increase
-is illustrated in :numref:`Figure %s <fig-linear>`. Note that, in
-practice, TCP does not wait for an entire window’s worth of ACKs to
-add 1 packet’s worth to the congestion window, but instead increments
-``CongestionWindow`` by a little for each ACK that
-arrives. Specifically, the congestion window is incremented as follows
-each time an ACK arrives:
+Một chiến lược kiểm soát tắc nghẽn chỉ giảm kích thước cửa sổ rõ ràng là quá thận trọng. Chúng ta cũng cần có khả năng tăng cửa sổ tắc nghẽn để tận dụng dung lượng mới có trong mạng. Đây là phần “tăng tuyến tính” của AIMD, và nó hoạt động như sau. Mỗi khi nguồn gửi thành công một lượng gói bằng ``CongestionWindow``—tức là mỗi gói được gửi trong thời gian trễ vòng lặp (RTT) vừa qua đã được xác nhận—nó sẽ cộng thêm tương đương 1 gói vào ``CongestionWindow``. Sự tăng tuyến tính này được minh họa trong :numref:`Hình %s <fig-linear>`. Lưu ý rằng, trên thực tế, TCP không chờ đến khi nhận đủ một cửa sổ ACK mới cộng thêm 1 gói vào cửa sổ tắc nghẽn, mà thay vào đó tăng ``CongestionWindow`` một chút cho mỗi ACK nhận được. Cụ thể, cửa sổ tắc nghẽn được tăng như sau mỗi khi một ACK đến:
 
 ::
 
    Increment = MSS x (MSS/CongestionWindow)
    CongestionWindow += Increment
 
-That is, rather than incrementing ``CongestionWindow`` by an entire
-``MSS`` bytes each RTT, we increment it by a fraction of ``MSS`` every
-time an ACK is received. Assuming that each ACK acknowledges the receipt
-of ``MSS`` bytes, then that fraction is ``MSS/CongestionWindow``.
+Nghĩa là, thay vì tăng ``CongestionWindow`` thêm toàn bộ ``MSS`` byte mỗi RTT, chúng ta tăng nó thêm một phần của ``MSS`` mỗi khi nhận được một ACK. Giả sử mỗi ACK xác nhận việc nhận ``MSS`` byte, thì phần đó là ``MSS/CongestionWindow``.
 
 .. _fig-sawtooth:
 .. figure:: figures/f06-09-9780123850591.png
    :width: 600px
    :align: center
 
-   Typical TCP sawtooth pattern.
+   Mẫu hình răng cưa TCP điển hình.
 
-This pattern of continually increasing and decreasing the congestion
-window continues throughout the lifetime of the connection. In fact,
-if you plot the current value of ``CongestionWindow`` as a function of
-time, you get a sawtooth pattern, as illustrated in :numref:`Figure %s
-<fig-sawtooth>`. The important concept to understand about AIMD is
-that the source is willing to reduce its congestion window at a much
-faster rate than it is willing to increase its congestion window. This
-is in contrast to an additive increase/additive decrease strategy in
-which the window would be increased by 1 packet when an ACK arrives
-and decreased by 1 when a timeout occurs. It has been shown that AIMD
-is a necessary condition for a congestion-control mechanism to be
-stable.
+Mẫu hình tăng và giảm liên tục của cửa sổ tắc nghẽn này tiếp tục trong suốt thời gian tồn tại của kết nối. Thực tế, nếu bạn vẽ giá trị hiện tại của ``CongestionWindow`` theo thời gian, bạn sẽ nhận được một mẫu hình răng cưa, như minh họa trong :numref:`Hình %s <fig-sawtooth>`. Khái niệm quan trọng cần hiểu về AIMD là nguồn sẵn sàng giảm cửa sổ tắc nghẽn với tốc độ nhanh hơn nhiều so với tốc độ tăng cửa sổ tắc nghẽn. Điều này trái ngược với chiến lược tăng tuyến tính/giảm tuyến tính, trong đó cửa sổ sẽ tăng thêm 1 gói khi nhận được một ACK và giảm đi 1 khi xảy ra hết thời gian chờ. Người ta đã chứng minh rằng AIMD là điều kiện cần thiết để một cơ chế kiểm soát tắc nghẽn ổn định.
 
-An intuitive explanation for why TCP decreases the window aggressively
-and increases it conservatively is that the consequences of having too
-large a window are compounding. This is because when the window is too
-large, packets that are dropped will be retransmitted, making
-congestion even worse. It is important to get out of this state quickly.
+Một giải thích trực quan về lý do tại sao TCP giảm cửa sổ mạnh mẽ và tăng nó một cách thận trọng là hậu quả của việc có cửa sổ quá lớn là cộng dồn. Điều này là do khi cửa sổ quá lớn, các gói bị loại bỏ sẽ được truyền lại, làm cho tắc nghẽn càng nghiêm trọng hơn. Việc thoát khỏi trạng thái này càng nhanh càng tốt là rất quan trọng.
 
-Finally, since a timeout is an indication of congestion that triggers
-multiplicative decrease, TCP needs the most accurate timeout mechanism
-it can afford. We already covered TCP’s timeout mechanism in an earlier
-chapter, so we do not repeat it here. The two main things to remember
-about that mechanism are that (1) timeouts are set as a function of both
-the average RTT and the standard deviation in that average, and (2) due
-to the cost of measuring each transmission with an accurate clock, TCP
-only samples the round-trip time once per RTT (rather than once per
-packet) using a coarse-grained (500-ms) clock.
+Cuối cùng, vì hết thời gian chờ là dấu hiệu của tắc nghẽn kích hoạt giảm bội số, TCP cần cơ chế hết thời gian chờ chính xác nhất có thể. Chúng ta đã đề cập đến cơ chế hết thời gian chờ của TCP trong một chương trước, nên không nhắc lại ở đây. Hai điều chính cần nhớ về cơ chế đó là (1) thời gian chờ được đặt dựa trên cả RTT trung bình và độ lệch chuẩn của giá trị trung bình đó, và (2) do chi phí đo từng lần truyền với đồng hồ chính xác, TCP chỉ lấy mẫu thời gian trễ vòng lặp một lần mỗi RTT (thay vì mỗi gói) bằng một đồng hồ thô (500 ms).
 
-6.3.2 Slow Start
-----------------
+6.3.2 Khởi động chậm
+--------------------
 
-The additive increase mechanism just described is the right approach to
-use when the source is operating close to the available capacity of the
-network, but it takes too long to ramp up a connection when it is
-starting from scratch. TCP therefore provides a second mechanism,
-ironically called *slow start*, which is used to increase the congestion
-window rapidly from a cold start. Slow start effectively increases the
-congestion window exponentially, rather than linearly.
+Cơ chế tăng tuyến tính vừa mô tả là cách tiếp cận phù hợp khi nguồn đang hoạt động gần với dung lượng có sẵn của mạng, nhưng nó mất quá nhiều thời gian để tăng tốc một kết nối khi bắt đầu từ đầu. Do đó, TCP cung cấp một cơ chế thứ hai, trớ trêu thay lại gọi là *khởi động chậm*, được sử dụng để tăng cửa sổ tắc nghẽn nhanh chóng từ trạng thái khởi đầu. Khởi động chậm thực tế tăng cửa sổ tắc nghẽn theo cấp số nhân, thay vì tuyến tính.
 
-Specifically, the source starts out by setting ``CongestionWindow`` to
-one packet. When the ACK for this packet arrives, TCP adds 1 to
-``CongestionWindow`` and then sends two packets. Upon receiving the
-corresponding two ACKs, TCP increments ``CongestionWindow`` by 2—one
-for each ACK—and next sends four packets. The end result is that TCP
-effectively doubles the number of packets it has in transit every RTT.
-:numref:`Figure %s <fig-exponential>` shows the growth in the number
-of packets in transit during slow start. Compare this to the linear
-growth of additive increase illustrated in :numref:`Figure %s
-<fig-linear>`.
+Cụ thể, nguồn bắt đầu bằng cách đặt ``CongestionWindow`` thành một gói. Khi ACK cho gói này đến, TCP cộng thêm 1 vào ``CongestionWindow`` và sau đó gửi hai gói. Khi nhận được hai ACK tương ứng, TCP tăng ``CongestionWindow`` thêm 2—mỗi ACK một—và tiếp theo gửi bốn gói. Kết quả cuối cùng là TCP thực tế nhân đôi số lượng gói đang truyền mỗi RTT. :numref:`Hình %s <fig-exponential>` cho thấy sự tăng trưởng số lượng gói đang truyền trong quá trình khởi động chậm. So sánh điều này với sự tăng trưởng tuyến tính của tăng tuyến tính được minh họa trong :numref:`Hình %s <fig-linear>`.
 
 .. _fig-exponential:
 .. figure:: figures/f06-10-9780123850591.png
    :width: 200px
    :align: center
 
-   Packets in transit during slow start.
+   Các gói đang truyền trong quá trình khởi động chậm.
 
-Why any exponential mechanism would be called “slow” is puzzling at
-first, but it can be explained if put in the proper historical context.
-We need to compare slow start not against the linear mechanism of the
-previous subsection, but against the original behavior of TCP. Consider
-what happens when a connection is established and the source first
-starts to send packets—that is, when it currently has no packets in
-transit. If the source sends as many packets as the advertised window
-allows—which is exactly what TCP did before slow start was
-developed—then even if there is a fairly large amount of bandwidth
-available in the  network, the routers may not be able to consume this
-burst of packets. It all depends on how much buffer space is available
-at the routers. Slow start was therefore designed to space packets out
-so that this burst does not occur. In other words, even though its
-exponential growth is faster than linear growth, slow start is much
-“slower” than sending an entire advertised window’s worth of data all at
-once.
+Tại sao một cơ chế tăng theo cấp số nhân lại được gọi là “chậm” nghe có vẻ khó hiểu lúc đầu, nhưng có thể giải thích nếu đặt trong bối cảnh lịch sử phù hợp. Chúng ta cần so sánh khởi động chậm không phải với cơ chế tuyến tính của phần trước, mà với hành vi ban đầu của TCP. Hãy xem điều gì xảy ra khi một kết nối được thiết lập và nguồn bắt đầu gửi các gói—tức là khi nó hiện không có gói nào đang truyền. Nếu nguồn gửi nhiều gói như cửa sổ quảng bá cho phép—điều mà TCP đã làm trước khi phát triển khởi động chậm—thì ngay cả khi có một lượng băng thông khá lớn có sẵn trong mạng, các bộ định tuyến có thể không xử lý được lượng lớn gói này. Tất cả phụ thuộc vào lượng bộ nhớ đệm có sẵn tại các bộ định tuyến. Do đó, khởi động chậm được thiết kế để giãn cách các gói ra để không xảy ra hiện tượng bùng nổ này. Nói cách khác, mặc dù tăng trưởng theo cấp số nhân nhanh hơn tăng tuyến tính, khởi động chậm vẫn “chậm” hơn nhiều so với việc gửi toàn bộ lượng dữ liệu mà cửa sổ quảng bá cho phép cùng một lúc.
 
-There are actually two different situations in which slow start runs.
-The first is at the very beginning of a connection, at which time the
-source has no idea how many packets it is going to be able to have in
-transit at a given time. (Keep in mind that today TCP runs over
-everything from 1-Mbps links to 40-Gbps links, so there is no way for
-the source to know the network’s capacity.) In this situation, slow
-start continues to double ``CongestionWindow`` each RTT until there is a
-loss, at which time a timeout causes multiplicative decrease to divide
-``CongestionWindow`` by 2.
+Thực tế có hai tình huống khác nhau mà khởi động chậm được sử dụng. Tình huống đầu tiên là ngay khi bắt đầu một kết nối, lúc này nguồn không biết sẽ có bao nhiêu gói có thể truyền tại một thời điểm. (Hãy nhớ rằng ngày nay TCP chạy trên mọi thứ từ các liên kết 1 Mbps đến 40 Gbps, nên không có cách nào để nguồn biết được dung lượng của mạng.) Trong tình huống này, khởi động chậm tiếp tục nhân đôi ``CongestionWindow`` mỗi RTT cho đến khi xảy ra mất gói, lúc đó một lần hết thời gian chờ sẽ khiến giảm bội số chia đôi ``CongestionWindow``.
 
-The second situation in which slow start is used is a bit more subtle;
-it occurs when the connection goes dead while waiting for a timeout to
-occur. Recall how TCP’s sliding window algorithm works—when a packet is
-lost, the source eventually reaches a point where it has sent as much
-data as the advertised window allows, and so it blocks while waiting for
-an ACK that will not arrive. Eventually, a timeout happens, but by this
-time there are no packets in transit, meaning that the source will
-receive no ACKs to “clock” the transmission of new packets. The source
-will instead receive a single cumulative ACK that reopens the entire
-advertised window, but, as explained above, the source then uses slow
-start to restart the flow of data rather than dumping a whole window’s
-worth of data on the network all at once.
+Tình huống thứ hai mà khởi động chậm được sử dụng tinh tế hơn; nó xảy ra khi kết nối bị ngắt trong khi chờ hết thời gian chờ. Hãy nhớ cách thuật toán cửa sổ trượt của TCP hoạt động—khi một gói bị mất, nguồn cuối cùng sẽ gửi hết dữ liệu mà cửa sổ quảng bá cho phép, và sau đó bị chặn trong khi chờ một ACK sẽ không bao giờ đến. Cuối cùng, một lần hết thời gian chờ xảy ra, nhưng lúc này không còn gói nào đang truyền, nghĩa là nguồn sẽ không nhận được ACK nào để “đồng bộ” việc truyền các gói mới. Thay vào đó, nguồn sẽ nhận được một ACK cộng dồn duy nhất mở lại toàn bộ cửa sổ quảng bá, nhưng như đã giải thích ở trên, nguồn sau đó sử dụng khởi động chậm để khởi động lại luồng dữ liệu thay vì gửi toàn bộ lượng dữ liệu mà cửa sổ quảng bá cho phép cùng một lúc.
 
-Although the source is using slow start again, it now knows more
-information than it did at the beginning of a connection. Specifically,
-the source has a current (and useful) value of ``CongestionWindow``;
-this is the value of ``CongestionWindow`` that existed prior to the last
-packet loss, divided by 2 as a result of the loss. We can think of this
-as the *target* congestion window. Slow start is used to rapidly
-increase the sending rate up to this value, and then additive increase
-is used beyond this point. Notice that we have a small bookkeeping
-problem to take care of, in that we want to remember the target
-congestion window resulting from multiplicative decrease as well as the
-*actual* congestion window being used by slow start. To address this
-problem, TCP introduces a temporary variable to store the target window,
-typically called ``CongestionThreshold``, that is set equal to the
-``CongestionWindow`` value that results from multiplicative decrease.
-The variable ``CongestionWindow`` is then reset to one packet, and it is
-incremented by one packet for every ACK that is received until it
-reaches ``CongestionThreshold``, at which point it is incremented by one
-packet per RTT.
+Mặc dù nguồn lại sử dụng khởi động chậm, nhưng lúc này nó biết nhiều thông tin hơn so với khi bắt đầu kết nối. Cụ thể, nguồn có một giá trị ``CongestionWindow`` hiện tại (và hữu ích); đây là giá trị ``CongestionWindow`` tồn tại trước khi mất gói cuối cùng, chia đôi do mất gói. Chúng ta có thể coi đây là *cửa sổ tắc nghẽn mục tiêu*. Khởi động chậm được sử dụng để tăng tốc độ gửi lên đến giá trị này, và sau đó tăng tuyến tính được sử dụng vượt quá điểm này. Lưu ý rằng chúng ta có một vấn đề ghi nhớ nhỏ cần giải quyết, đó là chúng ta muốn nhớ cửa sổ tắc nghẽn mục tiêu do giảm bội số cũng như cửa sổ tắc nghẽn *thực tế* đang được sử dụng bởi khởi động chậm. Để giải quyết vấn đề này, TCP giới thiệu một biến tạm thời để lưu trữ cửa sổ mục tiêu, thường gọi là ``CongestionThreshold``, được đặt bằng giá trị ``CongestionWindow`` sau khi giảm bội số. Biến ``CongestionWindow`` sau đó được đặt lại thành một gói, và được tăng thêm một gói cho mỗi ACK nhận được cho đến khi đạt ``CongestionThreshold``, tại thời điểm đó nó được tăng thêm một gói mỗi RTT.
 
-In other words, TCP increases the congestion window as defined by the
-following code fragment:
+Nói cách khác, TCP tăng cửa sổ tắc nghẽn như được định nghĩa trong đoạn mã sau:
 
 .. code-block:: c
 
@@ -268,265 +92,98 @@ following code fragment:
        state->CongestionWindow = MIN(cw + incr, TCP_MAXWIN);
    }
 
-where ``state`` represents the state of a particular TCP connection and
-defines an upper bound on how large the congestion window is allowed to
-grow.
+trong đó ``state`` đại diện cho trạng thái của một kết nối TCP cụ thể và xác định giới hạn trên về kích thước cửa sổ tắc nghẽn được phép tăng.
 
-:numref:`Figure %s <fig-trace1>` traces how TCP’s ``CongestionWindow``
-increases and decreases over time and serves to illustrate the
-interplay of slow start and additive increase/multiplicative
-decrease. This trace was taken from an actual TCP connection and shows
-the current value of ``CongestionWindow``—the colored line—over time.
+:numref:`Hình %s <fig-trace1>` theo dõi cách ``CongestionWindow`` của TCP tăng và giảm theo thời gian và minh họa sự kết hợp giữa khởi động chậm và tăng tuyến tính/giảm bội số. Dữ liệu này được lấy từ một kết nối TCP thực tế và cho thấy giá trị hiện tại của ``CongestionWindow``—đường màu—theo thời gian.
 
 .. _fig-trace1:
 .. figure:: figures/f06-11-9780123850591.png
    :width: 600px
    :align: center
 
-   Behavior of TCP congestion control. Colored line = value
-   of CongestionWindow over time; solid bullets at top of graph
-   = timeouts; hash marks at top of graph = time when each packet is
-   transmitted; vertical bars = time when a packet that was
-   eventually retransmitted was first transmitted.
+   Hành vi của kiểm soát tắc nghẽn TCP. Đường màu = giá trị
+   của CongestionWindow theo thời gian; chấm tròn ở đầu đồ thị
+   = hết thời gian chờ; dấu gạch ở đầu đồ thị = thời điểm mỗi gói được
+   truyền; thanh dọc = thời điểm một gói cuối cùng được truyền lại lần đầu.
 
-There are several things to notice about this trace. The first is the
-rapid increase in the congestion window at the beginning of the
-connection. This corresponds to the initial slow start phase. The slow
-start phase continues until several packets are lost at about 0.4
-seconds into the connection, at which time ``CongestionWindow`` flattens
-out at about 34 KB. (Why so many packets are lost during slow start is
-discussed below.) The reason why the congestion window flattens is that
-there are no ACKs arriving, due to the fact that several packets were
-lost. In fact, no new packets are sent during this time, as denoted by
-the lack of hash marks at the top of the graph. A timeout eventually
-happens at approximately 2 seconds, at which time the congestion window
-is divided by 2 (i.e., cut from approximately 34 KB to around 17 KB) and
-``CongestionThreshold`` is set to this value. Slow start then causes
-``CongestionWindow`` to be reset to one packet and to start ramping up
-from there.
+Có một số điều cần chú ý về dữ liệu này. Đầu tiên là sự tăng nhanh của cửa sổ tắc nghẽn ở đầu kết nối. Điều này tương ứng với giai đoạn khởi động chậm ban đầu. Giai đoạn khởi động chậm tiếp tục cho đến khi một số gói bị mất vào khoảng 0,4 giây kể từ khi bắt đầu kết nối, lúc đó ``CongestionWindow`` dừng lại ở khoảng 34 KB. (Tại sao lại có nhiều gói bị mất trong khởi động chậm sẽ được thảo luận bên dưới.) Lý do cửa sổ tắc nghẽn dừng lại là không có ACK nào đến, do một số gói đã bị mất. Thực tế, không có gói mới nào được gửi trong thời gian này, như được thể hiện bằng việc không có dấu gạch nào ở đầu đồ thị. Một lần hết thời gian chờ cuối cùng xảy ra vào khoảng 2 giây, lúc đó cửa sổ tắc nghẽn bị chia đôi (tức là giảm từ khoảng 34 KB xuống còn khoảng 17 KB) và ``CongestionThreshold`` được đặt bằng giá trị này. Khởi động chậm sau đó đặt lại ``CongestionWindow`` thành một gói và bắt đầu tăng từ đó.
 
-There is not enough detail in the trace to see exactly what happens when
-a couple of packets are lost just after 2 seconds, so we jump ahead to
-the linear increase in the congestion window that occurs between 2 and
-4 seconds. This corresponds to additive increase. At about 4 seconds,
-``CongestionWindow`` flattens out, again due to a lost packet. Now, at
-about 5.5 seconds:
+Không có đủ chi tiết trong dữ liệu để thấy chính xác điều gì xảy ra khi một vài gói bị mất ngay sau 2 giây, nên chúng ta chuyển sang giai đoạn tăng tuyến tính của cửa sổ tắc nghẽn diễn ra giữa 2 và 4 giây. Điều này tương ứng với tăng tuyến tính. Vào khoảng 4 giây, ``CongestionWindow`` lại dừng lại, một lần nữa do mất gói. Bây giờ, vào khoảng 5,5 giây:
 
-1. A timeout happens, causing the congestion window to be divided by 2,
-   dropping it from approximately 22 KB to 11 KB, and
-   ``CongestionThreshold`` is set to this amount.
+1. Một lần hết thời gian chờ xảy ra, khiến cửa sổ tắc nghẽn bị chia đôi, giảm từ khoảng 22 KB xuống còn 11 KB, và ``CongestionThreshold`` được đặt bằng giá trị này.
 
-2. ``CongestionWindow`` is reset to one packet, as the sender enters
-   slow start.
+2. ``CongestionWindow`` được đặt lại thành một gói, khi phía gửi vào giai đoạn khởi động chậm.
 
-3. Slow start causes ``CongestionWindow`` to grow exponentially until it
-   reaches ``CongestionThreshold``.
+3. Khởi động chậm khiến ``CongestionWindow`` tăng theo cấp số nhân cho đến khi đạt ``CongestionThreshold``.
 
-4. ``CongestionWindow`` then grows linearly.
+4. ``CongestionWindow`` sau đó tăng tuyến tính.
 
-The same pattern is repeated at around 8 seconds when another timeout
-occurs.
+Mẫu hình này lặp lại vào khoảng 8 giây khi một lần hết thời gian chờ khác xảy ra.
 
-We now return to the question of why so many packets are lost during the
-initial slow start period. At this point, TCP is attempting to learn how
-much bandwidth is available on the network. This is a difficult
-task. If the source is not aggressive at this stage—for example, if it
-only increases the congestion window linearly—then it takes a long time
-for it to discover how much bandwidth is available. This can have a
-dramatic impact on the throughput achieved for this connection. On the
-other hand, if the source is aggressive at this stage, as TCP is during
-exponential growth, then the source runs the risk of having half a
-window’s worth of packets dropped by the network.
+Chúng ta quay lại câu hỏi tại sao lại có nhiều gói bị mất trong giai đoạn khởi động chậm ban đầu. Lúc này, TCP đang cố gắng tìm hiểu có bao nhiêu băng thông có sẵn trên mạng. Đây là một nhiệm vụ khó khăn. Nếu nguồn không chủ động ở giai đoạn này—ví dụ, nếu nó chỉ tăng cửa sổ tắc nghẽn tuyến tính—thì sẽ mất rất nhiều thời gian để phát hiện ra băng thông có sẵn. Điều này có thể ảnh hưởng nghiêm trọng đến thông lượng đạt được cho kết nối này. Ngược lại, nếu nguồn chủ động ở giai đoạn này, như TCP trong quá trình tăng trưởng theo cấp số nhân, thì nguồn có nguy cơ bị mất một nửa lượng gói của cửa sổ do mạng loại bỏ.
 
-To see what can happen during exponential growth, consider the situation
-in which the source was just able to successfully send 16 packets
-through the network, causing it to double its congestion window to 32.
-Suppose, however, that the network happens to have just enough capacity
-to support 16 packets from this source. The likely result is that 16 of
-the 32 packets sent under the new congestion window will be dropped by
-the network; actually, this is the worst-case outcome, since some of the
-packets will be buffered in some router. This problem will become
-increasingly severe as the delay × bandwidth product of networks
-increases. For example, a delay × bandwidth product of 500 KB means that
-each connection has the potential to lose up to 500 KB of data at the
-beginning of each connection. Of course, this assumes that both the
-source and the destination implement the “big windows” extension.
+Để thấy điều gì có thể xảy ra trong quá trình tăng trưởng theo cấp số nhân, hãy xem xét tình huống nguồn vừa gửi thành công 16 gói qua mạng, khiến nó nhân đôi cửa sổ tắc nghẽn lên 32. Tuy nhiên, giả sử mạng chỉ đủ dung lượng để hỗ trợ 16 gói từ nguồn này. Kết quả có thể là 16 trong số 32 gói được gửi theo cửa sổ tắc nghẽn mới sẽ bị mạng loại bỏ; thực tế, đây là trường hợp xấu nhất, vì một số gói sẽ được lưu vào bộ nhớ đệm của một số bộ định tuyến. Vấn đề này sẽ ngày càng nghiêm trọng khi tích số trễ × băng thông của mạng tăng lên. Ví dụ, một tích số trễ × băng thông là 500 KB nghĩa là mỗi kết nối có khả năng mất tới 500 KB dữ liệu ở đầu mỗi kết nối. Tất nhiên, điều này giả định cả nguồn và đích đều triển khai phần mở rộng “cửa sổ lớn”.
 
-Alternatives to slow start, whereby the source tries to estimate the
-available bandwidth by more sophisticated means, have also been
-explored. One example is called *quick-start*. The basic idea is that a
-TCP sender can ask for an initial sending rate greater than slow start
-would allow by putting a requested rate in its SYN packet as an IP
-option. Routers along the path can examine the option, evaluate the
-current level of congestion on the outgoing link for this flow, and
-decide if that rate is acceptable, if a lower rate would be acceptable,
-or if standard slow start should be used. By the time the SYN reaches
-the receiver, it will contain either a rate that was acceptable to all
-routers on the path or an indication that one or more routers on the
-path could not support the quick-start request. In the former case, the
-TCP sender uses that rate to begin transmission; in the latter case, it
-falls back to standard slow start. If TCP is allowed to start off
-sending at a higher rate, a session could more quickly reach the point
-of filling the pipe, rather than taking many round-trip times to do so.
+Các phương án thay thế cho khởi động chậm, trong đó nguồn cố gắng ước lượng băng thông có sẵn bằng các phương pháp tinh vi hơn, cũng đã được nghiên cứu. Một ví dụ gọi là *khởi động nhanh* (quick-start). Ý tưởng cơ bản là một máy gửi TCP có thể yêu cầu tốc độ gửi ban đầu lớn hơn mức khởi động chậm cho phép bằng cách đặt tốc độ yêu cầu vào gói SYN dưới dạng một tùy chọn IP. Các bộ định tuyến trên đường đi có thể kiểm tra tùy chọn này, đánh giá mức độ tắc nghẽn hiện tại trên liên kết đầu ra cho luồng này, và quyết định xem tốc độ đó có chấp nhận được không, nếu tốc độ thấp hơn có thể chấp nhận được, hoặc nếu nên sử dụng khởi động chậm tiêu chuẩn. Khi gói SYN đến máy nhận, nó sẽ chứa hoặc là tốc độ được tất cả các bộ định tuyến trên đường đi chấp nhận, hoặc là chỉ báo rằng một hoặc nhiều bộ định tuyến không thể hỗ trợ yêu cầu khởi động nhanh. Trong trường hợp đầu tiên, máy gửi TCP sử dụng tốc độ đó để bắt đầu truyền; trong trường hợp thứ hai, nó quay lại sử dụng khởi động chậm tiêu chuẩn. Nếu TCP được phép bắt đầu gửi ở tốc độ cao hơn, một phiên có thể nhanh chóng đạt đến điểm lấp đầy đường truyền, thay vì mất nhiều vòng lặp để làm điều đó.
 
-Clearly one of the challenges to this sort of enhancement to TCP is that
-it requires substantially more cooperation from the routers than
-standard TCP does. If a single router in the path does not support
-quick-start, then the system reverts to standard slow start. Thus, it
-could be a long time before these types of enhancements could make it
-into the Internet; for now, they are more likely to be used in
-controlled network environments (e.g., research networks).
+Rõ ràng một trong những thách thức của loại cải tiến này cho TCP là nó đòi hỏi sự hợp tác nhiều hơn từ các bộ định tuyến so với TCP tiêu chuẩn. Nếu chỉ một bộ định tuyến trên đường đi không hỗ trợ khởi động nhanh, thì hệ thống sẽ quay lại sử dụng khởi động chậm tiêu chuẩn. Do đó, có thể sẽ mất nhiều thời gian trước khi các loại cải tiến này được áp dụng rộng rãi trên Internet; hiện tại, chúng có nhiều khả năng được sử dụng trong các môi trường mạng kiểm soát (ví dụ, mạng nghiên cứu).
 
-6.3.3 Fast Retransmit and Fast Recovery
----------------------------------------
+6.3.3 Truyền lại nhanh và phục hồi nhanh
+----------------------------------------
 
-The mechanisms described so far were part of the original proposal to
-add congestion control to TCP. It was soon discovered, however, that the
-coarse-grained implementation of TCP timeouts led to long periods of
-time during which the connection went dead while waiting for a timer to
-expire. Because of this, a new mechanism called *fast retransmit* was
-added to TCP. Fast retransmit is a heuristic that sometimes triggers the
-retransmission of a dropped packet sooner than the regular timeout
-mechanism. The fast retransmit mechanism does not replace regular
-timeouts; it just enhances that facility.
+Các cơ chế mô tả ở trên là một phần của đề xuất ban đầu để thêm kiểm soát tắc nghẽn vào TCP. Tuy nhiên, người ta sớm phát hiện ra rằng việc triển khai hết thời gian chờ thô của TCP dẫn đến các khoảng thời gian dài mà kết nối bị ngắt trong khi chờ bộ đếm thời gian hết hạn. Vì lý do này, một cơ chế mới gọi là *truyền lại nhanh* đã được thêm vào TCP. Truyền lại nhanh là một phương pháp dựa trên kinh nghiệm đôi khi kích hoạt việc truyền lại một gói bị mất sớm hơn cơ chế hết thời gian chờ thông thường. Cơ chế truyền lại nhanh không thay thế hết thời gian chờ thông thường; nó chỉ bổ sung cho chức năng đó.
 
-The idea of fast retransmit is straightforward. Every time a data packet
-arrives at the receiving side, the receiver responds with an
-acknowledgment, even if this sequence number has already been
-acknowledged. Thus, when a packet arrives out of order—when TCP cannot
-yet acknowledge the data the packet contains because earlier data has
-not yet arrived—TCP resends the same acknowledgment it sent the last
-time. This second transmission of the same acknowledgment is called a
-*duplicate ACK*. When the sending side sees a duplicate ACK, it knows
-that the other side must have received a packet out of order, which
-suggests that an earlier packet might have been lost. Since it is also
-possible that the earlier packet has only been delayed rather than lost,
-the sender waits until it sees some number of duplicate ACKs and then
-retransmits the missing packet. In practice, TCP waits until it has seen
-three duplicate ACKs before retransmitting the packet.
+Ý tưởng của truyền lại nhanh rất đơn giản. Mỗi khi một gói dữ liệu đến phía nhận, phía nhận sẽ phản hồi bằng một xác nhận, ngay cả khi số thứ tự này đã được xác nhận trước đó. Do đó, khi một gói đến không theo thứ tự—khi TCP chưa thể xác nhận dữ liệu trong gói đó vì dữ liệu trước đó chưa đến—TCP sẽ gửi lại cùng một xác nhận như lần trước. Việc gửi lại xác nhận giống nhau lần thứ hai này được gọi là một *ACK trùng lặp*. Khi phía gửi nhìn thấy một ACK trùng lặp, nó biết rằng phía bên kia chắc chắn đã nhận được một gói không theo thứ tự, điều này cho thấy một gói trước đó có thể đã bị mất. Vì cũng có thể gói trước đó chỉ bị trễ chứ không bị mất, phía gửi sẽ chờ cho đến khi thấy một số lượng ACK trùng lặp nhất định rồi mới truyền lại gói bị mất. Trên thực tế, TCP chờ đến khi thấy ba ACK trùng lặp trước khi truyền lại gói.
 
 .. _fig-tcp-fast:
 .. figure:: figures/f06-12-9780123850591.png
    :width: 300px
    :align: center
 
-   Fast retransmit based on duplicate ACKs.
+   Truyền lại nhanh dựa trên các ACK trùng lặp.
 
-:numref:`Figure %s <fig-tcp-fast>` illustrates how duplicate ACKs lead
-to a fast retransmit. In this example, the destination receives
-packets 1 and 2, but packet 3 is lost in the network. Thus, the
-destination will send a duplicate ACK for packet 2 when packet 4
-arrives, again when packet 5 arrives, and so on. (To simplify this
-example, we think in terms of packets 1, 2, 3, and so on, rather than
-worrying about the sequence numbers for each byte.) When the sender
-sees the third duplicate ACK for packet 2—the one sent because the
-receiver had gotten packet 6—it retransmits packet 3. Note that when
-the retransmitted copy of packet 3 arrives at the destination, the
-receiver then sends a cumulative ACK for everything up to and
-including packet 6 back to the source.
+:numref:`Hình %s <fig-tcp-fast>` minh họa cách các ACK trùng lặp dẫn đến truyền lại nhanh. Trong ví dụ này, đích nhận được các gói 1 và 2, nhưng gói 3 bị mất trong mạng. Do đó, đích sẽ gửi một ACK trùng lặp cho gói 2 khi gói 4 đến, lại gửi khi gói 5 đến, v.v. (Để đơn giản, ví dụ này sử dụng các gói 1, 2, 3, v.v., thay vì quan tâm đến số thứ tự của từng byte.) Khi phía gửi nhìn thấy ACK trùng lặp thứ ba cho gói 2—ACK được gửi vì phía nhận đã nhận được gói 6—nó sẽ truyền lại gói 3. Lưu ý rằng khi bản sao truyền lại của gói 3 đến đích, phía nhận sẽ gửi một ACK cộng dồn cho tất cả các gói đến và bao gồm cả gói 6 về phía nguồn.
 
 .. _fig-trace2:
 .. figure:: figures/f06-13-9780123850591.png
    :width: 600px
    :align: center
 
-   Trace of TCP with fast retransmit. Colored line
-   = CongestionWindow; solid bullet = timeout; hash marks = time
-   when each packet is transmitted; vertical bars = time when a
-   packet that was eventually retransmitted was first
-   transmitted.
+   Dữ liệu TCP với truyền lại nhanh. Đường màu
+   = CongestionWindow; chấm tròn = hết thời gian chờ; dấu gạch = thời điểm
+   mỗi gói được truyền; thanh dọc = thời điểm một gói cuối cùng được truyền lại lần đầu.
 
-:numref:`Figure %s <fig-trace2>` illustrates the behavior of a version
-of TCP with the fast retransmit mechanism. It is interesting to
-compare this trace with that given in :numref:`Figure %s
-<fig-trace1>`, where fast retransmit was not implemented—the long
-periods during which the congestion window stays flat and no packets
-are sent has been eliminated. In general, this technique is able to
-eliminate about half of the coarse-grained timeouts on a typical TCP
-connection, resulting in roughly a 20% improvement in the throughput
-over what could otherwise have been achieved. Notice, however, that
-the fast retransmit strategy does not eliminate all coarse-grained
-timeouts. This is because for a small window size there will not be
-enough packets in transit to cause enough duplicate ACKs to be
-delivered. Given enough lost packets—for example, as happens during
-the initial slow start phase—the sliding window algorithm eventually
-blocks the sender until a timeout occurs. In practice, TCP’s fast
-retransmit mechanism can detect up to three dropped packets per
-window.
+:numref:`Hình %s <fig-trace2>` minh họa hành vi của một phiên bản TCP với cơ chế truyền lại nhanh. Thật thú vị khi so sánh dữ liệu này với dữ liệu trong :numref:`Hình %s <fig-trace1>`, nơi truyền lại nhanh chưa được triển khai—các khoảng thời gian dài mà cửa sổ tắc nghẽn giữ nguyên và không có gói nào được gửi đã bị loại bỏ. Nói chung, kỹ thuật này có thể loại bỏ khoảng một nửa số lần hết thời gian chờ thô trên một kết nối TCP điển hình, dẫn đến cải thiện khoảng 20% thông lượng so với những gì có thể đạt được nếu không có nó. Tuy nhiên, lưu ý rằng chiến lược truyền lại nhanh không loại bỏ hoàn toàn các lần hết thời gian chờ thô. Điều này là do với kích thước cửa sổ nhỏ sẽ không có đủ gói đang truyền để tạo ra đủ số ACK trùng lặp. Nếu mất đủ nhiều gói—ví dụ, như xảy ra trong giai đoạn khởi động chậm ban đầu—thuật toán cửa sổ trượt cuối cùng sẽ chặn phía gửi cho đến khi xảy ra hết thời gian chờ. Trên thực tế, cơ chế truyền lại nhanh của TCP có thể phát hiện tối đa ba gói bị mất trên mỗi cửa sổ.
 
-Finally, there is one last improvement we can make. When the fast
-retransmit mechanism signals congestion, rather than drop the
-congestion window all the way back to one packet and run slow start,
-it is possible to use the ACKs that are still in the pipe to clock the
-sending of packets. This mechanism, which is called *fast recovery*,
-effectively removes the slow start phase that happens between when
-fast retransmit detects a lost packet and additive increase
-begins. For example, fast recovery avoids the slow start period
-between 3.8 and 4 seconds in :numref:`Figure %s <fig-trace2>` and
-instead simply cuts the congestion window in half (from 22 KB to
-11 KB) and resumes additive increase. In other words, slow start is
-only used at the beginning of a connection and whenever a
-coarse-grained timeout occurs. At all other times, the congestion
-window is following a pure additive increase/multiplicative decrease
-pattern.
+Cuối cùng, còn một cải tiến nữa có thể thực hiện. Khi cơ chế truyền lại nhanh báo hiệu tắc nghẽn, thay vì giảm cửa sổ tắc nghẽn về một gói và chạy khởi động chậm, có thể sử dụng các ACK vẫn còn trong đường truyền để điều tiết việc gửi các gói. Cơ chế này, gọi là *phục hồi nhanh*, thực tế loại bỏ giai đoạn khởi động chậm xảy ra giữa lúc truyền lại nhanh phát hiện gói bị mất và tăng tuyến tính bắt đầu. Ví dụ, phục hồi nhanh tránh được giai đoạn khởi động chậm giữa 3,8 và 4 giây trong :numref:`Hình %s <fig-trace2>` và thay vào đó chỉ đơn giản là giảm cửa sổ tắc nghẽn một nửa (từ 22 KB xuống 11 KB) và tiếp tục tăng tuyến tính. Nói cách khác, khởi động chậm chỉ được sử dụng ở đầu kết nối và bất cứ khi nào xảy ra hết thời gian chờ thô. Ở tất cả các thời điểm khác, cửa sổ tắc nghẽn tuân theo mô hình tăng tuyến tính/giảm bội số thuần túy.
 
 6.3.4 TCP CUBIC
 ---------------
 
-A variant of the standard TCP algorithm just described, called CUBIC, is
-the default congestion control algorithm distributed with Linux. CUBIC’s
-primary goal is to support networks with large delay × bandwidth
-products, which are sometimes called *long-fat networks*. Such networks
-suffer from the original TCP algorithm requiring too many round-trips to
-reach the available capacity of the end-to-end path. CUBIC does this by
-being more aggressive in how it increases the window size, but of course
-the trick is to be more aggressive without being so aggressive as to
-adversely affect other flows.
+Một biến thể của thuật toán TCP tiêu chuẩn vừa mô tả, gọi là CUBIC, là thuật toán kiểm soát tắc nghẽn mặc định được phân phối cùng Linux. Mục tiêu chính của CUBIC là hỗ trợ các mạng có tích số trễ × băng thông lớn, đôi khi gọi là *mạng dài-béo* (long-fat networks). Các mạng như vậy gặp phải vấn đề thuật toán TCP gốc cần quá nhiều vòng lặp để đạt đến dung lượng có sẵn của đường truyền đầu-cuối. CUBIC làm điều này bằng cách chủ động hơn trong việc tăng kích thước cửa sổ, nhưng tất nhiên vấn đề là phải chủ động hơn mà không gây ảnh hưởng xấu đến các luồng khác.
 
-One important aspect of CUBIC’s approach is to adjust its congestion
-window at regular intervals, based on the amount of time that has
-elapsed since the last congestion event (e.g., the arrival of a
-duplicate ACK), rather than only when ACKs arrive (the latter being a
-function of RTT). This allows CUBIC to behave fairly when competing with
-short-RTT flows, which will have ACKs arriving more frequently.
+Một khía cạnh quan trọng trong cách tiếp cận của CUBIC là điều chỉnh cửa sổ tắc nghẽn theo các khoảng thời gian đều đặn, dựa trên lượng thời gian đã trôi qua kể từ sự kiện tắc nghẽn cuối cùng (ví dụ, sự xuất hiện của một ACK trùng lặp), thay vì chỉ khi các ACK đến (cái sau phụ thuộc vào RTT). Điều này cho phép CUBIC hoạt động công bằng khi cạnh tranh với các luồng có RTT ngắn, vốn sẽ nhận ACK thường xuyên hơn.
 
 .. _fig-cubic:
 .. figure:: figures/tcp/Slide1.png
    :width: 500px
    :align: center
 
-   Generic cubic function illustrating the change in the congestion
-   window as a function of time.
+   Hàm bậc ba tổng quát minh họa sự thay đổi của cửa sổ tắc nghẽn
+   theo thời gian.
 
-The second important aspect of CUBIC is its use of a cubic function to
-adjust the congestion window. The basic idea is easiest to understand
-by looking at the general shape of a cubic function, which has three
-phases: slowing growth, flatten plateau, increasing growth. A generic
-example is shown in :numref:`Figure %s <fig-cubic>`, which we have
-annotated with one extra piece of information: the maximum congestion
-window size achieved just before the last congestion event as a target
-(denoted :math:`W_{max}`). The idea is to start fast but slow the
-growth rate as you get close to :math:`W_{max}`, be cautious and have
-near-zero growth when close to :math:`W_{max}`, and then increase the
-growth rate as you move away from :math:`W_{max}`. The latter phase is
-essentially probing for a new achievable :math:`W_{max}`.
+Khía cạnh quan trọng thứ hai của CUBIC là sử dụng một hàm bậc ba để điều chỉnh cửa sổ tắc nghẽn. Ý tưởng cơ bản dễ hiểu nhất khi nhìn vào hình dạng tổng quát của một hàm bậc ba, có ba giai đoạn: tăng chậm, bằng phẳng, tăng nhanh. Một ví dụ tổng quát được thể hiện trong :numref:`Hình %s <fig-cubic>`, trong đó chúng tôi đã chú thích thêm một thông tin: kích thước cửa sổ tắc nghẽn lớn nhất đạt được ngay trước sự kiện tắc nghẽn cuối cùng làm mục tiêu (ký hiệu :math:`W_{max}`). Ý tưởng là bắt đầu nhanh nhưng làm chậm tốc độ tăng khi đến gần :math:`W_{max}`, thận trọng và gần như không tăng khi ở gần :math:`W_{max}`, và sau đó tăng tốc độ khi rời xa :math:`W_{max}`. Giai đoạn sau thực chất là dò tìm một :math:`W_{max}` mới có thể đạt được.
 
-Specifically, CUBIC computes the congestion window as a function of time
-(t) since the last congestion event
+Cụ thể, CUBIC tính toán cửa sổ tắc nghẽn như một hàm của thời gian (t) kể từ sự kiện tắc nghẽn cuối cùng
 
 .. math::
 
    \mathsf{CWND(t)} = \mathsf{C} \times \mathsf{(t-K)}^{3} + \mathsf{W}_{max}
 
-where
+trong đó
 
 .. math::
 
    \mathsf{K} =  \sqrt[3]{\mathsf{W}_{max} \times (1 - \beta{})/\mathsf{C}}
 
-C is a scaling constant and :math:`\beta` is the multiplicative
-decrease factor.  CUBIC sets the latter to 0.7 rather than the 0.5
-that standard TCP uses. Looking back at :numref:`Figure %s
-<fig-cubic>`, CUBIC is often described as shifting between a concave
-function to being convex (whereas standard TCP’s additive function is
-only convex).
+C là hằng số tỷ lệ và :math:`\beta` là hệ số giảm bội số. CUBIC đặt giá trị này là 0,7 thay vì 0,5 như TCP tiêu chuẩn. Nhìn lại :numref:`Hình %s <fig-cubic>`, CUBIC thường được mô tả là chuyển từ một hàm lõm sang một hàm lồi (trong khi hàm tuyến tính của TCP tiêu chuẩn chỉ là lồi).
