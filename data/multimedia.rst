@@ -1,258 +1,64 @@
-7.2 Multimedia Data
-===================
+7.2 Dữ liệu Đa phương tiện
+==========================
 
-Multimedia data, comprised of audio, video, and still images, now makes
-up the majority of traffic on the Internet. Part of what has made the
-widespread transmission of multimedia across networks possible is
-advances in compression technology. Because multimedia data is consumed
-mostly by humans using their senses—vision and hearing—and processed by
-the human brain, there are unique challenges to compressing it. You want
-to try to keep the information that is most important to a human, while
-getting rid of anything that doesn’t improve the human’s perception of
-the visual or auditory experience. Hence, both computer science and the
-study of human perception come into play. In this section, we’ll look at
-some of the major efforts in representing and compressing multimedia
-data.
+Dữ liệu đa phương tiện, bao gồm âm thanh, video và hình ảnh tĩnh, hiện chiếm phần lớn lưu lượng trên Internet. Một phần lý do khiến việc truyền tải rộng rãi dữ liệu đa phương tiện qua mạng trở nên khả thi là nhờ những tiến bộ trong công nghệ nén. Bởi vì dữ liệu đa phương tiện chủ yếu được con người tiêu thụ thông qua các giác quan—thị giác và thính giác—và được xử lý bởi não bộ con người, nên có những thách thức đặc biệt trong việc nén loại dữ liệu này. Bạn muốn giữ lại những thông tin quan trọng nhất đối với con người, đồng thời loại bỏ bất cứ thứ gì không cải thiện trải nghiệm thị giác hoặc thính giác. Do đó, cả khoa học máy tính và nghiên cứu về nhận thức của con người đều đóng vai trò quan trọng. Trong phần này, chúng ta sẽ xem xét một số nỗ lực lớn trong việc biểu diễn và nén dữ liệu đa phương tiện.
 
-The uses of compression are not limited to multimedia data of course—for
-example, you may well have used a utility like ``zip`` or ``compress``
-to compress files before sending them over a network, or to uncompress a
-data file after downloading. It turns out that the techniques used for
-compressing data—which are typically *lossless*, because most people
-don’t like to lose data from a file—also show up as part of the solution
-for multimedia compression. In contrast, *lossy compression*, commonly
-used for multimedia data, does not promise that the data received is
-exactly the same as the data sent. As noted above, this is because
-multimedia data often contains information that is of little utility to
-the human who receives it. Our senses and brains can only perceive so
-much detail. They are also very good at filling in missing pieces and
-even correcting some errors in what we see or hear. And, lossy
-algorithms typically achieve much better compression ratios than do
-their lossless counterparts; they can be an order of magnitude better or
-more.
+Tất nhiên, việc sử dụng nén không chỉ giới hạn ở dữ liệu đa phương tiện—ví dụ, bạn có thể đã từng dùng tiện ích như ``zip`` hoặc ``compress`` để nén tệp trước khi gửi qua mạng, hoặc để giải nén tệp dữ liệu sau khi tải về. Hóa ra các kỹ thuật dùng để nén dữ liệu—thường là *không mất dữ liệu* (lossless), vì hầu hết mọi người không muốn mất dữ liệu trong tệp—cũng xuất hiện như một phần của giải pháp cho nén đa phương tiện. Ngược lại, *nén mất dữ liệu* (lossy compression), thường dùng cho dữ liệu đa phương tiện, không đảm bảo rằng dữ liệu nhận được sẽ giống hệt dữ liệu đã gửi. Như đã đề cập ở trên, điều này là do dữ liệu đa phương tiện thường chứa thông tin ít hữu ích đối với người nhận. Các giác quan và não bộ của chúng ta chỉ có thể cảm nhận được một mức độ chi tiết nhất định. Chúng cũng rất giỏi trong việc bù đắp các phần bị thiếu và thậm chí sửa một số lỗi trong những gì chúng ta nhìn hoặc nghe thấy. Ngoài ra, các thuật toán nén mất dữ liệu thường đạt được tỷ lệ nén tốt hơn nhiều so với các thuật toán không mất dữ liệu; chúng có thể tốt hơn một bậc độ lớn hoặc hơn nữa.
 
-To get a sense of how important compression has been to the spread of
-networked multimedia, consider the following example. A high-definition
-TV screen has something like 1080 × 1920 pixels, each of which has 24
-bits of color information, so each frame is
+Để cảm nhận tầm quan trọng của nén đối với sự phát triển của đa phương tiện mạng, hãy xem xét ví dụ sau. Một màn hình TV độ nét cao có khoảng 1080 × 1920 điểm ảnh, mỗi điểm ảnh có 24 bit thông tin màu, vậy mỗi khung hình là
 
 .. centered:: 1080 × 1920 × 24 = 50 *Mb*
 
-so if you want to send 24 frames per second, that would be over
-1 Gbps.  That’s more than most Internet users have access to.  By
-contrast, modern compression techniques can get a reasonably
-high-quality HDTV signal down to the range of 10 Mbps, a two order of
-magnitude reduction and well within the reach of most broadband users.
-Similar compression gains apply to lower quality video such as YouTube
-clips—Web video could never have reached its current popularity
-without compression to make all those entertaining videos fit within
-the bandwidth of today’s networks.
+nên nếu bạn muốn gửi 24 khung hình mỗi giây, thì sẽ vượt quá 1 Gbps. Đó là nhiều hơn mức mà hầu hết người dùng Internet có thể truy cập. Ngược lại, các kỹ thuật nén hiện đại có thể giảm một tín hiệu HDTV chất lượng cao xuống khoảng 10 Mbps, tức là giảm hai bậc độ lớn và hoàn toàn nằm trong khả năng của hầu hết người dùng băng thông rộng. Các mức nén tương tự cũng áp dụng cho video chất lượng thấp hơn như các clip YouTube—video trên web sẽ không bao giờ đạt được mức phổ biến hiện nay nếu không có nén để các video giải trí đó phù hợp với băng thông của các mạng hiện đại.
 
-Compression techniques as applied to multimedia have been an area of
-great innovation, particularly lossy compression.  Lossless techniques
-also have an important role to play, however.  Indeed, most of the
-lossy techniques include some steps that are lossless, so we begin our
-discussion with an overview of lossless compression.
+Các kỹ thuật nén áp dụng cho đa phương tiện là một lĩnh vực đổi mới lớn, đặc biệt là nén mất dữ liệu. Tuy nhiên, các kỹ thuật không mất dữ liệu cũng đóng vai trò quan trọng. Thực tế, hầu hết các kỹ thuật nén mất dữ liệu đều bao gồm một số bước không mất dữ liệu, vì vậy chúng ta sẽ bắt đầu bằng tổng quan về nén không mất dữ liệu.
 
-7.2.1 Lossless Compression Techniques
--------------------------------------
+7.2.1 Kỹ thuật nén không mất dữ liệu
+------------------------------------
 
-In many ways, compression is inseparable from data encoding. When
-thinking about how to encode a piece of data in a set of bits, we might
-just as well think about how to encode the data in the smallest set of
-bits possible. For example, if you have a block of data that is made up
-of the 26 symbols A through Z, and if all of these symbols have an equal
-chance of occurring in the data block you are encoding, then encoding
-each symbol in 5 bits is the best you can do (since 2\ :sup:`5` = 32
-is the lowest power of 2 above 26). If, however, the symbol R occurs
-50% of the time, then it would be a good idea to use fewer bits to
-encode the R than any of the other symbols. In general, if you know the
-relative probability that each symbol will occur in the data, then you
-can assign a different number of bits to each possible symbol in a way
-that minimizes the number of bits it takes to encode a given block of
-data. This is the essential idea of *Huffman codes*, one of the
-important early developments in data compression.
+Ở nhiều khía cạnh, nén không thể tách rời với mã hóa dữ liệu. Khi nghĩ về cách mã hóa một phần dữ liệu thành một tập hợp các bit, chúng ta cũng có thể nghĩ về cách mã hóa dữ liệu bằng tập hợp bit nhỏ nhất có thể. Ví dụ, nếu bạn có một khối dữ liệu gồm 26 ký hiệu từ A đến Z, và nếu tất cả các ký hiệu này có xác suất xuất hiện như nhau trong khối dữ liệu bạn đang mã hóa, thì mã hóa mỗi ký hiệu bằng 5 bit là tốt nhất bạn có thể làm (vì 2\ :sup:`5` = 32 là lũy thừa nhỏ nhất của 2 lớn hơn 26). Tuy nhiên, nếu ký hiệu R xuất hiện 50% thời gian, thì sẽ hợp lý nếu dùng ít bit hơn để mã hóa R so với các ký hiệu khác. Nói chung, nếu bạn biết xác suất tương đối của mỗi ký hiệu xuất hiện trong dữ liệu, bạn có thể gán số bit khác nhau cho mỗi ký hiệu sao cho tổng số bit dùng để mã hóa một khối dữ liệu là nhỏ nhất. Đây là ý tưởng cốt lõi của *mã Huffman* (Huffman codes), một trong những phát triển quan trọng đầu tiên trong nén dữ liệu.
 
-Run Length Encoding
-~~~~~~~~~~~~~~~~~~~
+Mã hóa theo độ dài chuỗi (Run Length Encoding)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run length encoding (RLE) is a compression technique with a brute-force
-simplicity. The idea is to replace consecutive occurrences of a given
-symbol with only one copy of the symbol, plus a count of how many times
-that symbol occurs—hence, the name *run length*. For example, the string
-``AAABBCDDDD`` would be encoded as ``3A2B1C4D``.
+Mã hóa theo độ dài chuỗi (RLE) là một kỹ thuật nén với sự đơn giản thô sơ. Ý tưởng là thay thế các ký hiệu xuất hiện liên tiếp bằng chỉ một bản sao của ký hiệu đó, cộng với số lần ký hiệu xuất hiện—do đó có tên gọi *độ dài chuỗi*. Ví dụ, chuỗi ``AAABBCDDDD`` sẽ được mã hóa thành ``3A2B1C4D``.
 
-RLE turns out to be useful for compressing some classes of images. It
-can be used in this context by comparing adjacent pixel values and then
-encoding only the changes. For images that have large homogeneous
-regions, this technique is quite effective. For example, it is not
-uncommon that RLE can achieve compression ratios on the order of 8-to-1
-for scanned text images. RLE works well on such files because they often
-contain a large amount of white space that can be removed. For those old
-enough to remember the technology, RLE was the key compression algorithm
-used to transmit faxes. However, for images with even a small degree of
-local variation, it is not uncommon for compression to actually increase
-the image byte size, since it takes 2 bytes to represent a single symbol
-when that symbol is not repeated.
+RLE tỏ ra hữu ích khi nén một số loại hình ảnh nhất định. Nó có thể được sử dụng trong bối cảnh này bằng cách so sánh các giá trị điểm ảnh liền kề rồi chỉ mã hóa các thay đổi. Đối với các hình ảnh có vùng đồng nhất lớn, kỹ thuật này khá hiệu quả. Ví dụ, không hiếm khi RLE đạt tỷ lệ nén khoảng 8:1 cho hình ảnh văn bản quét. RLE hoạt động tốt với các tệp như vậy vì chúng thường chứa nhiều khoảng trắng có thể loại bỏ. Đối với những ai còn nhớ công nghệ cũ, RLE là thuật toán nén chủ chốt dùng để truyền fax. Tuy nhiên, với hình ảnh có thậm chí một chút biến thiên cục bộ, không hiếm khi nén thực tế lại làm tăng kích thước tệp, vì cần 2 byte để biểu diễn một ký hiệu khi ký hiệu đó không lặp lại.
 
-Differential Pulse Code Modulation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mã hóa vi sai (Differential Pulse Code Modulation)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Another simple lossless compression algorithm is Differential Pulse Code
-Modulation (DPCM). The idea here is to first output a reference symbol
-and then, for each symbol in the data, to output the difference between
-that symbol and the reference symbol. For example, using symbol A as the
-reference symbol, the string ``AAABBCDDDD`` would be encoded as
-``A0001123333`` because A is the same as the reference symbol, B has a
-difference of 1 from the reference symbol, and so on. Note that this
-simple example does not illustrate the real benefit of DPCM, which is
-that when the differences are small they can be encoded with fewer bits
-than the symbol itself. In this example, the range of differences, 0-3,
-can be represented with 2 bits each, rather than the 7 or 8 bits
-required by the full character. As soon as the difference becomes too
-large, a new reference symbol is selected.
+Một thuật toán nén không mất dữ liệu đơn giản khác là Mã hóa vi sai (DPCM). Ý tưởng ở đây là đầu tiên xuất ra một ký hiệu tham chiếu, sau đó, với mỗi ký hiệu trong dữ liệu, xuất ra hiệu số giữa ký hiệu đó và ký hiệu tham chiếu. Ví dụ, dùng ký hiệu A làm tham chiếu, chuỗi ``AAABBCDDDD`` sẽ được mã hóa thành ``A0001123333`` vì A giống ký hiệu tham chiếu, B lệch 1 so với ký hiệu tham chiếu, v.v. Lưu ý rằng ví dụ đơn giản này không minh họa lợi ích thực sự của DPCM, đó là khi các hiệu số nhỏ thì có thể mã hóa bằng ít bit hơn ký hiệu gốc. Trong ví dụ này, dải hiệu số 0-3 có thể biểu diễn bằng 2 bit mỗi ký hiệu, thay vì 7 hoặc 8 bit cho ký tự đầy đủ. Khi hiệu số quá lớn, sẽ chọn ký hiệu tham chiếu mới.
 
-DPCM works better than RLE for most digital imagery, since it takes
-advantage of the fact that adjacent pixels are usually similar. Due to
-this correlation, the dynamic range of the differences between the
-adjacent pixel values can be significantly less than the dynamic range
-of the original image, and this range can therefore be represented using
-fewer bits. Using DPCM, we have measured compression ratios of 1.5-to-1
-on digital images. DPCM also works on audio, because adjacent samples of
-an audio waveform are likely to be close in value.
+DPCM hoạt động tốt hơn RLE với hầu hết hình ảnh số, vì nó tận dụng thực tế là các điểm ảnh liền kề thường giống nhau. Nhờ sự tương quan này, dải động của hiệu số giữa các giá trị điểm ảnh liền kề có thể nhỏ hơn đáng kể so với dải động của hình ảnh gốc, và do đó có thể biểu diễn bằng ít bit hơn. Với DPCM, chúng tôi đo được tỷ lệ nén 1.5:1 trên hình ảnh số. DPCM cũng hoạt động với âm thanh, vì các mẫu liền kề của sóng âm thường có giá trị gần nhau.
 
-A slightly different approach, called *delta encoding*, simply encodes a
-symbol as the difference from the previous one. Thus, for example,
-``AAABBCDDDD`` would be represented as ``A001011000``. Note that delta
-encoding is likely to work well for encoding images where adjacent
-pixels are similar. It is also possible to perform RLE after delta
-encoding, since we might find long strings of 0s if there are many
-similar symbols next to each other.
+Một cách tiếp cận hơi khác, gọi là *mã hóa delta* (delta encoding), chỉ đơn giản mã hóa một ký hiệu là hiệu số so với ký hiệu trước đó. Ví dụ, ``AAABBCDDDD`` sẽ được biểu diễn thành ``A001011000``. Lưu ý rằng mã hóa delta có thể hoạt động tốt khi mã hóa hình ảnh mà các điểm ảnh liền kề giống nhau. Cũng có thể thực hiện RLE sau mã hóa delta, vì có thể xuất hiện các chuỗi dài số 0 nếu có nhiều ký hiệu giống nhau liền kề.
 
-Dictionary-Based Methods
-~~~~~~~~~~~~~~~~~~~~~~~~
+Phương pháp dựa trên từ điển (Dictionary-Based Methods)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The final lossless compression method we consider is the
-dictionary-based approach, of which the Lempel-Ziv (LZ) compression
-algorithm is the best known. The Unix ``compress`` and ``gzip``
-commands use variants of the LZ algorithm.
+Phương pháp nén không mất dữ liệu cuối cùng mà chúng ta xét đến là phương pháp dựa trên từ điển, trong đó thuật toán nén Lempel-Ziv (LZ) là nổi tiếng nhất. Các lệnh ``compress`` và ``gzip`` trên Unix sử dụng các biến thể của thuật toán LZ.
 
-The idea of a dictionary-based compression algorithm is to build a
-dictionary (table) of variable-length strings (think of them as common
-phrases) that you expect to find in the data and then to replace each of
-these strings when it appears in the data with the corresponding index
-to the dictionary. For example, instead of working with individual
-characters in text data, you could treat each word as a string and
-output the index in the dictionary for that word. To further elaborate
-on this example, the word *compression* has the index 4978 in one
-particular dictionary; it is the 4978th word in
-``/usr/share/dict/words``. To compress a body of
-text, each time the string “compression” appears, it would be replaced
-by 4978. Since this particular dictionary has just over 25,000 words in
-it, it would take 15 bits to encode the index, meaning that the string
-“compression” could be represented in 15 bits rather than the 77 bits
-required by 7-bit ASCII. This is a compression ratio of 5-to-1! At
-another data point, we were able to get a 2-to-1 compression ratio when
-we applied the ``compress`` command to the source code for the protocols
-described in this book.
+Ý tưởng của thuật toán nén dựa trên từ điển là xây dựng một từ điển (bảng) các chuỗi có độ dài biến đổi (có thể coi như các cụm từ phổ biến) mà bạn kỳ vọng sẽ xuất hiện trong dữ liệu, sau đó thay thế mỗi chuỗi này khi nó xuất hiện trong dữ liệu bằng chỉ số tương ứng trong từ điển. Ví dụ, thay vì làm việc với từng ký tự riêng lẻ trong dữ liệu văn bản, bạn có thể coi mỗi từ là một chuỗi và xuất ra chỉ số trong từ điển cho từ đó. Để minh họa thêm, từ *compression* có chỉ số 4978 trong một từ điển cụ thể; nó là từ thứ 4978 trong ``/usr/share/dict/words``. Để nén một đoạn văn bản, mỗi lần chuỗi “compression” xuất hiện sẽ được thay bằng 4978. Vì từ điển này có hơn 25.000 từ, cần 15 bit để mã hóa chỉ số, nghĩa là từ “compression” có thể biểu diễn bằng 15 bit thay vì 77 bit nếu dùng ASCII 7 bit. Đây là tỷ lệ nén 5:1! Ở một ví dụ khác, chúng tôi đạt tỷ lệ nén 2:1 khi áp dụng lệnh ``compress`` cho mã nguồn các giao thức mô tả trong cuốn sách này.
 
-Of course, this leaves the question of where the dictionary comes from.
-One option is to define a static dictionary, preferably one that is
-tailored for the data being compressed. A more general solution, and the
-one used by LZ compression, is to adaptively define the dictionary based
-on the contents of the data being compressed. In this case, however, the
-dictionary constructed during compression has to be sent along with the
-data so that the decompression half of the algorithm can do its job.
-Exactly how you build an adaptive dictionary has been a subject of
-extensive research.
+Tất nhiên, câu hỏi đặt ra là từ điển lấy ở đâu. Một lựa chọn là định nghĩa một từ điển tĩnh, tốt nhất là phù hợp với dữ liệu cần nén. Một giải pháp tổng quát hơn, và là cách mà LZ sử dụng, là định nghĩa từ điển một cách thích nghi dựa trên nội dung dữ liệu cần nén. Tuy nhiên, trong trường hợp này, từ điển xây dựng trong quá trình nén phải được gửi kèm với dữ liệu để thuật toán giải nén có thể hoạt động. Cách xây dựng từ điển thích nghi như thế nào là chủ đề của nhiều nghiên cứu chuyên sâu.
 
-7.2.2 Image Representation and Compression (GIF, JPEG)
-------------------------------------------------------
+7.2.2 Biểu diễn và nén hình ảnh (GIF, JPEG)
+--------------------------------------------
 
-Given the ubiquitous use of digital imagery—this use was spawned by the
-invention of graphical displays, not high-speed networks—the need for
-standard representation formats and compression algorithms for digital
-imagery data has become essential. In response to this need, the ISO
-defined a digital image format known as *JPEG*, named after the Joint
-Photographic Experts Group that designed it. (The “Joint” in JPEG stands
-for a joint ISO/ITU effort.) JPEG is the most widely used format for
-still images in use today. At the heart of the definition of the format
-is a compression algorithm, which we describe below. Many techniques
-used in JPEG also appear in MPEG, the set of standards for video
-compression and transmission created by the Moving Picture Experts
-Group.
+Với việc sử dụng hình ảnh số phổ biến—việc này xuất phát từ sự ra đời của màn hình đồ họa chứ không phải mạng tốc độ cao—nhu cầu về các định dạng biểu diễn chuẩn và thuật toán nén cho dữ liệu hình ảnh số trở nên thiết yếu. Đáp ứng nhu cầu này, ISO đã định nghĩa một định dạng hình ảnh số gọi là *JPEG*, đặt theo tên Nhóm Chuyên gia Ảnh (Joint Photographic Experts Group) đã thiết kế nó. (Chữ “Joint” trong JPEG là sự hợp tác giữa ISO và ITU.) JPEG là định dạng phổ biến nhất cho hình ảnh tĩnh hiện nay. Trọng tâm của định nghĩa định dạng này là một thuật toán nén, sẽ được mô tả dưới đây. Nhiều kỹ thuật dùng trong JPEG cũng xuất hiện trong MPEG, bộ tiêu chuẩn cho nén và truyền video do Nhóm Chuyên gia Hình ảnh Động (Moving Picture Experts Group) xây dựng.
 
-Before delving into the details of JPEG, we observe that there are quite
-a few steps to get from a digital image to a compressed representation
-of that image that can be transmitted, decompressed, and displayed
-correctly by a receiver. You probably know that digital images are made
-up of pixels (hence, the megapixels quoted in smartphone camera
-advertisements). Each pixel represents one location in the
-two-dimensional grid that makes up the image, and for color images each
-pixel has some numerical value representing a color. There are lots of
-ways to represent colors, referred to as *color spaces*; the one most
-people are familiar with is RGB (red, green, blue). You can think of
-color as being a three dimensional quantity—you can make any color out
-of red, green, and blue light in different amounts. In a
-three-dimensional space, there are lots of different, valid ways to
-describe a given point (consider Cartesian and polar coordinates, for
-example). Similarly, there are various ways to describe a color using
-three quantities, and the most common alternative to RGB is YUV. The Y
-is luminance, roughly the overall brightness of the pixel, and U and V
-contain chrominance, or color information. Confoundingly, there are a
-few different variants of the YUV color space as well. More on this in a
-moment.
+Trước khi đi vào chi tiết JPEG, chúng ta nhận thấy có khá nhiều bước để chuyển từ một hình ảnh số sang một biểu diễn nén có thể truyền, giải nén và hiển thị đúng ở phía nhận. Bạn có thể biết rằng hình ảnh số được tạo thành từ các điểm ảnh (pixel)—do đó có khái niệm megapixel trong quảng cáo máy ảnh điện thoại. Mỗi điểm ảnh đại diện cho một vị trí trong lưới hai chiều tạo nên hình ảnh, và với hình ảnh màu, mỗi điểm ảnh có một giá trị số biểu diễn màu sắc. Có nhiều cách để biểu diễn màu, gọi là *không gian màu* (color spaces); cách quen thuộc nhất là RGB (đỏ, xanh lá, xanh dương). Bạn có thể coi màu sắc là một đại lượng ba chiều—có thể tạo ra bất kỳ màu nào từ các lượng khác nhau của ba màu cơ bản. Trong không gian ba chiều, có nhiều cách hợp lệ để mô tả một điểm (ví dụ, tọa độ Đề-các và tọa độ cực). Tương tự, có nhiều cách để mô tả màu bằng ba đại lượng, và cách thay thế phổ biến nhất cho RGB là YUV. Y là độ sáng (luminance), xấp xỉ độ sáng tổng thể của điểm ảnh, còn U và V chứa thông tin màu (chrominance). Thực tế, có một số biến thể khác nhau của không gian màu YUV. Sẽ nói thêm về điều này ở phần sau.
 
-The significance of this discussion is that the encoding and
-transmission of color images (either still or moving) requires agreement
-between the two ends on the color space. Otherwise, of course, you’d end
-up with different colors being displayed by the receiver than were
-captured by the sender. Hence, agreeing on a color space definition (and
-perhaps a way to communicate which particular space is in use) is part
-of the definition of any image or video format.
+Ý nghĩa của thảo luận này là việc mã hóa và truyền hình ảnh màu (tĩnh hoặc động) đòi hỏi hai đầu phải thống nhất về không gian màu. Nếu không, phía nhận có thể hiển thị màu khác với màu mà phía gửi ghi nhận. Do đó, việc thống nhất định nghĩa không gian màu (và có thể là cách truyền đạt không gian màu nào đang dùng) là một phần của định nghĩa bất kỳ định dạng hình ảnh hoặc video nào.
 
-Let’s look at the example of the Graphical Interchange Format (GIF). GIF
-uses the RGB color space and starts out with 8 bits to represent each of
-the three dimensions of color for a total of 24 bits. Rather than
-sending those 24 bits per pixel, however, GIF first reduces 24-bit color
-images to 8-bit color images. This is done by identifying the colors
-used in the picture, of which there will typically be considerably fewer
-than 2\ :sup:`24`, and then picking the 256 colors that most closely
-approximate the colors used in the picture. There might be more than 256
-colors, however, so the trick is to try not to distort the color too much
-by picking 256 colors such that no pixel has its color changed too much.
+Hãy xem ví dụ về Định dạng Trao đổi Đồ họa (GIF). GIF sử dụng không gian màu RGB và bắt đầu với 8 bit cho mỗi trong ba thành phần màu, tổng cộng 24 bit. Tuy nhiên, thay vì gửi 24 bit cho mỗi điểm ảnh, GIF trước tiên giảm hình ảnh màu 24 bit xuống hình ảnh màu 8 bit. Điều này thực hiện bằng cách xác định các màu được sử dụng trong bức ảnh, thường sẽ ít hơn nhiều so với 2\ :sup:`24`, rồi chọn ra 256 màu gần nhất với các màu thực tế trong ảnh. Có thể có nhiều hơn 256 màu, nên thủ thuật là cố gắng không làm biến dạng màu quá nhiều bằng cách chọn 256 màu sao cho không điểm ảnh nào bị thay đổi màu quá lớn.
 
-The 256 colors are stored in a table, which can be indexed with an 8-bit
-number, and the value for each pixel is replaced by the appropriate
-index. Note that this is an example of lossy compression for any picture
-with more than 256 colors. GIF then runs an LZ variant over the result,
-treating common sequences of pixels as the strings that make up the
-dictionary—a lossless operation. Using this approach, GIF is sometimes
-able to achieve compression ratios on the order of 10:1, but only when
-the image consists of a relatively small number of discrete colors.
-Graphical logos, for example, are handled well by GIF. Images of natural
-scenes, which often include a more continuous spectrum of colors, cannot
-be compressed at this ratio using GIF. It is also not too hard for a
-human eye to detect the distortion caused by the lossy color reduction
-of GIF in some cases.
+256 màu này được lưu trong một bảng, có thể đánh chỉ số bằng số 8 bit, và giá trị của mỗi điểm ảnh được thay bằng chỉ số phù hợp. Lưu ý rằng đây là ví dụ về nén mất dữ liệu đối với bất kỳ ảnh nào có hơn 256 màu. Sau đó, GIF chạy một biến thể của LZ trên kết quả, coi các chuỗi điểm ảnh phổ biến là các chuỗi tạo nên từ điển—một thao tác không mất dữ liệu. Với cách tiếp cận này, GIF đôi khi đạt tỷ lệ nén khoảng 10:1, nhưng chỉ khi hình ảnh có số lượng màu rời rạc tương đối nhỏ. Logo đồ họa, chẳng hạn, được GIF xử lý tốt. Hình ảnh cảnh vật tự nhiên, thường có phổ màu liên tục hơn, không thể nén ở tỷ lệ này bằng GIF. Ngoài ra, mắt người cũng dễ nhận ra biến dạng do giảm màu mất dữ liệu của GIF trong một số trường hợp.
 
-The JPEG format is considerably more well suited to photographic images,
-as you would hope given the name of the group that created it. JPEG does
-not reduce the number of colors like GIF. Instead, JPEG starts off by
-transforming the RGB colors (which are what you usually get out of a
-digital camera) to the YUV space. The reason for this has to do with the
-way the eye perceives images. There are receptors in the eye for
-brightness, and separate receptors for color. Because we’re very good at
-perceiving variations in brightness, it makes sense to spend more bits
-on transmitting brightness information. Since the Y component of YUV is,
-roughly, the brightness of the pixel, we can compress that component
-separately, and less aggressively, from the other two (chrominance)
-components.
+Định dạng JPEG phù hợp hơn nhiều với hình ảnh chụp thực tế, như bạn mong đợi từ tên của nhóm tạo ra nó. JPEG không giảm số lượng màu như GIF. Thay vào đó, JPEG bắt đầu bằng cách chuyển đổi màu RGB (thường là đầu ra của máy ảnh số) sang không gian YUV. Lý do là do cách mắt người cảm nhận hình ảnh. Mắt có các thụ thể cho độ sáng và các thụ thể riêng cho màu sắc. Vì chúng ta rất nhạy với biến thiên độ sáng, nên hợp lý khi dành nhiều bit hơn để truyền thông tin độ sáng. Vì thành phần Y của YUV là độ sáng của điểm ảnh, chúng ta có thể nén thành phần này riêng biệt, và ít mạnh tay hơn so với hai thành phần màu (chrominance) còn lại.
 
-As noted above, YUV and RGB are alternative ways to describe a point in
-a 3-dimensional space, and it’s possible to convert from one color space
-to another using linear equations. For one YUV space that is commonly
-used to represent digital images, the equations are:
+Như đã đề cập, YUV và RGB là hai cách thay thế để mô tả một điểm trong không gian ba chiều, và có thể chuyển đổi qua lại bằng các phương trình tuyến tính. Với một không gian YUV thường dùng cho hình ảnh số, các phương trình là:
 
 ::
 
@@ -260,95 +66,34 @@ used to represent digital images, the equations are:
    U = (B-Y) x 0.565
    V =  (R-Y) x 0.713
 
-The exact values of the constants here are not important, as long as the
-encoder and decoder agree on what they are. (The decoder will have to
-apply the inverse transformations to recover the RGB components needed
-to drive a display.) The constants are, however, carefully chosen based
-on the human perception of color. You can see that Y, the luminance, is
-a sum of the red, green, and blue components, while U and V are color
-difference components. U represents the difference between the luminance
-and blue, and V the difference between luminance and red. You may notice
-that setting R, G, and B to their maximum values (which would be 255 for
-8-bit representations) will also produce a value of Y=255 while U and V
-in this case would be zero. That is, a fully white pixel is
-(255,255,255) in RGB space and (255,0,0) in YUV space.
+Giá trị chính xác của các hằng số này không quan trọng, miễn là bộ mã hóa và giải mã thống nhất với nhau. (Bộ giải mã sẽ phải áp dụng phép biến đổi ngược để thu lại các thành phần RGB cần thiết cho hiển thị.) Tuy nhiên, các hằng số này được chọn cẩn thận dựa trên nhận thức màu của con người. Bạn có thể thấy Y, độ sáng, là tổng của các thành phần đỏ, xanh lá và xanh dương, còn U và V là các thành phần chênh lệch màu. U là hiệu giữa độ sáng và xanh dương, V là hiệu giữa độ sáng và đỏ. Bạn cũng có thể nhận thấy rằng đặt R, G, B ở giá trị tối đa (255 với biểu diễn 8 bit) cũng cho giá trị Y=255, còn U và V bằng 0. Tức là, một điểm ảnh trắng hoàn toàn là (255,255,255) trong RGB và (255,0,0) trong YUV.
 
 .. _fig-yuvsub:
 .. figure:: figures/f07-11-9780123850591.png
    :width: 500px
    :align: center
 
-   Subsampling the U and V components of an image.
+   Lấy mẫu thưa các thành phần U và V của một hình ảnh.
 
-Once the image has been transformed into YUV space, we can now think
-about compressing each of the three components separately. We want to
-be more aggressive in compressing the U and V components, to which
-human eyes are less sensitive. One way to compress the U and V
-components is to *subsample* them. The basic idea of subsampling is to
-take a number of adjacent pixels, calculate the average U or V value
-for that group of pixels, and transmit that, rather than sending the
-value for every pixel. :numref:`Figure %s <fig-yuvsub>` illustrates
-the point. The luminance (Y) component is not subsampled, so the Y
-value of all the pixels will be transmitted, as indicated by the 16 ×
-16 grid of pixels on the left. In the case of U and V, we treat each
-group of four adjacent pixels as a group, calculate the average of the
-U or V value for that group, and transmit that. Hence, we end up with
-an 8 × 8 grid of U and V values to transmit. Thus, in this example,
-for every four pixels, we transmit six values (four Y and one each of
-U and V) rather than the original 12 values (four each for all three
-components), for a 50% reduction in information.
+Sau khi chuyển đổi hình ảnh sang không gian YUV, chúng ta có thể nghĩ đến việc nén riêng từng thành phần. Ta muốn nén mạnh tay hơn với các thành phần U và V, mà mắt người ít nhạy cảm hơn. Một cách để nén U và V là *lấy mẫu thưa* (subsample) chúng. Ý tưởng cơ bản của lấy mẫu thưa là lấy một số điểm ảnh liền kề, tính giá trị trung bình U hoặc V cho nhóm đó, rồi truyền giá trị này thay vì truyền giá trị cho từng điểm ảnh. :numref:`Hình %s <fig-yuvsub>` minh họa điều này. Thành phần độ sáng (Y) không được lấy mẫu thưa, nên giá trị Y của tất cả điểm ảnh sẽ được truyền, như lưới 16 × 16 điểm ảnh bên trái. Với U và V, mỗi nhóm bốn điểm ảnh liền kề được coi là một nhóm, tính trung bình U hoặc V cho nhóm đó và truyền đi. Kết quả là ta có lưới 8 × 8 giá trị U và V để truyền. Như vậy, trong ví dụ này, với mỗi bốn điểm ảnh, ta truyền sáu giá trị (bốn Y và một U, một V) thay vì 12 giá trị ban đầu (bốn cho mỗi thành phần), giảm 50% thông tin.
 
-It’s worth noting that you could be either more or less aggressive in
-the subsampling, with corresponding increases in compression and
-decreases in quality. The subsampling approach shown here, in which
-chrominance is subsampled by a factor of two in both horizontal and
-vertical directions (and which goes by the identification 4:2:0),
-happens to match the most common approach used for both JPEG and MPEG.
+Lưu ý rằng bạn có thể lấy mẫu thưa mạnh tay hơn hoặc nhẹ hơn, với mức nén tăng lên và chất lượng giảm đi tương ứng. Cách lấy mẫu thưa trình bày ở đây, trong đó chrominance được lấy mẫu thưa theo cả chiều ngang và dọc với hệ số hai (ký hiệu 4:2:0), là cách phổ biến nhất dùng cho cả JPEG và MPEG.
 
 .. _fig-jpeg:
 .. figure:: figures/f07-12-9780123850591.png
    :width: 550px
    :align: center
 
-   Block diagram of JPEG compression.
+   Sơ đồ khối nén JPEG.
 
-Once subsampling is done, we now have three grids of pixels to deal
-with, and each one is dealt with separately. JPEG compression of each
-component takes place in three phases, as illustrated in :numref:`Figure
-%s <fig-jpeg>`. On the compression side, the image is fed through these
-three phases one 8 × 8 block at a time. The first phase applies the
-discrete cosine transform (DCT) to the block. If you think of the image
-as a signal in the spatial domain, then DCT transforms this signal into
-an equivalent signal in the *spatial frequency* domain. This is a
-lossless operation but a necessary precursor to the next, lossy step.
-After the DCT, the second phase applies a quantization to the resulting
-signal and, in so doing, loses the least significant information
-contained in that signal. The third phase encodes the final result, but
-in so doing also adds an element of lossless compression to the lossy
-compression achieved by the first two phases. Decompression follows
-these same three phases, but in reverse order.
+Sau khi lấy mẫu thưa, ta có ba lưới điểm ảnh để xử lý, mỗi lưới được xử lý riêng biệt. Nén JPEG cho mỗi thành phần diễn ra qua ba pha, như minh họa ở :numref:`Hình %s <fig-jpeg>`. Ở phía nén, hình ảnh được đưa qua ba pha này từng khối 8 × 8 điểm ảnh một. Pha đầu tiên áp dụng biến đổi cosin rời rạc (DCT) cho khối. Nếu coi hình ảnh là một tín hiệu trong miền không gian, thì DCT biến đổi tín hiệu này thành tín hiệu tương đương trong miền *tần số không gian*. Đây là thao tác không mất dữ liệu nhưng là bước tiền đề cần thiết cho bước tiếp theo, là bước mất dữ liệu. Sau DCT, pha thứ hai áp dụng lượng tử hóa cho tín hiệu kết quả và loại bỏ các thông tin ít quan trọng nhất. Pha thứ ba mã hóa kết quả cuối cùng, đồng thời bổ sung nén không mất dữ liệu vào nén mất dữ liệu đã đạt được ở hai pha đầu. Quá trình giải nén đi theo ba pha này nhưng theo thứ tự ngược lại.
 
-DCT Phase
-~~~~~~~~~
+Pha DCT
+~~~~~~~
 
-DCT is a transformation closely related to the fast Fourier transform
-(FFT). It takes an 8 × 8 matrix of pixel values as input and outputs an
-8 × 8 matrix of frequency coefficients. You can think of the input
-matrix as a 64-point signal that is defined in two spatial dimensions
-(*x* and *y*); DCT breaks this signal into 64 spatial frequencies. To
-get an intuitive feel for spatial frequency, imagine yourself moving
-across a picture in, say, the *x* direction. You would see the value of
-each pixel varying as some function of *x*. If this value changes slowly
-with increasing *x*, then it has a low spatial frequency; if it changes
-rapidly, it has a high spatial frequency. So the low frequencies
-correspond to the gross features of the picture, while the high
-frequencies correspond to fine detail. The idea behind the DCT is to
-separate the gross features, which are essential to viewing the image,
-from the fine detail, which is less essential and, in some cases, might
-be barely perceived by the eye.
+DCT là một phép biến đổi liên quan chặt chẽ với biến đổi Fourier nhanh (FFT). Nó nhận vào một ma trận 8 × 8 giá trị điểm ảnh và xuất ra một ma trận 8 × 8 hệ số tần số. Bạn có thể coi ma trận đầu vào là một tín hiệu 64 điểm xác định trong hai chiều không gian (*x* và *y*); DCT phân tích tín hiệu này thành 64 tần số không gian. Để hình dung trực quan về tần số không gian, hãy tưởng tượng bạn di chuyển qua một bức ảnh theo hướng *x*. Bạn sẽ thấy giá trị mỗi điểm ảnh thay đổi theo một hàm nào đó của *x*. Nếu giá trị này thay đổi chậm khi *x* tăng, thì đó là tần số không gian thấp; nếu thay đổi nhanh, là tần số cao. Vậy các tần số thấp tương ứng với các đặc trưng tổng thể của ảnh, còn tần số cao tương ứng với chi tiết nhỏ. Ý tưởng của DCT là tách biệt các đặc trưng tổng thể, vốn thiết yếu cho việc xem ảnh, khỏi các chi tiết nhỏ, vốn ít thiết yếu hơn và đôi khi mắt người khó nhận ra.
 
-DCT, along with its inverse, which recovers the original pixels and
-during decompression, are defined by the following formulas:
+DCT và phép biến đổi ngược của nó, dùng để thu lại điểm ảnh gốc khi giải nén, được định nghĩa bởi các công thức sau:
 
 .. math::
 
@@ -363,44 +108,20 @@ during decompression, are defined by the following formulas:
     \cos \left[ \frac{(2y+1)j \pi}{2N}\right]
    \end{aligned}
 
-where :math:`C(x) = 1/\sqrt{2}` when :math:`x=0` and :math:`1` when
-:math:`x>0`, and :math:`pixel(x,y)` is the grayscale value of the pixel
-at position *(x,y)* in the 8 × 8 block being compressed; N = 8 in this case.
+trong đó :math:`C(x) = 1/\sqrt{2}` khi :math:`x=0` và :math:`1` khi
+:math:`x>0`, và :math:`pixel(x,y)` là giá trị xám của điểm ảnh tại vị trí *(x,y)* trong khối 8 × 8 đang được nén; N = 8 trong trường hợp này.
 
-The first frequency coefficient, at location (0,0) in the output matrix,
-is called the *DC coefficient*. Intuitively, we can see that the DC
-coefficient is a measure of the average value of the 64 input pixels.
-The other 63 elements of the output matrix are called the *AC
-coefficients*. They add the higher-spatial-frequency information to this
-average value. Thus, as you go from the first frequency coefficient
-toward the 64th frequency coefficient, you are moving from low-frequency
-information to high-frequency information, from the broad strokes of the
-image to finer and finer detail. These higher-frequency coefficients are
-increasingly unimportant to the perceived quality of the image. It is
-the second phase of JPEG that decides which portion of which
-coefficients to throw away.
+Hệ số tần số đầu tiên, tại vị trí (0,0) trong ma trận đầu ra, gọi là *hệ số DC*. Trực giác mà nói, hệ số DC đo giá trị trung bình của 64 điểm ảnh đầu vào. 63 phần tử còn lại của ma trận đầu ra gọi là *hệ số AC*. Chúng bổ sung thông tin tần số không gian cao hơn vào giá trị trung bình này. Như vậy, khi đi từ hệ số đầu tiên đến hệ số thứ 64, bạn đi từ thông tin tần số thấp đến tần số cao, từ các nét lớn của ảnh đến chi tiết nhỏ hơn. Các hệ số tần số cao này ngày càng ít quan trọng đối với chất lượng cảm nhận của ảnh. Chính pha thứ hai của JPEG quyết định phần nào của các hệ số này sẽ bị loại bỏ.
 
-Quantization Phase
-~~~~~~~~~~~~~~~~~~
+Pha lượng tử hóa (Quantization)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The second phase of JPEG is where the compression becomes lossy. DCT
-does not itself lose information; it just transforms the image into a
-form that makes it easier to know what information to remove. (Although
-not lossy, *per se*, there is of course some loss of precision during
-the DCT phase because of the use of fixed-point arithmetic.)
-Quantization is easy to understand—it’s simply a matter of dropping the
-insignificant bits of the frequency coefficients.
+Pha thứ hai của JPEG là nơi nén trở nên mất dữ liệu. DCT tự nó không làm mất thông tin; nó chỉ biến đổi ảnh thành dạng dễ biết phần nào nên loại bỏ. (Dù không mất dữ liệu, nhưng thực tế có thể mất một chút độ chính xác do dùng số học dấu phẩy cố định trong pha DCT.) Lượng tử hóa rất dễ hiểu—chỉ đơn giản là loại bỏ các bit không quan trọng của các hệ số tần số.
 
-To see how the quantization phase works, imagine that you want to
-compress some whole numbers less than 100, such as 45, 98, 23, 66, and
-7. If you decided that knowing these numbers truncated to the nearest
-multiple of 10 is sufficient for your purposes, then you could divide
-each number by the quantum 10 using integer arithmetic, yielding 4, 9,
-2, 6, and 0. These numbers can each be encoded in 4 bits rather than the
-7 bits needed to encode the original numbers.
+Để hiểu pha lượng tử hóa hoạt động thế nào, hãy tưởng tượng bạn muốn nén một số nguyên nhỏ hơn 100, như 45, 98, 23, 66, và 7. Nếu bạn quyết định chỉ cần biết các số này làm tròn đến bội số 10 là đủ, bạn có thể chia mỗi số cho 10 rồi làm tròn xuống, được 4, 9, 2, 6, và 0. Các số này có thể mã hóa bằng 4 bit thay vì 7 bit cho số gốc.
 
 .. _tab-quant:
-.. table::  Example JPEG Quantization Table.
+.. table::  Bảng lượng tử hóa ví dụ của JPEG.
    :widths: auto
    :align: center
 
@@ -424,29 +145,15 @@ each number by the quantum 10 using integer arithmetic, yielding 4, 9,
    | 17      | 19 | 21 | 23 | 25 | 27 | 29 | 31 |
    +---------+----+----+----+----+----+----+----+
 
-Rather than using the same quantum for all 64 coefficients, JPEG uses
-a quantization table that gives the quantum to use for each of the
-coefficients, as specified in the formula given below. You can think
-of this table (``Quantum``) as a parameter that can be set to control
-how much information is lost and, correspondingly, how much
-compression is achieved. In practice, the JPEG standard specifies a
-set of quantization tables that have proven effective in compressing
-digital images; an example quantization table is given in
-:numref:`Table %s <tab-quant>`. In tables like this one, the low
-coefficients have a quantum close to 1 (meaning that little
-low-frequency information is lost) and the high coefficients have
-larger values (meaning that more high-frequency information is
-lost). Notice that as a result of such quantization tables many of the
-high-frequency coefficients end up being set to 0 after quantization,
-making them ripe for further compression in the third phase.
+Thay vì dùng cùng một lượng tử cho tất cả 64 hệ số, JPEG dùng một bảng lượng tử hóa cho biết lượng tử dùng cho từng hệ số, như công thức dưới đây. Bạn có thể coi bảng này (``Quantum``) là một tham số có thể điều chỉnh để kiểm soát mức độ thông tin bị mất và mức độ nén đạt được. Trong thực tế, chuẩn JPEG quy định một tập các bảng lượng tử hóa đã chứng minh hiệu quả trong nén hình ảnh số; một ví dụ được cho ở :numref:`Bảng %s <tab-quant>`. Trong các bảng như vậy, các hệ số thấp có lượng tử gần 1 (nghĩa là ít thông tin tần số thấp bị mất), còn các hệ số cao có giá trị lớn hơn (nghĩa là nhiều thông tin tần số cao bị mất hơn). Lưu ý rằng do các bảng lượng tử hóa như vậy, nhiều hệ số tần số cao sẽ bị đặt thành 0 sau lượng tử hóa, tạo điều kiện cho nén tiếp ở pha thứ ba.
 
-The basic quantization equation is
+Phương trình lượng tử hóa cơ bản là
 
 ::
 
    QuantizedValue(i,j) = IntegerRound(DCT(i,j)/Quantum(i,j))
 
-where
+trong đó
 
 ::
 
@@ -454,489 +161,162 @@ where
        Floor(x + 0.5) if x >= 0
        Floor(x - 0.5) if x < 0
 
-Decompression is then simply defined as
+Giải nén đơn giản là
 
 ::
 
    DCT(i,j) = QuantizedValue(i,j) x Quantum(i,j)
 
-For example, if the DC coefficient (i.e., DCT(0,0)) for a particular
-block was equal to 25, then the quantization of this value using
-:numref:`Table %s <tab-quant>` would result in
+Ví dụ, nếu hệ số DC (tức là DCT(0,0)) cho một khối là 25, thì lượng tử hóa giá trị này dùng :numref:`Bảng %s <tab-quant>` sẽ cho
 
 ::
 
    Floor(25/3+0.5) = 8
 
-During decompression, this coefficient would then be restored as 8 × 3 =
-24.
+Khi giải nén, hệ số này sẽ được khôi phục thành 8 × 3 = 24.
 
-Encoding Phase
-~~~~~~~~~~~~~~
+Pha mã hóa (Encoding)
+~~~~~~~~~~~~~~~~~~~~~
 
-The final phase of JPEG encodes the quantized frequency coefficients
-in a compact form. This results in additional compression, but this
-compression is lossless. Starting with the DC coefficient in position
-(0,0), the coefficients are processed in the zigzag sequence shown in
-:numref:`Figure %s <fig-zigzag>`. Along this zigzag, a form of run
-length encoding is used—RLE is applied to only the 0 coefficients,
-which is significant because many of the later coefficients are 0. The
-individual coefficient values are then encoded using a Huffman
-code. (The JPEG standard allows the implementer to use an arithmetic
-coding instead of the Huffman code.)
+Pha cuối cùng của JPEG là mã hóa các hệ số tần số đã lượng tử hóa thành dạng gọn. Điều này mang lại nén bổ sung, nhưng là nén không mất dữ liệu. Bắt đầu từ hệ số DC ở vị trí (0,0), các hệ số được xử lý theo trình tự zigzag như ở :numref:`Hình %s <fig-zigzag>`. Theo trình tự zigzag này, một dạng mã hóa theo độ dài chuỗi được áp dụng—RLE chỉ áp dụng cho các hệ số 0, điều này quan trọng vì nhiều hệ số về sau là 0. Giá trị từng hệ số sau đó được mã hóa bằng mã Huffman. (Chuẩn JPEG cho phép dùng mã hóa số học thay cho mã Huffman.)
 
 .. _fig-zigzag:
 .. figure:: figures/f07-13-9780123850591.png
    :width: 300px
    :align: center
 
-   Zigzag traversal of quantized frequency coefficients.
+   Trình tự zigzag của các hệ số tần số đã lượng tử hóa.
 
-In addition, because the DC coefficient contains a large percentage of
-the information about the 8 × 8 block from the source image, and images
-typically change slowly from block to block, each DC coefficient is
-encoded as the difference from the previous DC coefficient. This is the
-delta encoding approach described in a later section.
+Ngoài ra, vì hệ số DC chứa phần lớn thông tin về khối 8 × 8 điểm ảnh từ ảnh gốc, và hình ảnh thường thay đổi chậm từ khối này sang khối khác, mỗi hệ số DC được mã hóa là hiệu số so với hệ số DC trước đó. Đây là cách mã hóa delta đã mô tả ở phần trước.
 
-JPEG includes a number of variations that control how much compression
-you achieve versus the fidelity of the image. This can be done, for
-example, by using different quantization tables. These variations, plus
-the fact that different images have different characteristics, make it
-impossible to say with any precision the compression ratios that can be
-achieved with JPEG. Ratios of 30:1 are common, and higher ratios are
-certainly possible, but *artifacts* (noticeable distortion due to
-compression) become more severe at higher ratios.
+JPEG có nhiều biến thể kiểm soát mức nén đạt được so với độ trung thực của ảnh. Điều này có thể thực hiện, ví dụ, bằng cách dùng các bảng lượng tử hóa khác nhau. Các biến thể này, cộng với việc mỗi ảnh có đặc trưng khác nhau, khiến không thể nói chính xác tỷ lệ nén đạt được với JPEG. Tỷ lệ 30:1 là phổ biến, và tỷ lệ cao hơn chắc chắn có thể, nhưng *hiện tượng giả* (artifacts—biến dạng nhận thấy do nén) sẽ nghiêm trọng hơn ở tỷ lệ cao.
 
-7.2.3 Video Compression (MPEG)
-------------------------------
+7.2.3 Nén video (MPEG)
+----------------------
 
-We now turn our attention to the MPEG format, named after the Moving
-Picture Experts Group that defined it. To a first approximation, a
-moving picture (i.e., video) is simply a succession of still images—also
-called *frames* or *pictures*—displayed at some video rate. Each of
-these frames can be compressed using the same DCT-based technique used
-in JPEG. Stopping at this point would be a mistake, however, because it
-fails to remove the interframe redundancy present in a video sequence.
-For example, two successive frames of video will contain almost
-identical information if there is not much motion in the scene, so it
-would be unnecessary to send the same information twice. Even when there
-is motion, there may be plenty of redundancy since a moving object may
-not change from one frame to the next; in some cases, only its position
-changes. MPEG takes this interframe redundancy into consideration. MPEG
-also defines a mechanism for encoding an audio signal with the video,
-but we consider only the video aspect of MPEG in this section.
+Bây giờ chúng ta chuyển sang định dạng MPEG, đặt theo tên Nhóm Chuyên gia Hình ảnh Động (Moving Picture Experts Group) đã định nghĩa nó. Ở mức gần đúng đầu tiên, một hình ảnh động (video) chỉ là một chuỗi các hình ảnh tĩnh—còn gọi là *khung hình* (frame) hoặc *ảnh* (picture)—được hiển thị ở một tốc độ video nào đó. Mỗi khung hình này có thể được nén bằng kỹ thuật dựa trên DCT giống như JPEG. Tuy nhiên, dừng lại ở đây sẽ là sai lầm, vì nó không loại bỏ được sự dư thừa giữa các khung hình trong chuỗi video. Ví dụ, hai khung hình liên tiếp sẽ chứa thông tin gần như giống hệt nhau nếu cảnh không có nhiều chuyển động, nên không cần thiết phải gửi cùng một thông tin hai lần. Ngay cả khi có chuyển động, vẫn có thể có nhiều dư thừa vì một vật thể chuyển động có thể không thay đổi từ khung này sang khung khác; đôi khi chỉ vị trí của nó thay đổi. MPEG tính đến sự dư thừa giữa các khung hình này. MPEG cũng định nghĩa cơ chế mã hóa tín hiệu âm thanh cùng với video, nhưng ở đây chúng ta chỉ xét khía cạnh video của MPEG.
 
-Frame Types
-~~~~~~~~~~~
+Các loại khung hình
+~~~~~~~~~~~~~~~~~~
 
-MPEG takes a sequence of video frames as input and compresses them into
-three types of frames, called *I frames* (intrapicture), *P frames*
-(predicted picture), and *B frames* (bidirectional predicted picture).
-Each frame of input is compressed into one of these three frame types.
-I frames can be thought of as reference frames; they are self-contained,
-depending on neither earlier frames nor later frames. To a first
-approximation, an I frame is simply the JPEG compressed version of the
-corresponding frame in the video source. P and B frames are not
-self-contained; they specify relative differences from some reference
-frame. More specifically, a P frame specifies the differences from the
-previous I frame, while a B frame gives an interpolation between the
-previous and subsequent I or P frames.
+MPEG nhận vào một chuỗi khung hình video và nén chúng thành ba loại khung hình, gọi là *khung I* (intrapicture), *khung P* (predicted picture), và *khung B* (bidirectional predicted picture). Mỗi khung hình đầu vào được nén thành một trong ba loại này. Khung I có thể coi là khung tham chiếu; chúng độc lập, không phụ thuộc vào khung trước hay sau. Gần đúng, một khung I chỉ là phiên bản nén JPEG của khung tương ứng trong nguồn video. Khung P và B không độc lập; chúng chỉ ra sự khác biệt tương đối so với một khung tham chiếu. Cụ thể, khung P chỉ ra sự khác biệt so với khung I trước đó, còn khung B là phép nội suy giữa khung I hoặc P trước và sau.
 
 .. _fig-mpeg:
 .. figure:: figures/f07-14-9780123850591.png
    :width: 500px
    :align: center
 
-   Sequence of I, P, and B frames generated by MPEG.
+   Chuỗi các khung I, P, B do MPEG sinh ra.
 
-:numref:`Figure %s <fig-mpeg>` illustrates a sequence of seven video
-frames that, after being compressed by MPEG, result in a sequence of
-I, P, and B frames. The two I frames stand alone; each can be
-decompressed at the receiver independently of any other frames. The
-P frame depends on the preceding I frame; it can be decompressed at
-the receiver only if the preceding I frame also arrives. Each of the
-B frames depends on both the preceding I or P frame and the subsequent
-I or P frame. Both of these reference frames must arrive at the
-receiver before MPEG can decompress the B frame to reproduce the
-original video frame.
+:numref:`Hình %s <fig-mpeg>` minh họa một chuỗi bảy khung hình video mà sau khi nén bằng MPEG sẽ thành chuỗi các khung I, P, B. Hai khung I độc lập; mỗi khung có thể được giải nén ở phía nhận mà không cần khung nào khác. Khung P phụ thuộc vào khung I trước đó; nó chỉ có thể được giải nén nếu khung I trước đó cũng đến nơi. Mỗi khung B phụ thuộc vào cả khung I hoặc P trước và sau. Cả hai khung tham chiếu này phải đến nơi trước khi MPEG có thể giải nén khung B để tái tạo khung hình gốc.
 
-Note that, because each B frame depends on a later frame in the
-sequence, the compressed frames are not transmitted in sequential
-order.  Instead, the sequence I B B P B B I shown in :numref:`Figure
-%s <fig-mpeg>` is transmitted as I P B B I B B. Also, MPEG does not
-define the ratio of I frames to P and B frames; this ratio may vary
-depending on the required compression and picture quality. For
-example, it is permissible to transmit only I frames. This would be
-similar to using JPEG to compress the video.
+Lưu ý rằng vì mỗi khung B phụ thuộc vào một khung sau trong chuỗi, các khung nén không được truyền theo thứ tự tuần tự. Thay vào đó, chuỗi I B B P B B I trong :numref:`Hình %s <fig-mpeg>` được truyền thành I P B B I B B. Ngoài ra, MPEG không quy định tỷ lệ giữa khung I với khung P và B; tỷ lệ này có thể thay đổi tùy theo yêu cầu nén và chất lượng hình ảnh. Ví dụ, có thể chỉ truyền các khung I. Điều này tương tự như dùng JPEG để nén video.
 
-In contrast to the preceding discussion of JPEG, the following focuses
-on the *decoding* of an MPEG stream. It is a little easier to describe,
-and it is the operation that is more often implemented in networking
-systems today, since MPEG coding is so expensive that it is frequently
-done offline (i.e., not in real time). For example, in a video-on-demand
-system, the video would be encoded and stored on disk ahead of time.
-When a viewer wanted to watch the video, the MPEG stream would then be
-transmitted to the viewer’s machine, which would decode and display the
-stream in real time.
+Khác với phần mô tả JPEG ở trên, phần sau tập trung vào *giải mã* một luồng MPEG. Việc này dễ mô tả hơn, và là thao tác thường được triển khai trong các hệ thống mạng ngày nay, vì mã hóa MPEG tốn nhiều tài nguyên nên thường được thực hiện ngoại tuyến (không theo thời gian thực). Ví dụ, trong hệ thống video theo yêu cầu, video sẽ được mã hóa và lưu trên đĩa trước. Khi người xem muốn xem, luồng MPEG sẽ được truyền đến máy người xem, nơi sẽ giải mã và hiển thị luồng theo thời gian thực.
 
-Let’s look more closely at the three frame types. As mentioned above,
-I frames are approximately equal to the JPEG compressed version of the
-source frame. The main difference is that MPEG works in units of 16 × 16
-macroblocks. For a color video represented in YUV, the U and V
-components in each macroblock are subsampled into an 8 × 8 block, as we
-discussed above in the context of JPEG. Each 2 × 2 subblock in the
-macroblock is given by one U value and one V value—the average of the
-four pixel values. The subblock still has four Y values. The
-relationship between a frame and the corresponding macroblocks is given
-in :numref:`Figure %s <fig-macroblock>`.
+Hãy xem kỹ hơn ba loại khung hình. Như đã nói, khung I gần như là phiên bản nén JPEG của khung nguồn. Khác biệt chính là MPEG làm việc với đơn vị macroblock 16 × 16. Với video màu biểu diễn theo YUV, các thành phần U và V trong mỗi macroblock được lấy mẫu thưa thành khối 8 × 8, như đã bàn ở phần JPEG. Mỗi khối con 2 × 2 trong macroblock được cho bởi một giá trị U và một giá trị V—trung bình của bốn điểm ảnh. Khối con vẫn có bốn giá trị Y. Mối quan hệ giữa một khung hình và các macroblock tương ứng được cho ở :numref:`Hình %s <fig-macroblock>`.
 
 .. _fig-macroblock:
 .. figure:: figures/f07-15-9780123850591.png
    :width: 500px
    :align: center
 
-   Each frame as a collection of macroblocks.
+   Mỗi khung hình là tập hợp các macroblock.
 
-The P and B frames are also processed in units of macroblocks.
-Intuitively, we can see that the information they carry for each
-macroblock captures the motion in the video; that is, it shows in what
-direction and how far the macroblock moved relative to the reference
-frame(s). The following describes how a B frame is used to reconstruct a
-frame during decompression; P frames are handled in a similar manner,
-except that they depend on only one reference frame instead of two.
+Khung P và B cũng được xử lý theo đơn vị macroblock. Trực giác mà nói, thông tin chúng mang cho mỗi macroblock thể hiện chuyển động trong video; tức là, cho biết hướng và khoảng cách macroblock di chuyển so với khung tham chiếu. Sau đây mô tả cách một khung B được dùng để tái tạo khung hình khi giải nén; khung P được xử lý tương tự, chỉ khác là phụ thuộc vào một khung tham chiếu thay vì hai.
 
-Before getting to the details of how a B frame is decompressed, we first
-note that each macroblock in a B frame is not necessarily defined
-relative to both an earlier and a later frame, as suggested above, but
-may instead simply be specified relative to just one or the other. In
-fact, a given macroblock in a B frame can use the same intracoding as is
-used in an I frame. This flexibility exists because if the motion
-picture is changing too rapidly then it sometimes makes sense to give
-the intrapicture encoding rather than a forward- or backward-predicted
-encoding. Thus, each macroblock in a B frame includes a type field that
-indicates which encoding is used for that macroblock. In the following
-discussion, however, we consider only the general case in which the
-macroblock uses bidirectional predictive encoding.
+Trước khi đi vào chi tiết cách giải nén khung B, lưu ý rằng mỗi macroblock trong khung B không nhất thiết phải xác định so với cả khung trước và sau như đã nói, mà có thể chỉ xác định so với một trong hai. Thực tế, một macroblock trong khung B có thể dùng mã hóa nội giống như khung I. Sự linh hoạt này tồn tại vì nếu hình ảnh chuyển động quá nhanh thì đôi khi nên dùng mã hóa nội thay vì mã hóa dự đoán tiến hoặc lùi. Do đó, mỗi macroblock trong khung B có một trường kiểu chỉ ra mã hóa nào được dùng cho macroblock đó. Tuy nhiên, trong phần sau, chúng ta chỉ xét trường hợp tổng quát là macroblock dùng mã hóa dự đoán hai chiều.
 
-In such a case, each macroblock in a B frame is represented with a
-4-tuple: (1) a coordinate for the macroblock in the frame, (2) a
-motion vector relative to the previous reference frame, (3) a motion
-vector relative to the subsequent reference frame, and (4) a delta
-(:math:`\delta`) for each pixel in the macroblock (i.e., how much each
-pixel has changed relative to the two reference pixels). For each
-pixel in the macroblock, the first task is to find the corresponding
-reference pixel in the past and future reference frames. This is done
-using the two motion vectors associated with the macroblock. Then, the
-delta for the pixel is added to the average of these two reference
-pixels. Stated more precisely, if we let F\ :sub:`p` and F\ :sub:`f`
-denote the past and future reference frames, respectively, and the
-past/future motion vectors are given by (x\ :sub:`p`, y\ :sub:`p`) and
-(x\ :sub:`f`, y\ :sub:`f`), then the pixel at coordinate *(x,y)* in the current
-frame (denoted F\ :sub:`c`) is computed as
+Trong trường hợp này, mỗi macroblock trong khung B được biểu diễn bằng một bộ 4 thành phần: (1) tọa độ macroblock trong khung hình, (2) vector chuyển động so với khung tham chiếu trước, (3) vector chuyển động so với khung tham chiếu sau, và (4) delta (:math:`\delta`) cho mỗi điểm ảnh trong macroblock (tức là mức thay đổi của mỗi điểm ảnh so với hai điểm ảnh tham chiếu). Với mỗi điểm ảnh trong macroblock, nhiệm vụ đầu tiên là tìm điểm ảnh tham chiếu tương ứng trong hai khung tham chiếu trước và sau. Việc này thực hiện bằng hai vector chuyển động gắn với macroblock. Sau đó, delta cho điểm ảnh được cộng vào trung bình của hai điểm ảnh tham chiếu này. Cụ thể, nếu F\ :sub:`p` và F\ :sub:`f` là hai khung tham chiếu trước và sau, các vector chuyển động là (x\ :sub:`p`, y\ :sub:`p`) và (x\ :sub:`f`, y\ :sub:`f`), thì điểm ảnh tại *(x,y)* trong khung hiện tại (F\ :sub:`c`) được tính là
 
 .. math::
 
    F_c(x,y) = (F_p(x+x_p,y+y_p) + F_f(x+x_f,y+y_f))/2 + \delta(x,y)
 
-where :math:`\delta` is the delta for the pixel as specified in the B frame.
-These deltas are encoded in the same way as pixels in I frames; that is,
-they are run through DCT and then quantized. Since the deltas are typically
-small, most of the DCT coefficients are 0 after quantization; hence, they can
-be effectively compressed.
+trong đó :math:`\delta` là delta cho điểm ảnh như xác định trong khung B. Các delta này được mã hóa giống như điểm ảnh trong khung I; tức là, qua DCT rồi lượng tử hóa. Vì các delta thường nhỏ, hầu hết hệ số DCT sẽ là 0 sau lượng tử hóa; do đó, có thể nén hiệu quả.
 
-It should be fairly clear from the preceding discussion how encoding
-would be performed, with one exception. When generating a B or P frame
-during compression, MPEG must decide where to place the macroblocks.
-Recall that each macroblock in a P frame, for example, is defined
-relative to a macroblock in an I frame, but that the macroblock in the
-P frame need not be in the same part of the frame as the corresponding
-macroblock in the I frame—the difference in position is given by the
-motion vector. You would like to pick a motion vector that makes the
-macroblock in the P frame as similar as possible to the corresponding
-macroblock in the I frame, so that the deltas for that macroblock can be
-as small as possible. This means that you need to figure out where
-objects in the picture moved from one frame to the next. This is the
-problem of *motion estimation*, and several techniques (heuristics) for
-solving this problem are known. (We discuss papers that consider this
-problem at the end of this chapter.) The difficulty of this problem is
-one of the reasons why MPEG encoding takes longer than decoding on
-equivalent hardware. MPEG does not specify any particular technique; it
-only defines the format for encoding this information in B and P frames
-and the algorithm for reconstructing the pixel during decompression, as
-given above.
+Từ phần trên, có thể thấy cách mã hóa sẽ được thực hiện, ngoại trừ một điểm. Khi tạo khung B hoặc P trong quá trình nén, MPEG phải quyết định đặt macroblock ở đâu. Nhớ rằng mỗi macroblock trong khung P, chẳng hạn, được xác định so với một macroblock trong khung I, nhưng macroblock trong khung P không nhất thiết phải ở cùng vị trí với macroblock tương ứng trong khung I—sự khác biệt vị trí được cho bởi vector chuyển động. Bạn muốn chọn vector chuyển động sao cho macroblock trong khung P giống nhất với macroblock tương ứng trong khung I, để các delta cho macroblock đó nhỏ nhất có thể. Điều này nghĩa là bạn phải xác định vật thể trong ảnh đã di chuyển từ đâu sang đâu giữa hai khung hình. Đây là bài toán *ước lượng chuyển động* (motion estimation), và có nhiều kỹ thuật (heuristic) để giải quyết. (Chúng tôi bàn về các bài báo nghiên cứu vấn đề này ở cuối chương.) Độ khó của bài toán này là một trong những lý do khiến mã hóa MPEG tốn thời gian hơn giải mã trên cùng phần cứng. MPEG không quy định kỹ thuật cụ thể nào; nó chỉ định dạng mã hóa thông tin này trong các khung B và P và thuật toán tái tạo điểm ảnh khi giải nén như trên.
 
-Effectiveness and Performance
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Hiệu quả và hiệu năng
+~~~~~~~~~~~~~~~~~~~~
 
-MPEG typically achieves a compression ratio of 90:1, although ratios as
-high as 150:1 are not unheard of. In terms of the individual frame
-types, we can expect a compression ratio of approximately 30:1 for the
-I frames (this is consistent with the ratios achieved using JPEG when
-24-bit color is first reduced to 8-bit color), while P and B frame
-compression ratios are typically three to five times smaller than the
-rates for the I frame. Without first reducing the 24 bits of color to
-8 bits, the achievable compression with MPEG is typically between 30:1
-and 50:1.
+MPEG thường đạt tỷ lệ nén 90:1, dù tỷ lệ 150:1 cũng không hiếm. Xét riêng từng loại khung hình, có thể kỳ vọng tỷ lệ nén khoảng 30:1 cho khung I (phù hợp với tỷ lệ đạt được với JPEG khi màu 24 bit được giảm xuống 8 bit), còn khung P và B thường nén tốt hơn khung I từ ba đến năm lần. Nếu không giảm màu từ 24 bit xuống 8 bit, tỷ lệ nén đạt được với MPEG thường từ 30:1 đến 50:1.
 
-MPEG involves an expensive computation. On the compression side, it is
-typically done offline, which is not a problem for preparing movies for
-a video-on-demand service. Video can be compressed in real time using
-hardware today, but software implementations are quickly closing the
-gap. On the decompression side, low-cost MPEG video boards are
-available, but they do little more than YUV color lookup, which
-fortunately is the most expensive step. Most of the actual MPEG decoding
-is done in software. In recent years, processors have become fast enough
-to keep pace with 30-frames-per-second video rates when decoding MPEG
-streams purely in software—modern processors can even decode MPEG
-streams of high definition video (HDTV).
+MPEG là một phép tính tốn tài nguyên. Ở phía nén, thường được thực hiện ngoại tuyến, điều này không thành vấn đề khi chuẩn bị phim cho dịch vụ video theo yêu cầu. Video có thể được nén theo thời gian thực bằng phần cứng hiện nay, nhưng các phần mềm cũng đang nhanh chóng thu hẹp khoảng cách. Ở phía giải nén, các card video MPEG giá rẻ có sẵn, nhưng chúng chủ yếu chỉ làm tra cứu màu YUV, vốn là bước tốn tài nguyên nhất. Phần lớn việc giải mã MPEG thực tế được thực hiện bằng phần mềm. Những năm gần đây, bộ xử lý đã đủ nhanh để theo kịp tốc độ 30 khung hình/giây khi giải mã MPEG hoàn toàn bằng phần mềm—thậm chí các bộ xử lý hiện đại còn có thể giải mã MPEG cho video độ nét cao (HDTV).
 
-Video Encoding Standards
-~~~~~~~~~~~~~~~~~~~~~~~~
+Chuẩn mã hóa video
+~~~~~~~~~~~~~~~~~~
 
-We conclude by noting that MPEG is an evolving standard of significant
-complexity. This complexity comes from a desire to give the encoding
-algorithm every possible degree of freedom in how it encodes a given
-video stream, resulting in different video transmission rates. It also
-comes from the evolution of the standard over time, with the Moving
-Picture Experts Group working hard to retain backwards compatibility
-(e.g., MPEG-1, MPEG-2, MPEG-4). What we describe in this book is the
-essential ideas underlying MPEG-based compression, but certainly not all
-the intricacies involved in an international standard.
+Cuối cùng, cần lưu ý rằng MPEG là một chuẩn đang phát triển với độ phức tạp đáng kể. Độ phức tạp này xuất phát từ mong muốn cho thuật toán mã hóa mọi mức tự do có thể trong việc mã hóa một luồng video, dẫn đến các tốc độ truyền video khác nhau. Nó cũng đến từ sự phát triển của chuẩn qua thời gian, với Nhóm Chuyên gia Hình ảnh Động nỗ lực duy trì khả năng tương thích ngược (ví dụ, MPEG-1, MPEG-2, MPEG-4). Những gì mô tả trong sách này là các ý tưởng cốt lõi của nén dựa trên MPEG, nhưng chắc chắn không phải tất cả các chi tiết phức tạp của một chuẩn quốc tế.
 
-What’s more, MPEG is not the only standard available for encoding video.
-For example, the ITU-T has also defined the *H series* for encoding
-real-time multimedia data. Generally, the H series includes standards
-for video, audio, control, and multiplexing (e.g., mixing audio, video,
-and data onto a single bit stream). Within the series, H.261 and H.263
-were the first- and second-generation video encoding standards. In
-principle, both H.261 and H.263 look a lot like MPEG: They use DCT,
-quantization, and interframe compression. The differences between
-H.261/H.263 and MPEG are in the details.
+Ngoài ra, MPEG không phải là chuẩn duy nhất cho mã hóa video. Ví dụ, ITU-T cũng định nghĩa *dòng H* cho mã hóa dữ liệu đa phương tiện thời gian thực. Nhìn chung, dòng H bao gồm các chuẩn cho video, âm thanh, điều khiển và ghép kênh (ví dụ, trộn âm thanh, video và dữ liệu vào một luồng bit duy nhất). Trong dòng này, H.261 và H.263 là các chuẩn mã hóa video thế hệ thứ nhất và thứ hai. Về nguyên tắc, cả H.261 và H.263 đều rất giống MPEG: Chúng dùng DCT, lượng tử hóa và nén giữa các khung hình. Khác biệt giữa H.261/H.263 và MPEG nằm ở chi tiết.
 
-Today, a partnership between the ITU-T and the MPEG group has lead to
-the joint H.264/MPEG-4 standard, which is used for both Blu-ray Discs
-and by many popular streaming sources (e.g., YouTube, Vimeo).
+Ngày nay, sự hợp tác giữa ITU-T và nhóm MPEG đã dẫn đến chuẩn chung H.264/MPEG-4, được dùng cho cả đĩa Blu-ray và nhiều nguồn phát trực tuyến phổ biến (ví dụ, YouTube, Vimeo).
 
-7.2.4 Transmitting MPEG over a Network
---------------------------------------
+7.2.4 Truyền MPEG qua mạng
+--------------------------
 
-As we’ve noted, MPEG and JPEG are not just compression standards but
-also definitions of the format of video and images, respectively.
-Focusing on MPEG, the first thing to keep in mind is that it defines the
-format of a video *stream*; it does not specify how this stream is
-broken into network packets. Thus, MPEG can be used for videos stored on
-disk, as well as videos transmitted over a stream-oriented network
-connection, like that provided by TCP.
+Như đã đề cập, MPEG và JPEG không chỉ là các chuẩn nén mà còn là định nghĩa định dạng của video và hình ảnh. Tập trung vào MPEG, điều đầu tiên cần nhớ là nó định nghĩa định dạng của một *luồng* video; nó không quy định cách chia luồng này thành các gói mạng. Do đó, MPEG có thể dùng cho video lưu trên đĩa, cũng như video truyền qua kết nối mạng hướng luồng, như TCP cung cấp.
 
-What we describe below is called the *main profile* of an MPEG video
-stream that is being sent over a network. You can think of an MPEG
-profile as being analogous to a “version,” except the profile is not
-explicitly specified in an MPEG header; the receiver has to deduce the
-profile from the combination of header fields it sees.
+Những gì mô tả dưới đây gọi là *main profile* của một luồng video MPEG được gửi qua mạng. Bạn có thể coi một profile MPEG như một “phiên bản”, ngoại trừ profile không được chỉ rõ trong tiêu đề MPEG; phía nhận phải suy ra profile từ tổ hợp các trường tiêu đề nó thấy.
 
 .. _fig-nested:
 .. figure:: figures/f07-16-9780123850591.png
    :width: 500px
    :align: center
 
-   Format of an MPEG-compressed video stream.
+   Định dạng của một luồng video nén MPEG.
 
-A main profile MPEG stream has a nested structure, as illustrated in
-:numref:`Figure %s <fig-nested>`. (Keep in mind that this figure hides
-a *lot* of messy details.) At the outermost level, the video contains
-a sequence of groups of pictures (GOP) separated by a ``SeqHdr``. The
-sequence is terminated by a ``SeqEndCode`` (``0xb7``). The ``SeqHdr``
-that precedes every GOP specifies—among other things—the size of each
-picture (frame) in the GOP (measured in both pixels and macroblocks),
-the interpicture period (measured in μs), and two quantization
-matrices for the macroblocks within this GOP: one for intracoded
-macroblocks (I blocks) and one for intercoded macroblocks (B and
-P blocks). Since this information is given for each GOP—rather than
-once for the entire video stream, as you might expect—it is possible
-to change the quantization table and frame rate at GOP boundaries
-throughout the video. This makes it possible to adapt the video stream
-over time, as we discuss below.
+Một luồng MPEG main profile có cấu trúc lồng nhau, như minh họa ở :numref:`Hình %s <fig-nested>`. (Lưu ý rằng hình này ẩn đi rất nhiều chi tiết phức tạp.) Ở mức ngoài cùng, video chứa một chuỗi các nhóm ảnh (GOP) được phân tách bởi ``SeqHdr``. Chuỗi này kết thúc bằng ``SeqEndCode`` (``0xb7``). ``SeqHdr`` đi trước mỗi GOP chỉ định—trong số các thông tin khác—kích thước mỗi ảnh (khung hình) trong GOP (tính bằng điểm ảnh và macroblock), khoảng thời gian giữa các ảnh (tính bằng μs), và hai ma trận lượng tử hóa cho các macroblock trong GOP này: một cho macroblock mã hóa nội (I block) và một cho macroblock mã hóa giữa các khung (B và P block). Vì thông tin này được cung cấp cho từng GOP—thay vì một lần cho toàn bộ luồng video như bạn có thể nghĩ—nên có thể thay đổi bảng lượng tử hóa và tốc độ khung hình tại các ranh giới GOP trong suốt video. Điều này cho phép điều chỉnh luồng video theo thời gian, như sẽ bàn dưới đây.
 
-Each GOP is given by a ``GOPHdr``, followed by the set of pictures that
-make up the GOP. The ``GOPHdr`` specifies the number of pictures in the
-GOP, as well as synchronization information for the GOP (i.e., when the
-GOP should play, relative to the beginning of the video). Each picture,
-in turn, is given by a ``PictureHdr`` and a set of *slices* that make up
-the picture. (A slice is a region of the picture, such as one horizontal
-line.) The ``PictureHdr`` identifies the type of the picture (I, B, or
-P) and defines a picture-specific quantization table. The ``SliceHdr``
-gives the vertical position of the slice, plus another opportunity to
-change the quantization table—this time by a constant scaling factor
-rather than by giving a whole new table. Next, the ``SliceHdr`` is
-followed by a sequence of macroblocks. Finally, each macroblock includes
-a header that specifies the block address within the picture, along with
-data for the six blocks within the macroblock: one for the U component,
-one for the V component, and four for the Y component. (Recall that the
-Y component is 16 × 16, while the U and V components are 8 × 8.)
+Mỗi GOP được xác định bởi một ``GOPHdr``, theo sau là tập các ảnh tạo nên GOP. ``GOPHdr`` chỉ số ảnh trong GOP, cũng như thông tin đồng bộ cho GOP (tức là, khi nào GOP nên phát so với đầu video). Mỗi ảnh, đến lượt nó, được xác định bởi một ``PictureHdr`` và một tập các *slice* tạo nên ảnh. (Slice là một vùng của ảnh, như một dòng ngang.) ``PictureHdr`` xác định loại ảnh (I, B, hoặc P) và định nghĩa bảng lượng tử hóa riêng cho ảnh. ``SliceHdr`` cho biết vị trí dọc của slice, cùng một cơ hội nữa để thay đổi bảng lượng tử hóa—lần này bằng một hệ số tỉ lệ thay vì một bảng mới hoàn toàn. Tiếp theo, ``SliceHdr`` được theo sau bởi một chuỗi macroblock. Cuối cùng, mỗi macroblock có một tiêu đề chỉ địa chỉ khối trong ảnh, cùng dữ liệu cho sáu khối trong macroblock: một cho thành phần U, một cho V, và bốn cho Y. (Nhớ rằng thành phần Y là 16 × 16, còn U và V là 8 × 8.)
 
-It should be clear that one of the powers of the MPEG format is that it
-gives the encoder an opportunity to change the encoding over time. It
-can change the frame rate, the resolution, the mix of frame types that
-define a GOP, the quantization table, and the encoding used for
-individual macroblocks. As a consequence, it is possible to adapt the
-rate at which a video is transmitted over a network by trading picture
-quality for network bandwidth. Exactly how a network protocol might
-exploit this adaptability is currently a subject of research (see
-sidebar).
+Có thể thấy một trong những sức mạnh của định dạng MPEG là nó cho bộ mã hóa cơ hội thay đổi mã hóa theo thời gian. Có thể thay đổi tốc độ khung hình, độ phân giải, tỷ lệ các loại khung hình trong GOP, bảng lượng tử hóa, và mã hóa dùng cho từng macroblock. Do đó, có thể điều chỉnh tốc độ truyền video qua mạng bằng cách đánh đổi chất lượng hình ảnh lấy băng thông mạng. Cách một giao thức mạng có thể tận dụng khả năng thích nghi này hiện là chủ đề nghiên cứu (xem khung bên).
 
-Another interesting aspect of sending an MPEG stream over the network
-is exactly how the stream is broken into packets. If sent over a TCP
-connection, packetization is not an issue; TCP decides when it has
-enough bytes to send the next IP datagram. When using video
-interactively, however, it is rare to transmit it over TCP, since TCP
-has several features that are ill suited to highly latency-sensitive
-applications (such as abrupt rate changes after a packet loss and
-retransmission of lost packets). If we are transmitting video using
-UDP, say, then it makes sense to break the stream at carefully
-selected points, such as at macroblock boundaries. This is because we
-would like to confine the effects of a lost packet to a single
-macroblock, rather than damaging several macroblocks with a single
-loss. This is an example of Application Level Framing, which was
-discussed in an earlier chapter.
+Một khía cạnh thú vị khác của việc gửi luồng MPEG qua mạng là cách chia luồng thành các gói. Nếu gửi qua kết nối TCP, việc chia gói không thành vấn đề; TCP quyết định khi nào đủ byte để gửi một datagram IP. Tuy nhiên, khi dùng video tương tác, hiếm khi truyền qua TCP, vì TCP có nhiều đặc điểm không phù hợp với ứng dụng nhạy cảm độ trễ (như thay đổi tốc độ đột ngột sau khi mất gói và truyền lại gói bị mất). Nếu truyền video qua UDP, hợp lý là chia luồng tại các điểm được chọn cẩn thận, như tại ranh giới macroblock. Lý do là muốn giới hạn ảnh hưởng của mất gói vào một macroblock duy nhất, thay vì làm hỏng nhiều macroblock chỉ vì một gói bị mất. Đây là ví dụ của Application Level Framing, đã bàn ở chương trước.
 
-Packetizing the stream is only the first problem in sending
-MPEG-compressed video over a network. The next complication is dealing
-with packet loss. On the one hand, if a B frame is dropped by the
-network, then it is possible to simply replay the previous frame without
-seriously compromising the video; 1 frame out of 30 is no big deal. On
-the other hand, a lost I frame has serious consequences—none of the
-subsequent B and P frames can be processed without it. Thus, losing an
-I frame would result in losing multiple frames of the video. While you
-could retransmit the missing I frame, the resulting delay would probably
-not be acceptable in a real-time videoconference. One solution to this
-problem would be to use the Differentiated Services techniques described
-in the previous chapter to mark the packets containing I frames with a
-lower drop probability than other packets.
+Chia gói chỉ là vấn đề đầu tiên khi gửi video MPEG nén qua mạng. Phức tạp tiếp theo là xử lý mất gói. Một mặt, nếu một khung B bị mạng làm mất, có thể chỉ cần phát lại khung trước đó mà không ảnh hưởng nghiêm trọng đến video; mất 1 khung trong 30 không phải vấn đề lớn. Mặt khác, mất một khung I có hậu quả nghiêm trọng—không thể xử lý các khung B và P tiếp theo nếu không có nó. Như vậy, mất một khung I sẽ làm mất nhiều khung video. Dù có thể truyền lại khung I bị mất, độ trễ gây ra có thể không chấp nhận được trong hội nghị truyền hình thời gian thực. Một giải pháp là dùng kỹ thuật Dịch vụ Phân biệt (Differentiated Services) đã mô tả ở chương trước để đánh dấu các gói chứa khung I với xác suất bị loại thấp hơn các gói khác.
 
-One final observation is that how you choose to encode video depends on
-more than just the available network bandwidth. It also depends on the
-application’s latency constraints. Once again, an interactive
-application like videoconferencing needs small latencies. The critical
-factor is the combination of I, P, and B frames in the GOP. Consider the
-following GOP:
+Một nhận xét cuối cùng là cách bạn chọn mã hóa video phụ thuộc không chỉ vào băng thông mạng sẵn có. Nó còn phụ thuộc vào ràng buộc độ trễ của ứng dụng. Một lần nữa, ứng dụng tương tác như hội nghị truyền hình cần độ trễ nhỏ. Yếu tố then chốt là tổ hợp các khung I, P, B trong GOP. Xét GOP sau:
 
 .. centered:: I B B B B P B B B B I
 
-The problem this GOP causes a videoconferencing application is that the
-sender has to delay the transmission of the four B frames until the P or
-I that follows them is available. This is because each B frame depends
-on the subsequent P or I frame. If the video is playing at 15 frames per
-second (i.e., one frame every 67 ms), this means the first B frame is
-delayed 4 × 67 ms, which is more than a quarter of a second. This delay
-is in addition to any propagation delay imposed by the network. A
-quarter of a second is far greater than the 100-ms threshold that humans
-are able to perceive. It is for this reason that many videoconference
-applications encode video using JPEG, which is often called motion-JPEG.
-(Motion-JPEG also addresses the problem of dropping a reference frame
-since all frames are able to stand alone.) Notice, however, that an
-interframe encoding that depends upon only prior frames rather than
-later frames is not a problem. Thus, a GOP of
+Vấn đề GOP này gây ra cho ứng dụng hội nghị truyền hình là người gửi phải trì hoãn truyền bốn khung B cho đến khi khung P hoặc I tiếp theo sẵn sàng. Lý do là mỗi khung B phụ thuộc vào khung P hoặc I tiếp theo. Nếu video phát ở 15 khung hình/giây (tức là một khung mỗi 67 ms), điều này nghĩa là khung B đầu tiên bị trì hoãn 4 × 67 ms, tức là hơn một phần tư giây. Độ trễ này cộng thêm bất kỳ độ trễ lan truyền nào do mạng gây ra. Một phần tư giây lớn hơn nhiều so với ngưỡng 100 ms mà con người có thể cảm nhận. Vì lý do này, nhiều ứng dụng hội nghị truyền hình mã hóa video bằng JPEG, thường gọi là motion-JPEG. (Motion-JPEG cũng giải quyết vấn đề mất khung tham chiếu vì mọi khung đều độc lập.) Tuy nhiên, mã hóa giữa các khung chỉ phụ thuộc vào các khung trước chứ không phải khung sau thì không thành vấn đề. Do đó, một GOP như
 
 .. centered:: I P P P P I
 
-would work just fine for interactive videoconferencing.
+sẽ phù hợp cho hội nghị truyền hình tương tác.
 
-Adaptive Streaming
-~~~~~~~~~~~~~~~~~~
+Truyền phát thích nghi (Adaptive Streaming)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Because encoding schemes like MPEG allow for a trade-off between the
-bandwidth consumed and the quality of the image, there is an opportunity
-to adapt a video stream to match the available network bandwidth. This
-is effectively what video streaming services like Netflix do today.
+Vì các phương án mã hóa như MPEG cho phép đánh đổi giữa băng thông tiêu thụ và chất lượng hình ảnh, nên có cơ hội điều chỉnh luồng video cho phù hợp với băng thông mạng sẵn có. Đây chính là điều các dịch vụ truyền phát video như Netflix thực hiện ngày nay.
 
-For starters, let’s assume that we have some way to measure the amount
-of free capacity and level of congestion along a path, for example, by
-observing the rate at which packets are successfully arriving at the
-destination. As the available bandwidth fluctuates, we can feed that
-information back to the codec so that it adjusts its coding parameters
-to back off during congestion and to send more aggressively (with a
-higher picture quality) when the network is idle. This is analogous to
-the behavior of TCP, except in the video case we are actually modifying
-the total amount of data sent rather than how long we take to send a
-fixed amount of data, since we don’t want to introduce delay into a
-video application.
+Đầu tiên, giả sử ta có cách đo dung lượng còn trống và mức độ tắc nghẽn trên đường truyền, ví dụ, bằng cách quan sát tốc độ các gói đến đích thành công. Khi băng thông sẵn có dao động, ta có thể phản hồi thông tin đó về codec để nó điều chỉnh tham số mã hóa, giảm tốc khi tắc nghẽn và gửi mạnh hơn (chất lượng cao hơn) khi mạng rảnh. Điều này tương tự hành vi của TCP, ngoại trừ trong trường hợp video, ta thực sự thay đổi tổng lượng dữ liệu gửi đi thay vì thời gian gửi một lượng dữ liệu cố định, vì không muốn gây thêm độ trễ cho ứng dụng video.
 
-In the case of video-on-demand services like Netflix, we don’t adapt the
-encoding on the fly, but instead we encode a handful of video quality
-levels ahead of time, and save them to files named accordingly. The
-receiver simply changes the file name it requests to match the quality
-its measurements indicate the network will be able to deliver. The
-receiver watches its playback queue, and asks for a higher quality
-encoding when the queue becomes too full and a lower quality encoding
-when the queue becomes too empty.
+Với dịch vụ video theo yêu cầu như Netflix, ta không điều chỉnh mã hóa theo thời gian thực, mà thay vào đó mã hóa sẵn một số mức chất lượng video, lưu thành các tệp đặt tên tương ứng. Phía nhận chỉ cần đổi tên tệp yêu cầu cho phù hợp với chất lượng mà đo lường cho thấy mạng có thể cung cấp. Phía nhận theo dõi hàng đợi phát lại, và yêu cầu mã hóa chất lượng cao hơn khi hàng đợi đầy, chất lượng thấp hơn khi hàng đợi vơi.
 
-How does this approach know where in the movie to jump to should the
-requested quality change? In effect, the receiver never asks the sender
-to stream the whole movie, but instead it requests a sequence of short
-movie segments, typically a few seconds long (and always on GOP
-boundary). Each segment is an opportunity to change the quality level to
-match what the network is able to deliver. (It turns out that requesting
-movie chunks also makes it easier to implement *trick play*, jumping
-around from one place to another in the movie.) In other words, a movie
-is typically stored as a set of N × M chunks (files): N quality levels
-for each of M segments.
+Cách tiếp cận này biết nhảy đến đâu trong phim nếu chất lượng yêu cầu thay đổi như thế nào? Thực tế, phía nhận không bao giờ yêu cầu gửi toàn bộ phim, mà thay vào đó yêu cầu một chuỗi đoạn phim ngắn, thường chỉ vài giây (và luôn ở ranh giới GOP). Mỗi đoạn là một cơ hội để thay đổi mức chất lượng cho phù hợp với khả năng mạng. (Việc yêu cầu từng đoạn phim cũng giúp dễ thực hiện *trick play*, nhảy đến bất kỳ vị trí nào trong phim.) Nói cách khác, một bộ phim thường được lưu thành tập hợp N × M đoạn (tệp): N mức chất lượng cho mỗi M đoạn.
 
-There’s one last detail. Since the receiver is effectively requesting
-a sequence of discrete video chunks by name, the most common approach
-for issuing these requests is to use HTTP. Each chuck is a separate
-HTTP GET request with the URL identifying the specific chunk the
-receiver wants next. When you start downloading a movie, your video
-player first downloads a *manifest* file that contains nothing more
-than the URLs for the N × M chunks in the movie, and then it issues a
-sequence of HTTP requests using the appropriate URL for the
-situation. This general approach is called *HTTP adaptive streaming*,
-although it has been standardized in slightly different ways by
-various organizations, most notably MPEG’s DASH (*Dynamic Adaptive
-Streaming over HTTP*) and Apple’s HLS (*HTTP Live Streaming*).
+Còn một chi tiết cuối. Vì phía nhận thực chất yêu cầu một chuỗi đoạn video rời rạc theo tên, cách phổ biến nhất để gửi các yêu cầu này là dùng HTTP. Mỗi đoạn là một yêu cầu HTTP GET riêng với URL xác định đoạn mà phía nhận muốn tiếp theo. Khi bạn bắt đầu tải phim, trình phát video sẽ tải trước một tệp *manifest* chỉ đơn giản là danh sách URL cho N × M đoạn phim, rồi gửi chuỗi yêu cầu HTTP với URL phù hợp cho từng tình huống. Cách tiếp cận này gọi là *HTTP adaptive streaming*, dù đã được chuẩn hóa theo nhiều cách khác nhau bởi các tổ chức khác nhau, nổi bật nhất là DASH của MPEG (*Dynamic Adaptive Streaming over HTTP*) và HLS của Apple (*HTTP Live Streaming*).
 
-7.2.5 Audio Compression (MP3)
------------------------------
+7.2.5 Nén âm thanh (MP3)
+------------------------
 
-Not only does MPEG define how video is compressed, but it also defines a
-standard for compressing audio. This standard can be used to compress
-the audio portion of a movie (in which case the MPEG standard defines
-how the compressed audio is interleaved with the compressed video in a
-single MPEG stream) or it can be used to compress stand-alone audio (for
-example, an audio CD). The MPEG audio compression standard is just one
-of many for audio compression, but the pivotal role it played means
-that MP3 (which stands for MPEG Layer III—see below) has become almost
-synonymous with audio compression.
+Không chỉ MPEG định nghĩa cách nén video, mà còn định nghĩa chuẩn nén âm thanh. Chuẩn này có thể dùng để nén phần âm thanh của một bộ phim (trong trường hợp đó, chuẩn MPEG quy định cách xen kẽ âm thanh nén với video nén trong một luồng MPEG duy nhất) hoặc để nén âm thanh độc lập (ví dụ, đĩa CD âm thanh). Chuẩn nén âm thanh MPEG chỉ là một trong nhiều chuẩn nén âm thanh, nhưng vai trò then chốt của nó khiến MP3 (viết tắt của MPEG Layer III—xem dưới) gần như đồng nghĩa với nén âm thanh.
 
-To understand audio compression, we need to begin with the data.
-CD-quality audio, which is the *de facto* digital representation for
-high-quality audio, is sampled at a rate of 44.1 KHz (i.e., a sample is
-collected approximately once every 23 μs). Each sample is 16 bits, which
-means that a stereo (2-channel) audio stream results in a bit rate of
+Để hiểu nén âm thanh, ta cần bắt đầu từ dữ liệu. Âm thanh chất lượng CD, là đại diện số *de facto* cho âm thanh chất lượng cao, được lấy mẫu ở tốc độ 44.1 KHz (tức là, một mẫu được lấy khoảng mỗi 23 μs). Mỗi mẫu là 16 bit, nghĩa là một luồng âm thanh stereo (2 kênh) có tốc độ bit là
 
 .. centered:: 2 × 44.1 × 1000 × 16 = 1.41 *Mbps*
 
-By comparison, traditional telephone-quality voice is sampled at a rate of 8 KHz,
-with 8-bit samples, resulting in a bit rate of 64 kbps.
+So sánh, thoại chất lượng điện thoại truyền thống được lấy mẫu ở 8 KHz, với mẫu 8 bit, cho tốc độ bit 64 kbps.
 
-Clearly, some amount of compression is going to be required to transmit
-CD-quality audio over a network of limited bandwidth. (Consider the
-fact that MP3 audio streaming became popular in an era when 1.5Mbps home
-Internet connections were a novelty).  To make matters
-worse, synchronization and error correction overheads inflated the
-number of bits stored on a CD by a factor of three, so if you just
-read the data from the CD and sent it over the network, you would need
-4.32 Mbps.
+Rõ ràng, cần nén để truyền âm thanh chất lượng CD qua mạng băng thông hạn chế. (Hãy nhớ rằng truyền phát MP3 trở nên phổ biến vào thời mà kết nối Internet gia đình 1.5Mbps còn là điều mới mẻ.) Tệ hơn, các chi phí đồng bộ và sửa lỗi làm số bit lưu trên CD tăng gấp ba, nên nếu chỉ đọc dữ liệu từ CD và gửi qua mạng, bạn sẽ cần 4.32 Mbps.
 
-Just like video, there is lots of redundancy in audio, and
-compression takes advantage of this. The
-MPEG standards define three levels of compression, as
-enumerated in :numref:`Table %s <tab-mp3>`. Of these, Layer III, which is more
-widely known as MP3, was for many years the most commonly used. In
-recent years, higher bandwidth codecs have proliferated as streaming
-audio has become the dominant way many people consume music.
+Cũng như video, âm thanh có nhiều dư thừa, và nén tận dụng điều này. Chuẩn MPEG định nghĩa ba mức nén, như liệt kê ở :numref:`Bảng %s <tab-mp3>`. Trong đó, Layer III, còn gọi là MP3, từng là chuẩn phổ biến nhất trong nhiều năm. Gần đây, các codec băng thông cao hơn xuất hiện nhiều hơn khi truyền phát âm thanh trở thành cách nghe nhạc chủ đạo của nhiều người.
 
 .. _tab-mp3:
-.. table:: MP3 Compression Rates.
+.. table:: Tốc độ nén MP3.
    :widths: auto
    :align: center
 
@@ -950,34 +330,8 @@ audio has become the dominant way many people consume music.
    | Layer III | 128 kbps  | 12                 |
    +-----------+-----------+--------------------+
 
-To achieve these compression ratios, MP3 uses techniques that are
-similar to those used by MPEG to compress video. First, it splits the
-audio stream into some number of frequency subbands, loosely analogous
-to the way MPEG processes the Y, U, and V components of a video stream
-separately. Second, each subband is broken into a sequence of blocks,
-which are similar to MPEG’s macroblocks except they can vary in length
-from 64 to 1024 samples. (The encoding algorithm can vary the block size
-depending on certain distortion effects that are beyond our discussion.)
-Finally, each block is transformed using a modified DCT algorithm,
-quantized, and Huffman encoded, just as for MPEG video.
+Để đạt các tỷ lệ nén này, MP3 dùng các kỹ thuật tương tự như MPEG dùng để nén video. Đầu tiên, nó chia luồng âm thanh thành một số dải tần số con, tương tự như cách MPEG xử lý riêng các thành phần Y, U, V của video. Thứ hai, mỗi dải tần số con được chia thành chuỗi các khối, tương tự macroblock của MPEG nhưng có thể thay đổi độ dài từ 64 đến 1024 mẫu. (Thuật toán mã hóa có thể thay đổi kích thước khối tùy theo một số hiệu ứng biến dạng ngoài phạm vi bàn luận ở đây.) Cuối cùng, mỗi khối được biến đổi bằng thuật toán DCT sửa đổi, lượng tử hóa và mã hóa Huffman, giống như video MPEG.
 
-The trick to MP3 is how many subbands it elects to use and how many bits
-it allocates to each subband, keeping in mind that it is trying to
-produce the highest-quality audio possible for the target bit rate.
-Exactly how this allocation is made is governed by psychoacoustic models
-that are beyond the scope of this book, but to illustrate the idea
-consider that it makes sense to allocate more bits to low-frequency
-subbands when compressing a male voice and more bits to high-frequency
-subbands when compressing a female voice. Operationally, MP3 dynamically
-changes the quantization tables used for each subband to achieve the
-desired effect.
+Điểm then chốt của MP3 là số dải tần số con nó chọn dùng và số bit phân bổ cho mỗi dải, với mục tiêu tạo ra âm thanh chất lượng cao nhất cho tốc độ bit mục tiêu. Việc phân bổ này được điều chỉnh bởi các mô hình tâm lý âm học vượt ngoài phạm vi cuốn sách này, nhưng để minh họa, hãy xem xét rằng hợp lý khi phân bổ nhiều bit hơn cho dải tần số thấp khi nén giọng nam và nhiều bit hơn cho dải tần số cao khi nén giọng nữ. Về mặt vận hành, MP3 thay đổi động các bảng lượng tử hóa dùng cho từng dải để đạt hiệu quả mong muốn.
 
-Once compressed, the subbands are packaged into fixed-size frames, and a
-header is attached. This header includes synchronization information, as
-well as the bit allocation information needed by the decoder to
-determine how many bits are used to encode each subband. As mentioned
-above, these audio frames can then be interleaved with video frames to
-form a complete MPEG stream. One interesting side note is that, while it
-might work to drop B frames in the network should congestion occur,
-experience teaches us that it is not a good idea to drop audio frames
-since users are better able to tolerate bad video than bad audio.
+Sau khi nén, các dải tần số con được đóng gói thành các khung cố định, và một tiêu đề được gắn vào. Tiêu đề này chứa thông tin đồng bộ, cũng như thông tin phân bổ bit cần thiết cho bộ giải mã xác định số bit dùng để mã hóa mỗi dải. Như đã nói, các khung âm thanh này có thể được xen kẽ với các khung video để tạo thành một luồng MPEG hoàn chỉnh. Một lưu ý thú vị là, dù có thể bỏ qua các khung B trong mạng khi tắc nghẽn, kinh nghiệm cho thấy không nên bỏ khung âm thanh vì người dùng dễ chịu đựng video xấu hơn là âm thanh xấu.
