@@ -1,80 +1,16 @@
-Problem: What Do We Do with the Data?
--------------------------------------
+Vấn đề: Chúng ta làm gì với dữ liệu?
+------------------------------------
 
-From the network’s perspective, application programs send messages to
-each other. Each of these messages is just an uninterpreted string of
-bytes. From the application’s perspective, however, these messages
-contain various kinds of *data*\ —arrays of integers, video frames, lines
-of text, digital images, and so on. In other words, these bytes have
-meaning. We now consider the problem of how best to encode the different
-kinds of data that application programs want to exchange into byte
-strings. In many respects, this is similar to the problem of encoding
-byte strings into electromagnetic signals that we saw in an earlier
-chapter.
+Từ góc nhìn của mạng, các chương trình ứng dụng gửi thông điệp cho nhau. Mỗi thông điệp này chỉ là một chuỗi byte không được diễn giải. Tuy nhiên, từ góc nhìn của ứng dụng, các thông điệp này chứa nhiều loại *dữ liệu* khác nhau—mảng số nguyên, khung hình video, dòng văn bản, ảnh số, v.v. Nói cách khác, các byte này có ý nghĩa. Bây giờ chúng ta sẽ xem xét vấn đề làm thế nào để mã hóa tốt nhất các loại dữ liệu khác nhau mà các chương trình ứng dụng muốn trao đổi thành các chuỗi byte. Ở nhiều khía cạnh, điều này tương tự như vấn đề mã hóa chuỗi byte thành tín hiệu điện từ mà chúng ta đã thấy ở chương trước.
 
-Thinking back to our discussion of encoding, there are essentially two
-concerns. The first is that the receiver be able to extract the same
-message from the signal as the transmitter sent; this is the framing
-problem. The second is making the encoding as efficient as possible.
-Both of these concerns are also present when encoding application data
-into network messages.
+Nhớ lại cuộc thảo luận về mã hóa, về cơ bản có hai mối quan tâm. Đầu tiên là bên nhận phải có thể trích xuất cùng một thông điệp từ tín hiệu như bên gửi đã gửi; đây là vấn đề đóng khung (framing). Thứ hai là làm cho việc mã hóa hiệu quả nhất có thể. Cả hai mối quan tâm này cũng xuất hiện khi mã hóa dữ liệu ứng dụng thành thông điệp mạng.
 
-In order for the receiver to extract the message sent by the
-transmitter, the two sides need to agree to a message format, often
-called the *presentation format*. If the sender wants to send the
-receiver an array of integers, for example, then the two sides have to
-agree what each integer looks like (how many bits long it is, what order
-the bytes are arranged in, and whether the most significant bit comes
-first or last, for example) and how many elements are in the array. The
-first section describes various encodings of traditional computer data,
-such as integers, floating-point numbers, character strings, arrays, and
-structures. Well-established formats also exist for multimedia data:
-Video, for example, is typically transmitted in one of the formats
-created by the Moving Picture Experts Group (MPEG), and still images are
-usually transmitted in Joint Photographic Experts Group (JPEG) format.
-The particular issues that arise in the encoding of multimedia data are
-discussed in the next section.
+Để bên nhận có thể trích xuất thông điệp do bên gửi gửi, hai bên cần đồng ý về một định dạng thông điệp, thường gọi là *định dạng trình bày* (presentation format). Nếu bên gửi muốn gửi cho bên nhận một mảng số nguyên, chẳng hạn, thì hai bên phải đồng ý mỗi số nguyên trông như thế nào (dài bao nhiêu bit, thứ tự sắp xếp các byte, và bit quan trọng nhất nằm trước hay sau, v.v.) và có bao nhiêu phần tử trong mảng. Phần đầu tiên sẽ mô tả các kiểu mã hóa dữ liệu máy tính truyền thống, như số nguyên, số thực dấu phẩy động, chuỗi ký tự, mảng và cấu trúc. Các định dạng chuẩn cũng tồn tại cho dữ liệu đa phương tiện: Ví dụ, video thường được truyền theo một trong các định dạng do Nhóm Chuyên gia Hình ảnh Động (MPEG) tạo ra, và ảnh tĩnh thường được truyền theo định dạng của Nhóm Chuyên gia Ảnh (JPEG). Các vấn đề cụ thể phát sinh khi mã hóa dữ liệu đa phương tiện sẽ được bàn trong phần tiếp theo.
 
-Multimedia data types require us to think about both presentation and
-*compression*. The well-known formats for the transmission and storage
-of audio and video deal with both these issues: making sure that what
-was recorded, photographed, or heard at the sender can be interpreted
-correctly by the receiver, and doing so in a way that does not overwhelm
-the network with massive amounts of multimedia data.
+Các kiểu dữ liệu đa phương tiện buộc chúng ta phải nghĩ đến cả trình bày và *nén*. Các định dạng nổi tiếng cho truyền và lưu trữ âm thanh, video đều xử lý cả hai vấn đề này: đảm bảo những gì được ghi lại, chụp ảnh hoặc nghe ở bên gửi có thể được diễn giải đúng ở bên nhận, và làm điều đó theo cách không làm mạng bị quá tải bởi lượng dữ liệu đa phương tiện khổng lồ.
 
-Compression and, more generally, the efficiency of encoding have a rich
-history, dating back to Shannon’s pioneering work on information theory
-in the 1940s. In effect, there are two opposing forces at work here. In
-one direction, you would like as much redundancy in the data as possible
-so that the receiver is able to extract the right data even if errors
-are introduced into the message. The error detection and correcting
-codes we saw in an earlier chapter add redundant information to messages
-for exactly this purpose. In the other direction, we would like to
-remove as much redundancy from the data as possible so that we may
-encode it in as few bits as possible. It turns out the multimedia data
-offers a wealth of opportunities for compression because of the way our
-senses and brains process visual and auditory signals. We don’t hear
-high frequencies as well as lower ones, and we don’t notice fine detail
-as much as the bigger picture in an image, especially if the image is
-moving.
+Nén và, nói rộng hơn, hiệu quả của mã hóa có một lịch sử phong phú, bắt nguồn từ công trình tiên phong của Shannon về lý thuyết thông tin vào những năm 1940. Thực tế, có hai lực đối lập cùng tác động ở đây. Ở một hướng, bạn muốn càng nhiều dư thừa trong dữ liệu càng tốt để bên nhận có thể trích xuất đúng dữ liệu ngay cả khi có lỗi xuất hiện trong thông điệp. Các mã phát hiện và sửa lỗi mà chúng ta đã thấy ở chương trước thêm thông tin dư thừa vào thông điệp chính xác vì mục đích này. Ở hướng ngược lại, chúng ta muốn loại bỏ càng nhiều dư thừa khỏi dữ liệu càng tốt để có thể mã hóa nó bằng càng ít bit càng tốt. Hóa ra dữ liệu đa phương tiện mang lại rất nhiều cơ hội cho việc nén nhờ cách giác quan và não bộ chúng ta xử lý tín hiệu hình ảnh và âm thanh. Chúng ta không nghe rõ các tần số cao như các tần số thấp, và chúng ta không chú ý đến chi tiết nhỏ bằng tổng thể của một hình ảnh, đặc biệt nếu hình ảnh đó đang chuyển động.
 
-Compression is important to the designers of networks for many reasons,
-not just because we rarely find ourselves with an abundance of bandwidth
-everywhere in the network. For example, the way we design a compression
-algorithm affects our sensitivity to lost or delayed data and thus may
-influence the design of resource allocation mechanisms and end-to-end
-protocols. Conversely, if the underlying network is unable to guarantee
-a fixed amount of bandwidth for the duration of a videoconference, we
-may choose to design compression algorithms that can adapt to changing
-network conditions.
+Nén dữ liệu quan trọng với các nhà thiết kế mạng vì nhiều lý do, không chỉ vì chúng ta hiếm khi có dư thừa băng thông ở mọi nơi trong mạng. Ví dụ, cách chúng ta thiết kế thuật toán nén ảnh hưởng đến độ nhạy của chúng ta với dữ liệu bị mất hoặc bị trễ và do đó có thể ảnh hưởng đến thiết kế các cơ chế phân bổ tài nguyên và các giao thức đầu-cuối. Ngược lại, nếu mạng bên dưới không thể đảm bảo một lượng băng thông cố định trong suốt thời gian hội nghị truyền hình, chúng ta có thể chọn thiết kế các thuật toán nén có khả năng thích nghi với điều kiện mạng thay đổi.
 
-Finally, an important aspect of both presentation formatting and data
-compression is that they require the sending and receiving hosts to
-process every byte of data in the message. It is for this reason that
-presentation formatting and compression are sometimes called *data
-manipulation* functions. This is in contrast to most of the protocols we
-have seen up to this point, which process a message without ever looking
-at its contents. Because of this need to read, compute on, and write
-every byte of data in a message, data manipulations affect end-to-end
-throughput over the network. In some cases, these manipulations can be
-the limiting factor.
+Cuối cùng, một khía cạnh quan trọng của cả định dạng trình bày và nén dữ liệu là chúng yêu cầu các máy chủ gửi và nhận phải xử lý từng byte dữ liệu trong thông điệp. Chính vì lý do này mà định dạng trình bày và nén đôi khi được gọi là các chức năng *xử lý dữ liệu* (data manipulation). Điều này trái ngược với hầu hết các giao thức mà chúng ta đã thấy cho đến thời điểm này, vốn xử lý một thông điệp mà không cần xem nội dung của nó. Do cần phải đọc, tính toán và ghi từng byte dữ liệu trong một thông điệp, các thao tác xử lý dữ liệu ảnh hưởng đến thông lượng đầu-cuối trên mạng. Trong một số trường hợp, các thao tác này có thể là yếu tố giới hạn.
