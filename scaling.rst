@@ -1,4 +1,4 @@
-Chương 4: Kết nối liên mạng nâng cao
+Chương 4: Kết nối mạng nâng cao
 ====================================
 
   Mọi sự bình đẳng đều ẩn chứa một hệ thứ bậc.

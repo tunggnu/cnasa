@@ -1,7 +1,7 @@
-Chapter 3:  Internetworking
-===========================
+Chương 3: Kết nối mạng
+=======================
 
-   Nature seems ... to reach many of her ends by long circuitous routes.
+   Thiên nhiên dường như... đạt được nhiều mục đích của mình bằng những con đường vòng vèo.
 
    *—Rudolph Lotze*
 

@@ -1,7 +1,7 @@
-Chapter 6:  Congestion Control
+Chương 6: Kiểm soát Tắc nghẽn
 ================================
 
-   The hand that hath made you fair hath made you good.
+   Bàn tay đã làm cho bạn trở nên xinh đẹp cũng đã làm cho bạn trở nên tốt đẹp.
 
    *—William Shakespeare*
 
