@@ -1,310 +1,86 @@
-6.2 Queuing Disciplines
-=======================
+6.2 Các Kỷ Luật Xếp Hàng
+========================
 
-Regardless of how simple or how sophisticated the rest of the resource
-allocation mechanism is, each router must implement some queuing
-discipline that governs how packets are buffered while waiting to be
-transmitted. The queuing algorithm can be thought of as allocating both
-bandwidth (which packets get transmitted) and buffer space (which
-packets get discarded). It also directly affects the latency experienced
-by a packet by determining how long a packet waits to be transmitted.
-This section introduces two common queuing algorithms—first-in,
-first-out (FIFO) and fair queuing (FQ)—and identifies several variations
-that have been proposed.
+Bất kể cơ chế phân bổ tài nguyên còn lại đơn giản hay phức tạp đến đâu, mỗi bộ định tuyến đều phải triển khai một kỷ luật xếp hàng nào đó để kiểm soát cách các gói tin được lưu vào bộ đệm trong khi chờ truyền đi. Thuật toán xếp hàng có thể được xem như là phân bổ cả băng thông (gói nào được truyền) và không gian bộ đệm (gói nào bị loại bỏ). Nó cũng ảnh hưởng trực tiếp đến độ trễ mà một gói tin phải chịu bằng cách xác định thời gian chờ truyền của gói đó. Phần này giới thiệu hai thuật toán xếp hàng phổ biến—vào trước ra trước (FIFO) và xếp hàng công bằng (FQ)—và chỉ ra một số biến thể đã được đề xuất.
 
 6.2.1 FIFO
 ----------
 
-The idea of FIFO queuing, also called first-come, first-served (FCFS)
-queuing, is simple: The first packet that arrives at a router is the
-first packet to be transmitted. This is illustrated in :numref:`Figure
-%s(a) <fig-fifo>`, which shows a FIFO with “slots” to hold up to eight
-packets. Given that the amount of buffer space at each router is
-finite, if a packet arrives and the queue (buffer space) is full, then
-the router discards that packet, as shown in :numref:`Figure %s(b)
-<fig-fifo>`. This is done without regard to which flow the packet
-belongs to or how important the packet is. This is sometimes called
-*tail drop*, since packets that arrive at the tail end of the FIFO are
-dropped.
+Ý tưởng của xếp hàng FIFO, còn gọi là vào trước ra trước (FCFS), rất đơn giản: Gói tin đến bộ định tuyến trước sẽ được truyền đi trước. Điều này được minh họa trong :numref:`Hình %s(a) <fig-fifo>`, cho thấy một FIFO với các “khe” chứa tối đa tám gói tin. Vì không gian bộ đệm tại mỗi bộ định tuyến là hữu hạn, nếu một gói tin đến mà hàng đợi (không gian bộ đệm) đã đầy, bộ định tuyến sẽ loại bỏ gói tin đó, như minh họa trong :numref:`Hình %s(b) <fig-fifo>`. Việc này được thực hiện mà không quan tâm đến luồng mà gói tin thuộc về hay tầm quan trọng của gói tin. Điều này đôi khi được gọi là *loại bỏ ở đuôi* (tail drop), vì các gói tin đến ở cuối FIFO sẽ bị loại bỏ.
 
 .. _fig-fifo:
 .. figure:: figures/f06-05-9780123850591.png
    :width: 400px
    :align: center
 
-   FIFO queuing (a), and tail drop at a FIFO queue (b).
+   Xếp hàng FIFO (a), và loại bỏ ở đuôi tại hàng đợi FIFO (b).
 
-Note that tail drop and FIFO are two separable ideas. FIFO is a
-*scheduling discipline*—it determines the order in which packets are
-transmitted. Tail drop is a *drop policy*—it determines which packets
-get dropped. Because FIFO and tail drop are the simplest instances of
-scheduling discipline and drop policy, respectively, they are sometimes
-viewed as a bundle—the vanilla queuing implementation. Unfortunately,
-the bundle is often referred to simply as *FIFO queuing*, when it should
-more precisely be called *FIFO with tail drop*. A later section provides
-an example of another drop policy, which uses a more complex algorithm
-than “Is there a free buffer?” to decide when to drop packets. Such a
-drop policy may be used with FIFO, or with more complex scheduling
-disciplines.
+Lưu ý rằng loại bỏ ở đuôi và FIFO là hai ý tưởng tách biệt. FIFO là một *kỷ luật lập lịch*—nó xác định thứ tự các gói tin được truyền đi. Loại bỏ ở đuôi là một *chính sách loại bỏ*—nó xác định gói nào bị loại bỏ. Vì FIFO và loại bỏ ở đuôi là các ví dụ đơn giản nhất của kỷ luật lập lịch và chính sách loại bỏ, nên đôi khi chúng được xem như một gói—cách triển khai xếp hàng mặc định. Đáng tiếc, gói này thường chỉ được gọi đơn giản là *xếp hàng FIFO*, trong khi chính xác hơn nên gọi là *FIFO với loại bỏ ở đuôi*. Một phần sau sẽ cung cấp ví dụ về một chính sách loại bỏ khác, sử dụng thuật toán phức tạp hơn “Có bộ đệm trống không?” để quyết định khi nào loại bỏ gói tin. Chính sách loại bỏ như vậy có thể được dùng với FIFO, hoặc với các kỷ luật lập lịch phức tạp hơn.
 
-FIFO with tail drop, as the simplest of all queuing algorithms, is the
-most widely used in Internet routers at the time of writing. This simple
-approach to queuing pushes all responsibility for congestion control and
-resource allocation out to the edges of the network. Thus, the prevalent
-form of congestion control in the Internet currently assumes no help
-from the routers: TCP takes responsibility for detecting and responding
-to congestion. We will see how this works in the next section.
+FIFO với loại bỏ ở đuôi, là thuật toán xếp hàng đơn giản nhất, hiện là loại được sử dụng rộng rãi nhất trong các bộ định tuyến Internet tại thời điểm viết sách này. Cách tiếp cận đơn giản này đẩy toàn bộ trách nhiệm kiểm soát tắc nghẽn và phân bổ tài nguyên ra rìa mạng. Do đó, hình thức kiểm soát tắc nghẽn phổ biến nhất trên Internet hiện nay giả định không có sự hỗ trợ từ các bộ định tuyến: TCP chịu trách nhiệm phát hiện và phản ứng với tắc nghẽn. Chúng ta sẽ xem cách thức này hoạt động ở phần tiếp theo.
 
-A simple variation on basic FIFO queuing is priority queuing. The idea
-is to mark each packet with a priority; the mark could be carried, for
-example, in the IP header, as we’ll discuss in a later section. The
-routers then implement multiple FIFO queues, one for each priority
-class. The router always transmits packets out of the highest-priority
-queue if that queue is nonempty before moving on to the next priority
-queue. Within each priority, packets are still managed in a FIFO manner.
-This idea is a small departure from the best-effort delivery model, but
-it does not go so far as to make guarantees to any particular priority
-class. It just allows high-priority packets to cut to the front of the
-line.
+Một biến thể đơn giản của xếp hàng FIFO cơ bản là xếp hàng ưu tiên. Ý tưởng là đánh dấu mỗi gói tin với một mức ưu tiên; dấu này có thể được mang, ví dụ, trong tiêu đề IP, như sẽ được bàn ở phần sau. Các bộ định tuyến sau đó triển khai nhiều hàng đợi FIFO, mỗi hàng cho một lớp ưu tiên. Bộ định tuyến luôn truyền các gói từ hàng đợi ưu tiên cao nhất nếu hàng này không rỗng trước khi chuyển sang hàng ưu tiên tiếp theo. Trong mỗi mức ưu tiên, các gói vẫn được quản lý theo kiểu FIFO. Ý tưởng này là một sự khác biệt nhỏ so với mô hình chuyển giao nỗ lực tối đa (best-effort), nhưng nó không đi xa đến mức đảm bảo cho bất kỳ lớp ưu tiên nào. Nó chỉ cho phép các gói ưu tiên cao được “chen lên đầu hàng”.
 
-The problem with priority queuing, of course, is that the high-priority
-queue can starve out all the other queues; that is, as long as there is
-at least one high-priority packet in the high-priority queue,
-lower-priority queues do not get served. For this to be viable, there
-needs to be hard limits on how much high-priority traffic is inserted in
-the queue. It should be immediately clear that we can’t allow users to
-set their own packets to high priority in an uncontrolled way; we must
-either prevent them from doing this altogether or provide some form of
-“pushback” on users. One obvious way to do this is to use economics—the
-network could charge more to deliver high-priority packets than
-low-priority packets. However, there are significant challenges to
-implementing such a scheme in a decentralized environment such as the
-Internet.
+Vấn đề với xếp hàng ưu tiên, tất nhiên, là hàng ưu tiên cao có thể làm “đói” các hàng còn lại; tức là, miễn là còn ít nhất một gói ưu tiên cao trong hàng, các hàng ưu tiên thấp hơn sẽ không được phục vụ. Để khả thi, cần có giới hạn cứng về lượng lưu lượng ưu tiên cao được đưa vào hàng. Rõ ràng là không thể cho phép người dùng tự đặt gói của mình thành ưu tiên cao một cách không kiểm soát; chúng ta phải hoặc ngăn họ làm điều này hoàn toàn, hoặc cung cấp một dạng “phản hồi” nào đó cho người dùng. Một cách rõ ràng là dùng kinh tế học—mạng có thể thu phí cao hơn để chuyển các gói ưu tiên cao so với gói ưu tiên thấp. Tuy nhiên, có nhiều thách thức lớn khi triển khai một cơ chế như vậy trong môi trường phi tập trung như Internet.
 
-One situation in which priority queuing is used in the Internet is to
-protect the most important packets—typically, the routing updates that
-are necessary to stabilize the routing tables after a topology change.
-Often there is a special queue for such packets, which can be identified
-by the Differentiated Services Code Point (formerly the TOS field) in
-the IP header. This is in fact a simple case of the idea of
-“Differentiated Services.”
+Một tình huống mà xếp hàng ưu tiên được sử dụng trên Internet là để bảo vệ các gói tin quan trọng nhất—thường là các bản cập nhật định tuyến cần thiết để ổn định bảng định tuyến sau khi có thay đổi cấu trúc liên kết. Thường có một hàng đặc biệt cho các gói này, có thể được nhận diện bằng Differentiated Services Code Point (trước đây là trường TOS) trong tiêu đề IP. Đây thực chất là một trường hợp đơn giản của ý tưởng “Dịch vụ Phân biệt”.
 
-6.2.2 Fair Queuing
-------------------
+6.2.2 Xếp Hàng Công Bằng
+------------------------
 
-The main problem with FIFO queuing is that it does not discriminate
-between different traffic sources, or, in the language introduced in the
-previous section, it does not separate packets according to the flow to
-which they belong. This is a problem at two different levels. At one
-level, it is not clear that any congestion-control algorithm implemented
-entirely at the source will be able to adequately control congestion
-with so little help from the routers. We will suspend judgment on this
-point until the next section when we discuss TCP congestion control. At
-another level, because the entire congestion-control mechanism is
-implemented at the sources and FIFO queuing does not provide a means to
-police how well the sources adhere to this mechanism, it is possible for
-an ill-behaved source (flow) to capture an arbitrarily large fraction of
-the network capacity. Considering the Internet again, it is certainly
-possible for a given application not to use TCP and, as a consequence,
-to bypass its end-to-end congestion-control mechanism. (Applications
-such as Internet telephony do this today.) Such an application is able
-to flood the Internet’s routers with its own packets, thereby causing
-other applications’ packets to be discarded.
+Vấn đề chính của xếp hàng FIFO là nó không phân biệt giữa các nguồn lưu lượng khác nhau, hay, theo ngôn ngữ đã giới thiệu ở phần trước, nó không tách các gói theo luồng mà chúng thuộc về. Điều này gây ra vấn đề ở hai cấp độ. Ở một cấp độ, không rõ liệu bất kỳ thuật toán kiểm soát tắc nghẽn nào được triển khai hoàn toàn ở nguồn có thể kiểm soát tắc nghẽn đủ tốt với rất ít sự hỗ trợ từ các bộ định tuyến hay không. Chúng ta sẽ tạm gác đánh giá này cho đến phần tiếp theo khi bàn về kiểm soát tắc nghẽn TCP. Ở một cấp độ khác, vì toàn bộ cơ chế kiểm soát tắc nghẽn được triển khai ở nguồn và xếp hàng FIFO không cung cấp phương tiện để kiểm soát mức độ tuân thủ của các nguồn, nên một nguồn (luồng) hoạt động không đúng có thể chiếm một phần tùy ý lớn của băng thông mạng. Xét lại Internet, rõ ràng là một ứng dụng nào đó có thể không dùng TCP và do đó bỏ qua cơ chế kiểm soát tắc nghẽn đầu-cuối của nó. (Các ứng dụng như điện thoại Internet hiện nay làm điều này.) Ứng dụng như vậy có thể “ngập lụt” các bộ định tuyến Internet bằng các gói của nó, khiến các gói của ứng dụng khác bị loại bỏ.
 
-Fair queuing (FQ) is an algorithm that has been designed to address
-this problem. The idea of FQ is to maintain a separate queue for each
-flow currently being handled by the router. The router then services
-these queues in a sort of round-robin, as illustrated in
-:numref:`Figure %s <fig-fq>`.  When a flow sends packets too quickly,
-then its queue fills up. When a queue reaches a particular length,
-additional packets belonging to that flow’s queue are discarded. In
-this way, a given source cannot arbitrarily increase its share of the
-network’s capacity at the expense of other flows.
+Xếp hàng công bằng (FQ) là một thuật toán được thiết kế để giải quyết vấn đề này. Ý tưởng của FQ là duy trì một hàng đợi riêng cho mỗi luồng hiện đang được bộ định tuyến xử lý. Bộ định tuyến sau đó phục vụ các hàng này theo kiểu vòng tròn, như minh họa trong :numref:`Hình %s <fig-fq>`. Khi một luồng gửi gói quá nhanh, hàng đợi của nó sẽ đầy. Khi hàng đợi đạt đến một độ dài nhất định, các gói bổ sung thuộc hàng đó sẽ bị loại bỏ. Bằng cách này, một nguồn không thể tùy ý tăng phần băng thông mạng mà nó chiếm dụng làm ảnh hưởng đến các luồng khác.
 
 .. _fig-fq:
 .. figure:: figures/f06-06-9780123850591.png
    :width: 350px
    :align: center
 
-   Round-robin service of four flows at a router.
+   Phục vụ vòng tròn bốn luồng tại một bộ định tuyến.
 
-Note that FQ does not involve the router telling the traffic sources
-anything about the state of the router or in any way limiting how
-quickly a given source sends packets. In other words, FQ is still
-designed to be used in conjunction with an end-to-end congestion-control
-mechanism. It simply segregates traffic so that ill-behaved traffic
-sources do not interfere with those that are faithfully implementing the
-end-to-end algorithm. FQ also enforces fairness among a collection of
-flows managed by a well-behaved congestion-control algorithm.
+Lưu ý rằng FQ không liên quan đến việc bộ định tuyến thông báo cho các nguồn lưu lượng về trạng thái của bộ định tuyến hoặc giới hạn tốc độ gửi của nguồn. Nói cách khác, FQ vẫn được thiết kế để sử dụng kết hợp với một cơ chế kiểm soát tắc nghẽn đầu-cuối. Nó chỉ đơn giản là tách biệt lưu lượng để các nguồn hoạt động không đúng không ảnh hưởng đến các nguồn tuân thủ thuật toán đầu-cuối. FQ cũng đảm bảo công bằng giữa các luồng được quản lý bởi một thuật toán kiểm soát tắc nghẽn tốt.
 
-As simple as the basic idea is, there are still a modest number of
-details that you have to get right. The main complication is that the
-packets being processed at a router are not necessarily the same length.
-To truly allocate the bandwidth of the outgoing link in a fair manner,
-it is necessary to take packet length into consideration. For example,
-if a router is managing two flows, one with 1000-byte packets and the
-other with 500-byte packets (perhaps because of fragmentation upstream
-from this router), then a simple round-robin servicing of packets from
-each flow’s queue will give the first flow two-thirds of the link’s
-bandwidth and the second flow only one-third of its bandwidth.
+Dù ý tưởng cơ bản đơn giản, vẫn có một số chi tiết cần xử lý đúng. Phức tạp chính là các gói được xử lý tại bộ định tuyến không nhất thiết có cùng độ dài. Để thực sự phân bổ băng thông của liên kết ra một cách công bằng, cần phải tính đến độ dài gói. Ví dụ, nếu một bộ định tuyến quản lý hai luồng, một luồng có gói 1000 byte và luồng kia có gói 500 byte (có thể do phân mảnh ở bộ định tuyến trước), thì phục vụ vòng tròn đơn giản các gói từ mỗi hàng sẽ khiến luồng đầu nhận hai phần ba băng thông, còn luồng thứ hai chỉ nhận một phần ba.
 
-What we really want is bit-by-bit round-robin, where the router
-transmits a bit from flow 1, then a bit from flow 2, and so on. Clearly,
-it is not feasible to interleave the bits from different packets. The FQ
-mechanism therefore simulates this behavior by first determining when a
-given packet would finish being transmitted if it were being sent using
-bit-by-bit round-robin and then using this finishing time to sequence
-the packets for transmission.
+Điều chúng ta thực sự muốn là vòng tròn từng bit, nơi bộ định tuyến truyền một bit từ luồng 1, rồi một bit từ luồng 2, v.v. Rõ ràng, không khả thi để xen kẽ từng bit từ các gói khác nhau. Do đó, cơ chế FQ mô phỏng hành vi này bằng cách xác định thời điểm một gói sẽ hoàn thành truyền nếu được gửi theo kiểu vòng tròn từng bit, rồi dùng thời điểm hoàn thành này để sắp xếp các gói truyền đi.
 
-To understand the algorithm for approximating bit-by-bit round-robin,
-consider the behavior of a single flow and imagine a clock that ticks
-once each time one bit is transmitted from all of the active flows. (A
-flow is active when it has data in the queue.) For this flow, let :math:`P_i`
-denote the length of packet *i*, let :math:`S_i` denote the time when the
-router starts to transmit packet *i*, and let :math:`F_i`
-denote the time when the router finishes transmitting packet *i*. If
-:math:`P_i` is expressed in terms of how many clock ticks it takes to transmit
-packet *i* (keeping in mind that time advances 1 tick each time this
-flow gets 1 bit’s worth of service), then it is easy to see that
-:math:`F_i = S_i + P_i`.
+Để hiểu thuật toán xấp xỉ vòng tròn từng bit, hãy xét hành vi của một luồng và tưởng tượng một đồng hồ nhảy một nhịp mỗi khi một bit được truyền từ tất cả các luồng đang hoạt động. (Một luồng được coi là hoạt động khi có dữ liệu trong hàng.) Với luồng này, ký hiệu :math:`P_i` là độ dài của gói *i*, :math:`S_i` là thời điểm bộ định tuyến bắt đầu truyền gói *i*, và :math:`F_i` là thời điểm bộ định tuyến hoàn thành truyền gói *i*. Nếu :math:`P_i` được tính bằng số nhịp đồng hồ cần để truyền gói *i* (lưu ý rằng thời gian tăng 1 nhịp mỗi khi luồng này nhận được 1 bit dịch vụ), thì dễ thấy rằng :math:`F_i = S_i + P_i`.
 
-When do we start transmitting packet *i*? The answer to this question
-depends on whether packet *i* arrived before or after the router
-finished transmitting packet *i-1* from this flow. If it was before,
-then logically the first bit of packet *i* is transmitted immediately
-after the last bit of packet *i-1*. On the other hand, it is possible
-that the router finished transmitting packet *i-1* long before *i*
-arrived, meaning that there was a period of time during which the queue
-for this flow was empty, so the round-robin mechanism could not transmit
-any packets from this flow. If we let :math:`A_i`
-denote the time that packet *i* arrives at the router, then
-:math:`S_i = \max(F_{i-1}, A_i)`. Thus, we can compute
+Khi nào chúng ta bắt đầu truyền gói *i*? Câu trả lời phụ thuộc vào việc gói *i* đến trước hay sau khi bộ định tuyến hoàn thành truyền gói *i-1* của luồng này. Nếu đến trước, thì về mặt logic, bit đầu tiên của gói *i* được truyền ngay sau bit cuối của gói *i-1*. Ngược lại, có thể bộ định tuyến đã hoàn thành truyền gói *i-1* từ lâu trước khi *i* đến, nghĩa là có một khoảng thời gian hàng đợi của luồng này rỗng, nên cơ chế vòng tròn không thể truyền gói nào từ luồng này. Nếu ký hiệu :math:`A_i` là thời điểm gói *i* đến bộ định tuyến, thì :math:`S_i = \max(F_{i-1}, A_i)`. Do đó, ta có thể tính:
 
 .. math::
 
    F_i = \max(F_{i-1}, A_i) + P_i
 
-Now we move on to the situation in which there is more than one flow,
-and we find that there is a catch to determining :math:`A_i`.
-We can’t just read the wall clock when the packet arrives. As noted
-above, we want time to advance by one tick each time all the active
-flows get one bit of service under bit-by-bit round-robin, so we need a
-clock that advances more slowly when there are more flows. Specifically,
-the clock must advance by one tick when *n* bits are transmitted if
-there are *n* active flows. This clock will be used to calculate
-:math:`A_i`.
+Bây giờ chuyển sang trường hợp có nhiều luồng, ta thấy có một điểm cần lưu ý khi xác định :math:`A_i`. Ta không thể chỉ đơn giản đọc đồng hồ hệ thống khi gói đến. Như đã nói, ta muốn thời gian tăng một nhịp mỗi khi tất cả các luồng đang hoạt động nhận được một bit dịch vụ, nên cần một đồng hồ chạy chậm hơn khi có nhiều luồng. Cụ thể, đồng hồ phải tăng một nhịp khi *n* bit được truyền nếu có *n* luồng hoạt động. Đồng hồ này sẽ được dùng để tính :math:`A_i`.
 
-Now, for every flow, we calculate :math:`F_i` for each packet that arrives
-using the above formula. We then treat all the :math:`F_i` as timestamps,
-and the next packet to transmit is always the packet
-that has the lowest timestamp—the packet that, based on the above
-reasoning, should finish transmission before all others.
+Với mỗi luồng, ta tính :math:`F_i` cho mỗi gói đến bằng công thức trên. Sau đó, coi tất cả các :math:`F_i` là dấu thời gian, và gói tiếp theo được truyền luôn là gói có dấu thời gian nhỏ nhất—gói mà, theo lý luận trên, sẽ hoàn thành truyền trước các gói khác.
 
-Note that this means that a packet can arrive on a flow, and, because it
-is shorter than a packet from some other flow that is already in the
-queue waiting to be transmitted, it can be inserted into the queue in
-front of that longer packet. However, this does not mean that a newly
-arriving packet can preempt a packet that is currently being
-transmitted. It is this lack of preemption that keeps the implementation
-of FQ just described from exactly simulating the bit-by-bit round-robin
-scheme that we are attempting to approximate.
+Điều này có nghĩa là một gói có thể đến trên một luồng và, vì nó ngắn hơn một gói từ luồng khác đã có trong hàng chờ truyền, nó có thể được chèn vào trước gói dài hơn đó. Tuy nhiên, điều này không có nghĩa là một gói mới đến có thể ngắt quãng một gói đang được truyền. Chính sự không có ngắt quãng này khiến việc triển khai FQ như mô tả không mô phỏng chính xác vòng tròn từng bit mà chúng ta muốn xấp xỉ.
 
 .. _fig-fair-queuing:
 .. figure:: figures/f06-07-9780123850591.png
    :width: 600px
    :align: center
 
-   Example of fair queuing in action: (a) Packets with
-   earlier finishing times are sent first; (b) sending of a packet
-   already in progress is completed.
+   Ví dụ về xếp hàng công bằng: (a) Các gói có thời điểm hoàn thành sớm hơn được gửi trước; (b) việc gửi một gói đang truyền được hoàn tất.
 
-To better see how this implementation of fair queuing works, consider
-the example given in :numref:`Figure %s <fig-fair-queuing>`. Part (a)
-shows the queues for two flows; the algorithm selects both packets
-from flow 1 to be transmitted before the packet in the flow 2 queue,
-because of their earlier finishing times. In (b), the router has
-already begun to send a packet from flow 2 when the packet from flow 1
-arrives. Though the packet arriving on flow 1 would have finished
-before flow 2 if we had been using perfect bit-by-bit fair queuing,
-the implementation does not preempt the flow 2 packet.
+Để thấy rõ hơn cách hoạt động của xếp hàng công bằng này, hãy xét ví dụ trong :numref:`Hình %s <fig-fair-queuing>`. Phần (a) cho thấy các hàng đợi của hai luồng; thuật toán chọn cả hai gói từ luồng 1 để truyền trước gói trong hàng của luồng 2, vì chúng có thời điểm hoàn thành sớm hơn. Ở (b), bộ định tuyến đã bắt đầu gửi một gói từ luồng 2 khi gói từ luồng 1 đến. Dù gói đến trên luồng 1 sẽ hoàn thành trước luồng 2 nếu dùng xếp hàng công bằng hoàn hảo từng bit, nhưng việc triển khai không ngắt quãng gói của luồng 2.
 
-There are two things to notice about fair queuing. First, the link is
-never left idle as long as there is at least one packet in the queue.
-Any queuing scheme with this characteristic is said to be *work
-conserving*. One effect of being work conserving is that if I am sharing
-a link with a lot of flows that are not sending any data then; I can use
-the full link capacity for my flow. As soon as the other flows start
-sending, however, they will start to use their share and the capacity
-available to my flow will drop.
+Có hai điều cần lưu ý về xếp hàng công bằng. Thứ nhất, liên kết không bao giờ bị bỏ trống miễn là còn ít nhất một gói trong hàng. Bất kỳ cơ chế xếp hàng nào có đặc điểm này được gọi là *bảo toàn công việc* (work conserving). Một hệ quả của việc bảo toàn công việc là nếu tôi chia sẻ một liên kết với nhiều luồng không gửi dữ liệu thì tôi có thể sử dụng toàn bộ băng thông cho luồng của mình. Tuy nhiên, khi các luồng khác bắt đầu gửi, chúng sẽ sử dụng phần của mình và băng thông dành cho luồng của tôi sẽ giảm.
 
-The second thing to notice is that if the link is fully loaded and there
-are *n* flows sending data, I cannot use more than 1/n\ :sup:`th`
-of the link bandwidth. If I try to send more than that, my packets
-will be assigned increasingly large timestamps, causing them to sit in
-the queue longer awaiting transmission. Eventually, the queue will
-overflow—although whether it is my packets or someone else’s that are
-dropped is a decision that is not determined by the fact that we are
-using fair queuing. This is determined by the drop policy; FQ is a
-scheduling algorithm, which, like FIFO, may be combined with various
-drop policies.
+Điều thứ hai là nếu liên kết được sử dụng tối đa và có *n* luồng gửi dữ liệu, tôi không thể sử dụng quá 1/n\ :sup:`th` băng thông liên kết. Nếu tôi cố gửi nhiều hơn, các gói của tôi sẽ được gán dấu thời gian ngày càng lớn, khiến chúng phải chờ lâu hơn trong hàng. Cuối cùng, hàng sẽ bị tràn—dù gói của tôi hay của người khác bị loại bỏ là do chính sách loại bỏ quyết định; FQ là một thuật toán lập lịch, giống như FIFO, có thể kết hợp với nhiều chính sách loại bỏ khác nhau.
 
-Because FQ is work conserving, any bandwidth that is not used by one
-flow is automatically available to other flows. For example, if we have
-four flows passing through a router, and all of them are sending
-packets, then each one will receive one-quarter of the bandwidth. But,
-if one of them is idle long enough that all its packets drain out of the
-router’s queue, then the available bandwidth will be shared among the
-remaining three flows, which will each now receive one-third of the
-bandwidth. Thus, we can think of FQ as providing a guaranteed minimum
-share of bandwidth to each flow, with the possibility that it can get
-more than its guarantee if other flows are not using their shares.
+Vì FQ là bảo toàn công việc, bất kỳ băng thông nào không được một luồng sử dụng sẽ tự động được các luồng khác sử dụng. Ví dụ, nếu có bốn luồng đi qua một bộ định tuyến, và tất cả đều gửi gói, thì mỗi luồng sẽ nhận một phần tư băng thông. Nhưng nếu một luồng không gửi đủ lâu để tất cả các gói của nó rời khỏi hàng, thì băng thông còn lại sẽ được chia cho ba luồng còn lại, mỗi luồng nhận một phần ba băng thông. Do đó, có thể xem FQ như cung cấp một phần băng thông tối thiểu đảm bảo cho mỗi luồng, với khả năng nhận nhiều hơn nếu các luồng khác không dùng hết phần của mình.
 
-It is possible to implement a variation of FQ, called *weighted fair
-queuing* (WFQ), that allows a weight to be assigned to each flow
-(queue). This weight logically specifies how many bits to transmit each
-time the router services that queue, which effectively controls the
-percentage of the link’s bandwidth that flow will get. Simple FQ
-gives each queue a weight of 1, which means that logically only 1 bit is
-transmitted from each queue each time around. This results in each flow
-getting :math:`1/n^{th}` of the bandwidth when there are *n*
-flows. With WFQ, however, one queue might have a weight of 2, a second
-queue might have a weight of 1,
-and a third queue might have a weight of 3. Assuming that each queue
-always contains a packet waiting to be transmitted, the first flow will
-get one-third of the available bandwidth, the second will get one-sixth
-of the available bandwidth, and the third will get one-half of the
-available bandwidth.
+Có thể triển khai một biến thể của FQ, gọi là *xếp hàng công bằng có trọng số* (WFQ), cho phép gán trọng số cho mỗi luồng (hàng đợi). Trọng số này về mặt logic xác định số bit được truyền mỗi lần bộ định tuyến phục vụ hàng đó, qua đó kiểm soát tỷ lệ băng thông mà luồng nhận được. FQ đơn giản gán trọng số 1 cho mỗi hàng, nghĩa là về mặt logic chỉ 1 bit được truyền từ mỗi hàng mỗi vòng. Điều này dẫn đến mỗi luồng nhận :math:`1/n^{th}` băng thông khi có *n* luồng. Với WFQ, một hàng có thể có trọng số 2, hàng thứ hai trọng số 1, hàng thứ ba trọng số 3. Giả sử mỗi hàng luôn có gói chờ truyền, luồng đầu sẽ nhận một phần ba băng thông, luồng thứ hai một phần sáu, và luồng thứ ba một nửa băng thông.
 
-While we have described WFQ in terms of flows, note that it could be
-implemented on *classes* of traffic, where classes are defined in some
-other way than the simple flows introduced at the start of this chapter.
-For example, we could use some bits in the IP header to identify classes
-and allocate a queue and a weight to each class. This is exactly what is
-proposed as part of the Differentiated Services architecture described
-in a later section.
+Dù chúng ta mô tả WFQ theo luồng, lưu ý rằng nó có thể được triển khai trên *lớp* lưu lượng, nơi lớp được xác định theo cách khác ngoài các luồng đơn giản đã giới thiệu ở đầu chương. Ví dụ, có thể dùng một số bit trong tiêu đề IP để nhận diện lớp và gán hàng đợi cùng trọng số cho mỗi lớp. Đây chính là điều được đề xuất trong kiến trúc Dịch vụ Phân biệt sẽ trình bày ở phần sau.
 
-Note that a router performing WFQ must learn what weights to assign to
-each queue from somewhere, either by manual configuration or by some
-sort of signalling from the sources. In the latter case, we are moving
-toward a reservation-based model. Just assigning a weight to a queue
-provides a rather weak form of reservation because these weights are
-only indirectly related to the bandwidth the flow receives. (The
-bandwidth available to a flow also depends, for example, on how many
-other flows are sharing the link.) We will see in a later section how
-WFQ can be used as a component of a reservation-based resource
-allocation mechanism.
+Lưu ý rằng một bộ định tuyến thực hiện WFQ phải biết lấy trọng số cho mỗi hàng từ đâu, hoặc cấu hình thủ công hoặc nhận tín hiệu từ nguồn. Trong trường hợp sau, chúng ta đang tiến gần đến mô hình dựa trên đặt chỗ. Chỉ gán trọng số cho hàng cung cấp một dạng đặt chỗ khá yếu vì các trọng số này chỉ liên quan gián tiếp đến băng thông mà luồng nhận được. (Băng thông dành cho một luồng còn phụ thuộc vào số luồng khác chia sẻ liên kết.) Chúng ta sẽ thấy ở phần sau cách WFQ có thể được dùng như một thành phần của cơ chế phân bổ tài nguyên dựa trên đặt chỗ.
 
 .. _key-policy-mechanism:
-.. admonition:: Key Takeaway
+.. admonition:: Bài Học Chính
 
-   Finally, we observe that this whole discussion of queue management
-   illustrates an important system design principle known as
-   *separating policy and mechanism*. The idea is to view each
-   mechanism as an opaque box that provides a multifaceted service that
-   can be controlled by a set of knobs. A policy specifies a
-   particular setting of those knobs but does not know (or care) about
-   how the policy is implemented.  In this case, the mechanism in
-   question is the queuing discipline, and the policy is a particular
-   setting of which flow gets what level of service (e.g., priority or
-   weight). We discuss some policies that can be used with the WFQ
-   mechanism in a later section. :ref:`[Next] <key-red>`
+   Cuối cùng, chúng ta nhận thấy toàn bộ thảo luận về quản lý hàng đợi này minh họa một nguyên lý thiết kế hệ thống quan trọng gọi là *tách biệt chính sách và cơ chế*. Ý tưởng là xem mỗi cơ chế như một hộp đen cung cấp dịch vụ đa chiều có thể điều khiển bằng một tập các nút điều chỉnh. Một chính sách xác định một thiết lập cụ thể của các nút này nhưng không biết (hoặc không quan tâm) cách chính sách được triển khai. Trong trường hợp này, cơ chế là kỷ luật xếp hàng, còn chính sách là thiết lập cụ thể về luồng nào nhận mức dịch vụ nào (ví dụ, ưu tiên hay trọng số). Chúng ta sẽ bàn về một số chính sách có thể dùng với cơ chế WFQ ở phần sau. :ref:`[Tiếp theo] <key-red>`
