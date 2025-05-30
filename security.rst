@@ -1,8 +1,8 @@
-Chapter 8: Network Security
-===========================
+Chương 8: An ninh Mạng
+======================
 
-   It is true greatness to have in one the frailty of a man and the
-   security of a god.
+   Thật vĩ đại khi trong một con người có cả sự yếu đuối của con người
+   và sự an toàn của thần thánh.
 
    *—Seneca*
 
