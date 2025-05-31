@@ -1,248 +1,183 @@
-8.4 Authentication Protocols
-============================
+8.4 Các Giao Thức Xác Thực
+==========================
 
-So far we described how to encrypt messages, build authenticators,
-predistribute the necessary keys. It might seem as if all we have to do
-to make a protocol secure is append an authenticator to every message
-and, if we want confidentiality, encrypt the message.
+Cho đến nay chúng ta đã mô tả cách mã hóa thông điệp, xây dựng bộ xác thực,
+phân phối trước các khóa cần thiết. Có vẻ như tất cả những gì chúng ta cần làm
+để làm cho một giao thức an toàn là gắn một bộ xác thực vào mỗi thông điệp
+và, nếu muốn tính bảo mật, thì mã hóa thông điệp.
 
-There are two main reasons why it’s not that simple. First, there is the
-problem of a *replay attack*: an adversary retransmitting a copy of a
-message that was previously sent. If the message was an order you had
-placed on a website, for example, then the replayed message would appear
-to the website as though you had ordered more of the same. Even though
-it wasn’t the original incarnation of the message, its authenticator
-would still be valid; after all, the message was created by you, and it
-wasn’t modified. Clearly, we need a solution that ensures *originality*.
+Có hai lý do chính khiến mọi việc không đơn giản như vậy. Thứ nhất, có vấn đề về
+*một cuộc tấn công phát lại* (*replay attack*): một kẻ tấn công truyền lại một bản sao
+của một thông điệp đã được gửi trước đó. Nếu thông điệp đó là một đơn đặt hàng bạn đã
+đặt trên một trang web, ví dụ, thì thông điệp bị phát lại sẽ khiến trang web nghĩ rằng
+bạn đã đặt thêm nhiều đơn hàng giống như vậy. Mặc dù nó không phải là bản gốc của thông điệp,
+bộ xác thực của nó vẫn hợp lệ; dù sao thì thông điệp đó cũng do bạn tạo ra, và nó không bị sửa đổi.
+Rõ ràng, chúng ta cần một giải pháp đảm bảo *tính nguyên bản* (*originality*).
 
-In a variation of this attack called a *suppress-replay attack*, an
-adversary might merely delay your message (by intercepting and later
-replaying it), so that it is received at a time when it is no longer
-appropriate. For example, an adversary could delay your order to buy
-stock from an auspicious time to a time when you would not have wanted
-to buy. Although this message would in a sense be the original, it
-wouldn’t be timely. So we also need to ensure *timeliness*. Originality
-and timeliness may be considered aspects of integrity. Ensuring them
-will in most cases require a nontrivial, back-and-forth protocol.
+Trong một biến thể của cuộc tấn công này gọi là *tấn công trì hoãn-phát lại* (*suppress-replay attack*),
+một kẻ tấn công có thể chỉ đơn giản là trì hoãn thông điệp của bạn (bằng cách chặn và phát lại sau),
+để nó được nhận vào một thời điểm không còn phù hợp nữa. Ví dụ, một kẻ tấn công có thể trì hoãn
+đơn đặt hàng mua cổ phiếu của bạn từ một thời điểm thuận lợi sang một thời điểm mà bạn không còn muốn mua nữa.
+Mặc dù thông điệp này theo một nghĩa nào đó là bản gốc, nhưng nó lại không kịp thời.
+Vì vậy, chúng ta cũng cần đảm bảo *tính kịp thời* (*timeliness*). Tính nguyên bản và tính kịp thời
+có thể được xem là các khía cạnh của tính toàn vẹn. Đảm bảo chúng trong hầu hết các trường hợp
+sẽ đòi hỏi một giao thức qua lại không hề đơn giản.
 
-The second problem we have not yet solved is how to establish a session
-key. A session key is a secret-key cipher key generated on the fly and
-used for just one session. This too involves a nontrivial protocol.
+Vấn đề thứ hai mà chúng ta chưa giải quyết là làm thế nào để thiết lập một khóa phiên (*session key*).
+Khóa phiên là một khóa mã hóa khóa bí mật được tạo ra ngay tại chỗ và chỉ sử dụng cho một phiên duy nhất.
+Điều này cũng liên quan đến một giao thức không hề đơn giản.
 
-What these two issues have in common is authentication. If a message is
-not original and timely, then from a practical standpoint we want to
-consider it as not being authentic, not being from whom it claims to be.
-And, obviously, when you are arranging to share a new session key with
-someone, you want to know you are sharing it with the right person.
-Usually, authentication protocols establish a session key at the same
-time, so that at the end of the protocol Alice and Bob have
-authenticated each other and they have a new secret key to use. Without
-a new session key, the protocol would just authenticate Alice and Bob at
-one point in time; a session key allows them to efficiently authenticate
-subsequent messages. Generally, session key establishment protocols
-perform authentication. A notable exception is Diffie-Hellman, as
-described below, so the terms *authentication protocol* and *session key
-establishment protocol* are almost synonymous.
+Điểm chung của hai vấn đề này là xác thực (*authentication*). Nếu một thông điệp không nguyên bản
+và không kịp thời, thì trên thực tế chúng ta muốn coi nó là không xác thực, không đến từ người mà nó tuyên bố.
+Và, rõ ràng, khi bạn đang sắp chia sẻ một khóa phiên mới với ai đó, bạn muốn biết mình đang chia sẻ với đúng người.
+Thông thường, các giao thức xác thực sẽ thiết lập một khóa phiên cùng lúc, để sau khi giao thức kết thúc,
+Alice và Bob đã xác thực lẫn nhau và có một khóa bí mật mới để sử dụng. Nếu không có khóa phiên mới,
+giao thức chỉ xác thực Alice và Bob tại một thời điểm; khóa phiên cho phép họ xác thực hiệu quả các thông điệp tiếp theo.
+Nói chung, các giao thức thiết lập khóa phiên sẽ thực hiện xác thực. Một ngoại lệ đáng chú ý là Diffie-Hellman,
+như mô tả bên dưới, vì vậy các thuật ngữ *giao thức xác thực* (*authentication protocol*) và
+*giao thức thiết lập khóa phiên* (*session key establishment protocol*) gần như đồng nghĩa.
 
-There is a core set of techniques used to ensure originality and
-timeliness in authentication protocols. We describe those techniques
-before moving on to particular protocols.
+Có một tập hợp các kỹ thuật cốt lõi được sử dụng để đảm bảo tính nguyên bản và kịp thời trong các giao thức xác thực.
+Chúng tôi sẽ mô tả các kỹ thuật đó trước khi chuyển sang các giao thức cụ thể.
 
-8.4.1 Originality and Timeliness Techniques
--------------------------------------------
+8.4.1 Kỹ Thuật Đảm Bảo Tính Nguyên Bản và Kịp Thời
+--------------------------------------------------
 
-We have seen that authenticators alone do not enable us to detect
-messages that are not original or timely. One approach is to include a
-timestamp in the message. Obviously the timestamp itself must be
-tamperproof, so it must be covered by the authenticator. The primary
-drawback to timestamps is that they require distributed clock
-synchronization. Since our system would then depend on synchronization,
-the clock synchronization itself would need to be defended against
-security threats, in addition to the usual challenges of clock
-synchronization. Another issue is that distributed clocks are
-synchronized to only a certain degree—a certain margin of error. Thus,
-the timing integrity provided by timestamps is only as good as the
-degree of synchronization.
+Chúng ta đã thấy rằng chỉ dùng bộ xác thực thôi thì không thể phát hiện các thông điệp không nguyên bản hoặc không kịp thời.
+Một cách tiếp cận là đưa một dấu thời gian (*timestamp*) vào thông điệp. Rõ ràng, bản thân dấu thời gian phải không thể bị giả mạo,
+vì vậy nó phải được bảo vệ bởi bộ xác thực. Nhược điểm chính của dấu thời gian là nó đòi hỏi phải đồng bộ hóa đồng hồ phân tán.
+Vì hệ thống của chúng ta sẽ phụ thuộc vào việc đồng bộ hóa, nên chính việc đồng bộ hóa đồng hồ cũng cần được bảo vệ
+trước các mối đe dọa bảo mật, ngoài các thách thức thông thường của việc đồng bộ hóa đồng hồ.
+Một vấn đề khác là các đồng hồ phân tán chỉ được đồng bộ hóa đến một mức độ nhất định—một biên độ sai số nhất định.
+Do đó, tính toàn vẹn về thời gian mà dấu thời gian cung cấp chỉ tốt bằng mức độ đồng bộ hóa.
 
-Another approach is to include a *nonce*—a random number used only
-once—in the message. Participants can then detect replay attacks by
-checking whether a nonce has been used previously. Unfortunately, this
-requires keeping track of past nonces, of which a great many could
-accumulate. One solution is to combine the use of timestamps and nonces,
-so that nonces are required to be unique only within a certain span of
-time. That makes ensuring uniqueness of nonces manageable while
-requiring only loose synchronization of clocks.
+Một cách tiếp cận khác là đưa vào thông điệp một *nonce*—một số ngẫu nhiên chỉ sử dụng một lần.
+Các bên tham gia có thể phát hiện các cuộc tấn công phát lại bằng cách kiểm tra xem một nonce đã được sử dụng trước đó chưa.
+Đáng tiếc là điều này đòi hỏi phải theo dõi các nonce đã dùng, mà số lượng có thể tích tụ rất lớn.
+Một giải pháp là kết hợp việc sử dụng dấu thời gian và nonce, để các nonce chỉ cần đảm bảo duy nhất trong một khoảng thời gian nhất định.
+Điều đó giúp việc đảm bảo tính duy nhất của nonce trở nên khả thi hơn trong khi chỉ cần đồng bộ hóa đồng hồ lỏng lẻo.
 
-Another solution to the shortcomings of timestamps and nonces is to
-use one or both of them in a *challenge-response* protocol. Suppose we
-use a timestamp. In a challenge-response protocol, Alice sends Bob a
-timestamp, challenging Bob to encrypt it in a response message (if
-they share a secret key) or digitally sign it in a response message
-(if Bob has a public key, as in :numref:`Figure %s
-<fig-challenge-response>`). The encrypted timestamp is like an
-authenticator that additionally proves timeliness. Alice can easily
-check the timeliness of the timestamp in a response from Bob since
-that timestamp comes from Alice’s own clock—no distributed clock
-synchronization needed. Suppose instead that the protocol uses
-nonces. Then Alice need only keep track of those nonces for which
-responses are currently outstanding and haven’t been outstanding too
-long; any purported response with an unrecognized nonce must be bogus.
+Một giải pháp khác cho các hạn chế của dấu thời gian và nonce là sử dụng một hoặc cả hai trong một giao thức *thách thức-đáp ứng* (*challenge-response*).
+Giả sử chúng ta sử dụng dấu thời gian. Trong một giao thức thách thức-đáp ứng, Alice gửi cho Bob một dấu thời gian,
+thách thức Bob mã hóa nó trong một thông điệp phản hồi (nếu họ chia sẻ một khóa bí mật) hoặc ký số nó trong một thông điệp phản hồi
+(nếu Bob có một khóa công khai, như trong :numref:`Figure %s <fig-challenge-response>`).
+Dấu thời gian được mã hóa giống như một bộ xác thực bổ sung chứng minh tính kịp thời.
+Alice có thể dễ dàng kiểm tra tính kịp thời của dấu thời gian trong phản hồi từ Bob vì dấu thời gian đó xuất phát từ đồng hồ của chính Alice—
+không cần đồng bộ hóa đồng hồ phân tán. Giả sử thay vào đó giao thức sử dụng nonce.
+Khi đó Alice chỉ cần theo dõi các nonce mà phản hồi đang chờ xử lý và chưa chờ quá lâu;
+bất kỳ phản hồi nào với một nonce không nhận ra đều phải là giả mạo.
 
 .. _fig-challenge-response:
 .. figure:: figures/f08-07-9780123850591.png
    :width: 450px
    :align: center
 
-   A challenge-response protocol.
+   Một giao thức thách thức-đáp ứng.
 
-The beauty of challenge-response, which might otherwise seem excessively
-complex, is that it combines timeliness and authentication; after all,
-only Bob (and possibly Alice, if it’s a secret-key cipher) knows the key
-necessary to encrypt the never before seen timestamp or nonce.
-Timestamps or nonces are used in most of the authentication protocols
-that follow.
+Điều tuyệt vời của thách thức-đáp ứng, vốn có thể trông quá phức tạp, là nó kết hợp được tính kịp thời và xác thực;
+suy cho cùng, chỉ Bob (và có thể cả Alice, nếu là mã hóa khóa bí mật) biết khóa cần thiết để mã hóa dấu thời gian hoặc nonce chưa từng thấy trước đó.
+Dấu thời gian hoặc nonce được sử dụng trong hầu hết các giao thức xác thực tiếp theo.
 
-8.4.2 Public-Key Authentication Protocols
------------------------------------------
+8.4.2 Các Giao Thức Xác Thực Khóa Công Khai
+--------------------------------------------
 
-In the following discussion, we assume that Alice and Bob’s public keys
-have been predistributed to each other via some means such as a PKI. We
-mean this to include the case where Alice includes her certificate in
-her first message to Bob, and the case where Bob searches for a
-certificate about Alice when he receives her first message.
+Trong phần thảo luận sau, chúng tôi giả định rằng các khóa công khai của Alice và Bob đã được phân phối trước cho nhau
+thông qua một phương tiện nào đó như PKI. Điều này bao gồm cả trường hợp Alice gửi chứng chỉ của mình trong thông điệp đầu tiên cho Bob,
+và trường hợp Bob tìm kiếm một chứng chỉ về Alice khi nhận được thông điệp đầu tiên từ cô ấy.
 
 .. _fig-pKAuthSync:
 .. figure:: figures/f08-08-9780123850591.png
    :width: 600px
    :align: center
 
-   A public-key authentication protocol that depends on synchronization.
+   Một giao thức xác thực khóa công khai phụ thuộc vào đồng bộ hóa.
 
-This first protocol (:numref:`Figure %s <fig-pKAuthSync>`) relies on
-Alice and Bob’s clocks being synchronized. Alice sends Bob a message
-with a timestamp and her identity in plaintext plus her digital
-signature. Bob uses the digital signature to authenticate the message
-and the timestamp to verify its freshness. Bob sends back a message
-with a timestamp and his identity in plaintext, as well as a new
-session key encrypted (for confidentiality) using Alice’s public key,
-all digitally signed. Alice can verify the authenticity and freshness
-of the message, so she knows she can trust the new session key. To
-deal with imperfect clock synchronization, the timestamps could be
-augmented with nonces.
+Giao thức đầu tiên này (:numref:`Figure %s <fig-pKAuthSync>`) dựa vào việc đồng hồ của Alice và Bob được đồng bộ hóa.
+Alice gửi cho Bob một thông điệp với dấu thời gian và danh tính của cô ấy ở dạng văn bản thuần cùng với chữ ký số của cô ấy.
+Bob sử dụng chữ ký số để xác thực thông điệp và dấu thời gian để kiểm tra tính mới mẻ.
+Bob gửi lại một thông điệp với dấu thời gian và danh tính của mình ở dạng văn bản thuần, cũng như một khóa phiên mới được mã hóa
+(để đảm bảo tính bảo mật) bằng khóa công khai của Alice, tất cả đều được ký số.
+Alice có thể xác minh tính xác thực và tính mới mẻ của thông điệp, do đó cô ấy biết mình có thể tin tưởng vào khóa phiên mới.
+Để xử lý việc đồng bộ hóa đồng hồ không hoàn hảo, các dấu thời gian có thể được bổ sung bằng các nonce.
 
-The second protocol (:numref:`Figure %s <fig-pKAuthNoSync>`) is
-similar but does not rely on clock synchronization. In this protocol,
-Alice again sends Bob a digitally signed message with a timestamp and
-her identity.  Because their clocks aren’t synchronized, Bob cannot be
-sure that the message is fresh. Bob sends back a digitally signed
-message with Alice’s original timestamp, his own new timestamp, and
-his identity. Alice can verify the freshness of Bob’s reply by
-comparing her current time against the timestamp that originated with
-her. She then sends Bob a digitally signed message with his original
-timestamp and a new session key encrypted using Bob’s public key. Bob
-can verify the freshness of the message because the timestamp came
-from his clock, so he knows he can trust the new session key. The
-timestamps essentially serve as convenient nonces, and indeed this
-protocol could use nonces instead.
+Giao thức thứ hai (:numref:`Figure %s <fig-pKAuthNoSync>`) tương tự nhưng không phụ thuộc vào đồng bộ hóa đồng hồ.
+Trong giao thức này, Alice lại gửi cho Bob một thông điệp được ký số với dấu thời gian và danh tính của cô ấy.
+Vì đồng hồ của họ không được đồng bộ hóa, Bob không thể chắc chắn rằng thông điệp là mới.
+Bob gửi lại một thông điệp được ký số với dấu thời gian gốc của Alice, dấu thời gian mới của chính mình và danh tính của mình.
+Alice có thể xác minh tính mới mẻ của phản hồi từ Bob bằng cách so sánh thời gian hiện tại của mình với dấu thời gian bắt nguồn từ cô ấy.
+Sau đó, cô ấy gửi cho Bob một thông điệp được ký số với dấu thời gian gốc của Bob và một khóa phiên mới được mã hóa bằng khóa công khai của Bob.
+Bob có thể xác minh tính mới mẻ của thông điệp vì dấu thời gian xuất phát từ đồng hồ của mình, do đó anh ấy biết mình có thể tin tưởng vào khóa phiên mới.
+Các dấu thời gian về cơ bản đóng vai trò như các nonce tiện lợi, và thực tế giao thức này cũng có thể sử dụng nonce thay thế.
 
 .. _fig-pKAuthNoSync:
 .. figure:: figures/f08-09-9780123850591.png
    :width: 500px
    :align: center
 
-   A public-key authentication protocol that does not depend on
-   synchronization. Alice checks her own timestamp against her own clock,
-   and likewise for Bob.
+   Một giao thức xác thực khóa công khai không phụ thuộc vào đồng bộ hóa.
+   Alice kiểm tra dấu thời gian của mình với đồng hồ của chính mình, và Bob cũng vậy.
 
+8.4.3 Các Giao Thức Xác Thực Khóa Bí Mật
+----------------------------------------
 
-8.4.3 Secret-Key Authentication Protocols
------------------------------------------
-
-Only in fairly small systems is it practical to predistribute secret
-keys to every pair of entities. We focus here on larger systems, where
-each entity would have its own *master key* shared only with a Key
-Distribution Center (KDC). In this case, secret-key-based authentication
-protocols involve three parties: Alice, Bob, and a KDC. The end product
-of the authentication protocol is a session key shared between Alice and
-Bob that they will use to communicate directly, without involving the
-KDC.
+Chỉ trong các hệ thống khá nhỏ mới thực tế để phân phối trước các khóa bí mật cho từng cặp thực thể.
+Chúng tôi tập trung ở đây vào các hệ thống lớn hơn, nơi mỗi thực thể sẽ có *khóa chủ* (*master key*) riêng,
+chỉ chia sẻ với Trung tâm Phân phối Khóa (KDC). Trong trường hợp này, các giao thức xác thực dựa trên khóa bí mật
+liên quan đến ba bên: Alice, Bob và một KDC. Sản phẩm cuối cùng của giao thức xác thực là một khóa phiên được chia sẻ giữa Alice và Bob
+mà họ sẽ sử dụng để giao tiếp trực tiếp, không cần đến KDC nữa.
 
 .. _fig-needhamSchroeder:
 .. figure:: figures/f08-10-9780123850591.png
    :width: 500px
    :align: center
 
-   The Needham-Schroeder authentication protocol.
+   Giao thức xác thực Needham-Schroeder.
 
-The Needham-Schroeder authentication protocol is illustrated in
-:numref:`Figure %s <fig-needhamSchroeder>`. Note that the KDC doesn’t
-actually authenticate Alice’s initial message and doesn’t communicate
-with Bob at all. Instead, the KDC uses its knowledge of Alice’s and
-Bob’s master keys to construct a reply that would be useless to anyone
-other than Alice (because only Alice can decrypt it) and contains the
-necessary ingredients for Alice and Bob to perform the rest of the
-authentication protocol themselves.
+Giao thức xác thực Needham-Schroeder được minh họa trong :numref:`Figure %s <fig-needhamSchroeder>`.
+Lưu ý rằng KDC thực tế không xác thực thông điệp ban đầu của Alice và không giao tiếp với Bob.
+Thay vào đó, KDC sử dụng kiến thức về các khóa chủ của Alice và Bob để tạo ra một phản hồi mà chỉ Alice mới có thể giải mã
+(vì chỉ Alice biết khóa đó) và chứa các thành phần cần thiết để Alice và Bob tự thực hiện phần còn lại của giao thức xác thực.
 
-The nonce in the first two messages is to assure Alice that the KDC’s
-reply is fresh. The second and third messages include the new session
-key and Alice’s identifier, encrypted together using Bob’s master key.
-It is a sort of secret-key version of a public-key certificate; it is in
-effect a signed statement by the KDC (because the KDC is the only entity
-besides Bob who knows Bob’s master key) that the enclosed session key is
-owned by Alice and Bob. Although the nonce in the last two messages is
-intended to assure Bob that the third message was fresh, there is a flaw
-in this reasoning.
+Nonce trong hai thông điệp đầu tiên nhằm đảm bảo với Alice rằng phản hồi của KDC là mới.
+Thông điệp thứ hai và thứ ba bao gồm khóa phiên mới và định danh của Alice, được mã hóa cùng nhau bằng khóa chủ của Bob.
+Nó giống như một phiên bản khóa bí mật của chứng chỉ khóa công khai; về bản chất, nó là một tuyên bố được ký bởi KDC
+(vì KDC là thực thể duy nhất ngoài Bob biết khóa chủ của Bob) rằng khóa phiên kèm theo thuộc về Alice và Bob.
+Mặc dù nonce trong hai thông điệp cuối nhằm đảm bảo với Bob rằng thông điệp thứ ba là mới,
+nhưng có một lỗ hổng trong lập luận này.
 
 Kerberos
 ~~~~~~~~
 
-Kerberos is an authentication system based on the Needham-Schroeder
-protocol and specialized for client/server environments. Originally
-developed at MIT, it has been standardized by the IETF and is available
-as both open source and commercial products. We will focus here on some
-of Kerberos’s interesting innovations.
+Kerberos là một hệ thống xác thực dựa trên giao thức Needham-Schroeder và được chuyên biệt hóa cho môi trường client/server.
+Ban đầu được phát triển tại MIT, nó đã được IETF chuẩn hóa và có sẵn dưới dạng cả mã nguồn mở lẫn sản phẩm thương mại.
+Chúng tôi sẽ tập trung vào một số đổi mới thú vị của Kerberos.
 
-Kerberos clients are generally human users, and users authenticate
-themselves using passwords. Alice’s master key, shared with the KDC, is
-derived from her password—if you know the password, you can compute the
-key. Kerberos assumes anyone can physically access any client machine;
-therefore, it is important to minimize the exposure of Alice’s password
-or master key not just in the network but also on any machine where she
-logs in. Kerberos takes advantage of Needham-Schroeder to accomplish
-this. In Needham-Schroeder, the only time Alice needs to use her
-password is when decrypting the reply from the KDC. Kerberos client-side
-software waits until the KDC’s reply arrives, prompts Alice to enter her
-password, computes the master key and decrypts the KDC’s reply, and then
-erases all information about the password and master key to minimize its
-exposure. Also note that the only sign a user sees of Kerberos is when
-the user is prompted for a password.
+Các client Kerberos thường là người dùng, và người dùng xác thực bản thân bằng mật khẩu.
+Khóa chủ của Alice, chia sẻ với KDC, được tạo ra từ mật khẩu của cô ấy—nếu bạn biết mật khẩu, bạn có thể tính được khóa.
+Kerberos giả định bất kỳ ai cũng có thể truy cập vật lý vào bất kỳ máy client nào; do đó, việc giảm thiểu rủi ro lộ mật khẩu
+hoặc khóa chủ của Alice không chỉ trên mạng mà còn trên bất kỳ máy nào cô ấy đăng nhập là rất quan trọng.
+Kerberos tận dụng Needham-Schroeder để đạt được điều này. Trong Needham-Schroeder, thời điểm duy nhất Alice cần dùng mật khẩu
+là khi giải mã phản hồi từ KDC. Phần mềm client Kerberos sẽ đợi đến khi nhận được phản hồi từ KDC, nhắc Alice nhập mật khẩu,
+tính toán khóa chủ và giải mã phản hồi của KDC, sau đó xóa mọi thông tin về mật khẩu và khóa chủ để giảm thiểu rủi ro lộ lọt.
+Cũng lưu ý rằng dấu hiệu duy nhất mà người dùng thấy về Kerberos là khi họ được nhắc nhập mật khẩu.
 
-In Needham-Schroeder, the KDC’s reply to Alice plays two roles: It
-gives her the means to prove her identity (only Alice can decrypt the
-reply), and it gives her a sort of secret-key certificate or “ticket”
-to present to Bob—the session key and Alice’s identifier, encrypted
-with Bob’s master key. In Kerberos, those two functions—and the KDC
-itself, in effect—are split up (:numref:`Figure %s <fig-kerberos>`). A
-trusted server called an Authentication Server (AS) plays the first
-KDC role of providing Alice with something she can use to prove her
-identity—not to Bob this time, but to a second trusted server called a
-Ticket Granting Server (TGS). The TGS plays the second KDC role,
-replying to Alice with a ticket she can present to Bob. The attraction
-of this scheme is that if Alice needs to communicate with several
-servers, not just Bob, then she can get tickets for each of them from
-the TGS without going back to the AS.
+Trong Needham-Schroeder, phản hồi của KDC cho Alice đóng hai vai trò: Nó cung cấp cho cô ấy phương tiện để chứng minh danh tính
+(chỉ Alice mới có thể giải mã phản hồi), và nó cung cấp cho cô ấy một dạng chứng chỉ khóa bí mật hoặc “vé” để trình cho Bob—
+khóa phiên và định danh của Alice, được mã hóa bằng khóa chủ của Bob. Trong Kerberos, hai chức năng đó—và cả KDC, trên thực tế—
+được tách ra (:numref:`Figure %s <fig-kerberos>`). Một máy chủ tin cậy gọi là Máy chủ Xác thực (AS) đóng vai trò KDC đầu tiên,
+cung cấp cho Alice thứ mà cô ấy có thể dùng để chứng minh danh tính—lần này không phải với Bob, mà với một máy chủ tin cậy thứ hai
+gọi là Máy chủ Cấp vé (TGS). TGS đóng vai trò KDC thứ hai, phản hồi cho Alice bằng một vé mà cô ấy có thể trình cho Bob.
+Điểm hấp dẫn của sơ đồ này là nếu Alice cần giao tiếp với nhiều máy chủ, không chỉ Bob, thì cô ấy có thể lấy vé cho từng máy chủ từ TGS
+mà không cần quay lại AS.
 
 .. _fig-kerberos:
 .. figure:: figures/f08-11-9780123850591.png
    :width: 600px
    :align: center
 
-   Kerberos authentication.
+   Xác thực Kerberos.
 
-In the client/server application domain for which Kerberos is intended,
-it is reasonable to assume a degree of clock synchronization. This
-allows Kerberos to use timestamps and lifespans instead of
-Needham-Shroeder’s nonces, and thereby eliminate the Needham-Schroeder
-security weakness. Kerberos supports a choice of hash functions and
-secret-key ciphers, allowing it to keep pace with the state-of-the-art
-in cryptographic algorithms.
+Trong miền ứng dụng client/server mà Kerberos hướng tới, việc giả định một mức độ đồng bộ hóa đồng hồ là hợp lý.
+Điều này cho phép Kerberos sử dụng dấu thời gian và thời hạn thay vì nonce của Needham-Schroeder,
+và nhờ đó loại bỏ điểm yếu bảo mật của Needham-Schroeder. Kerberos hỗ trợ lựa chọn các hàm băm và mã hóa khóa bí mật,
+cho phép nó bắt kịp với các thuật toán mật mã hiện đại.
