@@ -1,64 +1,14 @@
-Problem: Security Attacks
+Vấn đề: Các cuộc tấn công bảo mật
 -------------------------
 
-Computer networks are typically a shared resource used by many
-applications representing different interests. The Internet is
-particularly widely shared, being used by competing businesses, mutually
-antagonistic governments, and opportunistic criminals. Unless security
-measures are taken, a network conversation or a distributed application
-may be compromised by an adversary.
+Mạng máy tính thường là một tài nguyên dùng chung được sử dụng bởi nhiều ứng dụng đại diện cho các lợi ích khác nhau. Internet đặc biệt được chia sẻ rộng rãi, được sử dụng bởi các doanh nghiệp cạnh tranh, các chính phủ đối địch lẫn nhau và các tội phạm cơ hội. Trừ khi các biện pháp bảo mật được thực hiện, một cuộc trò chuyện mạng hoặc một ứng dụng phân tán có thể bị xâm phạm bởi một kẻ tấn công.
 
-Consider, for example, some threats to secure use of the web. Suppose
-you are a customer using a credit card to order an item from a website.
-An obvious threat is that an adversary would eavesdrop on your network
-communication, reading your messages to obtain your credit card
-information. How might that eavesdropping be accomplished? It is trivial
-on a broadcast network such as an Ethernet or Wi-Fi, where any node can
-be configured to receive all the message traffic on that network. More
-elaborate approaches include wiretapping and planting spy software on
-any of the chain of nodes involved. Only in the most extreme cases
-(e.g.,national security) are serious measures taken to prevent such
-monitoring, and the Internet is not one of those cases. It is possible
-and practical, however, to encrypt messages so as to prevent an
-adversary from understanding the message contents. A protocol that does
-so is said to provide *confidentiality*. Taking the concept a step
-farther, concealing the quantity or destination of communication is
-called *traffic confidentiality*—because merely knowing how much
-communication is going where can be useful to an adversary in some
-situations.
+Hãy xem xét, ví dụ, một số mối đe dọa đối với việc sử dụng web an toàn. Giả sử bạn là một khách hàng sử dụng thẻ tín dụng để đặt hàng một mặt hàng từ một trang web. Một mối đe dọa rõ ràng là một kẻ tấn công sẽ nghe lén giao tiếp mạng của bạn, đọc các tin nhắn của bạn để lấy thông tin thẻ tín dụng của bạn. Làm thế nào việc nghe lén đó có thể được thực hiện? Điều này là tầm thường trên một mạng quảng bá như Ethernet hoặc Wi-Fi, nơi bất kỳ nút nào cũng có thể được cấu hình để nhận tất cả lưu lượng tin nhắn trên mạng đó. Các phương pháp tinh vi hơn bao gồm nghe lén đường dây và cài đặt phần mềm gián điệp trên bất kỳ chuỗi nút nào liên quan. Chỉ trong những trường hợp cực đoan nhất (ví dụ, an ninh quốc gia) mới có các biện pháp nghiêm ngặt được thực hiện để ngăn chặn việc giám sát như vậy, và Internet không phải là một trong những trường hợp đó. Tuy nhiên, hoàn toàn có thể và thực tế để mã hóa các tin nhắn nhằm ngăn kẻ tấn công hiểu được nội dung tin nhắn. Một giao thức làm được điều đó được gọi là cung cấp *tính bảo mật* (*confidentiality*). Tiến thêm một bước nữa, che giấu số lượng hoặc đích đến của giao tiếp được gọi là *tính bảo mật lưu lượng* (*traffic confidentiality*)—bởi vì chỉ cần biết có bao nhiêu giao tiếp đang đi đến đâu cũng có thể hữu ích cho kẻ tấn công trong một số tình huống.
 
-Even with confidentiality there still remains threats for the website
-customer. An adversary who can’t read the contents of your encrypted
-message might still be able to change a few bits in it, resulting in a
-valid order for, say, a completely different item or perhaps 1000 units
-of the item. There are techniques to detect, if not prevent, such
-tampering. A protocol that detects such message tampering is said to
-provide *integrity*.
+Ngay cả khi đã có tính bảo mật, vẫn còn những mối đe dọa đối với khách hàng của trang web. Một kẻ tấn công không thể đọc nội dung tin nhắn đã mã hóa của bạn vẫn có thể thay đổi một vài bit trong đó, dẫn đến một đơn đặt hàng hợp lệ cho, ví dụ, một mặt hàng hoàn toàn khác hoặc có thể là 1000 đơn vị của mặt hàng đó. Có các kỹ thuật để phát hiện, nếu không ngăn chặn, việc giả mạo như vậy. Một giao thức phát hiện việc giả mạo tin nhắn như vậy được gọi là cung cấp *tính toàn vẹn* (*integrity*).
 
-Another threat to the customer is unknowingly being directed to a false
-website. This can result from a Domain Name System (DNS) attack, in
-which false information is entered in a DNS server or the name service
-cache of the customer’s computer. This leads to translating a correct
-URL into an incorrect IP address—the address of a false website. A
-protocol that ensures that you really are talking to whom you think
-you’re talking is said to provide *authentication*. Authentication
-entails integrity, since it is meaningless to say that a message came
-from a certain participant if it is no longer the same message.
+Một mối đe dọa khác đối với khách hàng là vô tình bị chuyển hướng đến một trang web giả mạo. Điều này có thể xuất phát từ một cuộc tấn công Hệ thống tên miền (DNS), trong đó thông tin sai lệch được nhập vào máy chủ DNS hoặc bộ nhớ đệm dịch vụ tên của máy tính khách hàng. Điều này dẫn đến việc dịch một URL đúng thành một địa chỉ IP sai—địa chỉ của một trang web giả mạo. Một giao thức đảm bảo rằng bạn thực sự đang nói chuyện với người mà bạn nghĩ là mình đang nói chuyện được gọi là cung cấp *xác thực* (*authentication*). Xác thực bao hàm tính toàn vẹn, vì sẽ vô nghĩa khi nói rằng một tin nhắn đến từ một người tham gia nhất định nếu nó không còn là cùng một tin nhắn nữa.
 
-The owner of the website can be attacked as well. Some websites have
-been defaced; the files that make up the website content have been
-remotely accessed and modified without authorization. That is an issue
-of *access control*: enforcing the rules regarding who is allowed to do
-what. Websites have also been subject to denial of service (DoS)
-attacks, during which would-be customers are unable to access the
-website because it is being overwhelmed by bogus requests. Ensuring a
-degree of access is called *availability*.
+Chủ sở hữu của trang web cũng có thể bị tấn công. Một số trang web đã bị thay đổi giao diện; các tệp tạo nên nội dung trang web đã bị truy cập từ xa và sửa đổi mà không được phép. Đó là một vấn đề về *kiểm soát truy cập* (*access control*): thực thi các quy tắc về việc ai được phép làm gì. Các trang web cũng đã bị tấn công từ chối dịch vụ (DoS), trong đó những khách hàng tiềm năng không thể truy cập trang web vì nó bị quá tải bởi các yêu cầu giả mạo. Đảm bảo một mức độ truy cập được gọi là *khả dụng* (*availability*).
 
-In addition to these issues, the Internet has notably been used as a
-means for deploying malicious code, generally called *malware*, that
-exploits vulnerabilities in end systems. *Worms*, pieces of
-self-replicating code that spread over networks, have been known for
-several decades and continue to cause problems, as do their relatives,
-*viruses*, which are spread by the transmission of infected files.
-Infected machines can then be arranged into *botnets*, which can be used
-to inflict further harm, such as launching DoS attacks.
+Ngoài những vấn đề này, Internet còn nổi bật là phương tiện để triển khai mã độc hại, thường được gọi là *phần mềm độc hại* (*malware*), khai thác các lỗ hổng trong các hệ thống đầu cuối. *Sâu máy tính* (*worms*), các đoạn mã tự sao chép lan truyền qua mạng, đã được biết đến trong nhiều thập kỷ và tiếp tục gây ra vấn đề, cũng như các họ hàng của chúng là *virus*, được lan truyền qua việc truyền các tệp bị nhiễm. Các máy bị nhiễm sau đó có thể được sắp xếp thành *mạng bot* (*botnets*), có thể được sử dụng để gây thêm thiệt hại, chẳng hạn như phát động các cuộc tấn công// filepath: /home/tung/Works/Docs/systemsapproach/book/security/problem.rst
