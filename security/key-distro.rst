@@ -1,326 +1,114 @@
-8.3 Key Predistribution
-=======================
+8.3 Phân Phối Khóa Trước
+========================
 
-To use ciphers and authenticators, the communicating participants need
-to know what keys to use. In the case of a secret-key cipher, how does a
-pair of participants obtain the key they share? In the case of a
-public-key cipher, how do participants know what public key belongs to a
-certain participant? The answer differs depending on whether the keys
-are short-lived *session keys* or longer-lived *predistributed keys*.
+Để sử dụng các thuật toán mã hóa và bộ xác thực, các thành viên giao tiếp cần biết nên sử dụng khóa nào. Trong trường hợp mã hóa khóa bí mật, làm thế nào một cặp thành viên có được khóa mà họ chia sẻ? Trong trường hợp mã hóa khóa công khai, làm thế nào các thành viên biết khóa công khai nào thuộc về thành viên nào? Câu trả lời sẽ khác nhau tùy thuộc vào việc các khóa đó là *khóa phiên* (session key) tồn tại ngắn hạn hay *khóa phân phối trước* (predistributed key) tồn tại lâu hơn.
 
-A session key is a key used to secure a single, relatively short episode
-of communication: a session. Each distinct session between a pair of
-participants uses a new session key, which is always a secret key for
-speed. The participants determine what session key to use by means of a
-protocol—a session key establishment protocol. A session key
-establishment protocol needs its own security (so that, for example, an
-adversary cannot learn the new session key); that security is based on
-the longer-lived predistributed keys.
+Khóa phiên là một khóa được sử dụng để bảo vệ một phiên giao tiếp đơn lẻ, tương đối ngắn: một phiên. Mỗi phiên riêng biệt giữa một cặp thành viên sử dụng một khóa phiên mới, và khóa này luôn là khóa bí mật để đảm bảo tốc độ. Các thành viên xác định khóa phiên sẽ sử dụng thông qua một giao thức—giao thức thiết lập khóa phiên. Một giao thức thiết lập khóa phiên cần có cơ chế bảo mật riêng (ví dụ, để kẻ tấn công không thể biết được khóa phiên mới); cơ chế bảo mật này dựa trên các khóa phân phối trước tồn tại lâu hơn.
 
-There are two primary motivations for this division of labor between
-session keys and predistributed keys:
+Có hai động lực chính cho việc phân chia vai trò giữa khóa phiên và khóa phân phối trước:
 
--  Limiting the amount of time a key is used results in less time for
-   computationally intensive attacks, less ciphertext for cryptanalysis,
-   and less information exposed should the key be broken.
+-  Giới hạn thời gian sử dụng một khóa sẽ giảm thời gian cho các cuộc tấn công đòi hỏi tính toán cao, giảm lượng ciphertext cho phân tích mật mã, và giảm lượng thông tin bị lộ nếu khóa bị phá.
 
--  Public key ciphers are generally superior for authentication and
-   session key establishment but too slow to use for encrypting entire
-   messages for confidentiality.
+-  Mã hóa khóa công khai thường vượt trội hơn cho xác thực và thiết lập khóa phiên nhưng quá chậm để dùng cho mã hóa toàn bộ thông điệp nhằm đảm bảo tính bảo mật.
 
-This section explains how predistributed keys are distributed, and the
-next section will explain how session keys are then established. We
-henceforth use “Alice” and “Bob” to designate participants, as is common
-in the cryptography literature. Bear in mind that although we tend to
-refer to participants in anthropomorphic terms, we are more frequently
-concerned with the communication between software or hardware entities
-such as clients and servers that often have no direct relationship with
-any particular person.
+Phần này giải thích cách các khóa phân phối trước được phân phối, và phần tiếp theo sẽ giải thích cách các khóa phiên được thiết lập. Từ đây, chúng tôi sẽ sử dụng “Alice” và “Bob” để chỉ các thành viên, như thường thấy trong tài liệu mật mã học. Lưu ý rằng mặc dù chúng tôi thường gọi các thành viên bằng các thuật ngữ nhân hóa, nhưng thực tế chúng tôi quan tâm nhiều hơn đến giao tiếp giữa các thực thể phần mềm hoặc phần cứng như client và server, vốn thường không liên quan trực tiếp đến một cá nhân cụ thể nào.
 
-8.3.1 Predistribution of Public Keys
-------------------------------------
+8.3.1 Phân Phối Trước Khóa Công Khai
+-------------------------------------
 
-The algorithms to generate a matched pair of public and private keys are
-publicly known, and software that does it is widely available. So, if
-Alice wanted to use a public-key cipher, she could generate her own pair
-of public and private keys, keep the private key hidden, and publicize
-the public key. But, how can she publicize her public key—assert that it
-belongs to her—in such a way that other participants can be sure it
-really belongs to her? Not via email or Web, because an adversary could
-forge an equally plausible claim that key *x* belongs to Alice when *x*
-really belongs to the adversary.
+Các thuật toán để sinh ra một cặp khóa công khai và khóa riêng phù hợp là kiến thức công khai, và phần mềm thực hiện điều này rất phổ biến. Vì vậy, nếu Alice muốn sử dụng mã hóa khóa công khai, cô ấy có thể tự tạo ra cặp khóa công khai và khóa riêng, giữ bí mật khóa riêng, và công khai khóa công khai. Nhưng làm thế nào cô ấy có thể công khai khóa công khai của mình—khẳng định rằng nó thuộc về cô ấy—một cách mà các thành viên khác có thể chắc chắn rằng nó thực sự thuộc về cô ấy? Không thể làm điều này qua email hoặc Web, vì kẻ tấn công có thể giả mạo một tuyên bố tương tự rằng khóa *x* thuộc về Alice trong khi thực tế *x* thuộc về kẻ tấn công.
 
-A complete scheme for certifying bindings between public keys and
-identities—what key belongs to whom—is called a *Public Key
-Infrastructure* (PKI). A PKI starts with the ability to verify
-identities and bind them to keys out of band. By “out of band,” we mean
-something outside the network and the computers that comprise it, such
-as in the following If Alice and Bob are individuals who know each
-other, then they could get together in the same room and Alice could
-give her public key to Bob directly, perhaps on a business card. If Bob
-is an organization, Alice the individual could present conventional
-identification, perhaps involving a photograph or fingerprints. If Alice
-and Bob are computers owned by the same company, then a system
-administrator could configure Bob with Alice’s public key.
+Một sơ đồ hoàn chỉnh để chứng thực sự liên kết giữa khóa công khai và danh tính—khóa nào thuộc về ai—được gọi là *Hạ tầng Khóa Công khai* (Public Key Infrastructure, PKI). Một PKI bắt đầu bằng khả năng xác minh danh tính và liên kết chúng với các khóa bằng một kênh ngoài băng tần (out of band). “Ngoài băng tần” ở đây nghĩa là một cái gì đó bên ngoài mạng và các máy tính tạo nên nó, ví dụ như sau: Nếu Alice và Bob là hai cá nhân biết nhau, họ có thể gặp nhau trực tiếp và Alice có thể đưa khóa công khai của mình cho Bob, có thể là trên một tấm danh thiếp. Nếu Bob là một tổ chức, Alice có thể xuất trình giấy tờ tùy thân thông thường, có thể bao gồm ảnh hoặc dấu vân tay. Nếu Alice và Bob là các máy tính thuộc sở hữu của cùng một công ty, quản trị viên hệ thống có thể cấu hình Bob với khóa công khai của Alice.
 
-Establishing keys out of band doesn’t sound like it would scale well,
-but it suffices to bootstrap a PKI. Bob’s knowledge that Alice’s key is
-*x* can be widely, scalably disseminated using a combination of digital
-signatures and a concept of trust. For example, suppose that you have
-received Bob’s public key out of band and that you know enough about Bob
-to trust him on matters of keys and identities. Then Bob could send you
-a message asserting that Alice’s key is *x* and—since you already know
-Bob’s public key—you could authenticate the message as having come from
-Bob. (Remember that to digitally sign the statement Bob would append a
-cryptographic hash of it that has been encrypted using his private key.)
-Since you trust Bob to tell the truth, you would now know that Alice’s
-key is *x*, even though you had never met her or exchanged a single
-message with her. Using digital signatures, Bob wouldn’t even have to
-send you a message; he could simply create and publish a digitally
-signed statement that Alice’s key is *x*. Such a digitally signed
-statement of a public key binding is called a *public key certificate*,
-or simply a certificate. Bob could send Alice a copy of the certificate,
-or post it on a website. If and when someone needs to verify Alice’s
-public key, they could do so by getting a copy of the certificate,
-perhaps directly from Alice—as long as they trust Bob and know his
-public key. You can see how starting from a very small number of keys
-(in this case, just Bob’s) you could build up a large set of trusted
-keys over time. Bob in this case is playing the role often referred to
-as a *certification authority* (CA), and much of today’s Internet
-security depends on CAs. VeriSign is one well-known commercial CA. We
-return to this topic below.
+Việc thiết lập khóa ngoài băng tần nghe có vẻ không mở rộng tốt, nhưng nó đủ để khởi tạo một PKI. Việc Bob biết rằng khóa của Alice là *x* có thể được phổ biến rộng rãi và mở rộng bằng cách kết hợp chữ ký số và khái niệm về niềm tin. Ví dụ, giả sử bạn đã nhận được khóa công khai của Bob qua kênh ngoài băng tần và bạn biết đủ về Bob để tin tưởng anh ấy trong các vấn đề về khóa và danh tính. Khi đó Bob có thể gửi cho bạn một thông điệp khẳng định rằng khóa của Alice là *x* và—vì bạn đã biết khóa công khai của Bob—bạn có thể xác thực thông điệp là do Bob gửi. (Hãy nhớ rằng để ký số một phát biểu, Bob sẽ đính kèm một hàm băm mật mã của nó đã được mã hóa bằng khóa riêng của mình.) Vì bạn tin tưởng Bob nói thật, bạn sẽ biết rằng khóa của Alice là *x*, ngay cả khi bạn chưa từng gặp cô ấy hoặc trao đổi bất kỳ thông điệp nào với cô ấy. Sử dụng chữ ký số, Bob thậm chí không cần gửi thông điệp cho bạn; anh ấy chỉ cần tạo và công bố một phát biểu đã ký số rằng khóa của Alice là *x*. Một phát biểu đã ký số như vậy về sự liên kết khóa công khai được gọi là *chứng chỉ khóa công khai* (public key certificate), hoặc đơn giản là chứng chỉ. Bob có thể gửi cho Alice một bản sao chứng chỉ, hoặc đăng nó lên một trang web. Nếu và khi ai đó cần xác minh khóa công khai của Alice, họ có thể làm điều đó bằng cách lấy một bản sao chứng chỉ, có thể trực tiếp từ Alice—miễn là họ tin tưởng Bob và biết khóa công khai của anh ấy. Bạn có thể thấy rằng bắt đầu từ một số lượng rất nhỏ các khóa (trong trường hợp này chỉ có khóa của Bob) bạn có thể xây dựng một tập hợp lớn các khóa tin cậy theo thời gian. Bob trong trường hợp này đóng vai trò thường được gọi là *tổ chức chứng thực* (certification authority, CA), và phần lớn bảo mật Internet ngày nay phụ thuộc vào các CA. VeriSign là một CA thương mại nổi tiếng. Chúng ta sẽ quay lại chủ đề này bên dưới.
 
-One of the major standards for certificates is known as X.509. This
-standard leaves a lot of details open, but specifies a basic structure.
-A certificate clearly must include:
+Một trong những tiêu chuẩn quan trọng cho chứng chỉ là X.509. Tiêu chuẩn này để ngỏ nhiều chi tiết, nhưng quy định một cấu trúc cơ bản. Một chứng chỉ rõ ràng phải bao gồm:
 
--  The identity of the entity being certified
+-  Danh tính của thực thể được chứng thực
 
--  The public key of the entity being certified
+-  Khóa công khai của thực thể được chứng thực
 
--  The identity of the signer
+-  Danh tính của người ký
 
--  The digital signature
+-  Chữ ký số
 
--  A digital signature algorithm identifier (which cryptographic hash
-   and which cipher)
+-  Một định danh thuật toán chữ ký số (hàm băm mật mã nào và mã hóa nào)
 
-An optional component is an expiration time for the certificate. We will
-see a particular use of this feature below.
+Một thành phần tùy chọn là thời gian hết hạn của chứng chỉ. Chúng ta sẽ thấy một ứng dụng cụ thể của tính năng này bên dưới.
 
-Since a certificate creates a binding between an identity and a public
-key, we should look more closely at what we mean by “identity.” For
-example, a certificate that says, “This public key belongs to John
-Smith,” may not be terribly useful if you can’t tell which of the
-thousands of John Smiths is being identified. Thus, certificates must
-use a well-defined name space for the identities being certified; for
-example, certificates are often issued for email addresses and DNS
-domains.
+Vì một chứng chỉ tạo ra sự liên kết giữa một danh tính và một khóa công khai, chúng ta nên xem xét kỹ hơn ý nghĩa của “danh tính”. Ví dụ, một chứng chỉ nói rằng “Khóa công khai này thuộc về John Smith” có thể không hữu ích lắm nếu bạn không thể xác định được John Smith nào trong hàng ngàn người cùng tên. Do đó, chứng chỉ phải sử dụng một không gian tên được định nghĩa rõ ràng cho các danh tính được chứng thực; ví dụ, chứng chỉ thường được cấp cho địa chỉ email và tên miền DNS.
 
-There are different ways a PKI could formalize the notion of trust. We
-discuss the two main approaches.
+Có nhiều cách khác nhau để một PKI có thể chính thức hóa khái niệm niềm tin. Chúng tôi sẽ thảo luận hai cách tiếp cận chính.
 
-Certification Authorities
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Tổ Chức Chứng Thực (Certification Authorities)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In this model of trust, trust is binary; you either trust someone
-completely or not at all. Together with certificates, this allows the
-building of *chains of trust*. If X certifies that a certain public key
-belongs to Y, and then Y goes on to certify that another public key
-belongs to Z, then there exists a chain of certificates from X to Z,
-even though X and Z may have never met. If you know X’s key—and you
-trust X and Y—then you can believe the certificate that gives Z’s key.
-In other words, all you need is a chain of certificates, all signed by
-entities you trust, as long as it leads back to an entity whose key you
-already know.
+Trong mô hình niềm tin này, niềm tin là nhị phân; bạn hoặc hoàn toàn tin tưởng ai đó hoặc không tin chút nào. Kết hợp với chứng chỉ, điều này cho phép xây dựng *chuỗi niềm tin* (chains of trust). Nếu X chứng thực rằng một khóa công khai nhất định thuộc về Y, và sau đó Y lại chứng thực rằng một khóa công khai khác thuộc về Z, thì tồn tại một chuỗi chứng chỉ từ X đến Z, ngay cả khi X và Z chưa từng gặp nhau. Nếu bạn biết khóa của X—và bạn tin tưởng X và Y—thì bạn có thể tin vào chứng chỉ cung cấp khóa của Z. Nói cách khác, tất cả những gì bạn cần là một chuỗi chứng chỉ, tất cả đều được ký bởi các thực thể mà bạn tin tưởng, miễn là nó dẫn về một thực thể mà bạn đã biết khóa.
 
-A *certification authority* or *certificate authority* (CA) is an entity
-claimed (by someone) to be trustworthy for verifying identities and
-issuing public key certificates. There are commercial CAs, governmental
-CAs, and even free CAs. To use a CA, you must know its own key. You can
-learn that CA’s key, however, if you can obtain a chain of CA-signed
-certificates that starts with a CA whose key you already know. Then you
-can believe any certificate signed by that new CA.
+Một *tổ chức chứng thực* (certification authority, CA) là một thực thể được cho là đáng tin cậy trong việc xác minh danh tính và cấp chứng chỉ khóa công khai. Có các CA thương mại, CA chính phủ, và thậm chí cả CA miễn phí. Để sử dụng một CA, bạn phải biết khóa của nó. Tuy nhiên, bạn có thể biết khóa của CA đó nếu bạn có thể lấy được một chuỗi chứng chỉ do CA ký bắt đầu từ một CA mà bạn đã biết khóa. Khi đó bạn có thể tin vào bất kỳ chứng chỉ nào do CA mới này ký.
 
-A common way to build such chains is to arrange them in a
-tree-structured hierarchy, as shown in :numref:`Figure %s
-<fig-pem-tree>`. If everyone has the public key of the root CA, then
-any participant can provide a chain of certificates to another
-participant and know that it will be sufficient to build a chain of
-trust for that participant.
+Một cách phổ biến để xây dựng các chuỗi như vậy là sắp xếp chúng thành một cấu trúc cây, như minh họa trong :numref:`Figure %s <fig-pem-tree>`. Nếu mọi người đều có khóa công khai của CA gốc, thì bất kỳ thành viên nào cũng có thể cung cấp một chuỗi chứng chỉ cho thành viên khác và biết rằng nó sẽ đủ để xây dựng một chuỗi niềm tin cho thành viên đó.
 
 .. _fig-pem-tree:
 .. figure:: figures/f08-06-9780123850591.png
    :width: 600px
    :align: center
 
-   Tree-structured certification authority hierarchy.
+   Cấu trúc cây phân cấp tổ chức chứng thực.
 
-There are some significant issues with building chains of trust. Most
-importantly, even if you are certain that you have the public key of the
-root CA, you need to be sure that every CA from the root on down is
-doing its job properly. If just one CA in the chain is willing to issue
-certificates to entities without verifying their identities, then what
-looks like a valid chain of certificates becomes meaningless. For
-example, a root CA might issue a certificate to a second-tier CA and
-thoroughly verify that the name on the certificate matches the business
-name of the CA, but that second-tier CA might be willing to sell
-certificates to anyone who asks, without verifying their identity. This
-problem gets worse the longer the chain of trust. X.509 certificates
-provide the option of restricting the set of entities that the subject
-of a certificate is, in turn, trusted to certify.
+Có một số vấn đề quan trọng với việc xây dựng chuỗi niềm tin. Quan trọng nhất, ngay cả khi bạn chắc chắn rằng mình có khóa công khai của CA gốc, bạn cần đảm bảo rằng mọi CA từ gốc trở xuống đều thực hiện đúng trách nhiệm của mình. Nếu chỉ một CA trong chuỗi sẵn sàng cấp chứng chỉ cho các thực thể mà không xác minh danh tính, thì một chuỗi chứng chỉ tưởng như hợp lệ sẽ trở nên vô nghĩa. Ví dụ, một CA gốc có thể cấp chứng chỉ cho một CA cấp hai và xác minh kỹ lưỡng rằng tên trên chứng chỉ khớp với tên doanh nghiệp của CA, nhưng CA cấp hai đó có thể sẵn sàng bán chứng chỉ cho bất kỳ ai mà không xác minh danh tính. Vấn đề này càng nghiêm trọng khi chuỗi niềm tin càng dài. Chứng chỉ X.509 cung cấp tùy chọn giới hạn tập hợp các thực thể mà chủ thể của chứng chỉ được phép chứng thực tiếp.
 
-There can be more than one root to a certification tree, and this is
-common in securing Web transactions today, for example. Web browsers
-such as Firefox and Internet Explorer come pre-equipped with
-certificates for a set of CAs; in effect, the browser’s producer has
-decided these CAs and their keys can be trusted. A user can also add CAs
-to those that their browser recognizes as trusted. These certificates
-are accepted by Secure Socket Layer (SSL)/Transport Layer Security
-(TLS), the protocol most often used to secure Web transactions, which we
-discuss in a later section. (If you are curious, you can poke around in
-the preferences settings for your browser and find the “view
-certificates” option to see how many CAs your browser is configured to
-trust.)
+Có thể có nhiều hơn một gốc cho một cây chứng thực, và điều này khá phổ biến trong việc bảo mật các giao dịch Web ngày nay, ví dụ. Các trình duyệt Web như Firefox và Internet Explorer được cài sẵn các chứng chỉ cho một tập hợp các CA; thực chất, nhà sản xuất trình duyệt đã quyết định rằng các CA này và các khóa của họ có thể được tin tưởng. Người dùng cũng có thể thêm các CA vào danh sách mà trình duyệt của họ nhận diện là đáng tin cậy. Các chứng chỉ này được chấp nhận bởi Secure Socket Layer (SSL)/Transport Layer Security (TLS), giao thức thường được sử dụng nhất để bảo mật các giao dịch Web, mà chúng ta sẽ thảo luận ở phần sau. (Nếu bạn tò mò, bạn có thể vào phần cài đặt của trình duyệt và tìm tùy chọn “xem chứng chỉ” để xem trình duyệt của bạn đang tin tưởng bao nhiêu CA.)
 
-Web of Trust
-~~~~~~~~~~~~
+Mạng Lưới Niềm Tin (Web of Trust)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An alternative model of trust is the *web of trust* exemplified by
-Pretty Good Privacy (PGP), which is further discussed in a later
-section. PGP is a security system for email, so email addresses are the
-identities to which keys are bound and by which certificates are signed.
-In keeping with PGP’s roots as protection against government intrusion,
-there are no CAs. Instead, every individual decides whom they trust and
-how much they trust them—in this model, trust is a matter of degree. In
-addition, a public key certificate can include a confidence level
-indicating how confident the signer is of the key binding claimed in the
-certificate, so a given user may have to have several certificates
-attesting to the same key binding before he is willing to trust it.
+Một mô hình niềm tin thay thế là *mạng lưới niềm tin* (web of trust) được minh họa bởi Pretty Good Privacy (PGP), sẽ được thảo luận thêm ở phần sau. PGP là một hệ thống bảo mật cho email, vì vậy các địa chỉ email là danh tính mà các khóa được liên kết và chứng chỉ được ký. Theo đúng tinh thần của PGP là bảo vệ chống lại sự xâm nhập của chính phủ, không có CA nào cả. Thay vào đó, mỗi cá nhân tự quyết định mình tin ai và tin ở mức độ nào—trong mô hình này, niềm tin là vấn đề mức độ. Ngoài ra, một chứng chỉ khóa công khai có thể bao gồm một mức độ tin cậy cho biết người ký tin tưởng vào sự liên kết khóa trong chứng chỉ đến mức nào, vì vậy một người dùng có thể cần có nhiều chứng chỉ xác nhận cùng một liên kết khóa trước khi sẵn sàng tin tưởng nó.
 
-For example, suppose you have a certificate for Bob provided by Alice;
-you can assign a moderate level of trust to that certificate. However,
-if you have additional certificates for Bob that were provided by C and
-D, each of whom is also moderately trustworthy, that might considerably
-increase your level of confidence that the public key you have for Bob
-is valid. In short, PGP recognizes that the problem of establishing
-trust is quite a personal matter and gives users the raw material to
-make their own decisions, rather than assuming that they are all willing
-to trust in a single hierarchical structure of CAs. To quote Phil
-Zimmerman, the developer of PGP, “PGP is for people who prefer to pack
-their own parachutes.”
+Ví dụ, giả sử bạn có một chứng chỉ cho Bob do Alice cung cấp; bạn có thể gán cho chứng chỉ đó một mức độ tin cậy vừa phải. Tuy nhiên, nếu bạn có thêm các chứng chỉ cho Bob do C và D cung cấp, mỗi người cũng khá đáng tin cậy, điều đó có thể làm tăng đáng kể mức độ tin tưởng của bạn rằng khóa công khai bạn có cho Bob là hợp lệ. Tóm lại, PGP nhận ra rằng vấn đề thiết lập niềm tin là một vấn đề cá nhân và cung cấp cho người dùng các công cụ để tự quyết định, thay vì giả định rằng tất cả đều sẵn sàng tin tưởng vào một cấu trúc phân cấp duy nhất của các CA. Trích lời Phil Zimmerman, người phát triển PGP, “PGP dành cho những người thích tự gói dù nhảy của mình.”
 
-PGP has become quite popular in the networking community, and PGP
-key-signing parties are a regular feature of various networking events,
-such as IETF meetings. At these gatherings, an individual can
+PGP đã trở nên khá phổ biến trong cộng đồng mạng, và các buổi ký khóa PGP là một hoạt động thường xuyên tại các sự kiện mạng như các cuộc họp IETF. Tại các buổi này, một cá nhân có thể
 
--  Collect public keys from others whose identity he knows.
+-  Thu thập khóa công khai từ những người mà anh ta biết danh tính.
 
--  Provide his public key to others.
+-  Cung cấp khóa công khai của mình cho người khác.
 
--  Get his public key signed by others, thus collecting certificates
-   that will be persuasive to an increasingly large set of people.
+-  Nhận chữ ký cho khóa công khai của mình từ người khác, từ đó thu thập các chứng chỉ có thể thuyết phục được ngày càng nhiều người.
 
--  Sign the public key of other individuals, thus helping them build up
-   their set of certificates that they can use to distribute their
-   public keys.
+-  Ký khóa công khai của người khác, giúp họ xây dựng bộ chứng chỉ để phân phối khóa công khai của mình.
 
--  Collect certificates from other individuals whom he trusts enough to
-   sign keys.
+-  Thu thập chứng chỉ từ những người mà anh ta đủ tin tưởng để ký khóa.
 
-Thus, over time, a user will collect a set of certificates with varying
-degrees of trust.
+Như vậy, theo thời gian, một người dùng sẽ thu thập được một tập hợp các chứng chỉ với các mức độ tin cậy khác nhau.
 
-Certificate Revocation
-~~~~~~~~~~~~~~~~~~~~~~
+Thu Hồi Chứng Chỉ (Certificate Revocation)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One issue that arises with certificates is how to revoke, or undo, a
-certificate. Why is this important? Suppose that you suspect that
-someone has discovered your private key. There may be any number of
-certificates in the universe that assert that you are the owner of the
-public key corresponding to that private key. The person who discovered
-your private key thus has everything he needs to impersonate you: valid
-certificates and your private key. To solve this problem, it would be
-nice to be able to revoke the certificates that bind your old,
-compromised key to your identity, so that the impersonator will no
-longer be able to persuade other people that he is you.
+Một vấn đề phát sinh với chứng chỉ là làm thế nào để thu hồi, hoặc hủy bỏ, một chứng chỉ. Tại sao điều này lại quan trọng? Giả sử bạn nghi ngờ ai đó đã biết được khóa riêng của bạn. Có thể có bất kỳ số lượng chứng chỉ nào trên thế giới xác nhận rằng bạn là chủ sở hữu của khóa công khai tương ứng với khóa riêng đó. Người biết được khóa riêng của bạn do đó có mọi thứ cần thiết để giả mạo bạn: các chứng chỉ hợp lệ và khóa riêng của bạn. Để giải quyết vấn đề này, sẽ rất tốt nếu có thể thu hồi các chứng chỉ liên kết khóa cũ, đã bị lộ với danh tính của bạn, để kẻ giả mạo không còn có thể thuyết phục người khác rằng anh ta là bạn.
 
-The basic solution to the problem is simple enough. Each CA can issue a
-*certificate revocation list* (CRL), which is a digitally signed list of
-certificates that have been revoked. The CRL is periodically updated and
-made publicly available. Because it is digitally signed, it can just be
-posted on a website. Now, when Alice receives a certificate for Bob that
-she wants to verify, she will first consult the latest CRL issued by the
-CA. As long as the certificate has not been revoked, it is valid. Note
-that, if all certificates have unlimited life spans, the CRL would
-always be getting longer, since you could never take a certificate off
-the CRL for fear that some copy of the revoked certificate might be
-used. For this reason, it is common to attach an expiration date to a
-certificate when it is issued. Thus, we can limit the length of time
-that a revoked certificate needs to stay on a CRL. As soon as its
-original expiration date is passed, it can be removed from the CRL.
+Giải pháp cơ bản cho vấn đề này khá đơn giản. Mỗi CA có thể phát hành một *danh sách thu hồi chứng chỉ* (certificate revocation list, CRL), là một danh sách các chứng chỉ đã bị thu hồi được ký số. CRL được cập nhật định kỳ và công khai rộng rãi. Vì nó được ký số, nó có thể chỉ cần được đăng lên một trang web. Bây giờ, khi Alice nhận được một chứng chỉ cho Bob mà cô ấy muốn xác minh, cô ấy sẽ kiểm tra CRL mới nhất do CA phát hành. Miễn là chứng chỉ chưa bị thu hồi, nó vẫn hợp lệ. Lưu ý rằng, nếu tất cả các chứng chỉ đều có thời hạn sử dụng không giới hạn, CRL sẽ ngày càng dài, vì bạn không bao giờ có thể xóa một chứng chỉ khỏi CRL do lo ngại rằng một bản sao của chứng chỉ bị thu hồi có thể được sử dụng. Vì lý do này, thông thường sẽ gắn thêm ngày hết hạn cho chứng chỉ khi nó được phát hành. Nhờ đó, chúng ta có thể giới hạn thời gian mà một chứng chỉ bị thu hồi cần phải nằm trong CRL. Ngay khi ngày hết hạn gốc của nó đã qua, nó có thể được xóa khỏi CRL.
 
-8.3.2 Predistribution of Secret Keys
-------------------------------------
+8.3.2 Phân Phối Trước Khóa Bí Mật
+----------------------------------
 
-If Alice wants to use a secret-key cipher to communicate with Bob, she
-can’t just pick a key and send it to him because, without already having
-a key, they can’t encrypt this key to keep it confidential and they
-can’t authenticate each other. As with public keys, some predistribution
-scheme is needed. Predistribution is harder for secret keys than for
-public keys for two obvious reasons:
+Nếu Alice muốn sử dụng mã hóa khóa bí mật để giao tiếp với Bob, cô ấy không thể chỉ chọn một khóa và gửi cho Bob vì, nếu chưa có khóa, họ không thể mã hóa khóa này để giữ bí mật và cũng không thể xác thực nhau. Cũng như với khóa công khai, cần có một sơ đồ phân phối trước. Việc phân phối trước khó hơn đối với khóa bí mật so với khóa công khai vì hai lý do rõ ràng:
 
--  While only one public key per entity is sufficient for authentication
-   and confidentiality, there must be a secret key for each pair of
-   entities who wish to communicate. If there are N entities, that means
-   N(N-1)/2 keys.
+-  Trong khi chỉ cần một khóa công khai cho mỗi thực thể là đủ cho xác thực và bảo mật, thì phải có một khóa bí mật cho mỗi cặp thực thể muốn giao tiếp. Nếu có N thực thể, điều đó nghĩa là có N(N-1)/2 khóa.
 
--  Unlike public keys, secret keys must be kept secret.
+-  Không giống như khóa công khai, khóa bí mật phải được giữ bí mật.
 
-In summary, there are a lot more keys to distribute, and you can’t use
-certificates that everyone can read.
+Tóm lại, có rất nhiều khóa cần phân phối hơn, và bạn không thể sử dụng các chứng chỉ mà ai cũng có thể đọc.
 
-The most common solution is to use a *Key Distribution Center* (KDC). A
-KDC is a trusted entity that shares a secret key with each other entity.
-This brings the number of keys down to a more manageable N-1, few enough
-to establish out of band for some applications. When Alice wishes to
-communicate with Bob, that communication does not travel via the KDC.
-Rather, the KDC participates in a protocol that authenticates Alice and
-Bob—using the keys that the KDC already shares with each of them—and
-generates a new session key for them to use. Then Alice and Bob
-communicate directly using their session key. Kerberos is a widely used
-system based on this approach. We describe Kerberos (which also provides
-authentication) in the next section. The following subsection describes
-a powerful alternative.
+Giải pháp phổ biến nhất là sử dụng một *Trung tâm Phân phối Khóa* (Key Distribution Center, KDC). Một KDC là một thực thể đáng tin cậy chia sẻ một khóa bí mật với mỗi thực thể khác. Điều này giảm số lượng khóa xuống còn N-1, đủ ít để có thể thiết lập ngoài băng tần cho một số ứng dụng. Khi Alice muốn giao tiếp với Bob, giao tiếp đó không đi qua KDC. Thay vào đó, KDC tham gia vào một giao thức xác thực Alice và Bob—sử dụng các khóa mà KDC đã chia sẻ với từng người—và sinh ra một khóa phiên mới cho họ sử dụng. Sau đó Alice và Bob giao tiếp trực tiếp bằng khóa phiên của họ. Kerberos là một hệ thống phổ biến dựa trên cách tiếp cận này. Chúng tôi sẽ mô tả Kerberos (cũng cung cấp xác thực) ở phần tiếp theo. Phần tiếp theo sẽ mô tả một phương án thay thế mạnh mẽ.
 
-8.3.3 Diffie-Hellman Key Exchange
----------------------------------
+8.3.3 Trao Đổi Khóa Diffie-Hellman
+----------------------------------
 
-Another approach to establishing a shared secret key is to use the
-Diffie-Hellman key exchange protocol, which works without using any
-predistributed keys. The messages exchanged between Alice and Bob can be
-read by anyone able to eavesdrop, and yet the eavesdropper won’t know
-the secret key that Alice and Bob end up with.
+Một cách tiếp cận khác để thiết lập một khóa bí mật chung là sử dụng giao thức trao đổi khóa Diffie-Hellman, hoạt động mà không cần bất kỳ khóa phân phối trước nào. Các thông điệp trao đổi giữa Alice và Bob có thể bị bất kỳ ai nghe lén đọc được, nhưng kẻ nghe lén vẫn không biết được khóa bí mật mà Alice và Bob cuối cùng có được.
 
-Diffie-Hellman doesn’t authenticate the participants. Since it is rarely
-useful to communicate securely without being sure whom you’re
-communicating with, Diffie-Hellman is usually augmented in some way to
-provide authentication. One of the main uses of Diffie-Hellman is in the
-Internet Key Exchange (IKE) protocol, a central part of the IP Security
-(IPsec) architecture.
+Diffie-Hellman không xác thực các thành viên. Vì hiếm khi hữu ích khi giao tiếp an toàn mà không biết chắc mình đang giao tiếp với ai, Diffie-Hellman thường được bổ sung thêm một số cơ chế để cung cấp xác thực. Một trong những ứng dụng chính của Diffie-Hellman là trong giao thức Internet Key Exchange (IKE), một phần trung tâm của kiến trúc IP Security (IPsec).
 
-The Diffie-Hellman protocol has two parameters, *p* and *g*, both of
-which are public and may be used by all the users in a particular
-system. Parameter *p* must be a prime number. The integers
-:math:`\bmod p` (short for modulo *p*) are :math:`0` through *p-1*,
-since :math:`x \bmod p` is the remainder after *x* is divided by *p*,
-and form what mathematicians call a *group* under
-multiplication. Parameter *g* (usually called a generator) must be a
-*primitive root* of *p*: For every number *n* from 1 through *p-1*
-there must be some value *k* such that :math:`n = g^k \bmod p`. For
-example, if *p* were the prime number 5 (a real system would use a
-much larger number), then we might choose 2 to be the generator *g*
-since:
+Giao thức Diffie-Hellman có hai tham số, *p* và *g*, cả hai đều là công khai và có thể được tất cả người dùng trong một hệ thống sử dụng. Tham số *p* phải là một số nguyên tố. Các số nguyên :math:`\bmod p` (viết tắt của modulo *p*) là :math:`0` đến *p-1*, vì :math:`x \bmod p` là phần dư sau khi *x* chia cho *p*, và tạo thành một *nhóm* (group) dưới phép nhân. Tham số *g* (thường gọi là generator) phải là một *căn nguyên thủy* (primitive root) của *p*: Với mọi số *n* từ 1 đến *p-1* phải tồn tại một giá trị *k* sao cho :math:`n = g^k \bmod p`. Ví dụ, nếu *p* là số nguyên tố 5 (một hệ thống thực tế sẽ dùng số lớn hơn nhiều), thì ta có thể chọn 2 làm generator *g* vì:
 
 .. math::
 
@@ -338,108 +126,71 @@ since:
 
    4 = 2^2 \bmod p
 
-Suppose Alice and Bob want to agree on a shared secret key. Alice and
-Bob, and everyone else, already know the values of *p* and *g*. Alice
-generates a random private value *a* and Bob generates a random
-private value \ *b*. Both *a* and *b* are drawn from the set of
-integers :math:`\{1,\dots{}, p-1\}`. Alice and Bob derive their
-corresponding public values—the values they will send to each other
-unencrypted—as follows. Alice’s public value is
+Giả sử Alice và Bob muốn đồng ý về một khóa bí mật chung. Alice và Bob, cũng như mọi người khác, đều đã biết giá trị của *p* và *g*. Alice sinh ra một giá trị riêng tư ngẫu nhiên *a* và Bob sinh ra một giá trị riêng tư ngẫu nhiên *b*. Cả *a* và *b* đều được chọn từ tập các số nguyên :math:`\{1,\dots{}, p-1\}`. Alice và Bob tính toán các giá trị công khai tương ứng—các giá trị mà họ sẽ gửi cho nhau không mã hóa—như sau. Giá trị công khai của Alice là
 
 .. math::
 
    g^a \bmod p
 
-and Bob’s public value is
+và giá trị công khai của Bob là
 
 .. math::
 
    g^b \bmod p
 
-They then exchange their public values. Finally, Alice computes
+Sau đó họ trao đổi các giá trị công khai này. Cuối cùng, Alice tính
 
 .. math::
 
    g^{ab} \bmod p = (g^b \bmod p)^a \bmod p
 
-and Bob computes
+và Bob tính
 
 .. math::
 
    g^{ba} \bmod p = (g^a \bmod p)^b \bmod p.
 
-Alice and Bob now have :math:`g^{ab} \bmod p` (which is equal to
-:math:`g^{ba} \bmod p)` as their shared secret key.
+Alice và Bob giờ đều có :math:`g^{ab} \bmod p` (bằng với :math:`g^{ba} \bmod p`) làm khóa bí mật chung.
 
-Any eavesdropper would know *p, g*, and the two public values
-:math:`g^a \bmod p` and :math:`g^b \bmod p`.
-If only the eavesdropper could determine *a* or *b*, she could easily
-compute the resulting key. Determining *a* or *b* from that information
-is, however, computationally infeasible for suitably large *p,a,* and
-*b*; it is known as the *discrete logarithm problem*.
+Bất kỳ kẻ nghe lén nào cũng biết *p, g*, và hai giá trị công khai :math:`g^a \bmod p` và :math:`g^b \bmod p`.
+Nếu kẻ nghe lén có thể xác định được *a* hoặc *b*, họ có thể dễ dàng tính được khóa kết quả. Tuy nhiên, việc xác định *a* hoặc *b* từ thông tin đó là bất khả thi về mặt tính toán nếu *p, a,* và *b* đủ lớn; điều này được gọi là *bài toán logarit rời rạc* (discrete logarithm problem).
 
-For example, using *p = 5* and *g = 2* from above, suppose Alice picks
-the random number *a = 3* and Bob picks the random number *b = 4*.
-Then Alice sends Bob the public value
+Ví dụ, với *p = 5* và *g = 2* như trên, giả sử Alice chọn số ngẫu nhiên *a = 3* và Bob chọn số ngẫu nhiên *b = 4*.
+Khi đó Alice gửi cho Bob giá trị công khai
 
 .. math::
 
    2^3 \bmod 5 = 3
 
-and Bob sends Alice the public value
+và Bob gửi cho Alice giá trị công khai
 
 .. math::
 
    2^4 \bmod 5 = 1
 
-Alice is then able to compute
+Alice sau đó có thể tính
 
 .. math::
 
    g^{ab} \bmod p = (2^b \bmod 5)^3 \bmod 5 = (1)^3 \bmod 5 = 1
 
-by substituting Bob’s public value for :math:`(2^b \bmod 5)`. Similarly,
-Bob is able to compute
+bằng cách thay giá trị công khai của Bob vào :math:`(2^b \bmod 5)`. Tương tự, Bob có thể tính
 
 .. math::
 
    g^{ba} \bmod p = (g^a \bmod 5)^4 \bmod 5 = (3)^4 \bmod 5 = 1.
 
-by substituting Alice’s public value for :math:`(2^a \bmod 5)`.
-Both Alice and Bob now agree that the secret key is :math:`1`.
+bằng cách thay giá trị công khai của Alice vào :math:`(2^a \bmod 5)`.
+Cả Alice và Bob đều đồng ý rằng khóa bí mật là :math:`1`.
 
-There is the problem of Diffie-Hellman’s lack of authentication. One
-attack that can take advantage of this is the *man-in-the-middle
-attack*. Suppose Mallory is an adversary with the ability to intercept
-messages. Mallory already knows *p* and *g* since they are public, and
-she generates random private values :math:`c` and :math:`d` to use
-with Alice and Bob, respectively. When Alice and Bob send their public
-values to each other, Mallory intercepts them and sends her own public
-values, as in :numref:`Figure %s <fig-manInTheMiddle>`. The result is
-that Alice and Bob each end up unknowingly sharing a key with Mallory
-instead of each other.
+Có một vấn đề là Diffie-Hellman không cung cấp xác thực. Một kiểu tấn công có thể lợi dụng điều này là *tấn công người trung gian* (man-in-the-middle attack). Giả sử Mallory là một kẻ tấn công có khả năng chặn các thông điệp. Mallory đã biết *p* và *g* vì chúng là công khai, và cô ấy sinh ra các giá trị riêng tư ngẫu nhiên :math:`c` và :math:`d` để sử dụng với Alice và Bob, tương ứng. Khi Alice và Bob gửi các giá trị công khai cho nhau, Mallory chặn chúng và gửi các giá trị công khai của mình, như minh họa trong :numref:`Figure %s <fig-manInTheMiddle>`. Kết quả là Alice và Bob mỗi người đều vô tình chia sẻ một khóa với Mallory thay vì với nhau.
 
 .. _fig-manInTheMIddle:
 .. figure:: figures/f08-12-9780123850591.png
    :width: 300px
    :align: center
 
-   A man-in-the-middle attack.
+   Một cuộc tấn công người trung gian.
 
-A variant of Diffie-Hellman sometimes called *fixed Diffie-Hellman*
-supports authentication of one or both participants. It relies on
-certificates that are similar to public key certificates but instead
-certify the Diffie-Hellman public parameters of an entity. For example,
-such a certificate would state that Alice’s Diffie-Hellman parameters
-are *p, g*, and :math:`g^a \bmod p`
-(note that the value of *a* would still be known only to Alice). Such
-a certificate would assure Bob that the other participant in
-Diffie-Hellman is Alice—or else the other participant won’t be able to
-compute the secret key, because she won’t know *a*. If both participants
-have certificates for their Diffie-Hellman parameters, they can
-authenticate each other. If just one has a certificate, then just that
-one can be authenticated. This is useful in some situations; for
-example, when one participant is a web server and the other is an
-arbitrary client, the client can authenticate the web server and
-establish a secret key for confidentiality before sending a credit card
-number to the web server.
+Một biến thể của Diffie-Hellman đôi khi được gọi là *Diffie-Hellman cố định* (fixed Diffie-Hellman) hỗ trợ xác thực một hoặc cả hai thành viên. Nó dựa vào các chứng chỉ tương tự như chứng chỉ khóa công khai nhưng thay vào đó chứng thực các tham số Diffie-Hellman công khai của một thực thể. Ví dụ, một chứng chỉ như vậy sẽ nêu rằng các tham số Diffie-Hellman của Alice là *p, g*, và :math:`g^a \bmod p`
+(lưu ý rằng giá trị *a* vẫn chỉ mình Alice biết). Một chứng chỉ như vậy sẽ đảm bảo với Bob rằng thành viên còn lại trong Diffie-Hellman là Alice—nếu không, thành viên đó sẽ không thể tính được khóa bí mật vì không biết *a*. Nếu cả hai thành viên đều có chứng chỉ cho các tham số Diffie-Hellman của mình, họ có thể xác thực lẫn nhau. Nếu chỉ một người có chứng chỉ, thì chỉ người đó được xác thực. Điều này hữu ích trong một số tình huống; ví dụ, khi một thành viên là máy chủ web và thành viên còn lại là client bất kỳ, client có thể xác thực máy chủ web và thiết lập một khóa bí mật để đảm bảo bảo mật trước khi gửi số thẻ tín dụng cho máy chủ web.
