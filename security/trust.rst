@@ -1,68 +1,14 @@
-8.1 Trust and Threats
-=====================
+8.1 Niềm tin và các mối đe dọa
+=============================
 
-Before we address the how’s and why’s of building secure networks, it is
-important to establish one simple truth: We will inevitably fail. This
-is because security is ultimately an exercise in making assumptions
-about trust, evaluating threats, and mitigating risk. There is no such
-thing as perfect security.
+Trước khi chúng ta bàn về cách thức và lý do xây dựng các mạng an toàn, điều quan trọng là phải xác lập một sự thật đơn giản: Chúng ta chắc chắn sẽ thất bại. Điều này là bởi vì bảo mật cuối cùng là một bài toán về việc đưa ra các giả định về niềm tin, đánh giá các mối đe dọa và giảm thiểu rủi ro. Không có cái gọi là bảo mật tuyệt đối.
 
-Trust and threats are two sides of the same coin. A threat is a
-potential failure scenario that you design your system to avoid, and
-trust is an assumption you make about how external actors and internal
-components you build upon will behave. For example, if you are
-transmitting a message over WiFi on an open campus, you would likely
-identify an eavesdropper that can intercept the message as a threat (and
-adopt some of the methods discussed in this chapter as a
-countermeasure), but if you are transmitting a message over a fiber link
-between two machines in a locked datacenter, you might trust that
-channel is secure, and so take no additional steps.
+Niềm tin và các mối đe dọa là hai mặt của cùng một đồng xu. Một mối đe dọa là một kịch bản thất bại tiềm tàng mà bạn thiết kế hệ thống của mình để tránh, còn niềm tin là một giả định bạn đưa ra về cách các tác nhân bên ngoài và các thành phần nội bộ mà bạn dựa vào sẽ hành xử. Ví dụ, nếu bạn đang truyền một thông điệp qua WiFi ở một khuôn viên mở, bạn có thể xác định một kẻ nghe lén có thể chặn thông điệp là một mối đe dọa (và áp dụng một số phương pháp được thảo luận trong chương này như một biện pháp đối phó), nhưng nếu bạn truyền một thông điệp qua đường truyền cáp quang giữa hai máy trong một trung tâm dữ liệu bị khóa, bạn có thể tin tưởng rằng kênh đó là an toàn và không thực hiện thêm bước nào nữa.
 
-You could argue that since you already have a way to protect
-WiFi-based communication you just as well use it to protect the
-fiber-based channel, but that presumes the outcome of a cost/benefit
-analysis.  Suppose protecting any message, whether sent over WiFi or
-fiber, slows the communication down by 10% due to the overhead of
-encryption. If you need to squeeze every last ounce of performance out
-of a scientific computation (e.g., you are trying to model a
-hurricane) and the odds of someone breaking into the datacenter are
-one in a million (and even if they did, the data being transmitted has
-little value), then you would be well-justified in not securing the
-fiber communication channel.
+Bạn có thể lập luận rằng vì bạn đã có cách bảo vệ giao tiếp qua WiFi thì cũng nên dùng nó để bảo vệ kênh cáp quang, nhưng điều đó giả định kết quả của một phân tích chi phí/lợi ích. Giả sử việc bảo vệ bất kỳ thông điệp nào, dù gửi qua WiFi hay cáp quang, đều làm chậm giao tiếp 10% do chi phí mã hóa. Nếu bạn cần tận dụng tối đa hiệu suất cho một phép tính khoa học (ví dụ, bạn đang cố mô phỏng một cơn bão) và khả năng ai đó đột nhập vào trung tâm dữ liệu chỉ là một phần triệu (và ngay cả khi họ làm được, dữ liệu truyền đi cũng không có giá trị lớn), thì bạn hoàn toàn có lý khi không bảo mật kênh truyền cáp quang.
 
-These sorts of calculations happen all the time, although they are often
-implicit and unstated. For example, you may run the world’s most secure
-encryption algorithm on a message before transmitting it, but you’ve
-implicitly trusted that the server you’re running on is both faithfully
-executing that algorithm and not leaking a copy of your unencrypted
-message to an adversary. Do you treat this as a threat or do you trust
-that the server does not misbehave? At the end of the day, the best you
-can do is mitigate risk: identify those threats that you can eliminate
-in a cost effective way, and be explicit about what trust assumptions
-you are making so you aren’t caught off-guard by changing circumstances,
-such as an ever more determined or sophisticated adversary.
+Những phép tính kiểu này diễn ra mọi lúc, dù thường là ngầm định và không được nêu ra. Ví dụ, bạn có thể chạy thuật toán mã hóa an toàn nhất thế giới trên một thông điệp trước khi truyền đi, nhưng bạn đã ngầm tin tưởng rằng máy chủ bạn đang chạy vừa thực thi đúng thuật toán đó vừa không rò rỉ bản sao thông điệp chưa mã hóa cho kẻ tấn công. Bạn sẽ coi đây là một mối đe dọa hay tin tưởng rằng máy chủ không hành xử sai? Cuối cùng, điều tốt nhất bạn có thể làm là giảm thiểu rủi ro: xác định những mối đe dọa mà bạn có thể loại bỏ một cách hiệu quả về chi phí, và nêu rõ các giả định về niềm tin mà bạn đang đưa ra để không bị bất ngờ bởi những thay đổi về hoàn cảnh, chẳng hạn như một kẻ tấn công ngày càng quyết tâm hoặc tinh vi hơn.
 
-In this particular example, the threat of an adversary compromising a
-server has become quite real as more of our computations move from local
-servers into the cloud, and so research is now going into building a
-*Trusted Computing Base* (TCB), an interesting topic, but one that is in
-the realm of computer architecture rather than computer networks. For
-the purpose of this chapter, our recommendation is to pay attention to
-the words *trust* and *threat* (or adversary), as they are key to
-understanding the context in which security claims are made.
+Trong ví dụ cụ thể này, mối đe dọa về việc một kẻ tấn công xâm nhập máy chủ đã trở nên khá thực tế khi ngày càng nhiều phép tính của chúng ta chuyển từ máy chủ cục bộ lên đám mây, và do đó hiện nay đang có nhiều nghiên cứu về xây dựng *Nền tảng tính toán tin cậy* (TCB), một chủ đề thú vị nhưng thuộc lĩnh vực kiến trúc máy tính hơn là mạng máy tính. Đối với chương này, khuyến nghị của chúng tôi là hãy chú ý đến các từ *niềm tin* và *mối đe dọa* (hoặc kẻ tấn công), vì chúng là chìa khóa để hiểu bối cảnh mà các tuyên bố về bảo mật được đưa ra.
 
-There is one final historical note that helps set the table for this
-chapter. The Internet (and the ARPANET before it) where funded by the
-U.S. Department of Defense, an organization that certainly understands
-threat analysis. The original assessment was dominated by concerns about
-the network surviving in the face of routers and networks failing (or
-being destroyed), which explains why the routing algorithms are
-decentralized, with no central point of failure. On the other hand, the
-original design assumed all actors *inside* the network were trusted,
-and so little or no attention was paid to what today we would call
-cybersecurity (attacks from bad actors that are able to connect to the
-network). What this means is that many of the tools described in this
-chapter could be considered patches. They are strongly-grounded in
-cryptography, but “add-ons” nonetheless. If a comprehensive redesign of
-the Internet were to take place, integrating security would likely be
-the foremost driving factor.
+Có một ghi chú lịch sử cuối cùng giúp đặt nền móng cho chương này. Internet (và ARPANET trước đó) được tài trợ bởi Bộ Quốc phòng Hoa Kỳ, một tổ chức chắc chắn hiểu rõ về phân tích mối đe dọa. Đánh giá ban đầu chủ yếu tập trung vào mối lo ngại về việc mạng có thể tồn tại khi các bộ định tuyến và mạng bị hỏng (hoặc bị phá hủy), điều này giải thích tại sao các thuật toán định tuyến lại phi tập trung, không có điểm lỗi trung tâm. Mặt khác, thiết kế ban đầu giả định tất cả các tác nhân *bên trong* mạng đều đáng tin cậy, do đó rất ít hoặc không có sự chú ý nào dành cho cái mà ngày nay chúng ta gọi là an ninh mạng (các cuộc tấn công từ các tác nhân xấu có thể kết nối vào mạng). Điều này có nghĩa là nhiều công cụ được mô tả trong chương này có thể được coi là các bản vá. Chúng được xây dựng dựa trên nền tảng mật mã học vững chắc, nhưng dù sao cũng chỉ là “phần bổ sung”. Nếu một cuộc tái thiết kế toàn diện Internet được thực hiện, việc tích hợp bảo mật có lẽ sẽ là yếu tố thúc đẩy hàng đầu.
