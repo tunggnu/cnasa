@@ -1,476 +1,311 @@
-8.2 Cryptographic Building Blocks
-=================================
+8.2 Các Khối Xây Dựng Mật Mã
+============================
 
-We introduce the concepts of cryptography-based security step by step.
-The first step is the cryptographic algorithms—ciphers and cryptographic
-hashes—that are introduced in this section. They are not a solution in
-themselves, but rather building blocks from which a solution can be
-built. Cryptographic algorithms are parameterized by *keys*, and a later
-section then addresses the problem of distributing the keys. In the next
-step, we describe how to incorporate the cryptographic building blocks
-into protocols that provide secure communication between participants
-who possess the correct keys. A final section then examines several
-complete security protocols and systems in current use.
+Chúng tôi giới thiệu các khái niệm về bảo mật dựa trên mật mã từng bước một.
+Bước đầu tiên là các thuật toán mật mã—các mã hóa (cipher) và hàm băm mật mã—
+được giới thiệu trong phần này. Chúng không phải là một giải pháp tự thân,
+mà là các khối xây dựng từ đó có thể xây dựng nên một giải pháp. Các thuật toán mật mã
+được tham số hóa bởi *khóa* (key), và một phần sau sẽ đề cập đến vấn đề phân phối khóa.
+Ở bước tiếp theo, chúng tôi mô tả cách tích hợp các khối xây dựng mật mã
+vào các giao thức cung cấp liên lạc an toàn giữa các thành viên
+có khóa phù hợp. Phần cuối cùng sẽ xem xét một số giao thức và hệ thống bảo mật hoàn chỉnh đang được sử dụng hiện nay.
 
-8.2.1 Principles of Ciphers
----------------------------
+8.2.1 Nguyên Lý Của Mã Hóa (Cipher)
+-----------------------------------
 
-Encryption transforms a message in such a way that it becomes
-unintelligible to any party that does not have the secret of how to
-reverse the transformation. The sender applies an *encryption*
-function to the original *plaintext* message, resulting in a
-*ciphertext* message that is sent over the network, as shown in
-:numref:`Figure %s <fig-genericCrypto>`. The receiver applies a secret
-*decryption* function—the inverse of the encryption function—to
-recover the original plaintext. The ciphertext transmitted across the
-network is unintelligible to any eavesdropper, assuming the
-eavesdropper doesn’t know the decryption function. The transformation
-represented by an encryption function and its corresponding decryption
-function is called a *cipher*.
+Mã hóa (encryption) biến đổi một thông điệp theo cách mà nó trở nên
+không thể hiểu được đối với bất kỳ bên nào không có bí mật về cách đảo ngược phép biến đổi đó.
+Người gửi áp dụng một hàm *mã hóa* (encryption) lên thông điệp gốc (*plaintext*),
+tạo ra một thông điệp *ciphertext* được gửi qua mạng, như minh họa trong
+:numref:`Figure %s <fig-genericCrypto>`. Người nhận áp dụng một hàm *giải mã* (decryption) bí mật—
+là phép nghịch đảo của hàm mã hóa—để khôi phục lại bản rõ ban đầu. Ciphertext được truyền qua mạng
+là không thể hiểu được đối với bất kỳ kẻ nghe lén nào, với giả định rằng
+kẻ nghe lén không biết hàm giải mã. Phép biến đổi được biểu diễn bởi một hàm mã hóa và hàm giải mã tương ứng
+được gọi là một *cipher* (mã hóa).
 
 .. _fig-genericCrypto:
 .. figure:: figures/f08-01-9780123850591.png
    :width: 500px
    :align: center
 
-   Secret-key encryption and decryption.
+   Mã hóa và giải mã khóa bí mật.
 
-Cryptographers have been led to the principle, first stated in 1883,
-that encryption and decryption functions should be parameterized by a
-*key*, and furthermore that the functions should be considered public
-knowledge—only the key need be secret. Thus, the ciphertext produced for
-a given plaintext message depends on both the encryption function and
-the key. One reason for this principle is that if you depend on the
-cipher being kept secret, then you have to retire the cipher (not just
-the keys) when you believe it is no longer secret. This means
-potentially frequent changes of cipher, which is problematic since it
-takes a lot of work to develop a new cipher. Also, one of the best ways
-to know that a cipher is secure is to use it for a long time—if no one
-breaks it, it’s probably secure. (Fortunately, there are plenty of
-people who will try to break ciphers and who will let it be widely known
-when they have succeeded, so no news is generally good news.) Thus,
-there is considerable cost and risk in deploying a new cipher. Finally,
-parameterizing a cipher with keys provides us with what is in effect a
-very large family of ciphers; by switching keys, we essentially switch
-ciphers, thereby limiting the amount of data that a *cryptanalyst*
-(code-breaker) can use to try to break our key/cipher and the amount she
-can read if she succeeds.
+Các nhà mật mã học đã rút ra nguyên lý, lần đầu tiên được phát biểu năm 1883,
+rằng các hàm mã hóa và giải mã nên được tham số hóa bởi một *khóa* (key),
+và hơn nữa các hàm này nên được coi là kiến thức công khai—chỉ có khóa là cần giữ bí mật.
+Do đó, ciphertext được tạo ra cho một thông điệp bản rõ nhất định phụ thuộc vào cả hàm mã hóa và khóa.
+Một lý do cho nguyên lý này là nếu bạn phụ thuộc vào việc giữ bí mật thuật toán mã hóa,
+thì bạn sẽ phải loại bỏ thuật toán đó (không chỉ các khóa) khi bạn tin rằng nó không còn bí mật nữa.
+Điều này có nghĩa là phải thay đổi thuật toán thường xuyên, điều này gây khó khăn vì việc phát triển một thuật toán mới rất tốn công sức.
+Ngoài ra, một trong những cách tốt nhất để biết một thuật toán mã hóa có an toàn hay không là sử dụng nó trong thời gian dài—
+nếu không ai phá được nó, có lẽ nó an toàn. (May mắn thay, có rất nhiều người sẽ cố gắng phá các thuật toán mã hóa
+và sẽ thông báo rộng rãi khi họ thành công, vì vậy không có tin tức gì thường là tin tốt.)
+Do đó, có chi phí và rủi ro đáng kể khi triển khai một thuật toán mới.
+Cuối cùng, việc tham số hóa một thuật toán mã hóa bằng khóa cung cấp cho chúng ta một họ rất lớn các thuật toán mã hóa;
+bằng cách thay đổi khóa, về cơ bản chúng ta thay đổi thuật toán, từ đó giới hạn lượng dữ liệu mà một *cryptanalyst*
+(kẻ phá mã) có thể sử dụng để cố gắng phá khóa/thuật toán của chúng ta và lượng dữ liệu mà họ có thể đọc nếu thành công.
 
-The basic requirement for an encryption algorithm is that it turn
-plaintext into ciphertext in such a way that only the intended
-recipient—the holder of the decryption key—can recover the plaintext.
-What this means is that encrypted messages cannot be read by people who
-do not hold the key.
+Yêu cầu cơ bản đối với một thuật toán mã hóa là nó phải biến đổi bản rõ thành ciphertext
+sao cho chỉ người nhận dự định—người giữ khóa giải mã—mới có thể khôi phục bản rõ.
+Điều này có nghĩa là các thông điệp đã mã hóa không thể bị đọc bởi những người không giữ khóa.
 
-It is important to realize that when a potential attacker receives a
-piece of ciphertext, he may have more information at his disposal than
-just the ciphertext itself. For example, he may know that the plaintext
-was written in English, which means that the letter *e* occurs more
-often in the plaintext that any other letter; the frequency of many
-other letters and common letter combinations can also be predicted. This
-information can greatly simplify the task of finding the key. Similarly,
-he may know something about the likely contents of the message; for
-example, the word “login” is likely to occur at the start of a remote
-login session. This may enable a *known plaintext* attack, which has a
-much higher chance of success than a *ciphertext only* attack. Even
-better is a *chosen plaintext* attack, which may be enabled by feeding
-some information to the sender that you know the sender is likely to
-transmit—such things have happened in wartime, for example.
+Điều quan trọng là phải nhận ra rằng khi một kẻ tấn công tiềm năng nhận được một đoạn ciphertext,
+họ có thể có nhiều thông tin hơn ngoài bản thân ciphertext. Ví dụ, họ có thể biết rằng bản rõ được viết bằng tiếng Anh,
+nghĩa là chữ *e* xuất hiện thường xuyên hơn bất kỳ chữ cái nào khác; tần suất của nhiều chữ cái khác và các tổ hợp chữ cái phổ biến cũng có thể dự đoán được.
+Thông tin này có thể đơn giản hóa đáng kể việc tìm ra khóa. Tương tự, họ có thể biết điều gì đó về nội dung có khả năng xuất hiện trong thông điệp;
+ví dụ, từ “login” có thể xuất hiện ở đầu một phiên đăng nhập từ xa. Điều này có thể cho phép một cuộc tấn công *bản rõ đã biết* (known plaintext),
+có xác suất thành công cao hơn nhiều so với một cuộc tấn công *chỉ có ciphertext* (ciphertext only).
+Thậm chí tốt hơn là một cuộc tấn công *bản rõ được chọn* (chosen plaintext), có thể thực hiện bằng cách cung cấp một số thông tin cho người gửi
+mà bạn biết chắc họ sẽ truyền đi—những điều như vậy đã từng xảy ra trong thời chiến.
 
-The best cryptographic algorithms, therefore, can prevent the attacker
-from deducing the key even when the individual knows both the
-plaintext and the ciphertext. This leaves the attacker with no choice
-but to try all the possible keys—exhaustive, “brute force” search. If
-keys have *n* bits, then there are 2\ :sup:`n` possible values for a
-key (each of the *n* bits could be either a zero or a one).  An
-attacker could be so lucky as to try the correct value immediately, or
-so unlucky as to try every incorrect value before finally trying the
-correct value of the key, having tried all 2\ :sup:`n` possible
-values; the average number of guesses to discover the correct value is
-halfway between those extremes, 2\ :sup:`n-1`.  This can be made
-computationally impractical by choosing a sufficiently large key space
-and by making the operation of checking a key reasonably costly. What
-makes this difficult is that computing speeds keep increasing, making
-formerly infeasible computations feasible. Furthermore, although we
-are concentrating on the security of data as it moves through the
-network—that is, the data is sometimes vulnerable for only a short
-period of time—in general, security people have to consider the
-vulnerability of data that needs to be stored in archives for tens of
-years. This argues for a generously large key size.  On the other
-hand, larger keys make encryption and decryption slower.
+Do đó, các thuật toán mật mã tốt nhất có thể ngăn kẻ tấn công suy ra khóa ngay cả khi họ biết cả bản rõ và ciphertext.
+Điều này buộc kẻ tấn công chỉ còn cách thử tất cả các khóa có thể—tìm kiếm toàn bộ, “brute force”.
+Nếu khóa có *n* bit, thì có 2\ :sup:`n` giá trị khóa có thể (mỗi bit có thể là 0 hoặc 1).
+Kẻ tấn công có thể may mắn thử đúng giá trị ngay lập tức, hoặc xui xẻo phải thử tất cả các giá trị sai trước khi thử đúng khóa,
+tức là thử tất cả 2\ :sup:`n` giá trị; số lần đoán trung bình để tìm ra giá trị đúng là ở giữa hai cực đoan đó, 2\ :sup:`n-1`.
+Điều này có thể trở nên bất khả thi về mặt tính toán bằng cách chọn không gian khóa đủ lớn
+và làm cho việc kiểm tra một khóa đủ tốn kém. Điều làm cho việc này khó là tốc độ tính toán ngày càng tăng,
+khiến những phép tính trước đây không khả thi trở nên khả thi. Hơn nữa, mặc dù chúng ta tập trung vào bảo mật dữ liệu khi nó di chuyển qua mạng—
+tức là dữ liệu đôi khi chỉ dễ bị tấn công trong một thời gian ngắn—nhưng nói chung, người làm bảo mật phải xem xét cả
+tính dễ bị tấn công của dữ liệu cần lưu trữ trong kho lưu trữ hàng chục năm. Điều này đòi hỏi phải chọn kích thước khóa đủ lớn.
+Mặt khác, khóa lớn hơn làm cho việc mã hóa và giải mã chậm hơn.
 
-Most ciphers are *block ciphers*; they are defined to take as input a
-plaintext block of a certain fixed size, typically 64 to 128 bits. Using
-a block cipher to encrypt each block independently—known as *electronic
-codebook (ECB) mode* encryption—has the weakness that a given plaintext
-block value will always result in the same ciphertext block. Hence,
-recurring block values in the plaintext are recognizable as such in the
-ciphertext, making it much easier for a cryptanalyst to break the
-cipher.
+Hầu hết các thuật toán mã hóa là *block cipher* (mã hóa khối); chúng được định nghĩa để nhận đầu vào là một khối bản rõ có kích thước cố định,
+thường là 64 đến 128 bit. Sử dụng block cipher để mã hóa từng khối độc lập—được gọi là mã hóa *electronic codebook (ECB) mode*—
+có điểm yếu là một giá trị khối bản rõ nhất định sẽ luôn tạo ra cùng một khối ciphertext.
+Do đó, các giá trị khối lặp lại trong bản rõ sẽ dễ dàng nhận ra trong ciphertext,
+khiến cho việc phá mã trở nên dễ dàng hơn.
 
-To prevent this, block ciphers are always augmented to make the
-ciphertext for a block vary depending on context. Ways in which a
-block cipher may be augmented are called *modes of operation*. A
-common mode of operation is *cipher block chaining* (CBC), in which
-each plaintext block is XORed with the previous block’s ciphertext
-before being encrypted. The result is that each block’s ciphertext
-depends in part on the preceding blocks (i.e., on its context). Since
-the first plaintext block has no preceding block, it is XORed with a
-random number. That random number, called an *initialization vector*
-(IV), is included with the series of ciphertext blocks so that the
-first ciphertext block can be decrypted. This mode is illustrated in
-:numref:`Figure %s <fig-cbc>`. Another mode of operation is *counter
-mode*, in which successive values of a counter (e.g., 1, 2, 3,
-:math:`\ldots`) are incorporated into the encryption of successive
-blocks of plaintext.
+Để ngăn điều này, block cipher luôn được bổ sung để làm cho ciphertext của một khối thay đổi tùy theo ngữ cảnh.
+Các cách bổ sung cho block cipher được gọi là *chế độ hoạt động* (modes of operation).
+Một chế độ phổ biến là *cipher block chaining* (CBC), trong đó mỗi khối bản rõ được XOR với ciphertext của khối trước đó trước khi mã hóa.
+Kết quả là ciphertext của mỗi khối phụ thuộc một phần vào các khối trước đó (tức là vào ngữ cảnh).
+Vì khối bản rõ đầu tiên không có khối trước, nó được XOR với một số ngẫu nhiên.
+Số ngẫu nhiên đó, gọi là *vector khởi tạo* (initialization vector, IV), được gửi kèm với chuỗi các khối ciphertext
+để có thể giải mã khối ciphertext đầu tiên. Chế độ này được minh họa trong :numref:`Figure %s <fig-cbc>`.
+Một chế độ khác là *counter mode*, trong đó các giá trị liên tiếp của một bộ đếm (ví dụ, 1, 2, 3, :math:`\ldots`)
+được tích hợp vào việc mã hóa các khối bản rõ liên tiếp.
 
 .. _fig-cbc:
 .. figure:: figures/f08-02-9780123850591.png
    :width: 500px
    :align: center
 
-   Cipher Block Chaining.
+   Chuỗi khối mã hóa (Cipher Block Chaining).
 
-8.2.2 Secret-Key Ciphers
+8.2.2 Mã Hóa Khóa Bí Mật
 ------------------------
 
-In a secret-key cipher, both participants in a communication share the
-same key.\ [#]_ In other words, if a message is encrypted using a particular
-key, the same key is required for decrypting the message. If the
-cipher illustrated in :numref:`Figure %s <fig-genericCrypto>` were a
-secret-key cipher, then the encryption and decryption keys would be
-identical. Secret-key ciphers are also known as symmetric-key ciphers
-since the secret is shared with both participants. We’ll take a look
-at the alternative, public-key ciphers, shortly. (Public-key ciphers
-are known as also asymmetric-key ciphers, since as we’ll soon see, the
-two participants use different keys.)
+Trong một mã hóa khóa bí mật, cả hai bên tham gia liên lạc đều chia sẻ cùng một khóa.\ [#]_
+Nói cách khác, nếu một thông điệp được mã hóa bằng một khóa nhất định, thì cùng khóa đó được dùng để giải mã thông điệp.
+Nếu thuật toán mã hóa trong :numref:`Figure %s <fig-genericCrypto>` là mã hóa khóa bí mật,
+thì khóa mã hóa và giải mã sẽ giống hệt nhau. Mã hóa khóa bí mật còn được gọi là mã hóa khóa đối xứng
+vì bí mật được chia sẻ cho cả hai bên. Chúng ta sẽ xem xét lựa chọn thay thế là mã hóa khóa công khai ở phần sau.
+(Mã hóa khóa công khai còn gọi là mã hóa khóa bất đối xứng, vì như sẽ thấy, hai bên sử dụng các khóa khác nhau.)
 
-.. [#] We use the term *participant* for the parties involved in a
-       secure communication since that is the term we have been using
-       throughout the book to identify the two endpoints of a
-       channel. In the security world, they are typically called
-       *principals*.
+.. [#] Chúng tôi sử dụng thuật ngữ *participant* (thành viên) cho các bên tham gia liên lạc an toàn
+       vì đó là thuật ngữ được dùng xuyên suốt cuốn sách để chỉ hai đầu mút của một kênh.
+       Trong lĩnh vực bảo mật, họ thường được gọi là *principal* (chủ thể).
 
-The U.S. National Institute of Standards and Technology (NIST) has
-issued standards for a series of secret-key ciphers. *Data Encryption
-Standard* (DES) was the first, and it has stood the test of time in
-that no cryptanalytic attack better than brute force search has been
-discovered. Brute force search, however, has gotten faster. DES’s keys
-(56 independent bits) are now too small given current processor
-speeds.  DES keys have 56 independent bits (although they have 64 bits
-in total; the last bit of every byte is a parity bit). As noted above,
-you would, on average, have to search half of the space of 2\
-:sup:`56` possible keys to find the right one, giving 2\ :sup:`55` =
-3.6 × 10\ :sup:`16` keys.  That may sound like a lot, but such a
-search is highly parallelizable, so it’s possible to throw as many
-computers at the task as you can get your hands on—and these days it’s
-easy to lay your hands on thousands of computers. (Amazon will rent
-them to you for a few cents an hour.) By the late 1990s, it was
-already possible to recover a DES key after a few hours. Consequently,
-NIST updated the DES standard in 1999 to indicate that DES should only
-be used for legacy systems.
+Viện Tiêu chuẩn và Công nghệ Quốc gia Hoa Kỳ (NIST) đã ban hành các tiêu chuẩn cho một loạt mã hóa khóa bí mật.
+*Tiêu chuẩn Mã hóa Dữ liệu* (DES) là tiêu chuẩn đầu tiên, và nó đã vượt qua thử thách thời gian
+khi chưa có cuộc tấn công phân tích mật mã nào tốt hơn brute force được phát hiện.
+Tuy nhiên, brute force ngày càng nhanh hơn. Khóa của DES (56 bit độc lập) hiện nay là quá nhỏ với tốc độ xử lý hiện tại.
+Khóa DES có 56 bit độc lập (mặc dù tổng cộng có 64 bit; bit cuối của mỗi byte là bit chẵn lẻ).
+Như đã nói ở trên, trung bình bạn sẽ phải thử một nửa không gian 2\ :sup:`56` khóa để tìm ra khóa đúng,
+tức là 2\ :sup:`55` = 3.6 × 10\ :sup:`16` khóa. Nghe có vẻ nhiều, nhưng việc tìm kiếm này có thể song song hóa rất cao,
+nên bạn có thể sử dụng bao nhiêu máy tính tùy thích—và ngày nay rất dễ để có hàng ngàn máy tính.
+(Amazon sẽ cho bạn thuê với giá vài xu một giờ.) Đến cuối những năm 1990, đã có thể khôi phục khóa DES chỉ sau vài giờ.
+Do đó, NIST đã cập nhật tiêu chuẩn DES năm 1999 để chỉ sử dụng DES cho các hệ thống cũ.
 
-NIST also standardized the cipher *Triple DES* (3DES), which leverages
-the cryptanalysis resistance of DES while in effect increasing the key
-size. A 3DES key has 168 (= 3 × 56) independent bits, and is used as
-three DES keys; let’s call them DES-key1, DES-key2, and DES-key3. 3DES
-encryption of a block is performed by first DES encrypting the block
-using DES-key1, then DES *de*\ crypting the result using DES-key2, and
-finally DES encrypting that result using DES-key3. Decryption involves
-decrypting using DES-key3, then encrypting using DES-key2, then
-decrypting using DES-key1.
+NIST cũng chuẩn hóa thuật toán *Triple DES* (3DES), tận dụng khả năng chống phân tích mật mã của DES
+đồng thời tăng kích thước khóa. Khóa 3DES có 168 (= 3 × 56) bit độc lập, và được dùng như ba khóa DES;
+gọi là DES-key1, DES-key2, và DES-key3. Mã hóa 3DES một khối được thực hiện bằng cách đầu tiên mã hóa DES với DES-key1,
+sau đó *giải mã* DES với DES-key2, và cuối cùng mã hóa DES với DES-key3. Giải mã thực hiện ngược lại:
+giải mã với DES-key3, rồi mã hóa với DES-key2, rồi giải mã với DES-key1.
 
-The reason 3DES encryption uses DES *de*\ cryption with DES-key2 is to
-interoperate with legacy DES systems. If a legacy DES system uses a
-single key, then a 3DES system can perform the same encryption function
-by using that key for each of DES-key1, DES-key2, and DES-key3; in the
-first two steps, we encrypt and then decrypt with the same key,
-producing the original plaintext, which we then encrypt again.
+Lý do 3DES sử dụng giải mã DES với DES-key2 là để tương thích với các hệ thống DES cũ.
+Nếu một hệ thống DES cũ dùng một khóa duy nhất, thì hệ thống 3DES có thể thực hiện cùng hàm mã hóa
+bằng cách dùng khóa đó cho cả DES-key1, DES-key2 và DES-key3; ở hai bước đầu, ta mã hóa rồi giải mã với cùng một khóa,
+tạo ra bản rõ gốc, sau đó lại mã hóa lần nữa.
 
-Although 3DES solves DES’s key-length problem, it inherits some other
-shortcomings. Software implementations of DES/3DES are slow because it
-was originally designed by IBM for implementation in hardware. Also,
-DES/3DES uses a 64-bit block size; a larger block size is more efficient
-and more secure.
+Mặc dù 3DES giải quyết vấn đề độ dài khóa của DES, nó vẫn thừa hưởng một số nhược điểm khác.
+Việc triển khai phần mềm DES/3DES chậm vì ban đầu nó được IBM thiết kế để thực hiện bằng phần cứng.
+Ngoài ra, DES/3DES dùng kích thước khối 64 bit; kích thước khối lớn hơn sẽ hiệu quả và an toàn hơn.
 
-3DES is now being superseded by the *Advanced Encryption Standard* (AES)
-standard issued by NIST. The cipher underlying AES (with a few minor
-modifications) was originally named Rijndael (pronounced roughly like
-“Rhine dahl”) based on the names of its inventors, Daemen and Rijmen.
-AES supports key lengths of 128, 192, or 256 bits, and the block length
-is 128 bits. AES permits fast implementations in both software and
-hardware. It doesn’t require much memory, which makes it suitable for
-small mobile devices. AES has some mathematically proven security
-properties and, as of the time of writing, has not suffered from any
-significant successful attacks.
+Hiện nay, 3DES đang dần được thay thế bởi tiêu chuẩn *Advanced Encryption Standard* (AES) do NIST ban hành.
+Thuật toán mã hóa nền tảng của AES (với một vài sửa đổi nhỏ) ban đầu có tên là Rijndael (phát âm gần giống “Rhine dahl”)
+dựa trên tên của hai tác giả Daemen và Rijmen. AES hỗ trợ độ dài khóa 128, 192 hoặc 256 bit, và độ dài khối là 128 bit.
+AES cho phép triển khai nhanh cả trên phần mềm lẫn phần cứng. Nó không yêu cầu nhiều bộ nhớ,
+phù hợp với các thiết bị di động nhỏ. AES có một số thuộc tính bảo mật đã được chứng minh toán học
+và, tại thời điểm viết sách này, chưa có cuộc tấn công thành công đáng kể nào.
 
-8.2.3 Public-Key Ciphers
-------------------------
+8.2.3 Mã Hóa Khóa Công Khai
+---------------------------
 
-An alternative to secret-key ciphers is public-key ciphers. Instead of
-a single key shared by two participants, a public-key cipher uses a pair
-of related keys, one for encryption and a different one for decryption.
-The pair of keys is “owned” by just one participant. The owner keeps the
-decryption key secret so that only the owner can decrypt messages; that
-key is called the *private key*. The owner makes the encryption key
-public, so that anyone can encrypt messages for the owner; that key is
-called the *public key*. Obviously, for such a scheme to work, it must
-not be possible to deduce the private key from the public key.
-Consequently, any participant can get the public key and send an
-encrypted message to the owner of the keys, and only the owner has the
-private key necessary to decrypt it. This scenario is depicted in
-:numref:`Figure %s <fig-public>`.
+Một lựa chọn thay thế cho mã hóa khóa bí mật là mã hóa khóa công khai.
+Thay vì một khóa duy nhất được chia sẻ giữa hai bên, mã hóa khóa công khai sử dụng một cặp khóa liên quan,
+một để mã hóa và một khác để giải mã. Cặp khóa này “thuộc sở hữu” của chỉ một bên.
+Chủ sở hữu giữ bí mật khóa giải mã để chỉ mình có thể giải mã thông điệp; khóa đó gọi là *khóa riêng* (private key).
+Chủ sở hữu công khai khóa mã hóa, để bất kỳ ai cũng có thể mã hóa thông điệp gửi cho chủ sở hữu; khóa đó gọi là *khóa công khai* (public key).
+Rõ ràng, để sơ đồ này hoạt động, không được phép suy ra khóa riêng từ khóa công khai.
+Do đó, bất kỳ bên nào cũng có thể lấy khóa công khai và gửi thông điệp mã hóa cho chủ sở hữu cặp khóa,
+và chỉ chủ sở hữu có khóa riêng cần thiết để giải mã. Kịch bản này được minh họa trong :numref:`Figure %s <fig-public>`.
 
 .. _fig-public:
 .. figure:: figures/f08-03-9780123850591.png
    :width: 500px
    :align: center
 
-   Public-key encryption.
+   Mã hóa khóa công khai.
 
-Because it is somewhat unintuitive, we emphasize that the public
-encryption key is useless for decrypting a message—you couldn’t even
-decrypt a message that you yourself had just encrypted unless you had
-the private decryption key. If we think of keys as defining a
-communication channel between participants, then another difference
-between public-key and secret-key ciphers is the topology of the
-channels. A key for a secret-key cipher provides a channel that is
-two-way between two participants—each participant holds the same
-(symmetric) key that either one can use to encrypt or decrypt messages
-in either direction. A public/private key pair, in contrast, provides
-a channel that is one way and many-to-one: from everyone who has the
-public key to the unique owner of the private key, as illustrated in
-:numref:`Figure %s <fig-public>`.
+Vì điều này khá khó hiểu, chúng tôi nhấn mạnh rằng khóa mã hóa công khai là vô dụng cho việc giải mã thông điệp—
+bạn thậm chí không thể giải mã thông điệp mà chính bạn vừa mã hóa trừ khi bạn có khóa giải mã riêng.
+Nếu coi các khóa như xác định một kênh liên lạc giữa các bên, thì một khác biệt nữa giữa mã hóa khóa công khai và khóa bí mật là
+hình thái của các kênh. Một khóa cho mã hóa khóa bí mật cung cấp một kênh hai chiều giữa hai bên—
+mỗi bên giữ cùng một khóa (đối xứng) mà cả hai đều có thể dùng để mã hóa hoặc giải mã thông điệp theo cả hai chiều.
+Một cặp khóa công khai/riêng, ngược lại, cung cấp một kênh một chiều và nhiều-đến-một:
+từ tất cả những ai có khóa công khai đến chủ sở hữu duy nhất của khóa riêng, như minh họa trong :numref:`Figure %s <fig-public>`.
 
-An important additional property of public-key ciphers is that the
-private “decryption” key can be used with the encryption algorithm to
-encrypt messages so that they can only be decrypted using the public
-“encryption” key. This property clearly wouldn’t be useful for
-confidentiality since anyone with the public key could decrypt such a
-message. (Indeed, for two-way confidentiality between two
-participants, each participant needs its own pair of keys, and each
-encrypts messages using the other’s public key.) This property is,
-however, useful for authentication since it tells the receiver of such
-a message that it could only have been created by the owner of the
-keys (subject to certain assumptions that we will get into
-later). This is illustrated in :numref:`Figure %s <fig-pksign>`. It
-should be clear from the figure that anyone with the public key can
-decrypt the encrypted message, and, assuming that the result of the
-decryption matches the expected result, it can be concluded that the
-private key must have been used to perform the encryption. Exactly how
-this operation is used to provide authentication is the topic of a
-later section. As we will see, public-key ciphers are used primarily
-for authentication and to confidentially distribute secret (symmetric)
-keys, leaving the rest of confidentiality to secret-key ciphers.
+Một thuộc tính quan trọng khác của mã hóa khóa công khai là khóa riêng “giải mã” có thể được dùng với thuật toán mã hóa
+để mã hóa thông điệp sao cho chỉ có thể giải mã bằng khóa công khai “mã hóa”.
+Thuộc tính này rõ ràng không hữu ích cho tính bảo mật vì bất kỳ ai có khóa công khai đều có thể giải mã thông điệp như vậy.
+(Thật vậy, để bảo mật hai chiều giữa hai bên, mỗi bên cần có cặp khóa riêng, và mỗi bên mã hóa thông điệp bằng khóa công khai của bên kia.)
+Tuy nhiên, thuộc tính này hữu ích cho xác thực vì nó cho người nhận biết rằng thông điệp chỉ có thể được tạo ra bởi chủ sở hữu cặp khóa
+(dưới một số giả định sẽ được đề cập sau). Điều này được minh họa trong :numref:`Figure %s <fig-pksign>`.
+Có thể thấy từ hình vẽ rằng bất kỳ ai có khóa công khai đều có thể giải mã thông điệp đã mã hóa,
+và, giả sử kết quả giải mã khớp với kết quả mong đợi, có thể kết luận rằng khóa riêng đã được dùng để mã hóa.
+Cách thức sử dụng thao tác này để cung cấp xác thực sẽ được trình bày ở phần sau.
+Như sẽ thấy, mã hóa khóa công khai chủ yếu được dùng cho xác thực và phân phối bí mật các khóa đối xứng,
+phần còn lại của bảo mật sẽ do mã hóa khóa bí mật đảm nhiệm.
 
 .. _fig-pksign:
 .. figure:: figures/f08-04-9780123850591.png
    :width: 500px
    :align: center
 
-   Authentication using public keys.
+   Xác thực bằng khóa công khai.
 
-A bit of interesting history: The concept of public-key ciphers was
-first published in 1976 by Diffie and Hellman. Subsequently, however,
-documents have come to light proving that Britain’s
-Communications-Electronics Security Group had discovered public-key
-ciphers by 1970, and the U.S. National Security Agency (NSA) claims to
-have discovered them in the mid-1960s.
+Một chút lịch sử thú vị: Khái niệm mã hóa khóa công khai lần đầu tiên được công bố năm 1976 bởi Diffie và Hellman.
+Tuy nhiên, sau đó đã xuất hiện các tài liệu chứng minh rằng Nhóm An ninh Truyền thông Điện tử của Anh
+đã phát hiện ra mã hóa khóa công khai từ năm 1970, và Cơ quan An ninh Quốc gia Hoa Kỳ (NSA) tuyên bố đã phát hiện ra nó từ giữa những năm 1960.
 
-The best-known public-key cipher is RSA, named after its inventors:
-Rivest, Shamir, and Adleman. RSA relies on the high computational cost
-of factoring large numbers. The problem of finding an efficient way to
-factor numbers is one that mathematicians have worked on unsuccessfully
-since long before RSA appeared in 1978, and RSA’s subsequent resistance
-to cryptanalysis has further bolstered confidence in its security.
-Unfortunately, RSA needs relatively large keys, at least 1024 bits, to
-be secure. This is larger than keys for secret-key ciphers because it is
-faster to break an RSA private key by factoring the large number on
-which the pair of keys is based than by exhaustively searching the key
-space.
+Thuật toán mã hóa khóa công khai nổi tiếng nhất là RSA, đặt theo tên các tác giả: Rivest, Shamir và Adleman.
+RSA dựa vào chi phí tính toán rất lớn của việc phân tích thừa số các số lớn.
+Bài toán tìm cách phân tích thừa số hiệu quả là một vấn đề mà các nhà toán học đã nghiên cứu không thành công từ lâu trước khi RSA xuất hiện năm 1978,
+và khả năng chống phân tích mật mã của RSA sau đó càng củng cố niềm tin vào tính bảo mật của nó.
+Đáng tiếc là RSA cần các khóa tương đối lớn, ít nhất 1024 bit, để an toàn.
+Điều này lớn hơn các khóa của mã hóa khóa bí mật vì việc phá khóa riêng RSA bằng cách phân tích thừa số số lớn
+dễ hơn so với việc thử toàn bộ không gian khóa.
 
-Another public-key cipher is ElGamal. Like RSA, it relies on a
-mathematical problem, the discrete logarithm problem, for which no
-efficient solution has been found, and requires keys of at least 1024
-bits. There is a variation of the discrete logarithm problem, arising
-when the input is an elliptic curve, that is thought to be even more
-difficult to compute; cryptographic schemes based on this problem are
-referred to as *elliptic curve cryptography*.
+Một thuật toán mã hóa khóa công khai khác là ElGamal. Giống như RSA, nó dựa vào một bài toán toán học,
+bài toán logarit rời rạc, mà chưa có lời giải hiệu quả, và cũng cần các khóa ít nhất 1024 bit.
+Có một biến thể của bài toán logarit rời rạc, phát sinh khi đầu vào là một đường cong elliptic,
+được cho là còn khó tính toán hơn; các sơ đồ mật mã dựa trên bài toán này được gọi là *mật mã đường cong elliptic* (elliptic curve cryptography).
 
-Public-key ciphers are, unfortunately, several orders of magnitude
-slower than secret-key ciphers. Consequently, secret-key ciphers are
-used for the vast majority of encryption, while public-key ciphers are
-reserved for use in authentication and session key establishment.
+Đáng tiếc là mã hóa khóa công khai chậm hơn mã hóa khóa bí mật nhiều bậc độ lớn.
+Do đó, mã hóa khóa bí mật được dùng cho phần lớn các hoạt động mã hóa,
+trong khi mã hóa khóa công khai chỉ dùng cho xác thực và thiết lập khóa phiên.
 
-8.2.4 Authenticators
---------------------
+8.2.4 Bộ Xác Thực (Authenticator)
+---------------------------------
 
-Encryption alone does not provide data integrity. For example, just
-randomly modifying a ciphertext message could turn it into something
-that decrypts into valid-looking plaintext, in which case the tampering
-would be undetectable by the receiver. Nor does encryption alone provide
-authentication. It is not much use to say that a message came from a
-certain participant if the contents of the message have been modified
-after that participant created it. In a sense, integrity and
-authentication are fundamentally inseparable.
+Chỉ mã hóa thôi không cung cấp tính toàn vẹn dữ liệu. Ví dụ, chỉ cần sửa đổi ngẫu nhiên một thông điệp ciphertext
+có thể biến nó thành một bản rõ trông hợp lệ, khi đó việc giả mạo sẽ không bị người nhận phát hiện.
+Mã hóa cũng không cung cấp xác thực. Không có nhiều ý nghĩa khi nói rằng một thông điệp đến từ một bên nào đó
+nếu nội dung thông điệp đã bị sửa đổi sau khi bên đó tạo ra. Ở một khía cạnh nào đó, tính toàn vẹn và xác thực là không thể tách rời.
 
-An *authenticator* is a value, to be included in a transmitted message,
-that can be used to verify simultaneously the authenticity and the data
-integrity of a message. We will see how authenticators can be used in
-protocols. For now, we focus on the algorithms that produce
-authenticators.
+Một *bộ xác thực* (authenticator) là một giá trị được đưa vào thông điệp truyền đi,
+có thể dùng để kiểm tra đồng thời tính xác thực và toàn vẹn dữ liệu của thông điệp.
+Chúng ta sẽ thấy cách sử dụng bộ xác thực trong các giao thức. Hiện tại, chúng ta tập trung vào các thuật toán tạo ra bộ xác thực.
 
-You may recall that checksums and cyclic redundancy checks (CRCs) are
-pieces of information added to a message so the receiver detect when the
-message has been inadvertently modified by bit errors. A similar concept
-applies to authenticators, with the added challenge that the corruption
-of the message is likely to be deliberately performed by someone who
-wants the corruption to go undetected. To support authentication, an
-authenticator includes some proof that whoever created the authenticator
-knows a secret that is known only to the alleged sender of the message;
-for example, the secret could be a key, and the proof could be some
-value encrypted using the key. There is a mutual dependency between the
-form of the redundant information and the form of the proof of secret
-knowledge. We discuss several workable combinations.
+Bạn có thể nhớ rằng checksum và kiểm tra dư thừa tuần hoàn (CRC) là các thông tin bổ sung vào thông điệp
+để người nhận phát hiện khi thông điệp bị sửa đổi do lỗi bit. Một khái niệm tương tự áp dụng cho bộ xác thực,
+với thách thức bổ sung là việc làm sai lệch thông điệp có thể được thực hiện có chủ đích bởi ai đó muốn việc đó không bị phát hiện.
+Để hỗ trợ xác thực, bộ xác thực bao gồm một bằng chứng rằng người tạo ra bộ xác thực biết một bí mật chỉ người gửi thực sự mới biết;
+ví dụ, bí mật đó có thể là một khóa, và bằng chứng có thể là một giá trị được mã hóa bằng khóa đó.
+Có sự phụ thuộc lẫn nhau giữa dạng thông tin dư thừa và dạng bằng chứng về kiến thức bí mật.
+Chúng tôi sẽ thảo luận một số kết hợp khả thi.
 
-We initially assume that the original message need not be
-confidential—that a transmitted message will consist of the plaintext of
-the original message plus an authenticator. Later we will consider the
-case where confidentiality is desired.
+Ban đầu, chúng tôi giả định rằng thông điệp gốc không cần bảo mật—tức là thông điệp truyền đi sẽ gồm bản rõ của thông điệp gốc cộng với bộ xác thực.
+Sau này chúng tôi sẽ xem xét trường hợp cần bảo mật.
 
-One kind of authenticator combines encryption and a *cryptographic hash
-function*. Cryptographic hash algorithms are treated as public
-knowledge, as with cipher algorithms. A cryptographic hash function
-(also known as a *cryptographic checksum*) is a function that outputs
-sufficient redundant information about a message to expose any
-tampering. Just as a checksum or CRC exposes bit errors introduced by
-noisy links, a cryptographic checksum is designed to expose deliberate
-corruption of messages by an adversary. The value it outputs is called a
-*message digest* and, like an ordinary checksum, is appended to the
-message. All the message digests produced by a given hash have the same
-number of bits regardless of the length of the original message. Since
-the space of possible input messages is larger than the space of
-possible message digests, there will be different input messages that
-produce the same message digest, like collisions in a hash table.
+Một loại bộ xác thực kết hợp mã hóa và *hàm băm mật mã* (cryptographic hash function).
+Các thuật toán băm mật mã được coi là kiến thức công khai, giống như các thuật toán mã hóa.
+Hàm băm mật mã (còn gọi là *checksum mật mã*) là một hàm xuất ra đủ thông tin dư thừa về một thông điệp để phát hiện bất kỳ sự giả mạo nào.
+Cũng như checksum hoặc CRC phát hiện lỗi bit do đường truyền nhiễu, checksum mật mã được thiết kế để phát hiện việc cố ý làm sai lệch thông điệp bởi kẻ tấn công.
+Giá trị mà nó xuất ra gọi là *message digest* (bản tóm tắt thông điệp) và, giống như checksum thông thường, được nối vào thông điệp.
+Tất cả các bản tóm tắt thông điệp do một hàm băm nhất định tạo ra đều có cùng số bit bất kể độ dài thông điệp gốc.
+Vì không gian các thông điệp đầu vào lớn hơn không gian các bản tóm tắt, sẽ có các thông điệp đầu vào khác nhau tạo ra cùng một bản tóm tắt,
+giống như va chạm (collision) trong bảng băm.
 
-An authenticator can be created by encrypting the message digest. The
-receiver computes a digest of the plaintext part of the message and
-compares that to the decrypted message digest. If they are equal, then
-the receiver would conclude that the message is indeed from its alleged
-sender (since it would have to have been encrypted with the right key)
-and has not been tampered with. No adversary could get away with sending
-a bogus message with a matching bogus digest because she would not have
-the key to encrypt the bogus digest correctly. An adversary could,
-however, obtain the plaintext original message and its encrypted digest
-by eavesdropping. The adversary could then (since the hash function is
-public knowledge) compute the digest of the original message and
-generate alternative messages looking for one with the same message
-digest. If she finds one, she could undetectably send the new message
-with the old authenticator. Therefore, security requires that the hash
-function have the *one-way* property: It must be computationally
-infeasible for an adversary to find any plaintext message that has the
-same digest as the original.
+Một bộ xác thực có thể được tạo ra bằng cách mã hóa bản tóm tắt thông điệp. Người nhận tính toán bản tóm tắt của phần bản rõ của thông điệp
+và so sánh với bản tóm tắt đã giải mã. Nếu chúng bằng nhau, người nhận có thể kết luận rằng thông điệp thực sự đến từ người gửi dự kiến
+(vì nó phải được mã hóa bằng đúng khóa) và không bị giả mạo. Không kẻ tấn công nào có thể gửi một thông điệp giả với bản tóm tắt giả khớp
+vì họ không có khóa để mã hóa bản tóm tắt giả đúng cách. Tuy nhiên, kẻ tấn công có thể lấy được thông điệp gốc bản rõ và bản tóm tắt đã mã hóa
+bằng cách nghe lén. Sau đó, vì hàm băm là kiến thức công khai, họ có thể tính bản tóm tắt của thông điệp gốc và tạo ra các thông điệp thay thế
+để tìm một thông điệp có cùng bản tóm tắt. Nếu tìm được, họ có thể gửi thông điệp mới với bộ xác thực cũ mà không bị phát hiện.
+Do đó, bảo mật đòi hỏi hàm băm phải có tính *một chiều* (one-way): Phải bất khả thi về mặt tính toán để kẻ tấn công tìm được bất kỳ thông điệp bản rõ nào
+có cùng bản tóm tắt với thông điệp gốc.
 
-For a hash function to meet this requirement, its outputs must be
-fairly randomly distributed. For example, if digests are 128 bits long
-and randomly distributed, then you would need to try 2\ :sup:`127`
-messages, on average, before finding a second message whose digest
-matches that of a given message. If the outputs are not randomly
-distributed—that is, if some outputs are much more likely than
-others—then for some messages you could find another message with the
-same digest much more easily than this, which would reduce the
-security of the algorithm. If you were instead just trying to find any
-*collision*—any two messages that produce the same digest—then you
-would need to compute the digests of only 2\ :sup:`64` messages, on
-average.  This surprising fact is the basis of the “birthday
-attack”—see the exercises for more details.
+Để hàm băm đáp ứng yêu cầu này, đầu ra của nó phải được phân phối ngẫu nhiên.
+Ví dụ, nếu bản tóm tắt dài 128 bit và được phân phối ngẫu nhiên, bạn sẽ phải thử trung bình 2\ :sup:`127` thông điệp
+trước khi tìm được thông điệp thứ hai có bản tóm tắt trùng với một thông điệp cho trước.
+Nếu đầu ra không phân phối ngẫu nhiên—tức là một số đầu ra có xác suất cao hơn các đầu ra khác—
+thì với một số thông điệp, bạn có thể dễ dàng tìm được thông điệp khác có cùng bản tóm tắt hơn, làm giảm tính an toàn của thuật toán.
+Nếu bạn chỉ cố tìm bất kỳ *va chạm* nào—bất kỳ hai thông điệp nào cho cùng bản tóm tắt—thì chỉ cần tính bản tóm tắt của 2\ :sup:`64` thông điệp, trung bình.
+Sự thật bất ngờ này là cơ sở của “cuộc tấn công ngày sinh nhật”—xem bài tập để biết thêm chi tiết.
 
-There have been several common cryptographic hash algorithms over the
-years, including Message Digest 5 (MD5) and the Secure Hash Algorithm
-(SHA) family. Weaknesses of MD5 and earlier versions of SHA have been
-known for some time, which led NIST to develop and recommend a family
-of algorithms known as SHA-3 in 2015.
+Đã có một số thuật toán băm mật mã phổ biến qua các năm, bao gồm Message Digest 5 (MD5) và họ Secure Hash Algorithm (SHA).
+Các điểm yếu của MD5 và các phiên bản SHA trước đã được biết đến từ lâu, dẫn đến việc NIST phát triển và khuyến nghị họ thuật toán SHA-3 vào năm 2015.
 
-When generating an encrypted message digest, the digest encryption could use
-either a secret-key cipher or a public-key cipher. If a public-key
-cipher is used, the digest would be encrypted using the sender’s private
-key (the one we normally think of as being used for decryption), and the
-receiver—or anyone else—could decrypt the digest using the sender’s
-public key.
+Khi tạo bản tóm tắt thông điệp đã mã hóa, việc mã hóa bản tóm tắt có thể dùng mã hóa khóa bí mật hoặc mã hóa khóa công khai.
+Nếu dùng mã hóa khóa công khai, bản tóm tắt sẽ được mã hóa bằng khóa riêng của người gửi (khóa mà ta thường nghĩ là dùng để giải mã),
+và người nhận—hoặc bất kỳ ai khác—có thể giải mã bản tóm tắt bằng khóa công khai của người gửi.
 
-A digest encrypted with a public key algorithm but using the private key
-is called a *digital signature* because it provides nonrepudiation like
-a written signature. The receiver of a message with a digital signature
-can prove to any third party that the sender really sent that message,
-because the third party can use the sender’s public key to check for
-herself. (secret-key encryption of a digest does not have this property
-because only the two participants know the key; furthermore, since both
-participants know the key, the alleged receiver could have created the
-message herself.) Any public-key cipher can be used for digital
-signatures. *Digital Signature Standard* (DSS) is a digital signature
-format that has been standardized by NIST. DSS signatures may use any
-one of three public-key ciphers, one based on RSA, another on ElGamal,
-and a third called the *Elliptic Curve Digital Signature Algorithm*.
+Một bản tóm tắt được mã hóa bằng thuật toán khóa công khai nhưng dùng khóa riêng được gọi là *chữ ký số* (digital signature)
+vì nó cung cấp tính không thể chối bỏ giống như chữ ký viết tay. Người nhận một thông điệp có chữ ký số
+có thể chứng minh cho bất kỳ bên thứ ba nào rằng người gửi thực sự đã gửi thông điệp đó,
+vì bên thứ ba có thể dùng khóa công khai của người gửi để tự kiểm tra. (Mã hóa khóa bí mật bản tóm tắt không có thuộc tính này
+vì chỉ hai bên biết khóa; hơn nữa, vì cả hai bên đều biết khóa, người nhận cũng có thể tự tạo ra thông điệp.)
+Bất kỳ thuật toán mã hóa khóa công khai nào cũng có thể dùng cho chữ ký số.
+*Tiêu chuẩn Chữ ký Số* (DSS) là một định dạng chữ ký số đã được NIST chuẩn hóa.
+Chữ ký DSS có thể dùng một trong ba thuật toán mã hóa khóa công khai, một dựa trên RSA, một dựa trên ElGamal,
+và một thứ ba gọi là *Thuật toán Chữ ký Số Đường cong Elliptic* (Elliptic Curve Digital Signature Algorithm).
 
-An widely used alternative approach to encrypting a hash is to use a
-hash function that takes a secret value (a key known only to the
-sender and the receiver) as an input parameter in addition to the
-message text. Such a function outputs a message authentication code
-that is a function of both the secret key and the message
-contents. The sender appends the calculated message authentication
-code to the plaintext message. The receiver recomputes the
-authentication code using the plaintext and the secret value and
-compares that recomputed code to the code received in the message. The
-most common approaches to generating these codes are called HMACs or
-keyed-hash message authentication codes.
+Một cách tiếp cận thay thế phổ biến cho việc mã hóa hàm băm là sử dụng một hàm băm nhận một giá trị bí mật
+(một khóa chỉ người gửi và người nhận biết) làm tham số đầu vào ngoài văn bản thông điệp.
+Hàm này xuất ra một mã xác thực thông điệp là hàm của cả khóa bí mật và nội dung thông điệp.
+Người gửi nối mã xác thực tính được vào thông điệp bản rõ. Người nhận tính lại mã xác thực bằng bản rõ và giá trị bí mật
+và so sánh mã vừa tính với mã nhận được trong thông điệp. Các cách phổ biến nhất để tạo mã này gọi là HMAC hoặc
+mã xác thực thông điệp băm có khóa (keyed-hash message authentication code).
 
-HMACs can use any hash function of the sort described above, but they
-also include the key as part of the material to be hashed, so that a
-HMAC is a function of both the key and the input text. An approach to
-calculating HMACs has been standardized by NIST and takes the
-following form:
+HMAC có thể dùng bất kỳ hàm băm nào như mô tả ở trên, nhưng nó cũng đưa khóa vào như một phần của dữ liệu cần băm,
+nên HMAC là hàm của cả khóa và văn bản đầu vào. Một cách tính HMAC đã được NIST chuẩn hóa và có dạng sau:
 
 HMAC = H((K⊕opad) || H((K⊕ipad) || text))
 
-H is the hash function, K is the key, and opad (output pad) and ipad
-(input pad) are well-known strings that are XORed (⊕) with the key. ||
-represents concatenation.
+H là hàm băm, K là khóa, và opad (output pad) và ipad (input pad) là các chuỗi đã biết được XOR (⊕) với khóa. ||
+là phép nối chuỗi.
 
-A deep explanation of this HMAC function is beyond the scope of this
-book. However, this approach has been proved to be secure as long as
-the underlying hash function H has the appropriate
-collision-resistance properties outlined above. Note that the HMAC
-takes a hash function *H* that is not keyed, and turns it into a keyed
-hash by using the key (XORed with another string, *ipad*) as the first
-block to be fed into the hash function. The output of
-the keyed hash is then itself subjected to another keyed hash (again
-by XORing the key with a string and using that as the first block fed
-to the hash). The two passes of the keyed-hash function are important
-to the proof of security for this HMAC construction.
+Giải thích sâu về hàm HMAC này vượt quá phạm vi cuốn sách. Tuy nhiên, cách tiếp cận này đã được chứng minh là an toàn
+miễn là hàm băm H có các thuộc tính chống va chạm như đã nêu ở trên. Lưu ý rằng HMAC nhận một hàm băm *H* không có khóa,
+và biến nó thành hàm băm có khóa bằng cách dùng khóa (XOR với một chuỗi khác, *ipad*) làm khối đầu tiên đưa vào hàm băm.
+Đầu ra của hàm băm có khóa sau đó lại được đưa vào một hàm băm có khóa khác (lại XOR khóa với một chuỗi và dùng làm khối đầu tiên).
+Hai lần băm có khóa này quan trọng đối với chứng minh tính an toàn của cấu trúc HMAC này.
 
-Up to this point, we have been assuming that the message wasn’t
-confidential, so the original message could be transmitted as
-plaintext.  To add confidentiality to a message with an authentication
-code, it suffices to encrypt the concatenation of the entire message
-including its authentication code. Remember that, in practice,
-confidentiality is implemented using secret-key ciphers because they
-are so much faster than public-key ciphers. Furthermore, it costs
-little to include the authenticator in the encryption, and it
-increases security.
+Cho đến lúc này, chúng tôi giả định rằng thông điệp không cần bảo mật, nên thông điệp gốc có thể truyền dưới dạng bản rõ.
+Để thêm bảo mật cho thông điệp có mã xác thực, chỉ cần mã hóa toàn bộ thông điệp bao gồm cả mã xác thực.
+Hãy nhớ rằng, trên thực tế, bảo mật được thực hiện bằng mã hóa khóa bí mật vì nó nhanh hơn nhiều so với mã hóa khóa công khai.
+Hơn nữa, việc đưa mã xác thực vào mã hóa không tốn kém nhiều, lại tăng tính an toàn.
 
-In recent years, the idea of using a single algorithm to support both
-authentication and encryption has gained support for reasons of
-performance and simplicity of implementation. This is referred to as
-*authenticated encryption* or *authenticated encryption with
-associated data*. The latter term allows for some data fields (e.g.,
-packet headers) to be transmitted as plaintext—these are the
-associated data—while the rest of the message is encrypted, and the
-whole thing, headers included, is authenticated. We won't go into
-details here, but there is now a set of integrated algorithms that
-produce both ciphertext and authentication codes using a combination
-of ciphers and hash functions.
+Những năm gần đây, ý tưởng sử dụng một thuật toán duy nhất để hỗ trợ cả xác thực và mã hóa ngày càng được ủng hộ
+vì lý do hiệu năng và đơn giản hóa triển khai. Điều này được gọi là *mã hóa xác thực* (authenticated encryption)
+hoặc *mã hóa xác thực với dữ liệu liên kết* (authenticated encryption with associated data).
+Thuật ngữ sau cho phép một số trường dữ liệu (ví dụ, tiêu đề gói tin) được truyền dưới dạng bản rõ—đó là dữ liệu liên kết—
+trong khi phần còn lại của thông điệp được mã hóa, và toàn bộ, kể cả tiêu đề, đều được xác thực.
+Chúng tôi sẽ không đi sâu vào chi tiết ở đây, nhưng hiện đã có một tập hợp các thuật toán tích hợp
+tạo ra cả ciphertext và mã xác thực bằng cách kết hợp các thuật toán mã hóa và hàm băm.
 
-Although authenticators may seem to solve the authentication problem, we
-will see in a later section that they are only the foundation of a
-solution. First, however, we address the issue of how participants
-obtain keys in the first place.
+Mặc dù bộ xác thực có vẻ như giải quyết được vấn đề xác thực, chúng ta sẽ thấy ở phần sau rằng chúng chỉ là nền tảng của một giải pháp.
+Trước hết, chúng ta sẽ giải quyết vấn đề làm thế nào các thành viên có được khóa ngay từ đầu.
