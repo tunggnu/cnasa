@@ -1,8 +1,7 @@
-Chapter 9: Applications
-=======================
+Chương 9: Ứng dụng
+==================
 
-   Now this is not the end. It is not even the beginning of the end. But
-   it is, perhaps, the end of the beginning.
+   Bây giờ đây chưa phải là kết thúc. Thậm chí nó còn chưa phải là sự bắt đầu của kết thúc. Nhưng có lẽ, nó là sự kết thúc của sự bắt đầu.
 
    *—Winston Churchill*
 
