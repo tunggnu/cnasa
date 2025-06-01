@@ -1,78 +1,22 @@
-Perspective: Is Security Getting Worse or Better?
+Góc nhìn: An ninh mạng đang trở nên tệ hơn hay tốt hơn?
 ====================================================
 
-Security breaches are now a standard risk of connecting any system to
-the Internet, and it is rare for a week to go by without news of some
-new attack. Verizon, a large telco, conducts an annual review of the state of
-cyber-attacks; in 2024 they reached a milestone with over 10,000
-incidents, such as ransomware and phishing attacks, covered in the
-report. Measured by number of attacks then, it seems that things are
-getting worse. By contrast, an analysis of the economic impact of
-cyber-attacks performed by *The Economist* argued that the
-peak days of cyber-attacks might be behind us. The worst era for
-attacks in their economic analysis was 2003–2004 by a large margin.
+Các sự cố an ninh mạng giờ đây là một rủi ro tiêu chuẩn khi kết nối bất kỳ hệ thống nào với Internet, và hiếm khi có một tuần trôi qua mà không có tin tức về một cuộc tấn công mới nào đó. Verizon, một công ty viễn thông lớn, thực hiện một cuộc đánh giá thường niên về tình trạng các cuộc tấn công mạng; vào năm 2024 họ đã đạt một cột mốc với hơn 10.000 sự cố, như tấn công ransomware và lừa đảo qua email, được đề cập trong báo cáo. Nếu đo bằng số lượng các cuộc tấn công thì có vẻ mọi thứ đang trở nên tệ hơn. Ngược lại, một phân tích về tác động kinh tế của các cuộc tấn công mạng do *The Economist* thực hiện lại cho rằng thời kỳ đỉnh cao của các cuộc tấn công mạng có thể đã qua. Theo phân tích kinh tế của họ, giai đoạn tồi tệ nhất của các cuộc tấn công là năm 2003–2004 với khoảng cách rất lớn.
 
-There are certainly some respects in which security is improving. This
-can be attributed both to greater awareness of the need for strong
-security whenever important information is being handled, and the
-development of new techniques that enable better security practices.
+Chắc chắn có một số khía cạnh mà an ninh mạng đang được cải thiện. Điều này có thể được lý giải bởi nhận thức ngày càng cao về sự cần thiết của bảo mật mạnh mẽ bất cứ khi nào xử lý thông tin quan trọng, cũng như sự phát triển của các kỹ thuật mới cho phép thực hiện các biện pháp bảo mật tốt hơn.
 
-One example of a technology development that improved security
-implementations is SDN (software-defined networking). SDN has enabled
-a relatively new approach to providing isolation among systems known
-as *microsegmentation*.
+Một ví dụ về sự phát triển công nghệ đã cải thiện việc triển khai bảo mật là SDN (mạng định nghĩa bằng phần mềm). SDN đã cho phép một cách tiếp cận tương đối mới trong việc cung cấp sự cách ly giữa các hệ thống, được gọi là *microsegmentation* (phân đoạn vi mô).
 
 
-Microsegmentation stands in contrast to traditional approaches to
-segmenting networks, in which large sets of machines
-connect to a “zone” and firewalls are used to filter traffic
-passing between zones. While this makes for relatively simple network
-configuration, it means that lots of machines are in the same
-zone even if there was no need for them to communicate. Furthermore,
-the complexity of firewall rules grows over time as more and more
-rules need to be added to describe the traffic allowed to pass
-from one zone to another.
+Phân đoạn vi mô trái ngược với các phương pháp truyền thống trong việc phân đoạn mạng, trong đó các nhóm lớn máy tính kết nối vào một “vùng” và tường lửa được sử dụng để lọc lưu lượng giữa các vùng. Mặc dù điều này giúp cấu hình mạng trở nên đơn giản, nhưng nó cũng đồng nghĩa với việc nhiều máy nằm trong cùng một vùng ngay cả khi chúng không cần giao tiếp với nhau. Hơn nữa, độ phức tạp của các quy tắc tường lửa sẽ tăng dần theo thời gian khi ngày càng nhiều quy tắc cần được thêm vào để mô tả lưu lượng được phép đi từ vùng này sang vùng khác.
 
-By contrast, SDN allows for the creation of precisely defined virtual
-networks—microsegments—that determine both which machines can communicate with each
-other and how they can do so. For example, a three-tier application
-can have its own microsegmentation policy which states:  machines
-in the web-facing tier of the application can talk to the machines in
-the application tier on some set of specified ports, but
-web-facing machines may not talk to each other. This is a policy that
-was difficult to implement in the past;instead all the web-facing
-machines would sit on the same network segment, free to communicate
-with each other.
+Ngược lại, SDN cho phép tạo ra các mạng ảo được xác định chính xác—các phân đoạn vi mô—quy định rõ những máy nào có thể giao tiếp với nhau và giao tiếp như thế nào. Ví dụ, một ứng dụng ba lớp có thể có chính sách phân đoạn vi mô riêng, quy định: các máy ở tầng giao tiếp với web của ứng dụng có thể nói chuyện với các máy ở tầng ứng dụng trên một tập hợp các cổng được chỉ định, nhưng các máy ở tầng giao tiếp với web không được phép nói chuyện với nhau. Đây là một chính sách rất khó thực hiện trong quá khứ; thay vào đó, tất cả các máy ở tầng giao tiếp với web sẽ nằm trên cùng một phân đoạn mạng, tự do giao tiếp với nhau.
 
 
-The complexity of configuring segments was the reason that machines
-from many applications would likely sit on the same segment, creating
-opportunities for an attack to spread from one application to
-another. The lateral movement of attacks within datacenters has been
-well documented as a key strategy of successful cyberattacks over many
-years.
+Độ phức tạp trong việc cấu hình các phân đoạn là lý do khiến các máy từ nhiều ứng dụng khác nhau thường nằm trên cùng một phân đoạn, tạo cơ hội cho các cuộc tấn công lan rộng từ ứng dụng này sang ứng dụng khác. Việc di chuyển ngang của các cuộc tấn công trong các trung tâm dữ liệu đã được ghi nhận rõ ràng là một chiến lược then chốt của các cuộc tấn công mạng thành công trong nhiều năm qua.
 
 
-Consider the arrangement of VMs and the firewall in :numref:`Figure %s
-<fig-standard-firewall>`. Suppose that we wanted to put VM A and VM B in different segments
-and apply a firewall rule for traffic going from VM A to VM B. We have
-to prevent VM A from sending traffic directly to VM B. To do this, we
-could configure two VLANs in the physical network, connect A
-to one of them, and B to the other, and then configure the routing
-such that the path from the first VLAN to the second passes through
-the firewall. If at some point VM A was moved to another server, we’d then
-have to make sure the appropriate VLAN reached *that* server, connect VM
-A to it, and ensure that the routing configuration still forces
-traffic through the firewall. This situation may seem a little
-contrived, but it demonstrates why microsegmentation was challenging
-to implement before the arrival of SDN. By contrast, SDN allows the
-firewall function to be implemented in each virtual switch (vS in the
-figure). Thus, traffic from VM A to VM B passes through the
-firewall without any special routing configuration. It is the job of
-the SDN controller to create the appropriate firewall rule to enforce
-the desired isolation between VM A and VM B (and deal with movements
-of VM A and VM B if they occur). There is no magic, but SDN gives us a
-new tool to make a finer degree of isolation much easier to manage.
+Hãy xem xét cách bố trí các máy ảo và tường lửa trong :numref:`Figure %s <fig-standard-firewall>`. Giả sử chúng ta muốn đặt VM A và VM B vào các phân đoạn khác nhau và áp dụng một quy tắc tường lửa cho lưu lượng đi từ VM A sang VM B. Chúng ta phải ngăn VM A gửi lưu lượng trực tiếp đến VM B. Để làm điều này, chúng ta có thể cấu hình hai VLAN trong mạng vật lý, kết nối A vào một VLAN, B vào VLAN còn lại, rồi cấu hình định tuyến sao cho đường đi từ VLAN đầu tiên sang VLAN thứ hai phải đi qua tường lửa. Nếu tại một thời điểm nào đó VM A được chuyển sang một máy chủ khác, chúng ta lại phải đảm bảo VLAN phù hợp được kết nối tới máy chủ đó, kết nối VM A vào đó, và đảm bảo cấu hình định tuyến vẫn buộc lưu lượng đi qua tường lửa. Tình huống này có vẻ hơi gượng ép, nhưng nó cho thấy tại sao phân đoạn vi mô lại khó triển khai trước khi có SDN. Ngược lại, SDN cho phép chức năng tường lửa được triển khai ngay trong mỗi switch ảo (vS trong hình). Do đó, lưu lượng từ VM A đến VM B đi qua tường lửa mà không cần cấu hình định tuyến đặc biệt nào. Nhiệm vụ của bộ điều khiển SDN là tạo ra quy tắc tường lửa phù hợp để thực thi sự cách ly mong muốn giữa VM A và VM B (và xử lý khi VM A hoặc VM B di chuyển nếu có). Không có phép màu nào ở đây, nhưng SDN mang lại cho chúng ta một công cụ mới để quản lý mức độ cách ly chi tiết hơn một cách dễ dàng hơn.
 
 
 .. _fig-standard-firewall:
@@ -80,41 +24,25 @@ new tool to make a finer degree of isolation much easier to manage.
     :width: 600px
     :align: center
 
-    A set of virtual machines communicate through a firewall
+    Một tập hợp các máy ảo giao tiếp thông qua tường lửa
 
-The development of microsegmentation over the last decade was one of
-the major drivers of SDN adoption in the enterprise. It became the
-basis for a best practice in security known as “zero-trust”
-networking. Zero trust means that, as much as possible, every system in
-the network is assumed to be untrusted, and hence should be isolated
-from all other systems aside from precisely those systems it needs
-access to in order to do its assigned job.
+Sự phát triển của phân đoạn vi mô trong thập kỷ qua là một trong những động lực chính thúc đẩy việc áp dụng SDN trong doanh nghiệp. Nó đã trở thành nền tảng cho một thực tiễn tốt nhất về bảo mật được gọi là mạng “zero-trust” (không tin cậy). Zero trust có nghĩa là, càng nhiều càng tốt, mọi hệ thống trong mạng đều được giả định là không đáng tin cậy, và do đó nên được cách ly với tất cả các hệ thống khác ngoại trừ đúng những hệ thống mà nó cần truy cập để thực hiện nhiệm vụ được giao.
 
-The importance of the Internet in the running of
-critical systems and as the underpinning for
-much of the world's commerce has made it an attractive target for
-hackers. At the same time it drives home the need to develop and adopt
-best practices such as zero-trust networking. When we read of breaches
-today, it is often the case that some best practice has not been
-followed. The Verizon cybersecurity report, by documenting what has
-gone wrong in thousands of attacks, provides useful information about
-how many of those attacks could be prevented through using established
-cyber-hygiene techniques.
+Tầm quan trọng của Internet trong việc vận hành các hệ thống trọng yếu và là nền tảng cho phần lớn thương mại toàn cầu đã khiến nó trở thành mục tiêu hấp dẫn cho tin tặc. Đồng thời, điều này cũng nhấn mạnh sự cần thiết phải phát triển và áp dụng các thực tiễn tốt nhất như mạng zero-trust. Khi chúng ta đọc về các vụ vi phạm ngày nay, thường là do một số thực tiễn tốt nhất nào đó đã không được tuân thủ. Báo cáo an ninh mạng của Verizon, bằng cách ghi lại những gì đã xảy ra trong hàng ngàn cuộc tấn công, cung cấp thông tin hữu ích về việc có bao nhiêu cuộc tấn công trong số đó có thể được ngăn chặn nhờ áp dụng các kỹ thuật vệ sinh mạng đã được thiết lập.
 
-.. admonition:: Broader Perspective
+.. admonition:: Góc nhìn rộng hơn
 
-   Verizon's data breach report can be obtained from
+   Báo cáo vi phạm dữ liệu của Verizon có thể được lấy từ
    `Data Breach Investigations Report
    <https://www.verizon.com/business/resources/reports/dbir/>`__.
 
-   The economic impact of cyber-attacks is analyzed by *The Economist*
-   in this article: `Unexpectedly, the cost of big cyber-attacks is
+   Tác động kinh tế của các cuộc tấn công mạng được phân tích bởi *The Economist*
+   trong bài viết này: `Unexpectedly, the cost of big cyber-attacks is
    falling
    <https://www.economist.com/graphic-detail/2024/05/17/unexpectedly-the-cost-of-big-cyber-attacks-is-falling>`__,
-   May 2024.
+   tháng 5 năm 2024.
 
-   A deeper discussion on the use of SDN techniques to improve
-   security is provided in Chapter 8 of our book `Software-Defined
+   Một thảo luận sâu hơn về việc sử dụng các kỹ thuật SDN để cải thiện
+   bảo mật được trình bày trong Chương 8 của cuốn sách `Software-Defined
    Networking: A Systems Approach
    <https://sdn.systemsapproach.org/>`__.
-
