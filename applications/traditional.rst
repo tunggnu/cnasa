@@ -1,172 +1,47 @@
-9.1 Traditional Applications
-============================
+9.1 Ứng dụng truyền thống
+=========================
 
-We begin our discussion of applications by focusing on two of the most
-popular—the World Wide Web and email. Broadly speaking, both of these
-applications use the request/reply paradigm—users send requests to
-servers, which then respond accordingly. We refer to these as
-“traditional” applications because they typify the sort of applications
-that have existed since the early days of computer networks (although
-the Web is a lot newer than email but has its roots in file transfers
-that predated it). By contrast, later sections will look at a class of
-applications that have become popular more recently: streaming
-applications (e.g., multimedia applications like video and audio) and
-various overlay-based applications. (Note that there is a bit of a
-blurring between these classes, as we increasingly access
-streaming multimedia data over the Web, but for now we’ll focus on the
-general usage of the Web to request pages, images, etc.)
+Chúng ta bắt đầu thảo luận về các ứng dụng bằng cách tập trung vào hai ứng dụng phổ biến nhất—World Wide Web và email. Nói chung, cả hai ứng dụng này đều sử dụng mô hình yêu cầu/đáp ứng—người dùng gửi yêu cầu tới máy chủ, sau đó máy chủ phản hồi tương ứng. Chúng tôi gọi đây là các ứng dụng “truyền thống” vì chúng tiêu biểu cho loại ứng dụng đã tồn tại từ những ngày đầu của mạng máy tính (mặc dù Web mới hơn nhiều so với email nhưng có nguồn gốc từ các phương thức truyền tệp có trước nó). Ngược lại, các phần sau sẽ xem xét một lớp ứng dụng đã trở nên phổ biến gần đây hơn: các ứng dụng streaming (ví dụ, các ứng dụng đa phương tiện như video và âm thanh) và các ứng dụng dựa trên overlay khác nhau. (Lưu ý rằng có một chút mờ ranh giới giữa các lớp này, vì ngày càng nhiều dữ liệu đa phương tiện streaming được truy cập qua Web, nhưng hiện tại chúng ta sẽ tập trung vào cách sử dụng Web để yêu cầu trang, hình ảnh, v.v.)
 
-Before taking a close look at each of these applications, there are
-three general points that we need to make. The first is that it is
-important to distinguish between application *programs* and application
-*protocols*. For example, the HyperText Transport Protocol (HTTP) is an
-application protocol that is used to retrieve Web pages from remote
-servers. Many different application programs—that is, web clients like
-Internet Explorer, Chrome, Firefox, and Safari—provide users with a
-different look and feel, but all of them use the same HTTP protocol to
-communicate with web servers over the Internet. Indeed, it is the fact
-that the protocol is published and standardized that enables application
-programs developed by many different companies and individuals to
-interoperate. That is how so many browsers are able to interoperate with
-all the web servers (of which there are also many varieties).
+Trước khi xem xét kỹ từng ứng dụng này, có ba điểm chung mà chúng ta cần đề cập. Thứ nhất, điều quan trọng là phải phân biệt giữa *chương trình* ứng dụng và *giao thức* ứng dụng. Ví dụ, HyperText Transport Protocol (HTTP) là một giao thức ứng dụng được sử dụng để lấy các trang Web từ các máy chủ từ xa. Nhiều chương trình ứng dụng khác nhau—tức là các trình duyệt web như Internet Explorer, Chrome, Firefox và Safari—mang lại cho người dùng giao diện và trải nghiệm khác nhau, nhưng tất cả đều sử dụng cùng một giao thức HTTP để giao tiếp với các máy chủ web qua Internet. Thực tế là giao thức này được công bố và chuẩn hóa cho phép các chương trình ứng dụng do nhiều công ty và cá nhân khác nhau phát triển có thể tương tác với nhau. Đó là lý do tại sao rất nhiều trình duyệt có thể tương tác với tất cả các máy chủ web (vốn cũng có nhiều loại khác nhau).
 
-This section looks at two very widely used, standardized application
-protocols:
+Phần này xem xét hai giao thức ứng dụng được sử dụng rộng rãi và chuẩn hóa:
 
--  Simple Mail Transfer Protocol (SMTP) is used to exchange electronic
-   mail.
+-  Simple Mail Transfer Protocol (SMTP) được sử dụng để trao đổi thư điện tử.
 
--  HyperText Transport Protocol (HTTP) is used to communicate between
-   web browsers and web servers.
+-  HyperText Transport Protocol (HTTP) được sử dụng để giao tiếp giữa trình duyệt web và máy chủ web.
 
-Second, we observe that many application layer protocols, including HTTP
-and SMTP, have a companion protocol that specifies the format of the
-data that can be exchanged. This is one reason WHY these protocols are
-relatively simple: much of the complexity is managed in this companion
-standard. For example, SMTP is a protocol for exchanging electronic mail
-messages, but RFC 822 and Multipurpose Internet Mail Extensions (MIME)
-define the format of email messages. Similarly, HTTP is a protocol for
-fetching Web pages, but HyperText Markup Language (HTML) is a companion
-specification that defines the basic form of those pages.
+Thứ hai, chúng ta nhận thấy rằng nhiều giao thức tầng ứng dụng, bao gồm HTTP và SMTP, có một giao thức đi kèm quy định định dạng dữ liệu có thể trao đổi. Đây là một lý do tại sao các giao thức này tương đối đơn giản: phần lớn độ phức tạp được xử lý trong tiêu chuẩn đi kèm này. Ví dụ, SMTP là một giao thức để trao đổi các thông điệp thư điện tử, nhưng RFC 822 và Multipurpose Internet Mail Extensions (MIME) định nghĩa định dạng của các thông điệp email. Tương tự, HTTP là một giao thức để lấy các trang Web, nhưng HyperText Markup Language (HTML) là một đặc tả đi kèm quy định hình thức cơ bản của các trang đó.
 
-Finally, since the application protocols described in this section
-follow the same request/reply communication pattern, you might expect
-that they would be built on top of a Remote Procedure Call (RPC)
-transport protocol. This is not the case, however, as they are instead
-implemented on top of TCP [#]_. In effect, each protocol reinvents a simple
-RPC-like mechanism on top of a reliable transport protocol (TCP). We say
-“simple” because each protocol is not designed to support arbitrary
-remote procedure calls of the sort discussed in an earlier chapter, but
-is instead designed to send and respond to a specific set of request
-messages. Interestingly, the approach taken by HTTP has proven quite
-powerful, which has led to it being adopted widely by the *Web Services*
-architecture, with general RPC mechanisms built *on top of HTTP* rather
-than the other way around. More on this topic at the end of this
-section.
+Cuối cùng, vì các giao thức ứng dụng được mô tả trong phần này đều tuân theo cùng một mô hình giao tiếp yêu cầu/đáp ứng, bạn có thể mong đợi rằng chúng sẽ được xây dựng trên một giao thức vận chuyển Remote Procedure Call (RPC). Tuy nhiên, thực tế không phải vậy, mà chúng được triển khai trên TCP [#]_. Thực chất, mỗi giao thức này tự xây dựng một cơ chế giống RPC đơn giản trên một giao thức vận chuyển tin cậy (TCP). Chúng tôi nói “đơn giản” vì mỗi giao thức không được thiết kế để hỗ trợ các lời gọi thủ tục từ xa tùy ý như đã thảo luận ở chương trước, mà thay vào đó được thiết kế để gửi và phản hồi một tập hợp cụ thể các thông điệp yêu cầu. Thú vị là, cách tiếp cận của HTTP đã chứng tỏ rất mạnh mẽ, dẫn đến việc nó được áp dụng rộng rãi trong kiến trúc *Web Services*, với các cơ chế RPC tổng quát được xây dựng *trên HTTP* thay vì ngược lại. Sẽ nói thêm về chủ đề này ở cuối phần này.
 
-.. [#] This is starting to change for the Web with HTTP/3 as we discuss later in
-       the chapter.
+.. [#] Điều này bắt đầu thay đổi với Web khi có HTTP/3 như sẽ được thảo luận ở phần sau của chương.
 
-9.1.1 Electronic Mail (SMTP, MIME, IMAP)
-----------------------------------------
+9.1.1 Thư điện tử (SMTP, MIME, IMAP)
+------------------------------------
 
-Email is one of the oldest network applications. After all, what could
-be more natural than wanting to send a message to the user at the other
-end of a cross-country link you just managed to get running? It’s the
-20th century’s version of “*Mr. Watson, come here… I want to see you.*”
-Surprisingly, the pioneers of the ARPANET had not really envisioned
-email as a key application when the network was created—remote access to
-computing resources was the main design goal—but it turned out to be the
-Internet’s original killer app.
+Email là một trong những ứng dụng mạng lâu đời nhất. Rốt cuộc, còn gì tự nhiên hơn việc muốn gửi một thông điệp tới người dùng ở đầu bên kia của một đường truyền xuyên quốc gia mà bạn vừa thiết lập xong? Đó là phiên bản thế kỷ 20 của “*Ông Watson, lại đây… Tôi muốn gặp ông.*” Thật ngạc nhiên, những người tiên phong của ARPANET thực ra không hình dung email là một ứng dụng chủ chốt khi mạng được tạo ra—mục tiêu thiết kế chính là truy cập từ xa vào tài nguyên tính toán—nhưng cuối cùng nó lại trở thành “killer app” đầu tiên của Internet.
 
-As noted above, it is important (1) to distinguish the user interface
-(i.e., your mail reader) from the underlying message transfer protocols
-(such as SMTP or IMAP), and (2) to distinguish between this transfer
-protocol and a companion standard (RFC 822 and MIME) that defines the
-format of the messages being exchanged. We start by looking at the
-message format.
+Như đã lưu ý ở trên, điều quan trọng là (1) phân biệt giao diện người dùng (tức là chương trình đọc thư của bạn) với các giao thức truyền thông điệp bên dưới (như SMTP hoặc IMAP), và (2) phân biệt giữa giao thức truyền này với một tiêu chuẩn đi kèm (RFC 822 và MIME) định nghĩa định dạng của các thông điệp được trao đổi. Chúng ta bắt đầu bằng cách xem xét định dạng thông điệp.
 
-Message Format
-~~~~~~~~~~~~~~
+Định dạng thông điệp
+~~~~~~~~~~~~~~~~~~~
 
-RFC 822 defines messages to have two parts: a *header* and a *body*.
-Both parts are represented in ASCII text. Originally, the body was
-assumed to be simple text. This is still the case, although RFC 822 has
-been augmented by MIME to allow the message body to carry all sorts of
-data. This data is still represented as ASCII text, but because it may
-be an encoded version of, say, a JPEG image, it’s not necessarily
-readable by human users. More on MIME in a moment.
+RFC 822 định nghĩa thông điệp gồm hai phần: *header* (phần đầu) và *body* (phần thân). Cả hai phần đều được biểu diễn dưới dạng văn bản ASCII. Ban đầu, phần thân được giả định là văn bản thuần túy. Điều này vẫn đúng, mặc dù RFC 822 đã được mở rộng bởi MIME để cho phép phần thân mang mọi loại dữ liệu. Dữ liệu này vẫn được biểu diễn dưới dạng văn bản ASCII, nhưng vì nó có thể là phiên bản mã hóa của, ví dụ, một hình ảnh JPEG, nên không nhất thiết phải đọc được bằng mắt thường. Sẽ nói thêm về MIME ở phần sau.
 
-The message header is a series of ``<CRLF>``-terminated lines.
-(``<CRLF>`` stands for carriage-return plus line-feed, which are a pair
-of ASCII control characters often used to indicate the end of a line of
-text.) The header is separated from the message body by a blank line.
-Each header line contains a type and value separated by a colon. Many of
-these header lines are familiar to users, since they are asked to fill
-them out when they compose an email message; for example, the header
-identifies the message recipient, and the header says something about
-the purpose of the message. Other headers are filled in by the
-underlying mail delivery system. Examples include (when the message was
-transmitted), (what user sent the message), and (each mail server that
-handled this message). There are, of course, many other header lines;
-the interested reader is referred to RFC 822.
+Phần header của thông điệp là một chuỗi các dòng kết thúc bằng ``<CRLF>``. (``<CRLF>`` là viết tắt của carriage-return cộng line-feed, là một cặp ký tự điều khiển ASCII thường dùng để chỉ kết thúc một dòng văn bản.) Phần header được tách biệt với phần thân thông điệp bằng một dòng trống. Mỗi dòng header chứa một loại và một giá trị, được phân tách bằng dấu hai chấm. Nhiều dòng header này quen thuộc với người dùng, vì họ được yêu cầu điền chúng khi soạn email; ví dụ, header xác định người nhận thông điệp, và header nói điều gì đó về mục đích của thông điệp. Các header khác được hệ thống chuyển thư bên dưới tự động điền vào. Ví dụ như (khi nào thông điệp được gửi), (người dùng nào đã gửi thông điệp), và (mỗi máy chủ thư đã xử lý thông điệp này). Tất nhiên còn nhiều dòng header khác; bạn đọc quan tâm có thể tham khảo RFC 822.
 
-RFC 822 was extended in 1993 (and updated quite a few times since then)
-to allow email messages to carry many different types of data: audio,
-video, images, PDF documents, and so on. MIME consists of three basic
-pieces. The first piece is a collection of header lines that augment the
-original set defined by RFC 822. These header lines describe, in various
-ways, the data being carried in the message body. They include (the
-version of MIME being used), (a human-readable description of what’s in
-the message, analogous to the line), (the type of data contained in the
-message), and (how the data in the message body is encoded).
+RFC 822 đã được mở rộng vào năm 1993 (và được cập nhật khá nhiều lần kể từ đó) để cho phép thông điệp email mang nhiều loại dữ liệu khác nhau: âm thanh, video, hình ảnh, tài liệu PDF, v.v. MIME gồm ba phần cơ bản. Phần đầu tiên là một tập hợp các dòng header bổ sung cho tập gốc do RFC 822 định nghĩa. Các dòng header này mô tả, theo nhiều cách khác nhau, dữ liệu được mang trong phần thân thông điệp. Chúng bao gồm (phiên bản MIME đang được sử dụng), (mô tả dễ đọc về nội dung thông điệp, tương tự dòng Subject), (loại dữ liệu chứa trong thông điệp), và (cách dữ liệu trong phần thân được mã hóa).
 
-The second piece is definitions for a set of content types (and
-subtypes). For example, MIME defines several different image types,
-including ``image/gif`` and ``image/jpeg``, each with the obvious
-meaning. As another example, ``text/plain`` refers to simple text you
-might find in a vanilla 822-style message, while ``text/richtext``
-denotes a message that contains “marked up” text (text using special
-fonts, italics, etc.). As a third example, MIME defines an
-``application`` type, where the subtypes correspond to the output of
-different application programs (e.g., ``application/postscript`` and
-``application/msword``).
+Phần thứ hai là các định nghĩa cho một tập hợp các loại nội dung (và các loại phụ). Ví dụ, MIME định nghĩa một số loại hình ảnh khác nhau, bao gồm ``image/gif`` và ``image/jpeg``, mỗi loại có ý nghĩa rõ ràng. Một ví dụ khác, ``text/plain`` chỉ văn bản thuần túy mà bạn có thể thấy trong một thông điệp kiểu 822, trong khi ``text/richtext`` biểu thị một thông điệp chứa văn bản “được đánh dấu” (văn bản có phông chữ đặc biệt, in nghiêng, v.v.). Một ví dụ thứ ba, MIME định nghĩa loại ``application``, trong đó các loại phụ tương ứng với đầu ra của các chương trình ứng dụng khác nhau (ví dụ, ``application/postscript`` và ``application/msword``).
 
-MIME also defines a ``multipart`` type that says how a message carrying
-more than one data type is structured. This is like a programming
-language that defines both base types (e.g., integers and floats) and
-compound types (e.g., structures and arrays). One possible ``multipart``
-subtype is ``mixed``, which says that the message contains a set of
-independent data pieces in a specified order. Each piece then has its
-own header line that describes the type of that piece.
+MIME cũng định nghĩa loại ``multipart`` cho biết cách cấu trúc một thông điệp mang nhiều loại dữ liệu. Điều này giống như một ngôn ngữ lập trình định nghĩa cả kiểu cơ bản (ví dụ, số nguyên và số thực) và kiểu phức hợp (ví dụ, cấu trúc và mảng). Một loại phụ ``multipart`` có thể là ``mixed``, cho biết thông điệp chứa một tập hợp các phần dữ liệu độc lập theo thứ tự xác định. Mỗi phần sau đó có dòng header riêng mô tả loại của phần đó.
 
-The third piece is a way to encode the various data types so they can be
-shipped in an ASCII email message. The problem is that, for some data
-types (a JPEG image, for example), any given 8-bit byte in the image
-might contain one of 256 different values. Only a subset of these values
-are valid ASCII characters. It is important that email messages contain
-only ASCII, because they might pass through a number of intermediate
-systems (gateways, as described below) that assume all email is ASCII
-and would corrupt the message if it contained non-ASCII characters. To
-address this issue, MIME uses a straightforward encoding of binary data
-into the ASCII character set. The encoding is called ``base64``. The
-idea is to map every three bytes of the original binary data into four
-ASCII characters. This is done by grouping the binary data into 24-bit
-units and breaking each such unit into four 6-bit pieces. Each 6-bit
-piece maps onto one of 64 valid ASCII characters; for example, 0 maps
-onto A, 1 maps onto B, and so on. If you look at a message that has been
-encoded using the base64 encoding scheme, you’ll notice only the 52
-upper- and lowercase letters, the 10 digits 0 through 9, and the special
-characters + and /. These are the first 64 values in the ASCII character
-set.
+Phần thứ ba là một cách để mã hóa các loại dữ liệu khác nhau để chúng có thể được gửi trong thông điệp email ASCII. Vấn đề là, với một số loại dữ liệu (ví dụ, hình ảnh JPEG), bất kỳ byte 8 bit nào trong hình ảnh có thể chứa một trong 256 giá trị khác nhau. Chỉ một tập con các giá trị này là ký tự ASCII hợp lệ. Điều quan trọng là thông điệp email chỉ chứa ASCII, vì chúng có thể đi qua nhiều hệ thống trung gian (gateway, như mô tả bên dưới) giả định mọi email đều là ASCII và sẽ làm hỏng thông điệp nếu nó chứa ký tự không phải ASCII. Để giải quyết vấn đề này, MIME sử dụng một phương pháp mã hóa đơn giản dữ liệu nhị phân thành bộ ký tự ASCII. Phương pháp mã hóa này gọi là ``base64``. Ý tưởng là ánh xạ mỗi ba byte dữ liệu nhị phân gốc thành bốn ký tự ASCII. Điều này được thực hiện bằng cách nhóm dữ liệu nhị phân thành các đơn vị 24 bit và chia mỗi đơn vị thành bốn phần 6 bit. Mỗi phần 6 bit ánh xạ tới một trong 64 ký tự ASCII hợp lệ; ví dụ, 0 ánh xạ tới A, 1 tới B, v.v. Nếu bạn nhìn vào một thông điệp đã được mã hóa bằng base64, bạn sẽ chỉ thấy 52 chữ cái hoa và thường, 10 chữ số từ 0 đến 9, và các ký tự đặc biệt + và /. Đây là 64 giá trị đầu tiên trong bộ ký tự ASCII.
 
-As one aside, so as to make reading mail as painless as possible for
-those who still insist on using text-only mail readers, a MIME message
-that consists of regular text only can be encoded using 7-bit ASCII.
-There’s also a readable encoding for mostly ASCII data.
+Ngoài ra, để việc đọc thư dễ dàng nhất có thể cho những ai vẫn dùng trình đọc thư chỉ hỗ trợ văn bản, một thông điệp MIME chỉ chứa văn bản thuần túy có thể được mã hóa bằng ASCII 7 bit. Cũng có một phương pháp mã hóa dễ đọc cho dữ liệu chủ yếu là ASCII.
 
-Putting this all together, a message that contains some plain text, a
-JPEG image, and a PostScript file would look something like this:
+Kết hợp tất cả lại, một thông điệp chứa một đoạn văn bản thuần, một hình JPEG, và một tệp PostScript sẽ trông như sau:
 
 ::
 
@@ -197,103 +72,31 @@ JPEG image, and a PostScript file would look something like this:
    Content-Transfer-Encoding: 7bit
    ... readable encoding of a PostScript document
 
-In this example, the line in the message header says that this message
-contains various pieces, each denoted by a character string that does
-not appear in the data itself. Each piece then has its own
-``Content-Type`` and ``Content-Transfer-Encoding`` lines.
+Trong ví dụ này, dòng trong phần header cho biết thông điệp này chứa nhiều phần, mỗi phần được đánh dấu bằng một chuỗi ký tự không xuất hiện trong dữ liệu thực tế. Mỗi phần sau đó có dòng ``Content-Type`` và ``Content-Transfer-Encoding`` riêng.
 
-Message Transfer
-~~~~~~~~~~~~~~~~
+Truyền thông điệp
+~~~~~~~~~~~~~~~~~
 
-For many years, the majority of email was moved from host to host using
-only SMTP. While SMTP continues to play a central role, it is now just
-one email protocol of several, Internet Message Access Protocol (IMAP)
-and Post Office Protocol (POP) being two other important protocols for
-retrieving mail messages. We’ll begin our discussion by looking at SMTP,
-and move on to IMAP below.
+Trong nhiều năm, phần lớn email được chuyển từ máy này sang máy khác chỉ bằng SMTP. Mặc dù SMTP vẫn giữ vai trò trung tâm, hiện nay nó chỉ là một trong số các giao thức email, với Internet Message Access Protocol (IMAP) và Post Office Protocol (POP) là hai giao thức quan trọng khác để lấy thư. Chúng ta sẽ bắt đầu bằng cách xem xét SMTP, rồi chuyển sang IMAP ở phần dưới.
 
-To place SMTP in the right context, we need to identify the key players.
-First, users interact with a *mail reader* when they compose, file,
-search, and read their email. Countless mail readers are available, just
-like there are many web browsers to choose from. In the early days of
-the Internet, users typically logged into the machine on which their
-*mailbox* resided, and the mail reader they invoked was a local
-application program that extracted messages from the file system. Today,
-of course, users remotely access their mailbox from their laptop or
-smartphone; they do not first log into the host that stores their mail
-(a mail server). A second mail transfer protocol, such as POP or IMAP,
-is used to remotely download email from a mail server to the user’s
-device.
+Để đặt SMTP vào đúng ngữ cảnh, chúng ta cần xác định các thành phần chính. Đầu tiên, người dùng tương tác với một *mail reader* (chương trình đọc thư) khi họ soạn, lưu trữ, tìm kiếm và đọc email. Có vô số chương trình đọc thư, cũng như có nhiều trình duyệt web để lựa chọn. Thời kỳ đầu của Internet, người dùng thường đăng nhập vào máy chứa *hộp thư* của mình, và chương trình đọc thư mà họ sử dụng là một ứng dụng cục bộ trích xuất thông điệp từ hệ thống tệp. Ngày nay, tất nhiên, người dùng truy cập hộp thư từ xa bằng laptop hoặc điện thoại; họ không cần đăng nhập vào máy chủ lưu trữ thư (mail server). Một giao thức truyền thư thứ hai, như POP hoặc IMAP, được dùng để tải email từ máy chủ thư về thiết bị của người dùng.
 
-Second, there is a *mail daemon* (or process) running on each host that
-holds a mailbox. You can think of this process, also called a *message
-transfer agent* (MTA), as playing the role of a post office: Users (or
-their mail readers) give the daemon messages they want to send to other
-users, the daemon uses SMTP running over TCP to transmit the message to
-a daemon running on another machine, and the daemon puts incoming
-messages into the user’s mailbox (where that user’s mail reader can
-later find them). Since SMTP is a protocol that anyone could implement,
-in theory there could be many different implementations of the mail
-daemon. It turns out, though, that there are only a few popular
-implementations, with the old ``sendmail`` program from Berkeley Unix
-and ``postfix`` being the most widespread.
+Thứ hai, có một *mail daemon* (hoặc tiến trình) chạy trên mỗi máy chủ chứa hộp thư. Bạn có thể coi tiến trình này, còn gọi là *message transfer agent* (MTA), như đóng vai trò bưu điện: Người dùng (hoặc chương trình đọc thư của họ) gửi cho daemon các thông điệp muốn gửi đi, daemon sử dụng SMTP chạy trên TCP để truyền thông điệp tới một daemon trên máy khác, và daemon này đặt các thông điệp nhận được vào hộp thư của người dùng (để chương trình đọc thư có thể tìm thấy sau đó). Vì SMTP là một giao thức mà bất kỳ ai cũng có thể hiện thực, về lý thuyết có thể có nhiều hiện thực khác nhau của mail daemon. Tuy nhiên, thực tế chỉ có một vài hiện thực phổ biến, với chương trình ``sendmail`` của Berkeley Unix và ``postfix`` là phổ biến nhất.
 
 .. _fig-mail:
 .. figure:: figures/f09-01-9780123850591.png
    :width: 600px
    :align: center
 
-   Sequence of mail gateways store and forward email messages.
+   Chuỗi các gateway thư lưu trữ và chuyển tiếp thông điệp email.
 
-While it is certainly possible that the MTA on a sender’s machine
-establishes an SMTP/TCP connection to the MTA on the recipient’s mail
-server, in many cases the mail traverses one or more *mail gateways* on
-its route from the sender’s host to the receiver’s host. Like the end
-hosts, these gateways also run a message transfer agent process. It’s
-not an accident that these intermediate nodes are called *gateways*
-since their job is to store and forward email messages, much like an “IP
-gateway” (which we have referred to as a *router*) stores and forwards
-IP datagrams. The only difference is that a mail gateway typically
-buffers messages on disk and is willing to try retransmitting them to
-the next machine for several days, while an IP router buffers datagrams
-in memory and is only willing to retry transmitting them for a fraction
-of a second. :numref:`Figure %s <fig-mail>` illustrates a two-hop path from the
-sender to the receiver.
+Mặc dù hoàn toàn có thể MTA trên máy gửi thiết lập một kết nối SMTP/TCP tới MTA trên máy chủ nhận, trong nhiều trường hợp thư sẽ đi qua một hoặc nhiều *mail gateway* trên đường từ máy gửi tới máy nhận. Cũng như các máy đầu cuối, các gateway này cũng chạy một tiến trình message transfer agent. Không phải ngẫu nhiên mà các nút trung gian này được gọi là *gateway* vì nhiệm vụ của chúng là lưu trữ và chuyển tiếp thông điệp email, giống như một “IP gateway” (mà chúng ta gọi là *router*) lưu trữ và chuyển tiếp các datagram IP. Khác biệt duy nhất là một mail gateway thường lưu thông điệp trên đĩa và sẵn sàng thử gửi lại cho máy tiếp theo trong nhiều ngày, trong khi một router IP lưu datagram trong bộ nhớ và chỉ thử gửi lại trong một phần nhỏ của giây. :numref:`Figure %s <fig-mail>` minh họa đường đi hai bước từ người gửi tới người nhận.
 
-Why, you might ask, are mail gateways necessary? Why can’t the sender’s
-host send the message to the receiver’s host? One reason is that the
-recipient does not want to include the specific host on which he or she
-reads email in his or her address. Another is scale: In large
-organizations, it’s often the case that a number of different machines
-hold the *mailboxes* for the organization. For example, mail delivered
-to ``bob@cs.princeton.edu`` is first sent to a mail gateway in the CS
-Department at Princeton (that is, to the host named
-``cs.princeton.edu``), and then forwarded—involving a second
-connection—to the specific machine on which Bob has a mailbox. The
-forwarding gateway maintains a database that maps users into the machine
-on which their mailbox resides; the sender need not be aware of this
-specific name. (The list of header lines in the message will help you
-trace the mail gateways that a given message traversed.) Yet another
-reason, particularly true in the early days of email, is that the
-machine that hosts any given user’s mailbox may not always be up or
-reachable, in which case the mail gateway holds the message until it can
-be delivered.
+Bạn có thể hỏi, tại sao cần các mail gateway? Tại sao máy gửi không gửi trực tiếp tới máy nhận? Một lý do là người nhận không muốn địa chỉ email của mình chứa tên máy cụ thể mà họ đọc thư. Một lý do khác là vấn đề mở rộng: Trong các tổ chức lớn, thường có nhiều máy khác nhau lưu trữ *hộp thư* cho tổ chức. Ví dụ, thư gửi tới ``bob@cs.princeton.edu`` trước tiên được gửi tới một mail gateway của Khoa Khoa học Máy tính tại Princeton (tức là máy ``cs.princeton.edu``), rồi được chuyển tiếp—liên quan đến một kết nối thứ hai—tới máy cụ thể nơi Bob có hộp thư. Gateway chuyển tiếp duy trì một cơ sở dữ liệu ánh xạ người dùng tới máy chứa hộp thư của họ; người gửi không cần biết tên cụ thể này. (Danh sách các dòng header trong thông điệp sẽ giúp bạn truy vết các gateway mà một thông điệp đã đi qua.) Một lý do nữa, đặc biệt đúng trong những ngày đầu của email, là máy chủ chứa hộp thư của người dùng có thể không luôn hoạt động hoặc không thể truy cập, khi đó mail gateway sẽ giữ thông điệp cho đến khi có thể chuyển tiếp.
 
-Independent of how many mail gateways are in the path, an independent
-SMTP connection is used between each host to move the message closer to
-the recipient. Each SMTP session involves a dialog between the two mail
-daemons, with one acting as the client and the other acting as the
-server. Multiple messages might be transferred between the two hosts
-during a single session. Since RFC 822 defines messages using ASCII as
-the base representation, it should come as no surprise to learn that
-SMTP is also ASCII based. This means it is possible for a human at a
-keyboard to pretend to be an SMTP client program.
+Bất kể có bao nhiêu mail gateway trên đường đi, một kết nối SMTP độc lập được sử dụng giữa mỗi cặp máy để chuyển thông điệp gần hơn tới người nhận. Mỗi phiên SMTP là một đối thoại giữa hai mail daemon, một bên đóng vai trò client, bên kia là server. Có thể nhiều thông điệp được truyền giữa hai máy trong một phiên. Vì RFC 822 định nghĩa thông điệp sử dụng ASCII làm biểu diễn cơ sở, không có gì ngạc nhiên khi SMTP cũng dựa trên ASCII. Điều này có nghĩa là một người dùng có thể giả vờ là chương trình client SMTP bằng cách gõ lệnh trực tiếp trên bàn phím.
 
-SMTP is best understood by a simple example. The following is an
-exchange between sending host ``cs.princeton.edu`` and receiving host
-``systemsapproach.org`` . In this case, user Bob at Princeton is trying to send
-mail to users Alice and Tom at Systems Approach. Extra blank lines have been added
-to make the dialog more readable.
+SMTP dễ hiểu nhất qua một ví dụ đơn giản. Sau đây là một phiên trao đổi giữa máy gửi ``cs.princeton.edu`` và máy nhận ``systemsapproach.org``. Trong trường hợp này, người dùng Bob tại Princeton cố gắng gửi thư cho Alice và Tom tại Systems Approach. Một số dòng trống được thêm vào để dễ đọc hơn.
 
 .. code-block:: shell
 
@@ -319,168 +122,55 @@ to make the dialog more readable.
    QUIT
    221 Closing connection
 
-As you can see, SMTP involves a sequence of exchanges between the
-client and the server. In each exchange, the client posts a command
-(e.g., ``QUIT``) and the server responds with a code (e.g., ``250``,
-``550``, ``354``, ``221``). The server also returns a human-readable
-explanation for the code (e.g., ``No such user here``).  In this
-particular example, the client first identifies itself to the server
-with the ``HELO`` command. It gives its domain name as an
-argument. The server verifies that this name corresponds to the IP
-address being used by the TCP connection; you’ll notice the server
-states this IP address back to the client. The client then asks the
-server if it is willing to accept mail for two different users; the
-server responds by saying “yes” to one and “no” to the other. Then the
-client sends the message, which is terminated by a line with a single
-period (“.”) on it. Finally, the client terminates the connection.
+Như bạn thấy, SMTP bao gồm một chuỗi trao đổi giữa client và server. Trong mỗi trao đổi, client gửi một lệnh (ví dụ, ``QUIT``) và server phản hồi bằng một mã số (ví dụ, ``250``, ``550``, ``354``, ``221``). Server cũng trả về một giải thích dễ hiểu cho mã số đó (ví dụ, ``No such user here``). Trong ví dụ này, client đầu tiên xác định mình với server bằng lệnh ``HELO``. Nó cung cấp tên miền của mình làm đối số. Server xác minh tên này khớp với địa chỉ IP đang dùng cho kết nối TCP; bạn sẽ thấy server trả lại địa chỉ IP này cho client. Client sau đó hỏi server có chấp nhận thư cho hai người dùng khác nhau không; server trả lời “có” với một người và “không” với người kia. Sau đó, client gửi thông điệp, kết thúc bằng một dòng chỉ chứa dấu chấm (“.”). Cuối cùng, client kết thúc kết nối.
 
-There are, of course, many other commands and return codes. For example,
-the server can respond to a client’s ``RCPT`` command with a ``251``
-code, which indicates that the user does not have a mailbox on this
-host, but that the server promises to forward the message onto another
-mail daemon. In other words, the host is functioning as a mail gateway.
-As another example, the client can issue a ``VRFY`` operation to verify
-a user’s email address, but without actually sending a message to the
-user.
+Tất nhiên còn nhiều lệnh và mã trả về khác. Ví dụ, server có thể trả lời lệnh ``RCPT`` của client bằng mã ``251``, cho biết người dùng không có hộp thư trên máy này, nhưng server hứa sẽ chuyển tiếp thông điệp tới một mail daemon khác. Nói cách khác, máy này đóng vai trò mail gateway. Một ví dụ khác, client có thể gửi lệnh ``VRFY`` để xác minh địa chỉ email của người dùng mà không cần gửi thông điệp thực sự.
 
-The only other point of interest is the arguments to the ``MAIL`` and
-``RCPT`` operations; for example, ``FROM:<Bob@cs.princeton.edu>`` and
-``TO:<Alice@systemsapproach.org>``, respectively. These look a lot like 822 header
-fields, and in some sense they are. What actually happens is that the
-mail daemon parses the message to extract the information it needs to
-run SMTP. The information it extracts is said to form an *envelope* for
-the message. The SMTP client uses this envelope to parameterize its
-exchange with the SMTP server. One historical note: The reason
-``sendmail`` became so popular is that no one wanted to reimplement this
-message parsing function. While today’s email addresses look pretty tame
-(e.g., ``Bob@cs.princeton.edu``), this was not always the case. In the
-days before everyone was connected to the Internet, it was not uncommon
-to see email addresses of the form ``user%host@site!neighbor``.
+Điểm đáng chú ý còn lại là các đối số cho lệnh ``MAIL`` và ``RCPT``; ví dụ, ``FROM:<Bob@cs.princeton.edu>`` và ``TO:<Alice@systemsapproach.org>``. Chúng trông rất giống các trường header 822, và ở một mức độ nào đó đúng là như vậy. Thực tế, mail daemon sẽ phân tích thông điệp để trích xuất thông tin cần thiết cho SMTP. Thông tin này tạo thành một *phong bì* (envelope) cho thông điệp. SMTP client sử dụng phong bì này để tham số hóa trao đổi với SMTP server. Một ghi chú lịch sử: Lý do ``sendmail`` trở nên phổ biến là vì không ai muốn tự hiện thực chức năng phân tích thông điệp này. Mặc dù ngày nay địa chỉ email trông khá đơn giản (ví dụ, ``Bob@cs.princeton.edu``), trước đây không phải lúc nào cũng vậy. Thời kỳ trước khi mọi người đều kết nối Internet, không hiếm gặp các địa chỉ dạng ``user%host@site!neighbor``.
 
-Mail Reader
-~~~~~~~~~~~
+Chương trình đọc thư
+~~~~~~~~~~~~~~~~~~~
 
-The final step is for the user to actually retrieve his or her messages
-from the mailbox, read them, reply to them, and possibly save a copy for
-future reference. The user performs all these actions by interacting
-with a mail reader. As pointed out earlier, this reader was originally
-just a program running on the same machine as the user’s mailbox, in
-which case it could simply read and write the file that implements the
-mailbox. This was the common case in the pre-laptop era. Today, most
-often the user accesses his or her mailbox from a remote machine using
-yet another protocol, such as POP or IMAP. It is beyond the scope of
-this book to discuss the user interface aspects of the mail reader, but
-it is definitely within our scope to talk about the access protocol. We
-consider IMAP, in particular.
+Bước cuối cùng là người dùng thực sự lấy các thông điệp từ hộp thư, đọc, trả lời, và có thể lưu lại để tham khảo sau này. Người dùng thực hiện tất cả các thao tác này bằng cách tương tác với chương trình đọc thư. Như đã đề cập, ban đầu chương trình này chỉ là một ứng dụng chạy trên cùng máy với hộp thư của người dùng, khi đó nó chỉ cần đọc và ghi file thực hiện hộp thư. Đây là trường hợp phổ biến trước thời laptop. Ngày nay, hầu hết người dùng truy cập hộp thư từ máy từ xa bằng một giao thức khác, như POP hoặc IMAP. Việc thảo luận giao diện người dùng của chương trình đọc thư nằm ngoài phạm vi cuốn sách này, nhưng chúng ta hoàn toàn có thể nói về giao thức truy cập. Ở đây, chúng ta xét IMAP.
 
-IMAP is similar to SMTP in many ways. It is a client/server protocol
-running over TCP, where the client (running on the user’s desktop
-machine) issues commands in the form of ``<CRLF>``-terminated ASCII
-text lines and the mail server (running on the machine that maintains
-the user’s mailbox) responds in kind. The exchange begins with the
-client authenticating him- or herself and identifying the mailbox he
-or she wants to access. This can be represented by the simple state
-transition diagram shown in :numref:`Figure %s <fig-imap>`. In this
-diagram, ``LOGIN`` and ``LOGOUT`` are example commands that the client
-can issue, while ``OK`` is one possible server response. Other common
-commands include ``FETCH`` and ``EXPUNGE``, with the obvious
-meanings. Additional server responses include ``NO`` (client does not
-have permission to perform that operation) and ``BAD`` (command is ill
-formed).
+IMAP giống SMTP ở nhiều điểm. Nó là giao thức client/server chạy trên TCP, trong đó client (chạy trên máy tính để bàn của người dùng) gửi lệnh dưới dạng các dòng văn bản ASCII kết thúc bằng ``<CRLF>``, và mail server (chạy trên máy duy trì hộp thư của người dùng) phản hồi tương tự. Trao đổi bắt đầu bằng việc client xác thực và xác định hộp thư muốn truy cập. Điều này có thể được biểu diễn bằng sơ đồ trạng thái đơn giản như ở :numref:`Figure %s <fig-imap>`. Trong sơ đồ này, ``LOGIN`` và ``LOGOUT`` là các lệnh ví dụ mà client có thể gửi, còn ``OK`` là một phản hồi có thể của server. Các lệnh phổ biến khác gồm ``FETCH`` và ``EXPUNGE``, với ý nghĩa rõ ràng. Các phản hồi bổ sung của server gồm ``NO`` (client không có quyền thực hiện thao tác đó) và ``BAD`` (lệnh không hợp lệ).
 
 .. _fig-imap:
 .. figure:: figures/f09-02-9780123850591.png
    :width: 400px
    :align: center
 
-   IMAP state transition diagram.
+   Sơ đồ trạng thái IMAP.
 
-When the user asks to ``FETCH`` a message, the server returns it in
-MIME format and the mail reader decodes it. In addition to the message
-itself, IMAP also defines a set of message *attributes* that are
-exchanged as part of other commands, independent of transferring the
-message itself. Message attributes include information like the size
-of the message and, more interestingly, various *flags* associated
-with the message (e.g., ``Seen``, ``Answered``, ``Deleted``, and
-``Recent``). These flags are used to keep the client and server
-synchronized; that is, when the user deletes a message in the mail
-reader, the client needs to report this fact to the mail server.
-Later, should the user decide to expunge all deleted messages, the
-client issues an ``EXPUNGE`` command to the server, which knows to
-actually remove all earlier deleted messages from the mailbox.
+Khi người dùng yêu cầu ``FETCH`` một thông điệp, server trả về thông điệp ở định dạng MIME và chương trình đọc thư sẽ giải mã nó. Ngoài bản thân thông điệp, IMAP còn định nghĩa một tập các *thuộc tính* thông điệp được trao đổi như một phần của các lệnh khác, độc lập với việc truyền thông điệp. Các thuộc tính này bao gồm thông tin như kích thước thông điệp và, thú vị hơn, các *cờ* (flags) khác nhau gắn với thông điệp (ví dụ, ``Seen``, ``Answered``, ``Deleted``, và ``Recent``). Các cờ này được dùng để giữ cho client và server đồng bộ; tức là, khi người dùng xóa một thông điệp trong chương trình đọc thư, client cần báo cho server biết. Sau này, nếu người dùng quyết định xóa vĩnh viễn các thông điệp đã xóa, client gửi lệnh ``EXPUNGE`` tới server, server sẽ thực sự loại bỏ các thông điệp đã xóa khỏi hộp thư.
 
-Finally, note that when the user replies to a message, or sends a new
-message, the mail reader does not forward the message from the client to
-the mail server using IMAP, but it instead uses SMTP. This means that
-the user’s mail server is effectively the first mail gateway traversed
-along the path from the desktop to the recipient’s mailbox.
+Cuối cùng, lưu ý rằng khi người dùng trả lời một thông điệp, hoặc gửi thông điệp mới, chương trình đọc thư không chuyển tiếp thông điệp từ client tới mail server bằng IMAP, mà thay vào đó sử dụng SMTP. Điều này có nghĩa là mail server của người dùng thực chất là mail gateway đầu tiên trên đường từ máy tính cá nhân tới hộp thư của người nhận.
 
 9.1.2 World Wide Web (HTTP)
 ---------------------------
 
-The World Wide Web has been so successful and has made the Internet
-accessible to so many people that sometimes it seems to be synonymous
-with the Internet. In fact, the design of the system that became the Web
-started around 1989, long after the Internet had become a widely
-deployed system. The original goal of the Web was to find a way to
-organize and retrieve information, drawing on ideas about
-hypertext—interlinked documents—that had been around since at least the
-1960s.\ [#]_ The core idea of hypertext is that one document can link to
-another document, and the protocol (HTTP) and document language (HTML)
-were designed to meet that goal.
+World Wide Web đã thành công đến mức khiến Internet trở nên dễ tiếp cận với rất nhiều người, đến nỗi đôi khi người ta nghĩ Web đồng nghĩa với Internet. Thực tế, thiết kế của hệ thống trở thành Web bắt đầu vào khoảng năm 1989, lâu sau khi Internet đã trở thành một hệ thống được triển khai rộng rãi. Mục tiêu ban đầu của Web là tìm ra cách tổ chức và truy xuất thông tin, dựa trên các ý tưởng về siêu văn bản—các tài liệu liên kết với nhau—đã xuất hiện ít nhất từ những năm 1960.\ [#]_ Ý tưởng cốt lõi của siêu văn bản là một tài liệu có thể liên kết tới tài liệu khác, và giao thức (HTTP) cùng ngôn ngữ tài liệu (HTML) được thiết kế để đáp ứng mục tiêu đó.
 
-.. [#] A short history of the Web provided by the World Wide Web
-       consortium traces its roots to a 1945 article describing links
-       between microfiche documents.
+.. [#] Một lịch sử ngắn gọn về Web do World Wide Web Consortium cung cấp truy nguồn gốc của nó tới một bài báo năm 1945 mô tả các liên kết giữa các tài liệu microfiche.
 
-One helpful way to think of the Web is as a set of cooperating clients
-and servers, all of whom speak the same language: HTTP. Most people are
-exposed to the Web through a graphical client program or web browser
-such as Safari, Chrome, Firefox, or Internet Explorer. :numref:`Figure %s
-<fig-netscape>` shows the Safari browser in use, displaying a page of
-information from Princeton University.
+Một cách hữu ích để hình dung Web là tập hợp các client và server hợp tác, tất cả đều nói cùng một ngôn ngữ: HTTP. Hầu hết mọi người tiếp cận Web thông qua một chương trình client đồ họa hoặc trình duyệt web như Safari, Chrome, Firefox hoặc Internet Explorer. :numref:`Figure %s <fig-netscape>` cho thấy trình duyệt Safari đang được sử dụng, hiển thị một trang thông tin từ Đại học Princeton.
 
 .. _fig-netscape:
 .. figure:: figures/browser-screenshot.png
    :width: 600px
    :align: center
 
-   The Safari web browser.
+   Trình duyệt web Safari.
 
-If you want to organize information into a system of linked
-documents or objects, there needs to be a way to identify documents so
-you can link to them. Uniform Resource Locators (URLs)
-are so familiar to most of us by now that it’s easy to forget that they
-haven’t been around forever. They provide information that allows
-objects on the Web to be located, and they look like the following:
+Nếu bạn muốn tổ chức thông tin thành một hệ thống các tài liệu hoặc đối tượng liên kết, cần có một cách để nhận diện các tài liệu nhằm liên kết tới chúng. Uniform Resource Locators (URL) đã trở nên quen thuộc với hầu hết chúng ta đến mức dễ quên rằng chúng chưa tồn tại từ lâu. Chúng cung cấp thông tin cho phép xác định vị trí các đối tượng trên Web, và có dạng như sau:
 
 .. code-block:: html
 
    http://www.cs.princeton.edu/index.html
 
-If you opened that particular URL, your web browser would open a TCP
-connection to the web server at a machine called
-``www.cs.princeton.edu`` and immediately retrieve and display the file
-called ``index.html``. Most files on the Web contain images and text,
-and many have other objects such as audio and video clips, pieces of
-code, etc. They also frequently include URLs that point to other files
-that may be located on other machines, which is the core of the
-“hypertext” part of HTTP and HTML. A web browser has some way in which
-you can recognize URLs (often by highlighting or underlining some
-text) and then you can ask the browser to open them. These embedded
-URLs are an example of *hypertext links*. When you ask your web browser to
-open one of these embedded URLs (e.g., by pointing and clicking on it
-with a mouse), it will retrieve and display
-the named file. It thus becomes very easy to hop from one machine to
-another around the network, following links to all sorts of
-information. Once you have a means to embed a link in a document and
-allow a user to follow that link to get another document, you have the
-basis of a hypertext system.
+Nếu bạn mở URL này, trình duyệt web của bạn sẽ mở một kết nối TCP tới máy chủ web tại máy ``www.cs.princeton.edu`` và ngay lập tức lấy về và hiển thị tệp ``index.html``. Hầu hết các tệp trên Web chứa hình ảnh và văn bản, và nhiều tệp còn có các đối tượng khác như đoạn âm thanh, video, mã lệnh, v.v. Chúng cũng thường bao gồm các URL trỏ tới các tệp khác có thể nằm trên các máy khác, đây chính là cốt lõi của phần “siêu văn bản” trong HTTP và HTML. Trình duyệt web có cách để bạn nhận biết các URL (thường bằng cách làm nổi bật hoặc gạch chân một đoạn văn bản) và bạn có thể yêu cầu trình duyệt mở chúng. Các URL nhúng này là ví dụ về *liên kết siêu văn bản*. Khi bạn yêu cầu trình duyệt mở một URL nhúng (ví dụ, bằng cách nhấp chuột), nó sẽ lấy về và hiển thị tệp được chỉ định. Nhờ đó, bạn có thể dễ dàng di chuyển từ máy này sang máy khác trên mạng, theo các liên kết tới đủ loại thông tin. Khi bạn có phương tiện nhúng liên kết vào tài liệu và cho phép người dùng theo liên kết đó để lấy tài liệu khác, bạn đã có nền tảng của một hệ thống siêu văn bản.
 
-When you ask your browser to view a page, your browser (the client)
-fetches the page from the server using HTTP, which traditionally runs over TCP. Like SMTP,
-HTTP is a text-oriented protocol. At its core, HTTP is a
-request/response protocol, where every message has the general form
+Khi bạn yêu cầu trình duyệt xem một trang, trình duyệt (client) sẽ lấy trang từ server bằng HTTP, vốn truyền thống chạy trên TCP. Giống như SMTP, HTTP là một giao thức hướng văn bản. Ở cốt lõi, HTTP là một giao thức yêu cầu/đáp ứng, trong đó mỗi thông điệp có dạng tổng quát
 
 ::
 
@@ -489,815 +179,280 @@ request/response protocol, where every message has the general form
    <CRLF>
    MESSAGE_BODY <CRLF>
 
-where, as before, ``<CRLF>`` stands for carriage-return+line-feed. The
-first line (``START_LINE``) indicates whether this is a request message
-or a response message. In effect, it identifies the “remote procedure”
-to be executed (in the case of a request message), or the *status* of
-the request (in the case of a response message). The next set of lines
-specifies a collection of options and parameters that qualify the
-request or response. There are zero or more of these ``MESSAGE_HEADER``
-lines—the set is terminated by a blank line—each of which looks like a
-header line in an email message. HTTP defines many possible header
-types, some of which pertain to request messages, some to response
-messages, and some to the data carried in the message body. Instead of
-giving the full set of possible header types, though, we just give a
-handful of representative examples. Finally, after the blank line comes
-the contents of the requested message (``MESSAGE_BODY``); this part of
-the message is where a server would place the requested page when
-responding to a request, and it is typically empty for request messages.
+trong đó, như trước, ``<CRLF>`` là carriage-return+line-feed. Dòng đầu tiên (``START_LINE``) cho biết đây là thông điệp yêu cầu hay đáp ứng. Thực chất, nó xác định “thủ tục từ xa” sẽ được thực thi (trong trường hợp thông điệp yêu cầu), hoặc *trạng thái* của yêu cầu (trong trường hợp thông điệp đáp ứng). Tập các dòng tiếp theo chỉ định một tập hợp các tùy chọn và tham số bổ sung cho yêu cầu hoặc đáp ứng. Có thể có không hoặc nhiều dòng ``MESSAGE_HEADER``—tập này kết thúc bằng một dòng trống—mỗi dòng giống như một dòng header trong email. HTTP định nghĩa nhiều loại header khác nhau, một số dành cho thông điệp yêu cầu, một số cho thông điệp đáp ứng, và một số cho dữ liệu mang trong phần thân thông điệp. Thay vì liệt kê đầy đủ tất cả các loại header, chúng ta chỉ đưa ra một số ví dụ tiêu biểu. Cuối cùng, sau dòng trống là nội dung thông điệp được yêu cầu (``MESSAGE_BODY``); phần này là nơi server đặt trang được yêu cầu khi đáp ứng, và thường để trống đối với thông điệp yêu cầu.
 
-Why was HTTP designed to run over TCP? The designers didn’t have to do it that
-way, but TCP provides numerous services that HTTP needs: reliable
-delivery (who wants a Web page with missing data?), flow control, and
-congestion control. However, as we’ll see below, there are a few
-issues that arose from building a request/response protocol on top of
-TCP, that become more apparent as you consider the details of the interactions
-between the application and transport layer protocols. This has led to
-new versions of HTTP and a new underlying transport, QUIC, discussed below.
+Tại sao HTTP được thiết kế để chạy trên TCP? Các nhà thiết kế không nhất thiết phải làm vậy, nhưng TCP cung cấp nhiều dịch vụ mà HTTP cần: truyền tin cậy (không ai muốn một trang web bị thiếu dữ liệu), điều khiển luồng và điều khiển tắc nghẽn. Tuy nhiên, như sẽ thấy bên dưới, có một số vấn đề phát sinh khi xây dựng giao thức yêu cầu/đáp ứng trên TCP, và những vấn đề này càng rõ ràng hơn khi xem xét chi tiết tương tác giữa các giao thức tầng ứng dụng và tầng vận chuyển. Điều này đã dẫn đến các phiên bản mới của HTTP và một giao thức vận chuyển mới, QUIC, sẽ được thảo luận bên dưới.
 
-Request Messages
-~~~~~~~~~~~~~~~~
+Thông điệp yêu cầu
+~~~~~~~~~~~~~~~~~~
 
-The first line of an HTTP request message specifies three things: the
-operation to be performed, the Web page the operation should be
-performed on, and the version of HTTP being used. Although HTTP
-defines a wide assortment of possible request operations—including
-*write* operations that allow a Web page to be posted on a server—the
-two most common operations are ``GET`` (fetch the specified Web page)
-and ``HEAD`` (fetch status information about the specified Web
-page). The former is obviously used when your browser wants to
-retrieve and display a Web page. The latter is used to test the
-validity of a hypertext link or to see if a particular page has been
-modified since the browser last fetched it. The full set of operations
-is summarized in :numref:`Table %s <tab-ops>`. As innocent as it
-sounds, the ``POST`` command enables much mischief (including spam) on
-the Internet.
+Dòng đầu tiên của một thông điệp yêu cầu HTTP chỉ định ba điều: thao tác sẽ thực hiện, trang web thao tác sẽ thực hiện trên đó, và phiên bản HTTP đang sử dụng. Mặc dù HTTP định nghĩa nhiều thao tác yêu cầu khác nhau—bao gồm cả thao tác *ghi* cho phép đăng một trang web lên server—hai thao tác phổ biến nhất là ``GET`` (lấy trang web được chỉ định) và ``HEAD`` (lấy thông tin trạng thái về trang web được chỉ định). ``GET`` rõ ràng được dùng khi trình duyệt muốn lấy và hiển thị một trang web. ``HEAD`` được dùng để kiểm tra tính hợp lệ của một liên kết siêu văn bản hoặc xem một trang cụ thể có bị thay đổi kể từ lần cuối trình duyệt lấy về hay không. Tập hợp đầy đủ các thao tác được tóm tắt ở :numref:`Table %s <tab-ops>`. Nghe có vẻ vô hại, nhưng lệnh ``POST`` lại là nguồn gốc của nhiều vấn đề (bao gồm cả spam) trên Internet.
 
 .. _tab-ops:
-.. table::  HTTP Request Operations.
+.. table::  Các thao tác yêu cầu HTTP.
    :align: center
    :widths: auto
 
    +-----------+-----------------------------------------------------------+
-   | Operation | Description                                               |
+   | Operation | Mô tả                                                    |
    +===========+===========================================================+
-   | OPTIONS   | Request information about available options               |
+   | OPTIONS   | Yêu cầu thông tin về các tùy chọn có sẵn                  |
    +-----------+-----------------------------------------------------------+
-   | GET       | Retrieve document identified in URL                       |
+   | GET       | Lấy tài liệu được xác định trong URL                      |
    +-----------+-----------------------------------------------------------+
-   | HEAD      | Retrieve metainformation about document identified in URL |
+   | HEAD      | Lấy thông tin về tài liệu được xác định trong URL         |
    +-----------+-----------------------------------------------------------+
-   | POST      | Give information (e.g., annotation) to server             |
+   | POST      | Gửi thông tin (ví dụ, chú thích) tới server               |
    +-----------+-----------------------------------------------------------+
-   | PUT       | Store document under specified URL                        |
+   | PUT       | Lưu tài liệu dưới URL chỉ định                            |
    +-----------+-----------------------------------------------------------+
-   | DELETE    | Delete specified URL                                      |
+   | DELETE    | Xóa URL chỉ định                                          |
    +-----------+-----------------------------------------------------------+
-   | TRACE     | Loopback request message                                  |
+   | TRACE     | Yêu cầu lặp lại thông điệp                                |
    +-----------+-----------------------------------------------------------+
-   | CONNECT   | For use by proxies                                        |
+   | CONNECT   | Dùng cho proxy                                            |
    +-----------+-----------------------------------------------------------+
 
-For example, the ``START_LINE``
+Ví dụ, dòng ``START_LINE``
 
 ::
 
    GET http://www.cs.princeton.edu/index.html HTTP/1.1
 
-says that the client wants the server on host to return the page named
-``index.html``.  This particular example uses an absolute URL. It is
-also possible to request a path in the ``START_LINE`` and specify the host name
-in one of the ``MESSAGE_HEADER`` lines; for example,
+cho biết client muốn server trên máy đó trả về trang ``index.html``. Ví dụ này dùng URL tuyệt đối. Cũng có thể yêu cầu một đường dẫn trong ``START_LINE`` và chỉ định tên máy chủ trong một dòng ``MESSAGE_HEADER``; ví dụ,
 
 .. code-block:: http
 
    GET /index.html HTTP/1.1
    Host: www.cs.princeton.edu
 
-Here, ``Host`` is one of the possible ``MESSAGE_HEADER`` fields. One
-of the more interesting of these is ``If-Modified-Since``, which gives
-the client a way to conditionally request a Web page—the server
-returns the page only if it has been modified since the time specified
-in that header line.
+Ở đây, ``Host`` là một trong các trường ``MESSAGE_HEADER`` có thể có. Một trường thú vị khác là ``If-Modified-Since``, cho phép client yêu cầu có điều kiện một trang web—server chỉ trả về trang nếu nó đã bị thay đổi kể từ thời điểm được chỉ định trong dòng header đó.
 
-Response Messages
-~~~~~~~~~~~~~~~~~
+Thông điệp đáp ứng
+~~~~~~~~~~~~~~~~~~
 
-Like request messages, response messages begin with a single
-``START_LINE``. In this case, the line specifies the version of HTTP
-being used, a three-digit code indicating whether or not the request was
-successful, and a text string giving the reason for the response. For
-example, the ``START_LINE``
+Giống như thông điệp yêu cầu, thông điệp đáp ứng bắt đầu bằng một dòng ``START_LINE``. Trong trường hợp này, dòng này chỉ định phiên bản HTTP đang sử dụng, một mã ba chữ số cho biết yêu cầu có thành công hay không, và một chuỗi văn bản giải thích lý do phản hồi. Ví dụ, dòng ``START_LINE``
 
 .. code-block:: http
 
    HTTP/1.1 202 Accepted
 
-indicates that the server was able to satisfy the request, while
+chỉ ra rằng server đã xử lý thành công yêu cầu, trong khi
 
 .. code-block:: http
 
    HTTP/1.1 404 Not Found
 
-indicates that it was not able to satisfy the request because the page
-was not found. There are five general types of response codes, with the
-first digit of the code indicating its type. :numref:`Table %s <tab-codes>`
-summarizes the five types of codes.
+chỉ ra rằng server không thể xử lý yêu cầu vì không tìm thấy trang. Có năm loại mã phản hồi tổng quát, với chữ số đầu tiên của mã cho biết loại. :numref:`Table %s <tab-codes>` tóm tắt năm loại mã này.
 
 .. _tab-codes:
-.. table::  Five Types of HTTP Result Codes.
+.. table::  Năm loại mã kết quả HTTP.
    :align: center
    :widths: auto
 
    +------+---------------+--------------------------------------------------------+
-   | Code | Type          | Example Reasons                                        |
+   | Mã   | Loại          | Ví dụ lý do                                            |
    +======+===============+========================================================+
-   | 1xx  | Informational | request received, continuing process                   |
+   | 1xx  | Thông tin     | yêu cầu đã nhận, đang tiếp tục xử lý                   |
    +------+---------------+--------------------------------------------------------+
-   | 2xx  | Success       | action successfully received, understood, and accepted |
+   | 2xx  | Thành công    | hành động đã nhận, hiểu và chấp nhận                   |
    +------+---------------+--------------------------------------------------------+
-   | 3xx  | Redirection   | further action must be taken to complete the request   |
+   | 3xx  | Chuyển hướng  | cần thực hiện thêm hành động để hoàn thành yêu cầu     |
    +------+---------------+--------------------------------------------------------+
-   | 4xx  | Client Error  | request contains bad syntax or cannot be fulfilled     |
+   | 4xx  | Lỗi phía client | yêu cầu có cú pháp sai hoặc không thể thực hiện      |
    +------+---------------+--------------------------------------------------------+
-   | 5xx  | Server Error  | server failed to fulfill an apparently valid request   |
+   | 5xx  | Lỗi phía server | server không thực hiện được yêu cầu hợp lệ           |
    +------+---------------+--------------------------------------------------------+
 
-As with the unexpected consequences of the ``POST`` request message, it
-is sometimes surprising how various response messages are used in
-practice. For example, request redirection (specifically code 302) turns
-out to be a powerful mechanism that plays a big role in Content
-Distribution Networks (CDNs) by redirecting requests to a nearby cache.
+Cũng như với các hậu quả bất ngờ của thông điệp yêu cầu ``POST``, đôi khi cũng bất ngờ khi các thông điệp đáp ứng khác nhau được sử dụng trong thực tế như thế nào. Ví dụ, chuyển hướng yêu cầu (cụ thể là mã 302) hóa ra là một cơ chế mạnh mẽ đóng vai trò lớn trong các mạng phân phối nội dung (CDN) bằng cách chuyển hướng yêu cầu tới bộ nhớ đệm gần nhất.
 
-Also similar to request messages, response messages can contain one or
-more ``MESSAGE_HEADER`` lines. These lines relay additional
-information back to the client. For example, the ``Location`` header
-line specifies that the requested URL is available at another
-location. Thus, if the Princeton CS Department Web page had moved from
-``http://www.cs.princeton.edu/index.html`` to
-``http://www.princeton.edu/cs/index.html``, for example, then the
-server at the original address might respond with
+Tương tự như thông điệp yêu cầu, thông điệp đáp ứng có thể chứa một hoặc nhiều dòng ``MESSAGE_HEADER``. Các dòng này chuyển thêm thông tin về cho client. Ví dụ, dòng header ``Location`` chỉ ra rằng URL được yêu cầu hiện có ở vị trí khác. Do đó, nếu trang web của Khoa Khoa học Máy tính Princeton chuyển từ ``http://www.cs.princeton.edu/index.html`` sang ``http://www.princeton.edu/cs/index.html``, server tại địa chỉ cũ có thể phản hồi như sau:
 
 .. code-block:: http
 
    HTTP/1.1 301 Moved Permanently
    Location: http://www.princeton.edu/cs/index.html
 
-In the common case, the response message will also carry the requested
-page. This page is an HTML document, but since it may carry nontextual
-data (e.g., a GIF image), it is encoded using MIME (see the previous
-section). Certain of the ``MESSAGE_HEADER`` lines give attributes of the
-page contents, including (number of bytes in the contents), ``Expires``
-(time at which the contents are considered stale), and (time at which
-the contents were last modified at the server).
+Trong trường hợp phổ biến, thông điệp đáp ứng cũng sẽ mang theo trang được yêu cầu. Trang này là một tài liệu HTML, nhưng vì nó có thể chứa dữ liệu phi văn bản (ví dụ, hình ảnh GIF), nên nó được mã hóa bằng MIME (xem phần trước). Một số dòng ``MESSAGE_HEADER`` cung cấp thuộc tính của nội dung trang, bao gồm (số byte trong nội dung), ``Expires`` (thời điểm nội dung bị coi là lỗi thời), và (thời điểm nội dung được sửa đổi lần cuối trên server).
 
 Uniform Resource Identifiers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The URLs that HTTP uses as addresses are one type of *Uniform Resource
-Identifier* (URI). A URI is a character string that identifies a
-resource, where a resource can be anything that has identity, such as a
-document, an image, or a service.
+Các URL mà HTTP dùng làm địa chỉ là một loại *Uniform Resource Identifier* (URI). URI là một chuỗi ký tự nhận diện một tài nguyên, nơi tài nguyên có thể là bất cứ thứ gì có danh tính, như tài liệu, hình ảnh hoặc dịch vụ.
 
-The format of URIs allows various more specialized kinds of resource
-identifiers to be incorporated into the URI space of identifiers. The
-first part of a URI is a *scheme* that names a particular way of
-identifying a certain kind of resource, such as ``mailto`` for email
-addresses or ``file`` for file names. The second part of a URI,
-separated from the first part by a colon, is the *scheme-specific part*.
-It is a resource identifier consistent with the scheme in the first
-part, as in the URIs ``mailto:santa@northpole.org`` and
-``file:///C:/foo.html``.
+Định dạng của URI cho phép tích hợp nhiều loại định danh tài nguyên chuyên biệt vào không gian định danh URI. Phần đầu của URI là *scheme* chỉ ra cách nhận diện một loại tài nguyên cụ thể, ví dụ ``mailto`` cho địa chỉ email hoặc ``file`` cho tên tệp. Phần thứ hai của URI, tách biệt với phần đầu bằng dấu hai chấm, là *scheme-specific part*. Đây là định danh tài nguyên phù hợp với scheme ở phần đầu, như trong các URI ``mailto:santa@northpole.org`` và ``file:///C:/foo.html``.
 
-A resource doesn’t have to be retrievable or accessible. We saw an
-example of this in an earlier chapter—extensible markup language (XML)
-namespaces are identified by URIs that look an awful lot like URLs, but
-strictly speaking they are not *locators* because they don’t tell you
-how to locate something; they just provide a globally unique identifier
-for the namespace. There is no requirement that you can retrieve
-anything at the URI given as the target namespace of an XML document.
-We’ll see another example of a URI that is not a URL in a later section.
+Một tài nguyên không nhất thiết phải có thể truy xuất hoặc truy cập được. Chúng ta đã thấy một ví dụ về điều này ở chương trước—namespace của XML được nhận diện bằng URI trông rất giống URL, nhưng thực ra chúng không phải là *locator* vì chúng không cho biết cách xác định vị trí; chúng chỉ cung cấp một định danh toàn cục duy nhất cho namespace. Không có yêu cầu nào rằng bạn có thể truy xuất bất cứ thứ gì tại URI được chỉ định là target namespace của một tài liệu XML. Chúng ta sẽ thấy một ví dụ khác về URI không phải là URL ở phần sau.
 
-TCP Connections
-~~~~~~~~~~~~~~~
+Kết nối TCP
+~~~~~~~~~~~
 
-The original version of HTTP (1.0) established a separate TCP
-connection for each data item retrieved from the server. It’s not too
-hard to see how this was a very inefficient mechanism: connection
-setup and teardown messages had to be exchanged between the client and
-server even if all the client wanted to do was verify that it had the
-most recent copy of a page. Thus, retrieving a page that included some
-text and a dozen icons or other small graphics would result in 13
-separate TCP connections being established and closed. :numref:`Figure
-%s <fig-oldhttp>` shows the sequence of events for fetching a page
-that has just a single embedded object.  Colored lines indicate TCP
-messages, while black lines indicate the HTTP requests and
-responses. (Some of the TCP ACKs are not shown to avoid cluttering the
-picture.) You can see two round trip times are spent setting up TCP
-connections while another two (at least) are spent getting the page
-and image. As well as the latency impact, there is also processing
-cost on the server to handle the extra TCP connection establishment
-and termination.
+Phiên bản gốc của HTTP (1.0) thiết lập một kết nối TCP riêng cho mỗi mục dữ liệu được lấy từ server. Không khó để thấy đây là một cơ chế rất kém hiệu quả: các thông điệp thiết lập và đóng kết nối phải được trao đổi giữa client và server ngay cả khi client chỉ muốn kiểm tra xem mình đã có bản mới nhất của một trang hay chưa. Do đó, lấy một trang có chứa một số văn bản và một tá biểu tượng hoặc hình ảnh nhỏ khác sẽ dẫn đến việc thiết lập và đóng 13 kết nối TCP riêng biệt. :numref:`Figure %s <fig-oldhttp>` cho thấy trình tự các sự kiện khi lấy một trang chỉ có một đối tượng nhúng. Các đường màu biểu thị thông điệp TCP, còn các đường màu đen biểu thị các yêu cầu và đáp ứng HTTP. (Một số ACK của TCP không được hiển thị để tránh làm rối hình.) Bạn có thể thấy hai lần trễ vòng (round trip) được dùng để thiết lập kết nối TCP trong khi hai lần nữa (ít nhất) được dùng để lấy trang và hình ảnh. Ngoài tác động đến độ trễ, còn có chi phí xử lý trên server để xử lý việc thiết lập và đóng kết nối TCP bổ sung.
 
 .. _fig-oldhttp:
 .. figure:: figures/f09-04-9780123850591.png
    :width: 500px
    :align: center
 
-   HTTP 1.0 behavior.
+   Hành vi HTTP 1.0.
 
-To overcome this situation, HTTP version 1.1 introduced *persistent
-connections*—the client and server can exchange multiple
-request/response messages over the same TCP connection. Persistent
-connections have many advantages. First, they eliminate the
-connection setup overhead, thereby reducing the load on the server,
-the load on the network caused by the additional TCP packets, and the
-delay perceived by the user. Second, because a client can send
-multiple request messages down a single TCP connection, TCP’s
-congestion window mechanism is able to operate more efficiently. This
-is because it’s not necessary to go through the slow start phase for
-each page. :numref:`Figure %s <fig-persist>` shows the transaction
-from :numref:`Figure %s <fig-oldhttp>` using a persistent connection
-in the case where the connection is already open (presumably due to
-some prior access of the same server).
+Để khắc phục tình trạng này, HTTP phiên bản 1.1 đã giới thiệu *kết nối duy trì*—client và server có thể trao đổi nhiều thông điệp yêu cầu/đáp ứng trên cùng một kết nối TCP. Kết nối duy trì có nhiều lợi ích. Thứ nhất, chúng loại bỏ chi phí thiết lập kết nối, nhờ đó giảm tải cho server, giảm tải cho mạng do các gói TCP bổ sung, và giảm độ trễ cảm nhận của người dùng. Thứ hai, vì client có thể gửi nhiều thông điệp yêu cầu trên một kết nối TCP, cơ chế cửa sổ tắc nghẽn của TCP có thể hoạt động hiệu quả hơn. Điều này là vì không cần phải qua giai đoạn khởi động chậm cho mỗi trang. :numref:`Figure %s <fig-persist>` cho thấy giao dịch từ :numref:`Figure %s <fig-oldhttp>` sử dụng kết nối duy trì trong trường hợp kết nối đã mở sẵn (có thể do truy cập trước đó tới cùng server).
 
 .. _fig-persist:
 .. figure:: figures/f09-05-9780123850591.png
    :width: 500px
    :align: center
 
-   HTTP 1.1 behavior with persistent connections.
+   Hành vi HTTP 1.1 với kết nối duy trì.
 
-Persistent connections do not come without a price, however. The problem
-is that neither the client nor server necessarily knows how long to keep
-a particular TCP connection open. This is especially critical on the
-server, which might be asked to keep connections opened on behalf of
-thousands of clients. The solution is that the server must time out and
-close a connection if it has received no requests on the connection for
-a period of time. Also, both the client and server must watch to see if
-the other side has elected to close the connection, and they must use
-that information as a signal that they should close their side of the
-connection as well. (Recall that both sides must close a TCP connection
-before it is fully terminated.) Concerns about this added complexity may
-be one reason why persistent connections were not used from the outset,
-but today it is widely accepted that the benefits of persistent
-connections more than offset the drawbacks.
+Tuy nhiên, kết nối duy trì không phải không có giá. Vấn đề là cả client lẫn server không nhất thiết biết nên giữ một kết nối TCP cụ thể mở trong bao lâu. Điều này đặc biệt quan trọng ở phía server, nơi có thể được yêu cầu giữ các kết nối mở thay mặt cho hàng nghìn client. Giải pháp là server phải đặt timeout và đóng kết nối nếu không nhận được yêu cầu nào trên kết nối trong một khoảng thời gian nhất định. Ngoài ra, cả client và server phải theo dõi xem phía bên kia có chủ động đóng kết nối hay không, và phải dùng thông tin đó làm tín hiệu để đóng phía mình. (Nhớ rằng cả hai phía phải đóng kết nối TCP trước khi nó thực sự kết thúc.) Lo ngại về sự phức tạp bổ sung này có thể là một lý do khiến kết nối duy trì không được sử dụng ngay từ đầu, nhưng ngày nay lợi ích của kết nối duy trì đã được thừa nhận là vượt trội so với nhược điểm.
 
-While 1.1 is still widely supported, version 2.0 was formally
-approved by the IETF in 2015. Known as HTTP/2, the new version is
-backwards compatible with 1.1 (i.e,. it adopts the same syntax for
-header fields, status codes, and URIs), but it adds two new features.
+Mặc dù 1.1 vẫn được hỗ trợ rộng rãi, phiên bản 2.0 đã được IETF phê duyệt chính thức vào năm 2015. Được gọi là HTTP/2, phiên bản mới này tương thích ngược với 1.1 (tức là nó giữ nguyên cú pháp trường header, mã trạng thái và URI), nhưng bổ sung hai tính năng mới.
 
-The first is to make it easier for web servers to *minify* the
-information they send back to web browsers. If you look closely at the
-makeup of the HTML in a typical web page, you will find a plethora of
-references to other bits-and-pieces (e.g., images, scripts, style files)
-that the browser needs to render the page. Rather than force the client
-to request these bits-and-pieces (technically known as *resources*) in
-subsequent requests, HTTP/2 provides a means for the server to bundle
-the required resources and proactively *push* them to the client without
-incurring the round-trip delay of forcing the client to request them.
-This feature is coupled with a compression mechanism that reduces the
-number of bytes that need to be pushed. The whole goal is to minimize
-the latency an end-user experiences from the moment they click on a
-hyperlink until the selected page is fully rendered.
+Đầu tiên là giúp server web dễ dàng *nén nhỏ* thông tin gửi lại cho trình duyệt web. Nếu bạn xem kỹ cấu trúc HTML của một trang web điển hình, bạn sẽ thấy rất nhiều tham chiếu tới các thành phần nhỏ khác (ví dụ, hình ảnh, script, file style) mà trình duyệt cần để dựng trang. Thay vì buộc client phải yêu cầu các thành phần này (kỹ thuật gọi là *resource*), HTTP/2 cung cấp cơ chế cho server gói các resource cần thiết và chủ động *đẩy* chúng tới client mà không phải chờ client yêu cầu, nhờ đó giảm độ trễ do phải chờ round-trip. Tính năng này đi kèm với cơ chế nén giúp giảm số byte cần truyền. Mục tiêu là tối thiểu hóa độ trễ mà người dùng cuối cảm nhận từ lúc nhấp vào liên kết cho đến khi trang được dựng xong.
 
-The second big advance of HTTP/2 is to multiplex several requests on a
-single TCP connection. This goes beyond what version 1.1
-supports—allowing a *sequence* of requests to reuse a TCP
-connection—by permitting these requests to overlap with each
-other. The way HTTP/2 does this should sound familiar: it defines a
-*channel* abstraction (technically, the channels are called
-*streams*), permits multiple concurrent streams to be active at a
-given time (each labeled with a unique *stream id*), and limits each
-stream to one active request/reply exchange at a time.
+Tiến bộ lớn thứ hai của HTTP/2 là cho phép ghép kênh nhiều yêu cầu trên một kết nối TCP. Điều này vượt xa những gì phiên bản 1.1 hỗ trợ—cho phép một *chuỗi* yêu cầu dùng lại một kết nối TCP—bằng cách cho phép các yêu cầu này chồng lấn lên nhau. Cách HTTP/2 làm điều này nghe có vẻ quen thuộc: nó định nghĩa một trừu tượng *kênh* (về mặt kỹ thuật, các kênh gọi là *stream*), cho phép nhiều stream đồng thời hoạt động cùng lúc (mỗi stream có một *stream id* duy nhất), và giới hạn mỗi stream chỉ có một trao đổi yêu cầu/đáp ứng đang hoạt động tại một thời điểm.
 
-HTTP/3 and QUIC
-~~~~~~~~~~~~~~~
-As the preceding discussion illustrates, the history of HTTP has
-included a series of incremental changes to make better use of TCP as
-the underlying transport. But there is a fundamental issue that can't
-be fully resolved: TCP provides a byte-stream abstraction, while HTTP
-is a request/response protocol. The natural solution would be to adopt
-a more suitable transport, but as we saw in
-:ref:`Chapter 5 <Chapter 5: End-to-End Protocols>`, there is no
-standard RPC protocol that enjoys the widespread acceptance of TCP.
+HTTP/3 và QUIC
+~~~~~~~~~~~~~~
 
-Ultimately, the solution to this mismatch was to create a new
-transport protocol in QUIC. QUIC was explicitly designed to provide a
-good match to the requirements of HTTP, and HTTP/3 takes advantage of
-the improved underlying transport. For example, QUIC explicitly
-supports stream multiplexing at the transport layer. Thus, a single
-packet loss only impacts the delivery of the stream that suffered the
-loss, rather than causing a stall in the entire TCP connection while
-waiting for that lost packet to be retransmitted. At the same time,
-that lost packet provides a congestion signal that is applied to all
-streams in the QUIC connection. We cover QUIC in more detail in
-:ref:`Section 5.2 <5.2 Reliable Byte Stream (TCP)>`.
+Như phần thảo luận trước cho thấy, lịch sử của HTTP là một chuỗi các thay đổi dần dần để tận dụng tốt hơn TCP làm giao thức vận chuyển bên dưới. Nhưng có một vấn đề cơ bản không thể giải quyết triệt để: TCP cung cấp trừu tượng luồng byte, trong khi HTTP là giao thức yêu cầu/đáp ứng. Giải pháp tự nhiên là dùng một giao thức vận chuyển phù hợp hơn, nhưng như đã thấy ở :ref:`Chương 5 <Chapter 5: End-to-End Protocols>`, không có giao thức RPC chuẩn nào được chấp nhận rộng rãi như TCP.
 
-Another significant advantage of QUIC compared to TCP is the way it
-handles the steps required to secure an HTTP connection. Whereas the
-exchange of certificates and encryption keys follows the establishment
-of a TCP session, QUIC handles these steps as part of session
-establishment, leading to a considerable reduction in the number of
-round-trips needed to establish a secure connection before the first
-content is delivered.
+Cuối cùng, giải pháp cho sự không tương thích này là tạo ra một giao thức vận chuyển mới là QUIC. QUIC được thiết kế rõ ràng để phù hợp với yêu cầu của HTTP, và HTTP/3 tận dụng giao thức vận chuyển cải tiến này. Ví dụ, QUIC hỗ trợ ghép kênh stream ngay ở tầng vận chuyển. Do đó, một gói tin bị mất chỉ ảnh hưởng đến stream gặp lỗi, thay vì làm dừng toàn bộ kết nối TCP trong khi chờ truyền lại gói bị mất. Đồng thời, gói bị mất đó vẫn cung cấp tín hiệu tắc nghẽn áp dụng cho tất cả các stream trong kết nối QUIC. Chúng ta sẽ tìm hiểu chi tiết hơn về QUIC ở :ref:`Mục 5.2 <5.2 Reliable Byte Stream (TCP)>`.
 
-HTTP/3 is implemented in the majority of browsers and is incrementally
-being deployed on servers across the Internet. There remain
-plenty of servers running HTTP/2 and even some HTTP/1.1 as well, so version negotiation is
-likely to be part of HTTP implementations for the foreseeable future.
+Một lợi thế quan trọng khác của QUIC so với TCP là cách nó xử lý các bước cần thiết để bảo mật kết nối HTTP. Trong khi trao đổi chứng chỉ và khóa mã hóa diễn ra sau khi thiết lập phiên TCP, QUIC xử lý các bước này như một phần của thiết lập phiên, giúp giảm đáng kể số vòng lặp cần thiết để thiết lập kết nối bảo mật trước khi truyền nội dung đầu tiên.
 
-Caching
-~~~~~~~
+HTTP/3 đã được triển khai trong phần lớn các trình duyệt và đang được triển khai dần trên các server khắp Internet. Vẫn còn nhiều server chạy HTTP/2 và thậm chí cả HTTP/1.1, nên việc thương lượng phiên bản có thể sẽ là một phần của các hiện thực HTTP trong tương lai gần.
 
-An important implementation strategy that makes the web more usable is
-to cache Web pages. Caching has many benefits. From the client’s
-perspective, a page that can be retrieved from a nearby cache can be
-displayed much more quickly than if it has to be fetched from across the
-world. From the server’s perspective, having a cache intercept and
-satisfy a request reduces the load on the server.
+Bộ nhớ đệm (Caching)
+~~~~~~~~~~~~~~~~~~~~
 
-Caching can be implemented in many different places. For example, a
-user’s browser can cache recently accessed pages and simply display the
-cached copy if the user visits the same page again. As another example,
-a site can support a single site-wide cache. This allows users to take
-advantage of pages previously downloaded by other users. Closer to the
-middle of the Internet, Internet Service Providers (ISPs) can cache
-pages.\ [#]_ Note that, in the second case, the users within the site most
-likely know what machine is caching pages on behalf of the site, and
-they configure their browsers to connect directly to the caching host.
-This node is sometimes called a *proxy*. In contrast, the sites that
-connect to the ISP are probably not aware that the ISP is caching pages.
-It simply happens to be the case that HTTP requests coming out of the
-various sites pass through a common ISP router. This router can peek
-inside the request message and look at the URL for the requested page.
-If it has the page in its cache, it returns it. If not, it forwards the
-request to the server and watches for the response to fly by in the
-other direction. When it does, the router saves a copy in the hope that
-it can use it to satisfy a future request.
+Một chiến lược hiện thực quan trọng giúp web dễ sử dụng hơn là lưu trữ các trang web vào bộ nhớ đệm (cache). Caching mang lại nhiều lợi ích. Từ góc độ client, một trang có thể lấy từ cache gần sẽ được hiển thị nhanh hơn nhiều so với việc phải lấy từ bên kia thế giới. Từ góc độ server, có một cache chặn và đáp ứng yêu cầu giúp giảm tải cho server.
 
-.. [#] There are quite a few issues with this sort of caching, ranging
-       from the technical to the regulatory. One example of a
-       technical challenge is the effect of *asymmetric paths*, when
-       the request to the server and the response to the client do not
-       follow the same sequence of router hops.
+Caching có thể được triển khai ở nhiều nơi khác nhau. Ví dụ, trình duyệt của người dùng có thể cache các trang vừa truy cập và chỉ cần hiển thị lại bản đã cache nếu người dùng truy cập lại trang đó. Một ví dụ khác, một site có thể hỗ trợ một cache dùng chung cho toàn site. Điều này cho phép người dùng tận dụng các trang đã được người khác tải về trước đó. Gần hơn về phía trung tâm Internet, các nhà cung cấp dịch vụ Internet (ISP) có thể cache các trang.\ [#]_ Lưu ý rằng, trong trường hợp thứ hai, người dùng trong site thường biết máy nào đang cache trang cho site và cấu hình trình duyệt để kết nối trực tiếp tới máy cache này. Nút này đôi khi được gọi là *proxy*. Ngược lại, các site kết nối tới ISP có thể không biết rằng ISP đang cache trang. Đơn giản là các yêu cầu HTTP từ các site khác nhau đi qua cùng một router ISP. Router này có thể kiểm tra thông điệp yêu cầu và xem URL của trang được yêu cầu. Nếu nó có trang trong cache, nó trả về luôn. Nếu không, nó chuyển tiếp yêu cầu tới server và quan sát phản hồi trả về. Khi có phản hồi, router lưu lại một bản với hy vọng có thể dùng để đáp ứng yêu cầu sau này.
 
-No matter where pages are cached, the ability to cache Web pages is
-important enough that HTTP has been designed to make the job easier. The
-trick is that the cache needs to make sure it is not responding with an
-out-of-date version of the page. For example, the server assigns an
-expiration date (the ``Expires`` header field) to each page it sends
-back to the client (or to a cache between the server and client). The
-cache remembers this date and knows that it need not reverify the page
-each time it is requested until after that expiration date has passed.
-After that time (or if that header field is not set) the cache can use
-the ``HEAD`` or conditional ``GET`` operation (``GET`` with header line)
-to verify that it has the most recent copy of the page. More generally,
-there are a set of *cache directives* that must be obeyed by all caching
-mechanisms along the request/response chain. These directives specify
-whether or not a document can be cached, how long it can be cached, how
-fresh a document must be, and so on. We’ll look at the related issue of
-CDNs—which are effectively distributed caches—in a later section.
+.. [#] Có khá nhiều vấn đề với kiểu caching này, từ kỹ thuật đến quy định pháp lý. Một ví dụ về thách thức kỹ thuật là hiệu ứng của *đường đi bất đối xứng*, khi yêu cầu tới server và phản hồi về client không đi qua cùng một chuỗi router.
 
-9.1.3 Web Services
-------------------
+Dù trang được cache ở đâu, khả năng cache trang web quan trọng đến mức HTTP đã được thiết kế để hỗ trợ việc này dễ dàng hơn. Mấu chốt là cache cần đảm bảo không trả về bản lỗi thời của trang. Ví dụ, server gán ngày hết hạn (trường header ``Expires``) cho mỗi trang gửi về client (hoặc cache giữa server và client). Cache ghi nhớ ngày này và biết rằng không cần xác minh lại trang mỗi lần được yêu cầu cho đến khi ngày hết hạn đã qua. Sau thời điểm đó (hoặc nếu trường header này không được đặt), cache có thể dùng thao tác ``HEAD`` hoặc ``GET`` có điều kiện (``GET`` với dòng header) để xác minh mình có bản mới nhất của trang. Tổng quát hơn, có một tập hợp các *chỉ thị cache* mà mọi cơ chế cache dọc chuỗi yêu cầu/đáp ứng phải tuân thủ. Các chỉ thị này quy định tài liệu có thể cache hay không, cache trong bao lâu, tài liệu phải mới đến mức nào, v.v. Chúng ta sẽ xem xét vấn đề liên quan là CDN—về bản chất là các cache phân tán—ở phần sau.
 
-So far we have focused on interactions between a human and a web server.
-For example, a human uses a web browser to interact with a server, and
-the interaction proceeds in response to input from the user (e.g., by
-clicking on links). However, there is increasing demand for direct
-computer-to-computer interaction. And, just as the applications
-described above need protocols, so too do the applications that
-communicate directly with each other. We conclude this section by
-looking at the challenges of building large numbers of
-application-to-application protocols and some of the proposed solutions.
+9.1.3 Dịch vụ Web (Web Services)
+--------------------------------
 
-Much of the motivation for enabling direct application-to-application
-communication comes from the business world. Historically, interactions
-between enterprises—businesses or other organizations—have involved some
-manual steps such as filling out an order form or making a phone call to
-determine whether some product is in stock. Even within a single
-enterprise it is common to have manual steps between software systems
-that cannot interact directly because they were developed independently.
-Increasingly, such manual interactions are being replaced with direct
-application-to-application interaction. An ordering application at
-enterprise A would send a message to an order fulfillment application at
-enterprise B, which would respond immediately indicating whether the
-order can be filled. Perhaps, if the order cannot be filled by B, the
-application at A would immediately order from another supplier or
-solicit bids from a collection of suppliers.
+Đến đây, chúng ta đã tập trung vào tương tác giữa con người và server web. Ví dụ, một người dùng sử dụng trình duyệt web để tương tác với server, và tương tác diễn ra theo phản hồi từ người dùng (ví dụ, nhấp vào liên kết). Tuy nhiên, nhu cầu tương tác trực tiếp giữa các máy tính ngày càng tăng. Và, cũng như các ứng dụng mô tả ở trên cần giao thức, các ứng dụng giao tiếp trực tiếp với nhau cũng vậy. Chúng ta kết thúc phần này bằng cách xem xét các thách thức khi xây dựng số lượng lớn các giao thức ứng dụng-đến-ứng dụng và một số giải pháp đề xuất.
 
-Here is a simple example of what we are talking about. Suppose you buy a
-book at an online retailer like Amazon. Once your book has been
-shipped, Amazon could send you the tracking number in an email, and then
-you could head over to the website for the shipping
-company—\ ``http://www.fedex.com``, perhaps—and track the package.
-However, you can also track your package directly from the Amazon.com
-website. In order to make this happen, Amazon has to be able to send a
-query to FedEx, in a format that FedEx understands, interpret the
-result, and display it in a Web page that perhaps contains other
-information about your order. Underlying the user experience of getting
-all the information about the order served up at once on the Amazon.com
-Web page is the fact that Amazon and FedEx had to have a protocol for
-exchanging the information needed to track packages—call it the Package
-Tracking Protocol. It should be clear that there are so many potential
-protocols of this type that we’d better have some tools to simplify the
-task of specifying them and building them.
+Phần lớn động lực cho việc cho phép giao tiếp trực tiếp giữa các ứng dụng đến từ thế giới kinh doanh. Lịch sử, các tương tác giữa các doanh nghiệp—công ty hoặc tổ chức khác—thường liên quan đến một số bước thủ công như điền đơn đặt hàng hoặc gọi điện để kiểm tra hàng tồn kho. Ngay cả trong một doanh nghiệp, cũng thường có các bước thủ công giữa các hệ thống phần mềm không thể tương tác trực tiếp vì được phát triển độc lập. Ngày càng nhiều, các tương tác thủ công này đang được thay thế bằng giao tiếp ứng dụng-đến-ứng dụng trực tiếp. Một ứng dụng đặt hàng ở doanh nghiệp A sẽ gửi thông điệp tới ứng dụng xử lý đơn hàng ở doanh nghiệp B, ứng dụng này sẽ phản hồi ngay lập tức cho biết đơn hàng có thể được thực hiện hay không. Có thể, nếu đơn hàng không được B đáp ứng, ứng dụng ở A sẽ ngay lập tức đặt hàng từ nhà cung cấp khác hoặc gửi yêu cầu tới một tập hợp nhà cung cấp.
 
-Network applications, even those that cross organization boundaries, are
-not new—email and web browsing cross such boundaries. What is new about
-this problem is the scale. Not scale in the size of the network, but
-scale in the number of different kinds of network applications. Both the
-protocol specifications and the implementations of those protocols for
-traditional applications like electronic mail and file transfer have
-typically been developed by a small group of networking experts. To
-enable the vast number of potential network applications to be developed
-quickly, it was necessary to come up with some technologies that
-simplify and automate the task of application protocol design and
-implementation.
+Đây là một ví dụ đơn giản về điều chúng ta đang nói. Giả sử bạn mua một cuốn sách ở một nhà bán lẻ trực tuyến như Amazon. Khi sách được gửi đi, Amazon có thể gửi cho bạn số theo dõi qua email, rồi bạn có thể vào website của công ty vận chuyển—\ ``http://www.fedex.com``, chẳng hạn—để tra cứu kiện hàng. Tuy nhiên, bạn cũng có thể tra cứu kiện hàng trực tiếp từ website Amazon.com. Để làm được điều này, Amazon phải có khả năng gửi truy vấn tới FedEx, theo định dạng mà FedEx hiểu, diễn giải kết quả và hiển thị nó trên một trang web có thể chứa thông tin khác về đơn hàng của bạn. Đằng sau trải nghiệm người dùng khi nhận được tất cả thông tin về đơn hàng cùng lúc trên trang Amazon.com là thực tế Amazon và FedEx phải có một giao thức để trao đổi thông tin cần thiết để tra cứu kiện hàng—gọi là Giao thức Tra cứu Kiện hàng. Rõ ràng có rất nhiều giao thức tiềm năng kiểu này nên chúng ta cần có công cụ để đơn giản hóa việc đặc tả và xây dựng chúng.
 
-Two architectures have been advocated as solutions to this problem. Both
-architectures are called *Web Services*, taking their name from the term
-for the individual applications that offer a remotely accessible service
-to client applications to form network applications. The terms used as
-informal shorthand to distinguish the two Web Services architectures are
-*SOAP* and *REST*. We will discuss the technical meanings of those terms
-shortly.
+Các ứng dụng mạng, ngay cả khi vượt qua ranh giới tổ chức, không phải là mới—email và duyệt web đều vượt qua ranh giới đó. Điều mới ở đây là quy mô. Không phải quy mô về kích thước mạng, mà là quy mô về số lượng loại ứng dụng mạng khác nhau. Cả đặc tả giao thức lẫn hiện thực các giao thức đó cho các ứng dụng truyền thống như email và truyền tệp thường được phát triển bởi một nhóm nhỏ chuyên gia mạng. Để cho phép phát triển nhanh chóng số lượng lớn các ứng dụng mạng tiềm năng, cần có các công nghệ đơn giản hóa và tự động hóa việc thiết kế và hiện thực giao thức ứng dụng.
 
-The SOAP architecture’s approach to the problem is to make it feasible,
-at least in theory, to generate protocols that are customized to each
-network application. The key elements of the approach are a framework
-for protocol specification, software toolkits for automatically
-generating protocol implementations from the specifications, and modular
-partial specifications that can be reused across protocols.
+Có hai kiến trúc được đề xuất làm giải pháp cho vấn đề này. Cả hai đều gọi là *Dịch vụ Web* (Web Services), lấy tên từ thuật ngữ chỉ các ứng dụng riêng lẻ cung cấp dịch vụ truy cập từ xa cho ứng dụng client để tạo thành ứng dụng mạng. Các thuật ngữ dùng để phân biệt hai kiến trúc Dịch vụ Web là *SOAP* và *REST*. Chúng ta sẽ bàn về ý nghĩa kỹ thuật của các thuật ngữ này ngay sau đây.
 
-The REST architecture’s approach to the problem is to regard individual
-Web Services as World Wide Web resources—identified by URIs and accessed
-via HTTP. Essentially, the REST architecture is just the Web
-architecture. The Web architecture’s strengths include stability and a
-demonstrated scalability (in the network-size sense). It could be
-considered a weakness that HTTP is not well suited to the usual
-procedural or operation-oriented style of invoking a remote service.
-REST advocates argue, however, that rich services can nonetheless be
-exposed using a more data-oriented or document-passing style for which
-HTTP is well suited.
+Kiến trúc SOAP tiếp cận vấn đề bằng cách làm cho việc tạo ra các giao thức tùy biến cho từng ứng dụng mạng trở nên khả thi, ít nhất về lý thuyết. Các yếu tố then chốt của cách tiếp cận này là một khung đặc tả giao thức, các bộ công cụ phần mềm để tự động sinh hiện thực giao thức từ đặc tả, và các đặc tả mô-đun có thể tái sử dụng giữa các giao thức.
 
-Custom Application Protocols (WSDL, SOAP)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Kiến trúc REST tiếp cận vấn đề bằng cách coi từng Dịch vụ Web là một tài nguyên của World Wide Web—được nhận diện bằng URI và truy cập qua HTTP. Về bản chất, kiến trúc REST chính là kiến trúc Web. Ưu điểm của kiến trúc Web là ổn định và đã chứng minh được khả năng mở rộng (theo nghĩa quy mô mạng). Có thể coi là một điểm yếu khi HTTP không phù hợp với kiểu gọi thủ tục từ xa (RPC) hoặc hướng thao tác thường thấy. Tuy nhiên, các nhà ủng hộ REST cho rằng các dịch vụ phong phú vẫn có thể được cung cấp bằng phong cách hướng dữ liệu hoặc truyền tài liệu, vốn rất phù hợp với HTTP.
 
-The architecture informally referred to as SOAP is based on *Web
-Services Description Language* (WSDL) and *SOAP*.\ [#]_ Both of these
-standards are issued by the World Wide Web Consortium (W3C). This is the
-architecture that people usually mean when they use the term Web
-Services without any preceding qualifier. As these standards are still
-evolving, our discussion here is effectively a snapshot.
+Giao thức ứng dụng tùy biến (WSDL, SOAP)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. [#] Although the name *SOAP* originated as an acronym, it
-       officially no longer stands for anything.
+Kiến trúc thường được gọi không chính thức là SOAP dựa trên *Web Services Description Language* (WSDL) và *SOAP*.\ [#]_ Cả hai tiêu chuẩn này đều do World Wide Web Consortium (W3C) ban hành. Đây là kiến trúc mà người ta thường nghĩ đến khi nói về Dịch vụ Web mà không có định tính nào đi kèm. Vì các tiêu chuẩn này vẫn đang phát triển, phần thảo luận ở đây chỉ là một ảnh chụp nhanh.
 
-WSDL and SOAP are frameworks for specifying and implementing application
-protocols and transport protocols, respectively. They are generally used
-together, although that is not strictly required. WSDL is used to
-specify application-specific details such as what operations are
-supported, the formats of the application data to invoke or respond to
-those operations, and whether an operation involves a response. SOAP’s
-role is to make it easy to define a transport protocol with exactly the
-desired semantics regarding protocol features such as reliability and
-security.
+.. [#] Mặc dù tên *SOAP* ban đầu là một từ viết tắt, hiện nay nó không còn đại diện cho cụm từ nào nữa.
 
-Both WSDL and SOAP consist primarily of a protocol specification
-language. Both languages are based on XML with an eye toward making
-specifications accessible to software tools such as stub compilers and
-directory services. In a world of many custom protocols, support for
-automating generation of implementations is crucial to avoid the effort
-of manually implementing each protocol. Support software generally takes
-the form of toolkits and application servers developed by third-party
-vendors, which allows developers of individual Web Services to focus
-more on the business problem they need to solve (such as tracking the
-package purchased by a customer).
+WSDL và SOAP là các khung để đặc tả và hiện thực giao thức ứng dụng và giao thức vận chuyển, tương ứng. Chúng thường được dùng cùng nhau, dù không bắt buộc. WSDL dùng để đặc tả các chi tiết ứng dụng như các thao tác được hỗ trợ, định dạng dữ liệu ứng dụng để gọi hoặc đáp ứng các thao tác đó, và liệu một thao tác có cần phản hồi hay không. Vai trò của SOAP là giúp dễ dàng định nghĩa một giao thức vận chuyển với đúng các đặc tính mong muốn về độ tin cậy, bảo mật, v.v.
 
-Defining Application Protocols
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cả WSDL và SOAP chủ yếu là ngôn ngữ đặc tả giao thức. Cả hai đều dựa trên XML với mục tiêu làm cho đặc tả dễ tiếp cận với các công cụ phần mềm như trình biên dịch stub và dịch vụ thư mục. Trong thế giới có nhiều giao thức tùy biến, hỗ trợ tự động sinh hiện thực là rất quan trọng để tránh phải hiện thực thủ công từng giao thức. Phần mềm hỗ trợ thường là các bộ công cụ và máy chủ ứng dụng do các nhà cung cấp bên thứ ba phát triển, cho phép các nhà phát triển Dịch vụ Web tập trung hơn vào bài toán nghiệp vụ cần giải quyết (như tra cứu kiện hàng cho khách hàng).
 
-WSDL has chosen a procedural *operation* model of application protocols.
-An abstract Web Service interface consists of a set of named operations,
-each representing a simple interaction between a client and the Web
-Service. An operation is analogous to a remotely callable procedure in
-an RPC system. An example from W3C’s WSDL Primer is a hotel reservation
-Web Service with two operations, CheckAvailability and MakeReservation.
+Đặc tả giao thức ứng dụng
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each operation specifies a *Message Exchange Pattern* (MEP) that gives
-the sequence in which the messages are to be transmitted, including the
-fault messages to be sent when an error disrupts the message flow.
-Several MEPs are predefined, and new custom MEPs can be defined, but it
-appears that in practice only two MEPs are being used: **In-Only** (a
-single message from client to service) and **In-Out** (a request from
-client and a corresponding reply from service). These patterns should be
-very familiar, and suggest that the costs of supporting MEP flexibility
-perhaps outweigh the benefits.
+WSDL chọn mô hình giao thức ứng dụng dựa trên thao tác (operation). Một giao diện Dịch vụ Web trừu tượng gồm một tập các thao tác được đặt tên, mỗi thao tác đại diện cho một tương tác đơn giản giữa client và Dịch vụ Web. Một thao tác tương tự như một thủ tục có thể gọi từ xa trong hệ thống RPC. Một ví dụ từ W3C’s WSDL Primer là Dịch vụ Web đặt phòng khách sạn với hai thao tác, CheckAvailability và MakeReservation.
 
-MEPs are templates that have placeholders instead of specific message
-types or formats, so part of the definition of an operation involves
-specifying which message formats to map into the placeholders in the
-pattern. Message formats are not defined at the bit level that is
-typical of protocols we have discussed. They are instead defined as an
-abstract data model using XML. XML Schema provides a set of primitive
-data types and ways to define compound data types. Data that conforms to
-an XML Schema-defined format—its abstract data model—can be concretely
-represented using XML, or it can use another representation, such as the
-“binary” representation Fast Infoset.
+Mỗi thao tác chỉ định một *Mẫu Trao đổi Thông điệp* (Message Exchange Pattern, MEP) cho biết trình tự các thông điệp sẽ được truyền, bao gồm cả thông điệp lỗi khi có sự cố. Có một số MEP được định nghĩa sẵn, và có thể định nghĩa MEP tùy biến mới, nhưng thực tế chỉ có hai MEP được dùng: **In-Only** (một thông điệp từ client tới dịch vụ) và **In-Out** (một yêu cầu từ client và một phản hồi từ dịch vụ). Các mẫu này rất quen thuộc, và cho thấy chi phí hỗ trợ linh hoạt MEP có lẽ lớn hơn lợi ích.
 
-WSDL nicely separates the parts of a protocol that can be specified
-abstractly—operations, MEPs, abstract message formats—from the parts
-that must be concrete. WSDL’s concrete part specifies an underlying
-protocol, how MEPs are mapped onto it, and what bit-level representation
-is used for messages on the wire. This part of a specification is known
-as a *binding*, although it is better described as an implementation, or
-a mapping onto an implementation. WSDL has predefined bindings for HTTP
-and SOAP-based protocols, with parameters that allow the protocol
-designer to fine-tune the mapping onto those protocols. There is a
-framework for defining new bindings, but SOAP protocols dominate.
+MEP là các mẫu có chỗ trống thay vì loại hoặc định dạng thông điệp cụ thể, nên một phần của việc định nghĩa thao tác là chỉ định định dạng thông điệp nào sẽ được ánh xạ vào các chỗ trống trong mẫu. Định dạng thông điệp không được định nghĩa ở mức bit như các giao thức đã bàn trước đây, mà được định nghĩa như một mô hình dữ liệu trừu tượng dùng XML. XML Schema cung cấp một tập các kiểu dữ liệu cơ bản và cách định nghĩa kiểu dữ liệu phức hợp. Dữ liệu tuân theo định dạng do XML Schema định nghĩa—mô hình dữ liệu trừu tượng của nó—có thể được biểu diễn cụ thể bằng XML, hoặc dùng biểu diễn khác như “binary” Fast Infoset.
 
-A crucial aspect of how WSDL mitigates the problem of specifying large
-numbers of protocols is through reuse of what are essentially
-specification modules. The WSDL specification of a Web Service may be
-composed of multiple WSDL documents, and individual WSDL documents may
-also be used in other Web Service specifications. This modularity makes
-it easier to develop a specification and easier to ensure that, if two
-specifications are supposed to have some elements that are identical
-(for example, so that they can be supported by the same tool), then
-those elements are indeed identical. This modularity, together with
-WSDL’s defaulting rules, also helps keep specifications from becoming
-overwhelmingly verbose for human protocol designers.
+WSDL tách biệt rõ ràng phần giao thức có thể đặc tả trừu tượng—thao tác, MEP, định dạng thông điệp trừu tượng—với phần phải cụ thể hóa. Phần cụ thể của WSDL chỉ định giao thức nền, cách ánh xạ MEP lên nó, và định dạng bit-level của thông điệp trên đường truyền. Phần này gọi là *binding*, dù thực chất là hiện thực hoặc ánh xạ lên hiện thực. WSDL có các binding định nghĩa sẵn cho HTTP và các giao thức dựa trên SOAP, với các tham số cho phép nhà thiết kế giao thức tinh chỉnh ánh xạ lên các giao thức đó. Có khung để định nghĩa binding mới, nhưng các giao thức dựa trên SOAP chiếm ưu thế.
 
-WSDL modularity should be familiar to anyone who has developed
-moderately large pieces of software. A WSDL document need not be a
-complete specification; it could, for example, define a single message
-format. The partial specifications are uniquely identified using XML
-Namespaces; each WSDL document specifies the URI of a *target
-namespace*, and any new definitions in the document are named in the
-context of that namespace. One WSDL document can incorporate components
-of another by *including* the second document if both share the same
-target namespace or *importing* it if the target namespaces differ.
+Một khía cạnh then chốt giúp WSDL giảm bớt vấn đề đặc tả số lượng lớn giao thức là thông qua tái sử dụng các mô-đun đặc tả. Đặc tả WSDL của một Dịch vụ Web có thể gồm nhiều tài liệu WSDL, và từng tài liệu WSDL cũng có thể được dùng trong các đặc tả Dịch vụ Web khác. Tính mô-đun này giúp việc phát triển đặc tả dễ dàng hơn và đảm bảo rằng nếu hai đặc tả cần có một số thành phần giống hệt nhau (ví dụ, để được hỗ trợ bởi cùng một công cụ), thì các thành phần đó thực sự giống nhau. Tính mô-đun này, cùng với các quy tắc mặc định của WSDL, cũng giúp đặc tả không trở nên quá dài dòng với người thiết kế giao thức.
 
-Defining Transport Protocols
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tính mô-đun của WSDL sẽ quen thuộc với bất kỳ ai từng phát triển phần mềm quy mô vừa trở lên. Một tài liệu WSDL không nhất thiết phải là một đặc tả hoàn chỉnh; nó có thể chỉ định nghĩa một định dạng thông điệp. Các đặc tả một phần được nhận diện duy nhất bằng XML Namespace; mỗi tài liệu WSDL chỉ định URI của *target namespace*, và mọi định nghĩa mới trong tài liệu được đặt tên trong ngữ cảnh namespace đó. Một tài liệu WSDL có thể tích hợp thành phần của tài liệu khác bằng cách *include* nếu cùng namespace hoặc *import* nếu namespace khác nhau.
 
-Although SOAP is sometimes called a protocol, it is better thought of as
-a framework for defining protocols. As the SOAP 1.2 specification
-explains, “SOAP provides a simple messaging framework whose core
-functionality is concerned with providing extensibility.” SOAP uses many
-of the same strategies as WSDL, including message formats defined using
-XML Schema, bindings to underlying protocols, Message Exchange Patterns,
-and reusable specification elements identified using XML namespaces.
+Đặc tả giao thức vận chuyển
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SOAP is used to define transport protocols with exactly the features
-needed to support a particular application protocol. SOAP aims to make
-it feasible to define many such protocols by using reusable components.
-Each component captures the header information and logic that go into
-implementing a particular feature. To define a protocol with a certain
-set of features, just compose the corresponding components. Let’s look
-more closely at this aspect of SOAP.
+Mặc dù SOAP đôi khi được gọi là giao thức, thực ra nó là một khung để định nghĩa giao thức. Như đặc tả SOAP 1.2 giải thích, “SOAP cung cấp một khung nhắn tin đơn giản với chức năng cốt lõi là hỗ trợ mở rộng.” SOAP dùng nhiều chiến lược giống WSDL, bao gồm định dạng thông điệp bằng XML Schema, binding tới giao thức nền, MEP, và các thành phần đặc tả tái sử dụng nhận diện bằng XML namespace.
 
-SOAP 1.2 introduced a *feature* abstraction, which the specification
-describes thus:
+SOAP dùng để định nghĩa các giao thức vận chuyển với đúng các đặc tính cần thiết để hỗ trợ một giao thức ứng dụng cụ thể. SOAP hướng tới việc làm cho việc định nghĩa nhiều giao thức như vậy trở nên khả thi nhờ dùng các thành phần tái sử dụng. Mỗi thành phần nắm bắt thông tin header và logic cần thiết để hiện thực một đặc tính cụ thể. Để định nghĩa một giao thức với một tập đặc tính nào đó, chỉ cần kết hợp các thành phần tương ứng. Hãy xem kỹ hơn khía cạnh này của SOAP.
 
-   *A SOAP feature is an extension of the SOAP messaging
-   framework. Although SOAP poses no constraints on the potential
-   scope of such features, example features may include “reliability,”
-   “security,” “correlation,” “routing,” and message exchange patterns
-   (MEPs) such as request/response, one-way, and peer-to-peer
-   conversations.*
+SOAP 1.2 giới thiệu trừu tượng *feature* (tính năng), được đặc tả như sau:
 
-A SOAP feature specification must include:
+   *Một feature của SOAP là một phần mở rộng của khung nhắn tin SOAP. Mặc dù SOAP không đặt ràng buộc nào lên phạm vi tiềm năng của các feature, ví dụ về feature có thể bao gồm “độ tin cậy”, “bảo mật”, “liên kết”, “định tuyến”, và các mẫu trao đổi thông điệp (MEP) như yêu cầu/đáp ứng, một chiều, và hội thoại peer-to-peer.*
 
--  A URI that identifies the feature
+Một đặc tả feature của SOAP phải bao gồm:
 
--  The state information and processing, abstractly described, that is
-   required at each SOAP node to implement the feature
+-  Một URI nhận diện feature
 
--  The information to be relayed to the next node
+-  Thông tin trạng thái và xử lý, mô tả trừu tượng, cần thiết ở mỗi nút SOAP để hiện thực feature
 
--  (If the feature is a MEP) the life cycle and temporal/causal
-   relationships of the messages exchanged—for example, responses follow
-   requests and are sent to the originator of the request
+-  Thông tin cần chuyển tiếp tới nút tiếp theo
 
-Note that this formalization of the concept of a protocol feature is
-rather low level; it is almost a design.
+-  (Nếu feature là MEP) vòng đời và quan hệ thời gian/nguyên nhân của các thông điệp trao đổi—ví dụ, phản hồi theo sau yêu cầu và gửi tới nguồn gốc của yêu cầu
 
-Given a set of features, there are two strategies for defining a SOAP
-protocol that will implement them. One is by layering: binding SOAP to
-an underlying protocol in such a way as to derive the features. For
-example, we could obtain a request/response protocol by binding SOAP to
-HTTP, with a SOAP request in an HTTP request and a SOAP reply in an HTTP
-response. Because this is such a common example, it happens that SOAP
-has a predefined binding to HTTP; new bindings may be defined using the
-SOAP Protocol Binding Framework.
+Lưu ý rằng việc hình thức hóa khái niệm feature giao thức này khá thấp; nó gần như là thiết kế.
 
-The second and more flexible way to implement features involves *header
-blocks*. A SOAP message consists of an Envelope, which contains a Header
-that contains header blocks, and a Body, which contains the payload
-destined for the ultimate receiver. This message structure is
-illustrated in :numref:`Figure %s <fig-soapFormat>`.
+Với một tập feature, có hai chiến lược để định nghĩa một giao thức SOAP hiện thực chúng. Một là xếp lớp: binding SOAP lên một giao thức nền để thu được các feature. Ví dụ, có thể thu được giao thức yêu cầu/đáp ứng bằng cách binding SOAP lên HTTP, với một yêu cầu SOAP trong HTTP request và một phản hồi SOAP trong HTTP response. Vì đây là ví dụ phổ biến, SOAP có binding định nghĩa sẵn cho HTTP; có thể định nghĩa binding mới bằng SOAP Protocol Binding Framework.
+
+Cách thứ hai, linh hoạt hơn, là dùng *header block*. Một thông điệp SOAP gồm một Envelope, chứa Header với các header block, và Body chứa payload gửi tới đích cuối. Cấu trúc thông điệp này minh họa ở :numref:`Figure %s <fig-soapFormat>`.
 
 .. _fig-soapFormat:
 .. figure:: figures/f09-06-9780123850591.png
    :width: 250px
    :align: center
 
-   SOAP message structure.
+   Cấu trúc thông điệp SOAP.
 
-It should be a familiar notion by now that certain header information
-corresponds to particular features. A digital signature is used to
-implement authentication, a sequence number is used for reliability, and
-a checksum is used to detect message corruption. A SOAP header block is
-intended to encapsulate the header information that corresponds to a
-particular feature. The correspondence is not always one-to-one since
-multiple header blocks could be involved in a single feature, or a
-single header block could be used in multiple features. A *SOAP module*
-is a specification of the syntax and the semantics of one or more header
-blocks. Each module is intended to provide one or more features and must
-declare the features it implements.
+Có lẽ bạn đã quen với ý tưởng rằng một số thông tin header tương ứng với các feature cụ thể. Chữ ký số dùng để xác thực, số thứ tự dùng cho độ tin cậy, và checksum dùng để phát hiện lỗi thông điệp. Một header block của SOAP nhằm đóng gói thông tin header tương ứng với một feature cụ thể. Sự tương ứng này không phải lúc nào cũng một-một vì có thể nhiều header block liên quan đến một feature, hoặc một header block dùng cho nhiều feature. Một *SOAP module* là đặc tả cú pháp và ngữ nghĩa của một hoặc nhiều header block. Mỗi module nhằm cung cấp một hoặc nhiều feature và phải khai báo các feature nó hiện thực.
 
-The goal behind SOAP modules is to be able to compose a protocol with a
-set of features by simply including each of the corresponding module
-specifications. If your protocol is required to have at-most-once
-semantics and authentication, include the corresponding modules in your
-specification. This represents a novel approach to modularizing protocol
-services, an alternative to the protocol layering we have seen
-throughout this book. It is a bit like flattening a series of protocol
-layers into a single protocol, but in a structured way. It remains to be
-seen how well SOAP features and modules, introduced in version 1.2 of
-SOAP, will work in practice. The main weakness of this scheme is that
-modules may well interfere with each other. A module specification is
-required to specify any *known* interactions with other SOAP modules,
-but clearly that doesn’t do much to alleviate the problem. On the other
-hand, a core set of features and modules that provides the most
-important properties may be small enough to be well known and well
-understood.
+Mục tiêu của các module SOAP là có thể xây dựng một giao thức với một tập feature chỉ bằng cách đưa các đặc tả module tương ứng vào. Nếu giao thức của bạn cần đảm bảo tối đa một lần (at-most-once) và xác thực, chỉ cần đưa các module tương ứng vào đặc tả. Đây là một cách tiếp cận mới trong việc mô-đun hóa dịch vụ giao thức, thay thế cho việc xếp lớp giao thức đã thấy trong sách này. Nó giống như làm phẳng một chuỗi lớp giao thức thành một giao thức duy nhất, nhưng theo cách có cấu trúc. Vẫn còn phải xem các feature và module SOAP (giới thiệu ở phiên bản 1.2) sẽ hoạt động thực tế ra sao. Điểm yếu chính của sơ đồ này là các module có thể xung đột với nhau. Một đặc tả module phải chỉ rõ mọi tương tác *đã biết* với các module SOAP khác, nhưng rõ ràng điều này không giúp giải quyết triệt để vấn đề. Mặt khác, một tập feature và module cốt lõi cung cấp các thuộc tính quan trọng nhất có thể đủ nhỏ để được biết rõ và hiểu rõ.
 
-Standardizing Web Services Protocols
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Chuẩn hóa giao thức Dịch vụ Web
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As we’ve said, WSDL and SOAP aren’t protocols; they are standards for
-*specifying* protocols. For different enterprises to implement Web
-Services that interoperate with each other, it is not enough to agree to
-use WSDL and SOAP to define their protocols; they must agree
-on—standardize—specific protocols. For example, you could imagine that
-online retailers and shipping companies might like to standardize a
-protocol by which they exchange information, along the lines of the
-simple package tracking example at the start of this section. This
-standardization is crucial for tool support as well as interoperability.
-And, yet, different network applications in this architecture must
-necessarily differ in at least the message formats and operations they
-use.
+Như đã nói, WSDL và SOAP không phải là giao thức; chúng là tiêu chuẩn để *đặc tả* giao thức. Để các doanh nghiệp khác nhau hiện thực Dịch vụ Web có thể tương tác với nhau, chỉ đồng ý dùng WSDL và SOAP để định nghĩa giao thức là chưa đủ; họ phải đồng ý—chuẩn hóa—các giao thức cụ thể. Ví dụ, bạn có thể hình dung các nhà bán lẻ trực tuyến và công ty vận chuyển muốn chuẩn hóa một giao thức để trao đổi thông tin, giống như ví dụ tra cứu kiện hàng ở đầu phần này. Việc chuẩn hóa này rất quan trọng cho cả hỗ trợ công cụ lẫn khả năng tương tác. Tuy nhiên, các ứng dụng mạng khác nhau trong kiến trúc này nhất thiết phải khác nhau ít nhất ở định dạng thông điệp và thao tác sử dụng.
 
-This tension between standardization and customization is tackled by
-establishing partial standards called *profiles*. A profile is a set of
-guidelines that narrow or constrain choices available in WSDL, SOAP, and
-other standards that may be referenced in defining a protocol. They may
-at the same time resolve ambiguities or gaps in those standards. In
-practice, a profile often formalizes an emerging *de facto* standard.
+Sự căng thẳng giữa chuẩn hóa và tùy biến này được giải quyết bằng cách thiết lập các tiêu chuẩn một phần gọi là *profile*. Một profile là một tập hướng dẫn thu hẹp hoặc ràng buộc các lựa chọn có thể có trong WSDL, SOAP và các tiêu chuẩn khác có thể được tham chiếu khi định nghĩa giao thức. Đồng thời, chúng có thể giải quyết các mơ hồ hoặc lỗ hổng trong các tiêu chuẩn đó. Trong thực tế, một profile thường chính thức hóa một tiêu chuẩn *de facto* đang nổi lên.
 
-The broadest and most widely adopted profile is known as the *WS-I Basic
-Profile*. It was proposed by the Web Services Interoperability
-Organization (WS-I), an industry consortium, while WSDL and SOAP are
-specified by the World Wide Web Consortium (W3C). The Basic Profile
-resolves some of the most basic choices faced in defining a Web Service.
-Most notably it requires that WSDL be bound exclusively to SOAP and SOAP
-be bound exclusively to HTTP and use the HTTP POST method. It also
-specifies which versions of WSDL and SOAP must be used.
+Profile rộng nhất và được áp dụng nhiều nhất là *WS-I Basic Profile*. Nó được đề xuất bởi Web Services Interoperability Organization (WS-I), một liên minh ngành công nghiệp, trong khi WSDL và SOAP do World Wide Web Consortium (W3C) đặc tả. Basic Profile giải quyết một số lựa chọn cơ bản nhất khi định nghĩa Dịch vụ Web. Đáng chú ý nhất, nó yêu cầu WSDL chỉ được binding với SOAP và SOAP chỉ được binding với HTTP và dùng phương thức HTTP POST. Nó cũng chỉ định phiên bản WSDL và SOAP phải sử dụng.
 
-The *WS-I Basic Security Profile* adds security constraints to the Basic
-Profile by specifying how the SSL/TLS layer is to be used and requiring
-conformance to *WS-Security* (Web Services Security). WS-Security
-specifies how to use various existing techniques such as X.509 public
-key certificates and Kerberos to provide security features in SOAP
-protocols.
+*WS-I Basic Security Profile* bổ sung các ràng buộc bảo mật cho Basic Profile bằng cách chỉ định cách sử dụng lớp SSL/TLS và yêu cầu tuân thủ *WS-Security* (Web Services Security). WS-Security chỉ định cách sử dụng các kỹ thuật hiện có như chứng chỉ khóa công khai X.509 và Kerberos để cung cấp các tính năng bảo mật trong giao thức SOAP.
 
-WS-Security is just the first of a growing suite of SOAP-level standards
-established by the industry consortium OASIS (Organization for the
-Advancement of Structured Information Standards). The standards known
-collectively as *WS-*\ \* include WS-Reliability, WS-ReliableMessaging,
-WS-Coordination, and WS-AtomicTransaction.
+WS-Security chỉ là tiêu chuẩn đầu tiên trong một loạt các tiêu chuẩn tầng SOAP ngày càng tăng do liên minh ngành công nghiệp OASIS (Organization for the Advancement of Structured Information Standards) thiết lập. Các tiêu chuẩn được gọi chung là *WS-*\ \* bao gồm WS-Reliability, WS-ReliableMessaging, WS-Coordination, và WS-AtomicTransaction.
 
-A Generic Application Protocol (REST)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Một giao thức ứng dụng tổng quát (REST)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The WSDL/SOAP Web Services architecture is based on the assumption that
-the best way to integrate applications across networks is via protocols
-that are customized to each application. That architecture is designed
-to make it practical to specify and implement all those protocols. In
-contrast, the REST Web Services architecture is based on the assumption
-that the best way to integrate applications across networks is by
-re-applying the model underlying the World Wide Web architecture. This
-model, articulated by Web architect Roy Fielding, is known as
-*REpresentational State Transfer* (REST). There is no need for a new
-REST architecture for Web Services—the existing Web architecture is
-sufficient, although a few extensions are probably necessary. In the Web
-architecture, individual Web Services are regarded as resources
-identified by URIs and accessed via HTTP—a single generic application
-protocol with a single generic addressing scheme.
+Kiến trúc Dịch vụ Web WSDL/SOAP dựa trên giả định rằng cách tốt nhất để tích hợp ứng dụng qua mạng là thông qua các giao thức tùy biến cho từng ứng dụng. Kiến trúc này được thiết kế để làm cho việc đặc tả và hiện thực tất cả các giao thức đó trở nên khả thi. Ngược lại, kiến trúc Dịch vụ Web REST dựa trên giả định rằng cách tốt nhất để tích hợp ứng dụng qua mạng là áp dụng lại mô hình nền tảng của kiến trúc World Wide Web. Mô hình này, do kiến trúc sư Web Roy Fielding đề xuất, gọi là *REpresentational State Transfer* (REST). Không cần một kiến trúc REST mới cho Dịch vụ Web—kiến trúc Web hiện tại là đủ, dù có thể cần một số mở rộng. Trong kiến trúc Web, từng Dịch vụ Web được coi là tài nguyên nhận diện bằng URI và truy cập qua HTTP—một giao thức ứng dụng tổng quát với một không gian địa chỉ tổng quát.
 
-Where WSDL has user-defined operations, REST uses the small set of
-available HTTP methods, such as ``GET`` and ``POST`` (see :numref:`Table
-%s <tab-ops>`). So how can these simple methods provide an interface to a
-rich Web Service? By employing the REST model, in which the complexity
-is shifted from the protocol to the payload. The payload is a
-representation of the abstract state of a resource. For example, a
-``GET`` could return a representation of the current state of the
-resource, and a ``POST`` could send a representation of a desired state
-of the resource.
+Nơi WSDL có thao tác do người dùng định nghĩa, REST dùng tập nhỏ các phương thức HTTP sẵn có, như ``GET`` và ``POST`` (xem :numref:`Table %s <tab-ops>`). Vậy làm sao các phương thức đơn giản này cung cấp giao diện cho một Dịch vụ Web phong phú? Bằng cách áp dụng mô hình REST, trong đó độ phức tạp được chuyển từ giao thức sang payload. Payload là một biểu diễn trạng thái trừu tượng của tài nguyên. Ví dụ, một ``GET`` có thể trả về biểu diễn trạng thái hiện tại của tài nguyên, còn ``POST`` có thể gửi biểu diễn trạng thái mong muốn của tài nguyên.
 
-The representation of a resource state is abstract; it need not resemble
-how the resource is actually implemented by a particular Web Service
-instance. It is not necessary to transmit a complete resource state in
-each message. The size of messages can be reduced by transmitting just
-the parts of a state that are of interest (e.g., just the parts that are
-being modified). And, because Web Services share a single protocol and
-address space with other web resources, parts of states can be passed by
-reference—by URI—even when they are other Web Services.
+Biểu diễn trạng thái tài nguyên là trừu tượng; nó không nhất thiết giống cách tài nguyên được hiện thực bởi một Dịch vụ Web cụ thể. Không cần truyền toàn bộ trạng thái tài nguyên trong mỗi thông điệp. Kích thước thông điệp có thể giảm bằng cách chỉ truyền phần trạng thái quan tâm (ví dụ, chỉ phần bị thay đổi). Và, vì Dịch vụ Web chia sẻ một giao thức và không gian địa chỉ với các tài nguyên web khác, các phần trạng thái có thể được truyền bằng tham chiếu—bằng URI—ngay cả khi chúng là Dịch vụ Web khác.
 
-This approach is best summarized as a data-oriented or document-passing
-style, as opposed to a procedural style. Defining an application
-protocol in this architecture consists of defining the document
-structure (i.e., the state representation). XML and the lighter-weight
-JavaScript Object Notation (JSON) are the most frequently used
-presentation languages for this state. Interoperability depends on
-agreement, between a Web Service and its clients, on the state
-representation. Of course, the same is true in the SOAP architecture; a
-Web Service and its client have to be in agreement on payload format.
-The difference is that in the SOAP architecture interoperability
-additionally depends on agreement on the protocol; in the REST
-architecture, the protocol is always HTTP, so that source of
-interoperability problems is eliminated.
+Cách tiếp cận này có thể tóm tắt là phong cách hướng dữ liệu hoặc truyền tài liệu, trái ngược với phong cách thủ tục. Định nghĩa một giao thức ứng dụng trong kiến trúc này là định nghĩa cấu trúc tài liệu (tức là biểu diễn trạng thái). XML và JavaScript Object Notation (JSON) nhẹ hơn là hai ngôn ngữ trình bày thường dùng cho trạng thái này. Khả năng tương tác phụ thuộc vào sự đồng thuận giữa Dịch vụ Web và client về biểu diễn trạng thái. Tất nhiên, điều này cũng đúng trong kiến trúc SOAP; Dịch vụ Web và client phải đồng thuận về định dạng payload. Khác biệt là trong kiến trúc SOAP, khả năng tương tác còn phụ thuộc vào đồng thuận về giao thức; trong kiến trúc REST, giao thức luôn là HTTP, nên nguồn gốc vấn đề tương tác này bị loại bỏ.
 
-One of the selling features of REST is that it leverages the
-infrastructure that has been deployed to support the Web. For example,
-Web proxies can enforce security or cache information. Existing content
-distribution networks (CDNs) can be used to support RESTful
-applications.
+Một điểm mạnh của REST là tận dụng được hạ tầng đã triển khai để hỗ trợ Web. Ví dụ, proxy Web có thể thực thi bảo mật hoặc cache thông tin. Các mạng phân phối nội dung (CDN) hiện có có thể dùng để hỗ trợ ứng dụng RESTful.
 
-In contrast with WSDL/SOAP, the Web has had time for standards to
-stabilize and to demonstrate that it scales very well. It also comes
-with some security in the form of Secure Socket Layer (SSL)/Transport
-Layer Security (TLS). The Web and REST may also have an advantage in
-evolvability. Although the WSDL and SOAP *frameworks* are highly
-flexible with regard to what new features and bindings can go into the
-definition of a protocol, that flexibility is irrelevant once the
-protocol is defined. Standardized protocols such as HTTP are designed
-with a provision for being extended in a backward-compatible way. HTTP’s
-own extensibility takes the form of headers, new methods, and new
-content types. Protocol designers using WSDL/SOAP need to design such
-extensibility into each of their custom protocols. Of course, the
-designers of state representations in a REST architecture also have to
-design for evolvability.
+Trái ngược với WSDL/SOAP, Web đã có thời gian để các tiêu chuẩn ổn định và chứng minh khả năng mở rộng rất tốt. Nó cũng đi kèm một số bảo mật dưới dạng Secure Socket Layer (SSL)/Transport Layer Security (TLS). Web và REST cũng có thể có lợi thế về khả năng tiến hóa. Mặc dù các khung WSDL và SOAP rất linh hoạt về những tính năng và binding mới có thể đưa vào định nghĩa giao thức, sự linh hoạt đó không còn ý nghĩa khi giao thức đã được định nghĩa. Các giao thức chuẩn hóa như HTTP được thiết kế với khả năng mở rộng tương thích ngược. Chính HTTP cũng có thể mở rộng qua header, phương thức mới, và loại nội dung mới. Nhà thiết kế giao thức dùng WSDL/SOAP cần tự thiết kế khả năng mở rộng cho từng giao thức tùy biến. Tất nhiên, nhà thiết kế biểu diễn trạng thái trong kiến trúc REST cũng phải thiết kế cho khả năng tiến hóa.
 
-An area where WSDL/SOAP may have an advantage is in adapting or
-wrapping previously written, “legacy” applications to conform to Web
-Services.  This is an important point since most Web Services will be
-based on legacy applications for the near future at least. These
-applications usually have a procedural interface that maps more easily
-into WSDL’s operations than REST states. The REST versus WSDL/SOAP
-competition may very well hinge on how easy or difficult it turns out
-to be to devise REST-style interfaces for individual Web Services. We
-may find that some Web Services are better served by WSDL/SOAP and
-others by REST.
+Một lĩnh vực mà WSDL/SOAP có thể có lợi thế là thích nghi hoặc bọc các ứng dụng “legacy” đã viết từ trước để phù hợp với Dịch vụ Web. Đây là điểm quan trọng vì hầu hết Dịch vụ Web trong tương lai gần sẽ dựa trên ứng dụng legacy. Các ứng dụng này thường có giao diện thủ tục phù hợp hơn với thao tác của WSDL hơn là trạng thái của REST. Cuộc cạnh tranh REST so với WSDL/SOAP có thể sẽ phụ thuộc vào việc xây dựng giao diện kiểu REST cho từng Dịch vụ Web dễ hay khó. Có thể một số Dịch vụ Web phù hợp với WSDL/SOAP, số khác phù hợp với REST.
 
-The online retailer Amazon, as it happens, was an early adopter
-(2002) of Web Services. Interestingly, Amazon made its systems publicly
-accessible via *both* of the Web Services architectures, and according
-to some reports a substantial majority of developers use the REST
-interface. Of course, this is just one data point and may well reflect
-factors specific to Amazon.
+Nhà bán lẻ trực tuyến Amazon, chẳng hạn, là một trong những đơn vị áp dụng sớm (2002) Dịch vụ Web. Thú vị là Amazon công khai hệ thống của mình qua *cả hai* kiến trúc Dịch vụ Web, và theo một số báo cáo, phần lớn lập trình viên dùng giao diện REST. Tất nhiên, đây chỉ là một ví dụ và có thể phản ánh các yếu tố đặc thù của Amazon.
 
-From Web Services to Cloud Services
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Từ Dịch vụ Web đến Dịch vụ Đám mây (Cloud Services)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If Web Services is what we call it when the web server that implements
-my application sends a request to the web server that implements your
-application, then what do we call it when we both put our applications
-in the cloud so that they can support scalable workloads? We can call
-both of them *Cloud Services* if we want to, but is that a distinction
-without a difference? It depends.
+Nếu Dịch vụ Web là khi server web hiện thực ứng dụng của tôi gửi yêu cầu tới server web hiện thực ứng dụng của bạn, thì gọi là gì khi cả hai chúng ta đưa ứng dụng lên đám mây để hỗ trợ tải lớn? Ta có thể gọi cả hai là *Dịch vụ Đám mây* (Cloud Services) nếu muốn, nhưng liệu đó có phải là sự phân biệt không có khác biệt? Còn tùy.
 
-Moving a server process from a physical machine running in my machine
-room into a virtual machine running in a cloud provider’s datacenter
-shifts responsibility for keeping the machine running from my system
-admin to the cloud provider’s operations team, but the application is
-still designed according to the Web Services architecture. On the other
-hand, if the application is designed from scratch to run on a scalable
-cloud platform, for example by adhering to the *micro-services
-architecture*, then we say the application is *cloud native*. So the
-important distinction is cloud native versus legacy web services
-deployed in the cloud.
+Chuyển một tiến trình server từ máy vật lý trong phòng máy của tôi lên máy ảo chạy trong trung tâm dữ liệu của nhà cung cấp đám mây chuyển trách nhiệm duy trì máy từ quản trị viên hệ thống của tôi sang đội vận hành của nhà cung cấp đám mây, nhưng ứng dụng vẫn được thiết kế theo kiến trúc Dịch vụ Web. Ngược lại, nếu ứng dụng được thiết kế từ đầu để chạy trên nền tảng đám mây có khả năng mở rộng, ví dụ tuân thủ kiến trúc *micro-services*, thì ta gọi ứng dụng đó là *cloud native*. Vậy điểm khác biệt quan trọng là cloud native so với dịch vụ web legacy triển khai trên đám mây.
 
-We briefly saw the micro-services architecture in Chapter 5 when
-describing gRPC, and although it’s difficult to definitively declare
-micro-services superior to web services, the current trend in industry
-almost certainly favors the former. More interesting, perhaps, is the
-ongoing debate about REST+Json versus gRPC+Protbufs as the preferred RPC
-mechanism for implementing micro-services. Keeping in mind that both run
-on top of HTTP, we leave it as an exercise for the reader to pick a side
-and defend it.
+Chúng ta đã thấy kiến trúc micro-services ở Chương 5 khi mô tả gRPC, và dù khó có thể khẳng định micro-services vượt trội so với dịch vụ web, xu hướng hiện tại trong ngành gần như chắc chắn nghiêng về micro-services. Có lẽ thú vị hơn là cuộc tranh luận đang diễn ra về REST+Json so với gRPC+Protobufs như cơ chế RPC ưa thích để hiện thực micro-services. Hãy nhớ rằng cả hai đều chạy trên HTTP, chúng tôi để bạn đọc tự chọn phe và bảo vệ quan điểm của mình.
