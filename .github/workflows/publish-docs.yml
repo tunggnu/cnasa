@@ -4,7 +4,7 @@ run-name: ${{ github.actor }} is publishing document artifacts 🚀
 on:
   push:
     branches:
-      - master
+      - vi
 
 permissions:
   contents: read
