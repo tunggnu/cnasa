@@ -1,8 +1,8 @@
-Chapter 5:  End-to-End Protocols
+Chương 5: Các Giao Thức Đầu-Cuối
 ================================
 
-  Victory is the beautiful, bright coloured flower. Transport is the
-  stem without which it could never have blossomed.
+  Chiến thắng là bông hoa rực rỡ, xinh đẹp. Vận chuyển là thân cây mà không có
+  nó, hoa không thể nở.
 
   *—Winston Churchill*
 
