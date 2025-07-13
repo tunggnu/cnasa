@@ -1,280 +1,280 @@
-8.5 Example Systems
-===================
+8.5 Các Hệ Thống Ví Dụ
+======================
 
-We have now seen many of the components required to provide one or two
-aspects of security. These components include cryptographic algorithms,
-key predistribution mechanisms, and authentication protocols. In this
-section, we examine some complete systems that use these components.
+Chúng ta đã thấy nhiều thành phần cần thiết để cung cấp một hoặc hai
+khía cạnh của bảo mật. Những thành phần này bao gồm các thuật toán mật mã,
+cơ chế phân phối khóa trước, và các giao thức xác thực. Trong phần này,
+chúng ta sẽ xem xét một số hệ thống hoàn chỉnh sử dụng các thành phần này.
 
-These systems can be roughly categorized by the protocol layer at which
-they operate. Systems that operate at the application layer include
-Pretty Good Privacy (PGP), which provides electronic mail security, and
-Secure Shell (SSH), a secure remote login facility. At the transport
-layer, there is the IETF’s Transport Layer Security (TLS) standard and
-the older protocol from which it derives, Secure Socket Layer (SSL). The
-IPsec (IP Security) protocols, as their name implies, operate at the IP
-(network) layer. 802.11i provides security at the link layer of wireless
-networks. This section describes the salient features of each of these
-approaches.
+Các hệ thống này có thể được phân loại sơ bộ theo lớp giao thức mà chúng
+hoạt động. Các hệ thống hoạt động ở lớp ứng dụng bao gồm Pretty Good Privacy
+(PGP), cung cấp bảo mật cho thư điện tử, và Secure Shell (SSH), một tiện ích
+đăng nhập từ xa an toàn. Ở lớp vận chuyển, có tiêu chuẩn Transport Layer Security
+(TLS) của IETF và giao thức cũ hơn mà nó kế thừa, Secure Socket Layer (SSL).
+Các giao thức IPsec (IP Security), như tên gọi, hoạt động ở lớp IP (lớp mạng).
+802.11i cung cấp bảo mật ở lớp liên kết của mạng không dây. Phần này mô tả
+các đặc điểm nổi bật của từng phương pháp tiếp
+cận
+này.
 
-You might reasonably wonder why security has to be provided at so many
-different layers. One reason is that different threats require different
-defensive measures, and this often translates into securing a different
-protocol layer. For example, if your main concern is with a person in
-the building next door snooping on your traffic as it flows between your
-laptop and your 802.11 access point, then you probably want security at
-the link layer. However, if you want to be really sure you are connected
-to your bank’s website and preventing all the data that you send to the
-bank from being read by curious employees of some Internet service
-provider, then something that extends all the way from your machine to
-the bank’s server—like the transport layer—may be the right place to
-secure the traffic. As is often the case, there is no one-size-fits-all
-solution.
+Bạn có thể tự hỏi tại sao bảo mật lại phải được cung cấp ở nhiều lớp khác nhau.
+Một lý do là các mối đe dọa khác nhau đòi hỏi các biện pháp phòng thủ khác nhau,
+và điều này thường dẫn đến việc bảo vệ một lớp giao thức khác nhau. Ví dụ, nếu
+mối quan tâm chính của bạn là một người ở tòa nhà bên cạnh nghe lén lưu lượng
+giữa máy tính xách tay của bạn và điểm truy cập 802.11, thì bạn có thể muốn bảo
+mật ở lớp liên kết. Tuy nhiên, nếu bạn muốn thực sự chắc chắn rằng mình đang kết
+nối đến trang web của ngân hàng và ngăn chặn tất cả dữ liệu bạn gửi đến ngân hàng
+khỏi bị đọc bởi các nhân viên tò mò của một nhà cung cấp dịch vụ Internet nào đó,
+thì một thứ gì đó kéo dài từ máy của bạn đến máy chủ của ngân hàng—như lớp vận chuyển—
+có thể là nơi phù hợp để bảo vệ lưu lượng. Như thường lệ, không có giải pháp nào phù hợp
+cho
+tất
+cả.
 
-The security systems described below have the ability to vary which
-cryptographic algorithms they use. The idea of making a security system
-algorithm independent is a very good one, because you never know when
-your favorite cryptographic algorithm might be proved to be
-insufficiently strong for your purposes. It would be nice if you could
-quickly change to a new algorithm without having to change the protocol
-specification or implementation. Note the analogy to being able to
-change keys without changing the algorithm; if one of your cryptographic
-algorithms turns out to be flawed, it would be great if your entire
-security architecture didn’t need an immediate redesign.
+Các hệ thống bảo mật được mô tả dưới đây có khả năng thay đổi các thuật toán mật mã
+mà chúng sử dụng. Ý tưởng làm cho một hệ thống bảo mật độc lập với thuật toán là rất tốt,
+bởi vì bạn không bao giờ biết khi nào thuật toán mật mã ưa thích của mình có thể bị chứng minh
+là không đủ mạnh cho mục đích của bạn. Sẽ rất tốt nếu bạn có thể nhanh chóng chuyển sang một
+thuật toán mới mà không phải thay đổi đặc tả giao thức hoặc hiện thực. Lưu ý sự tương tự với
+việc có thể thay đổi khóa mà không cần thay đổi thuật toán; nếu một trong các thuật toán mật mã
+của bạn hóa ra có lỗ hổng, sẽ rất tuyệt nếu toàn bộ kiến trúc bảo mật của bạn không cần phải thiết
+kế lại ngay
+lập
+tức.
 
 8.5.1 Pretty Good Privacy (PGP)
 -------------------------------
 
-Pretty Good Privacy (PGP) is a widely used approach to providing
-security for electronic mail. It provides authentication,
-confidentiality, data integrity, and nonrepudiation. Originally devised
-by Phil Zimmerman, it has evolved into an IETF standard known as
-OpenPGP. As we saw in a previous section, PGP is notable for using a
-“web of trust” model for distribution of keys rather than a tree-like
-hierarchy.
+Pretty Good Privacy (PGP) là một phương pháp được sử dụng rộng rãi để cung cấp
+bảo mật cho thư điện tử. Nó cung cấp xác thực, tính bí mật, toàn vẹn dữ liệu,
+và không thể chối bỏ. Ban đầu được phát triển bởi Phil Zimmerman, nó đã phát triển
+thành một tiêu chuẩn của IETF được gọi là OpenPGP. Như chúng ta đã thấy ở phần trước,
+PGP nổi bật vì sử dụng mô hình “web of trust” để phân phối khóa thay vì một hệ phân cấp
+dạng
+cây.
 
-PGP’s confidentiality and receiver authentication depend on the receiver
-of an email message having a public key that is known to the sender. To
-provide sender authentication and nonrepudiation, the sender must have a
-public key that is known by the receiver. These public keys are
-predistributed using certificates and a web-of-trust PKI. PGP supports
-RSA and DSS for public key certificates. These certificates may
-additionally specify which cryptographic algorithms are supported or
-preferred by the key’s owner. The certificates provide bindings between
-email addresses and public keys.
+Tính bí mật và xác thực phía người nhận của PGP phụ thuộc vào việc người nhận
+của một thông điệp email có một khóa công khai mà người gửi biết. Để cung cấp xác thực
+người gửi và không thể chối bỏ, người gửi phải có một khóa công khai mà người nhận biết.
+Những khóa công khai này được phân phối trước bằng chứng chỉ và một PKI kiểu web-of-trust.
+PGP hỗ trợ RSA và DSS cho chứng chỉ khóa công khai. Các chứng chỉ này cũng có thể chỉ định
+các thuật toán mật mã nào được hỗ trợ hoặc ưu tiên bởi chủ sở hữu khóa. Các chứng chỉ cung cấp
+liên kết giữa địa chỉ email và khóa
+công
+khai.
 
 .. _fig-pgpMessage:
 .. figure:: figures/f08-13-9780123850591.png
    :width: 400px
    :align: center
 
-   PGP’s steps to prepare a message for emailing from Alice to Bob.
+   Các bước của PGP để chuẩn bị một thông điệp gửi email từ Alice đến Bob.
 
-Consider the following example of PGP being used to provide both
-sender authentication and confidentiality. Suppose Alice has a message
-to email to Bob. Alice’s PGP application goes through the steps
-illustrated in :numref:`Figure %s <fig-pgpMessage>`. First, the
-message is digitally signed by Alice; MD5, SHA-1, and the SHA-2 family
-are among the hashes that may be used in the digital signature. Her
-PGP application then generates a new session key for just this one
-message; AES and 3DES are among the supported secret-key ciphers. The
-digitally signed message is encrypted using the session key, then the
-session key itself is encrypted using Bob’s public key and appended to
-the message. Alice’s PGP application reminds her of the level of trust
-she had previously assigned to Bob’s public key, based on the number
-of certificates she has for Bob and the trustworthiness of the
-individuals who signed the certificates. Finally, not for security but
-because email messages have to be sent in ASCII, a base64 encoding is
-applied to the message to convert it to an ASCII-compatible
-representation. Upon receiving the PGP message in an email, Bob’s PGP
-application reverses this process step-by-step to obtain the original
-plaintext message and confirm Alice’s digital signature—and reminds
-Bob of the level of trust he has in Alice’s public key.
+Xét ví dụ sau về việc sử dụng PGP để cung cấp cả xác thực người gửi và tính bí mật.
+Giả sử Alice có một thông điệp muốn gửi email cho Bob. Ứng dụng PGP của Alice thực hiện
+các bước được minh họa trong :numref:`Figure %s <fig-pgpMessage>`. Đầu tiên, thông điệp
+được Alice ký số; MD5, SHA-1, và họ SHA-2 là các hàm băm có thể được sử dụng trong chữ ký số.
+Ứng dụng PGP của cô ấy sau đó sinh ra một khóa phiên mới chỉ cho thông điệp này; AES và 3DES
+là các mã hóa khóa bí mật được hỗ trợ. Thông điệp đã ký số được mã hóa bằng khóa phiên, sau đó
+chính khóa phiên được mã hóa bằng khóa công khai của Bob và được nối vào thông điệp. Ứng dụng PGP
+của Alice nhắc nhở cô ấy về mức độ tin cậy mà cô ấy đã gán cho khóa công khai của Bob trước đó,
+dựa trên số lượng chứng chỉ cô ấy có cho Bob và độ tin cậy của những người đã ký các chứng chỉ đó.
+Cuối cùng, không phải vì bảo mật mà vì email phải được gửi dưới dạng ASCII, một mã hóa base64 được
+áp dụng cho thông điệp để chuyển nó sang dạng tương thích ASCII. Khi nhận được thông điệp PGP
+trong
+email,
+ứng dụng PGP của Bob đảo ngược quá trình này từng bước để lấy lại thông điệp bản rõ gốc và
+xác
+nhận
+chữ
+ký
+số
+của Alice—và nhắc Bob về mức độ tin cậy mà anh ấy có với khóa công khai của Alice.
 
-Email has particular characteristics that allow PGP to embed an adequate
-authentication protocol in this one-message data transmission protocol,
-avoiding the need for any prior message exchange (and sidestepping some
-of the complexities described in the previous section). Alice’s digital
-signature suffices to authenticate her. Although there is no proof that
-the message is timely, legitimate email isn’t guaranteed to be timely
-either. There is also no proof that the message is original, but Bob is
-an email user and probably a fault-tolerant human who can recover from
-duplicate emails (which, again, are not out of the question under normal
-operation anyway). Alice can be sure that only Bob could read the
-message because the session key was encrypted with his public key.
-Although this protocol doesn’t prove to Alice that Bob is actually there
-and received the email, an authenticated email from Bob back to Alice
-could do this.
+Email có những đặc điểm riêng cho phép PGP nhúng một giao thức xác thực đủ tốt vào giao thức truyền dữ liệu
+một thông điệp này, tránh được nhu cầu trao đổi thông điệp trước (và né được một số
+phức tạp đã mô tả ở phần trước).
+Chữ ký số của Alice là đủ để xác thực cô ấy. Mặc dù không có bằng chứng rằng thông điệp
+là kịp thời, nhưng email hợp lệ
+cũng không đảm bảo tính kịp thời. Cũng không có bằng chứng rằng thông điệp là nguyên bản,
+nhưng Bob là người dùng email
+và có lẽ là một con người chịu lỗi, có thể xử lý các email trùng lặp (điều này cũng không phải
+là bất thường trong vận hành bình thường).
+Alice có thể chắc chắn rằng chỉ Bob mới đọc được thông điệp vì khóa phiên đã được
+mã hóa bằng khóa công khai của anh ấy.
+Mặc dù giao thức này không chứng minh cho Alice rằng Bob thực sự ở đó và đã nhận email,
+một email xác thực từ Bob gửi lại cho Alice
+có thể làm điều này.
 
-The preceding discussion gives a good example of why application-layer
-security mechanisms can be helpful. Only with a full knowledge of how
-the application works can you make the right choices about which attacks
-to defend against (like forged email) versus which to ignore (like
-delayed or replayed email).
+Phần thảo luận trên là một ví dụ điển hình về lý do tại sao các cơ chế bảo mật
+ở lớp ứng dụng lại hữu ích.
+Chỉ khi hiểu đầy đủ cách ứng dụng hoạt động, bạn mới có thể đưa ra lựa chọn đúng
+về những tấn công nào cần phòng chống
+(như email giả mạo) so với những gì có thể bỏ qua (như email bị trễ hoặc bị phát lại).
 
 8.5.2 Secure Shell (SSH)
 ------------------------
 
-The Secure Shell (SSH) protocol is used to provide a remote login
-service, replacing the less secure Telnet used in the early days of the
-Internet. (SSH can also be used to remotely execute commands and
-transfer files, but we will focus first on how SSH supports remote
-login.) SSH is most often used to provide strong client/server
-authentication/message integrity—where the SSH client runs on the user’s
-desktop machine and the SSH server runs on some remote machine that the
-user wants to log into—but it also supports confidentiality. Telnet
-provides none of these capabilities. Note that “SSH” is often used to
-refer to both the SSH protocol and applications that use it; you need to
-figure out which from the context.
+Giao thức Secure Shell (SSH) được sử dụng để cung cấp dịch vụ đăng nhập từ xa,
+thay thế cho Telnet kém an toàn được sử dụng trong những ngày đầu của Internet.
+(SSH cũng có thể được dùng để thực thi lệnh từ xa và truyền file,
+nhưng chúng ta sẽ tập trung trước vào cách SSH hỗ trợ đăng nhập từ xa.)
+SSH thường được sử dụng để cung cấp xác thực client/server
+mạnh mẽ/toàn vẹn thông điệp—trong đó client SSH chạy trên máy tính để bàn của
+người dùng
+và server SSH chạy trên một máy từ xa mà người dùng muốn đăng nhập vào—nhưng
+nó cũng hỗ trợ tính bí mật. Telnet không cung cấp bất kỳ khả năng nào trong số này.
+Lưu ý rằng “SSH” thường được dùng để chỉ cả giao thức SSH
+và các ứng dụng sử dụng nó; bạn cần xác định ý nghĩa từ ngữ cảnh.
 
-To better appreciate the importance of SSH on today’s Internet, consider
-a couple of the scenarios where it is used. Telecommuters, for example,
-often subscribe to ISPs that offer high-speed fiber-to-the-home, and
-they use these ISPs (plus some chain of other ISPs) to reach machines
-operated by their employer. This means that when a telecommuter logs
-into a machine inside his employer’s data center, both the passwords and
-all the data sent or received potentially passes through any number of
-untrusted networks. SSH provides a way to encrypt the data sent over
-these connections and to improve the strength of the authentication
-mechanism used to log in. (A similar situation occurs when said employee
-connects to work using the public Wi-Fi at Starbucks.) Another usage of
-SSH is remote login to a router, perhaps to change its configuration or
-read its log files; clearly, a network administrator wants to be sure
-that he can log into a router securely and that unauthorized parties can
-neither log in nor intercept the commands sent to the router or output
-sent back to the administrator.
+Để hiểu rõ hơn tầm quan trọng của SSH trên Internet ngày nay, hãy xem xét một số kịch bản sử dụng nó.
+Ví dụ, những người làm việc từ xa thường đăng ký với các ISP
+cung cấp kết nối cáp quang tốc độ cao đến nhà,
+và họ sử dụng các ISP này (cộng với một chuỗi các ISP khác) để kết nối
+đến các máy do công ty của họ vận hành.
+Điều này có nghĩa là khi một người làm việc từ xa đăng nhập vào một
+máy trong trung tâm dữ liệu của công ty,
+cả mật khẩu và tất cả dữ liệu gửi/nhận đều có thể đi qua bất kỳ số lượng mạng không tin cậy nào.
+SSH cung cấp một cách để mã hóa dữ liệu gửi qua các kết nối này
+và tăng cường cơ chế xác thực được sử dụng để đăng nhập.
+(Một tình huống tương tự xảy ra khi nhân viên đó kết nối làm việc qua Wi-Fi công cộng ở Starbucks.)
+Một cách sử dụng SSH khác là đăng nhập từ xa vào một router,
+có thể để thay đổi cấu hình hoặc đọc file log;
+rõ ràng, quản trị viên mạng muốn chắc chắn rằng mình có thể đăng nhập
+vào router một cách an toàn và không bên trái phép nào
+có thể đăng nhập hoặc chặn các lệnh gửi đến router hoặc đầu ra gửi về cho quản trị viên.
 
-The latest version of SSH, version 2, consists of three protocols:
+Phiên bản mới nhất của SSH, phiên bản 2, bao gồm ba giao thức:
 
--  SSH-TRANS, a transport layer protocol
+-  SSH-TRANS, một giao thức lớp vận chuyển
 
--  SSH-AUTH, an authentication protocol
+-  SSH-AUTH, một giao thức xác thực
 
--  SSH-CONN, a connection protocol
+-  SSH-CONN, một giao thức kết nối
 
-We focus on the first two, which are involved in remote login. We
-briefly discuss the purpose of SSH-CONN at the end of the section.
+Chúng ta tập trung vào hai giao thức đầu, liên quan đến đăng nhập từ xa.
+Chúng ta sẽ bàn ngắn gọn về mục đích của SSH-CONN ở cuối phần này.
 
-SSH-TRANS provides an encrypted channel between the client and server
-machines. It runs on top of a TCP connection. Any time a user uses an
-SSH application to log into a remote machine, the first step is to set
-up an SSH-TRANS channel between those two machines. The two machines
-establish this secure channel by first having the client authenticate
-the server using RSA. Once authenticated, the client and server
-establish a session key that they will use to encrypt any data sent over
-the channel. This high-level description skims over several details,
-including the fact that the SSH-TRANS protocol includes a negotiation of
-the encryption algorithm the two sides are going to use. For example,
-AES is commonly selected. Also, SSH-TRANS includes a message integrity
-check of all data exchanged over the channel.
+SSH-TRANS cung cấp một kênh mã hóa giữa máy client và server.
+Nó chạy trên một kết nối TCP.
+Bất cứ khi nào người dùng sử dụng ứng dụng SSH để đăng nhập vào một máy từ xa,
+bước đầu tiên là thiết lập một kênh SSH-TRANS giữa hai máy đó.
+Hai máy thiết lập kênh bảo mật này bằng cách đầu tiên
+để client xác thực server bằng RSA.
+Sau khi xác thực, client và server thiết lập một khóa phiên
+mà họ sẽ sử dụng để mã hóa bất kỳ dữ liệu nào gửi qua kênh.
+Mô tả cấp cao này bỏ qua một số chi tiết, bao gồm cả việc giao thức
+SSH-TRANS có một quá trình thương lượng thuật toán mã hóa mà hai bên sẽ sử dụng.
+Ví dụ, AES thường được chọn. Ngoài ra, SSH-TRANS bao gồm
+kiểm tra toàn vẹn thông điệp cho tất cả dữ liệu trao đổi qua kênh.
 
-The one issue we can’t skim over is how the client came to possess the
-server’s public key that it needs to authenticate the server. Strange as
-it may sound, the server tells the client its public key at connection
-time. The first time a client connects to a particular server, the SSH
-application warns the user that it has never talked to this machine
-before and asks if the user wants to continue. Although it is a risky
-thing to do, because SSH is effectively not able to authenticate the
-server, users often say “yes” to this question. The SSH application then
-remembers the server’s public key, and the next time the user connects
-to that same machine it compares this saved key with the one the server
-responds with. If they are the same, SSH authenticates the server. If
-they are different, however, the SSH application again warns the user
-that something is amiss, and the user is then given an opportunity to
-abort the connection. Alternatively, the prudent user can learn the
-server’s public key through some out-of-band mechanism, save it on the
-client machine, and thus never take the “first time” risk.
+Một vấn đề không thể bỏ qua là làm thế nào client có được khóa công khai
+của server mà nó cần để xác thực server.
+Nghe có vẻ lạ, nhưng server sẽ gửi khóa công khai của nó cho client tại thời điểm kết nối.
+Lần đầu tiên một client kết nối đến một server cụ thể,
+ứng dụng SSH sẽ cảnh báo người dùng rằng nó chưa từng kết nối với máy này trước đây
+và hỏi người dùng có muốn tiếp tục không. Mặc dù đây là một việc rủi ro,
+vì SSH thực tế không thể xác thực server,
+người dùng thường trả lời “yes” cho câu hỏi này. Ứng dụng SSH
+sau đó sẽ ghi nhớ khóa công khai của server,
+và lần sau khi người dùng kết nối đến cùng máy đó, nó sẽ so sánh
+khóa đã lưu với khóa mà server trả về.
+Nếu chúng giống nhau, SSH xác thực server. Nếu khác, ứng dụng SSH
+lại cảnh báo người dùng rằng có điều gì đó không ổn,
+và người dùng có thể chọn hủy kết nối. Ngoài ra, người dùng cẩn trọng
+có thể lấy khóa công khai của server qua một kênh ngoài băng tần,
+lưu nó trên máy client, và do đó không bao giờ phải chịu rủi ro “lần đầu”.
 
-Once the SSH-TRANS channel exists, the next step is for the user to
-actually log into the machine, or more specifically, authenticate
-himself or herself to the server. SSH allows three different mechanisms
-for doing this. First, since the two machines are communicating over a
-secure channel, it is OK for the user to simply send his or her password
-to the server. This is not a safe thing to do when using Telnet since
-the password would be sent in the clear, but in the case of SSH the
-password is encrypted in the SSH-TRANS channel. The second mechanism
-uses public-key encryption. This requires that the user has already
-placed his or her public key on the server. The third mechanism, called
-*host-based authentication*, basically says that any user claiming to be
-so-and-so from a certain set of trusted hosts is automatically believed
-to be that same user on the server. Host-based authentication requires
-that the client *host* authenticate itself to the server when they first
-connect; standard SSH-TRANS only authenticates the server by default.
+Khi kênh SSH-TRANS đã được thiết lập, bước tiếp theo là người dùng thực sự
+đăng nhập vào máy, hay cụ thể hơn là xác thực bản thân với server.
+SSH cho phép ba cơ chế khác nhau để làm điều này.
+Đầu tiên, vì hai máy đang giao tiếp qua một kênh bảo mật,
+người dùng chỉ cần gửi mật khẩu của mình cho server.
+Điều này không an toàn khi dùng Telnet vì mật khẩu sẽ được gửi dưới dạng bản rõ,
+nhưng với SSH thì mật khẩu được mã hóa trong kênh SSH-TRANS.
+Cơ chế thứ hai sử dụng mã hóa khóa công khai. Điều này yêu cầu người dùng
+đã đặt khóa công khai của mình trên server.
+Cơ chế thứ ba, gọi là *host-based authentication*, về cơ bản nói rằng
+bất kỳ người dùng nào tự nhận là ai đó từ một tập hợp các máy tin cậy
+sẽ tự động được tin là cùng người dùng đó trên server.
+Host-based authentication yêu cầu client *host* xác thực bản thân
+với server khi kết nối lần đầu;
+SSH-TRANS tiêu chuẩn chỉ xác thực server theo mặc định.
 
-The main thing you should take away from this discussion is that SSH
-is a fairly straightforward application of the protocols and
-algorithms we have seen throughout this chapter. However, what
-sometimes makes SSH a challenge to understand is all the keys a user
-has to create and manage, where the exact interface is operating
-system dependent. For example, the OpenSSH package that runs on most
-Unix machines supports a command that can be used to create
-public/private key pairs. These keys are then stored in various files
-in directory in the user’s home directory. For example, file
-``~/.ssh/known_hosts`` records the keys for all the hosts the user has
-logged into, file ``~/.ssh/authorized_keys`` contains the public keys
-needed to authenticate the user when he or she logs into this machine
-(i.e., they are used on the server side), and file ``~/.ssh/id_rsa``
-contains the private keys needed to authenticate the user on remote
-machines (i.e., they are used on the client side).
+Điều quan trọng bạn nên rút ra từ phần này là SSH là một ứng dụng khá trực tiếp
+của các giao thức và thuật toán
+chúng ta đã thấy trong chương này. Tuy nhiên, điều đôi khi
+làm SSH khó hiểu là tất cả các khóa mà người dùng phải tạo và quản lý,
+nơi giao diện cụ thể phụ thuộc vào hệ điều hành. Ví dụ, gói OpenSSH
+chạy trên hầu hết các máy Unix hỗ trợ một lệnh để tạo cặp khóa công khai/riêng.
+Các khóa này sau đó được lưu trong các file khác nhau trong thư mục home
+của người dùng. Ví dụ, file ``~/.ssh/known_hosts`` ghi lại các khóa
+của tất cả các máy mà người dùng đã đăng nhập vào,
+file ``~/.ssh/authorized_keys`` chứa các khóa công khai cần thiết
+để xác thực người dùng
+khi anh/chị ấy đăng nhập vào máy này (tức là dùng ở phía server),
+và file ``~/.ssh/id_rsa`` chứa các khóa riêng cần thiết
+để xác thực người dùng
+trên các máy từ xa (tức là dùng ở phía client).
 
 .. _fig-ssh-tunnel:
 .. figure:: figures/f08-14-9780123850591.png
    :width: 500px
    :align: center
 
-   Using SSH port forwarding to secure other TCP-based applications.
+   Sử dụng SSH port forwarding để bảo vệ các ứng dụng dựa trên TCP khác.
 
-Finally, SSH has proven so useful as a system for securing remote login,
-it has been extended to also support other applications, such as sending
-and receiving email. The idea is to run these applications over a secure
-“SSH tunnel.” This capability is called *port forwarding*, and it uses
-the SSH-CONN protocol. The idea is illustrated in :numref:`Figure
-%s <fig-ssh-tunnel>`, where we see a client on host A indirectly
-communicating with a server on host B by forwarding its traffic through
-an SSH connection. The mechanism is called *port forwarding* because
-when messages arrive at the well-known SSH port on the server, SSH first
-decrypts the contents and then “forwards” the data to the actual port at
-which the server is listening. This is just another sort of tunnel,
-which in this case happens to provide confidentiality and
-authentication. It’s possible to provide a form of virtual private
-network (VPN) using SSH tunnels in this way.
+Cuối cùng, SSH đã chứng tỏ hữu ích đến mức nó được mở rộng để hỗ trợ các ứng dụng khác,
+như gửi và nhận email. Ý tưởng là chạy các ứng dụng này qua một “SSH tunnel” bảo mật.
+Khả năng này được gọi là *port forwarding*, và nó sử dụng giao thức SSH-CONN.
+Ý tưởng được minh họa trong :numref:`Figure %s <fig-ssh-tunnel>`, nơi ta thấy một client trên máy A
+giao tiếp gián tiếp với một server trên máy B bằng cách chuyển tiếp lưu lượng qua một kết nối SSH.
+Cơ chế này được gọi là *port forwarding* vì khi các thông điệp đến cổng SSH nổi tiếng trên server,
+SSH trước tiên sẽ giải mã nội dung và sau đó “chuyển tiếp” dữ liệu đến cổng thực mà server đang lắng nghe.
+Đây chỉ là một loại tunnel khác, trong trường hợp này cung cấp tính bí mật và xác thực.
+Có thể cung cấp một dạng mạng riêng ảo (VPN) bằng cách sử dụng các
+tunnel
+SSH
+theo
+cách
+này.
 
-8.5.3 Transport Layer Security (TLS, SSL, HTTPS)
+8.5.3 Bảo mật tầng giao vận (TLS, SSL, HTTPS)
 ------------------------------------------------
 
-To understand the design goals and requirements for the Transport Layer
-Security (TLS) standard and the Secure Socket Layer (SSL) on which TLS
-is based, it is helpful to consider one of the main problems that they
-are intended to solve. As the World Wide Web became popular and
-commercial enterprises began to take an interest in it, it became clear
-that some level of security would be necessary for transactions on the
-Web. The canonical example of this is making purchases by credit card.
-There are several issues of concern when sending your credit card
-information to a computer on the Web. First, you might worry that the
-information would be intercepted in transit and subsequently used to
-make unauthorized purchases. You might also worry about the details of a
-transaction being modified, such as changing the purchase amount. And
-you would certainly like to know that the computer to which you are
-sending your credit card information is in fact one belonging to the
-vendor in question and not some other party. Thus, we immediately see a
-need for confidentiality, integrity, and authentication in Web
-transactions. The first widely used solution to this problem was SSL,
-originally developed by Netscape and subsequently the basis for the
-IETF’s TLS standard.
+Để hiểu các mục tiêu thiết kế và yêu cầu cho tiêu chuẩn Transport Layer Security (TLS)
+và Secure Socket Layer (SSL) mà TLS dựa vào, sẽ hữu ích
+khi xem xét một trong những vấn đề chính mà chúng nhằm giải quyết.
+Khi World Wide Web trở nên phổ biến và các doanh nghiệp bắt đầu quan tâm đến nó,
+rõ ràng là cần có một mức độ bảo mật nào đó cho các giao dịch trên Web.
+Ví dụ điển hình là mua hàng bằng thẻ tín dụng.
+Có một số vấn đề cần quan tâm khi gửi thông tin thẻ tín dụng
+đến một máy tính trên Web. Đầu tiên, bạn có thể lo lắng rằng
+thông tin sẽ bị chặn trên đường truyền và sau đó bị sử dụng
+để mua hàng trái phép. Bạn cũng có thể lo lắng về việc chi tiết giao dịch
+bị sửa đổi, như thay đổi số tiền mua.
+Và bạn chắc chắn muốn biết rằng máy tính mà bạn đang gửi
+thông tin thẻ tín dụng thực sự thuộc về nhà cung cấp mà bạn muốn,
+chứ không phải một bên khác. Do đó, chúng ta thấy ngay nhu cầu về tính bí mật,
+toàn vẹn, và xác thực trong các giao dịch Web.
+Giải pháp đầu tiên được sử dụng rộng rãi cho vấn đề này là SSL,
+ban đầu được phát triển bởi Netscape và sau đó là nền tảng cho tiêu chuẩn TLS
+của
+IETF.
 
-The designers of SSL and TLS recognized that these problems were not
-specific to Web transactions (i.e., those using HTTP) and instead built
-a general-purpose protocol that sits between an application protocol
-such as HTTP and a transport protocol such as TCP. The reason for
-calling this “transport layer security” is that, from the application’s
-perspective, this protocol layer looks just like a normal transport
-protocol except for the fact that it is secure. That is, the sender can
-open connections and deliver bytes for transmission, and the secure
-transport layer will get them to the receiver with the necessary
-confidentiality, integrity, and authentication. By running the secure
-transport layer on top of TCP, all of the normal features of TCP
-(reliability, flow control, congestion control, etc.) are also provided
-to the application. This arrangement of protocol layers is depicted in
+Các nhà thiết kế SSL và TLS nhận ra rằng các vấn đề này không chỉ riêng
+cho các giao dịch Web (tức là các giao dịch sử dụng HTTP)
+và thay vào đó xây dựng một giao thức đa dụng nằm giữa
+một giao thức ứng dụng như HTTP và một giao thức vận chuyển như TCP.
+Lý do gọi đây là “bảo mật lớp vận chuyển” là vì, từ góc nhìn của ứng dụng,
+lớp giao thức này trông giống như một giao thức vận chuyển bình thường
+ngoại trừ việc nó an toàn. Tức là, người gửi có thể mở kết nối
+và gửi byte để truyền, và lớp vận chuyển bảo mật sẽ chuyển chúng đến người nhận
+với tính bí mật, toàn vẹn, và xác thực cần thiết.
+Bằng cách chạy lớp vận chuyển bảo mật trên TCP, tất cả các tính năng bình thường của TCP
+(độ tin cậy, kiểm soát lưu lượng, kiểm soát tắc nghẽn, v.v.)
+cũng được cung cấp cho ứng dụng. Sơ đồ các lớp giao thức này được minh họa
+trong
 :numref:`Figure %s <fig-tls-stack>`.
 
 .. _fig-tls-stack:
@@ -282,642 +282,642 @@ to the application. This arrangement of protocol layers is depicted in
    :width: 300px
    :align: center
 
-   Secure transport layer inserted between application and TCP layers.
+   Lớp vận chuyển bảo mật được chèn giữa lớp ứng dụng và lớp TCP.
 
-When HTTP is used in this way, it is known as HTTPS (Secure HTTP). In
-fact, HTTP itself is unchanged. It simply delivers data to and accepts
-data from the SSL/TLS layer rather than TCP. For convenience, a default
-TCP port has been assigned to HTTPS (443). That is, if you try to
-connect to a server on TCP port 443, you will likely find yourself
-talking to the SSL/TLS protocol, which will pass your data through to
-HTTP provided all goes well with authentication and decryption. Although
-standalone implementations of SSL/TLS are available, it is more common
-for an implementation to be bundled with applications that need it,
-primarily web browsers.
+Khi HTTP được sử dụng theo cách này, nó được gọi là HTTPS (HTTP bảo mật).
+Thực tế, bản thân HTTP không thay đổi.
+Nó chỉ gửi dữ liệu đến và nhận dữ liệu từ lớp SSL/TLS thay vì TCP.
+Để thuận tiện, một cổng TCP mặc định đã được gán cho HTTPS (443).
+Tức là, nếu bạn cố gắng kết nối đến một server trên cổng TCP 443,
+bạn có thể sẽ nói chuyện với giao thức SSL/TLS, giao thức này sẽ
+chuyển dữ liệu của bạn đến HTTP nếu mọi việc xác thực và giải mã diễn ra suôn sẻ.
+Mặc dù có các hiện thực độc lập của SSL/TLS,
+nhưng phổ biến hơn là hiện thực được đóng gói cùng các ứng dụng cần nó,
+chủ yếu là trình duyệt web.
 
-In the remainder of our discussion of transport layer security, we focus
-on TLS. Although SSL and TLS are unfortunately not interoperable, they
-differ in only minor ways, so nearly all of this description of TLS
-applies to SSL.
+Trong phần còn lại của thảo luận về bảo mật lớp vận chuyển,
+chúng ta tập trung vào TLS.
+Mặc dù SSL và TLS không tương thích với nhau, chúng chỉ khác nhau ở một số điểm nhỏ,
+nên hầu hết mô tả về TLS dưới đây cũng áp dụng cho SSL.
 
-Handshake Protocol
-~~~~~~~~~~~~~~~~~~
+Giao Thức Bắt Tay
+~~~~~~~~~~~~~~~~~
 
-A pair of TLS participants negotiate at runtime which cryptography to
-use. The participants negotiate a choice of:
+Một cặp thành viên TLS thương lượng tại thời gian chạy sẽ sử dụng mật mã nào.
+Các thành viên thương lượng lựa chọn:
 
--  Data integrity hash (MD5, SHA-1, etc.), used to implement HMACs
+-  Hàm băm toàn vẹn dữ liệu (MD5, SHA-1, v.v.), dùng để hiện thực HMAC
 
--  secret-key cipher for confidentiality (among the possibilities are
-   DES, 3DES, and AES)
+-  mã hóa khóa bí mật cho tính bí mật (các lựa chọn bao gồm
+   DES, 3DES, và AES)
 
--  Session key establishment approach (among the possibilities are
-   Diffie-Hellman, and public-key authentication protocols using DSS)
+-  Phương pháp thiết lập khóa phiên (các lựa chọn bao gồm Diffie-Hellman,
+   và các giao thức xác thực khóa công khai sử dụng DSS)
 
-Interestingly, the participants may also negotiate the use of a
-compression algorithm, not because this offers any security benefits,
-but because it’s easy to do when you’re negotiating all this other stuff
-and you’ve already decided to do some expensive per-byte operations on
-the data.
+Điều thú vị là các thành viên cũng có thể thương lượng
+việc sử dụng thuật toán nén,
+không phải vì điều này mang lại lợi ích bảo mật,
+mà vì nó dễ thực hiện khi bạn đã quyết định thực hiện
+các thao tác tốn kém trên từng byte dữ liệu.
 
-In TLS, the confidentiality cipher uses two keys, one for each
-direction, and similarly two initialization vectors. The HMACs are
-likewise keyed with different keys for the two participants. Thus,
-regardless of the choice of cipher and hash, a TLS session requires
-effectively six keys. TLS derives all of them from a single shared
-*master secret*. The master secret is a 384-bit (48-byte) value that in
-turn is derived in part from the “session key” that results from TLS’s
-session key establishment protocol.
+Trong TLS, mã hóa bảo mật sử dụng hai khóa, một cho mỗi chiều,
+và tương tự hai vector khởi tạo.
+Các HMAC cũng được khóa bằng các khóa khác nhau cho hai thành viên.
+Do đó, bất kể lựa chọn mã hóa và hàm băm,
+một phiên TLS thực tế cần sáu khóa.
+TLS sinh ra tất cả các khóa này từ một *master secret* chung.
+Master secret là một giá trị 384-bit (48-byte) kế thừa từ một phần từ “khóa phiên”
+(session key) là kết quả của giao thức thiết lập khóa phiên của TLS.
 
-The part of TLS that negotiates the choices and establishes the shared
-master secret is called the *handshake protocol*. (Actual data transfer
-is performed by TLS’s *record protocol*.) The handshake protocol is at
-heart a session key establishment protocol, with a master secret instead
-of a session key. Since TLS supports a choice of approaches to session
-key establishment, these call for correspondingly different protocol
-variants. Furthermore, the handshake protocol supports a choice between
-mutual authentication of both participants, authentication of just one
-participant (this is the most common case, such as authenticating a
-website but not a user), or no authentication at all (anonymous
-Diffie-Hellman). Thus, the handshake protocol knits together several
-session key establishment protocols into a single protocol.
+Phần của TLS chịu trách nhiệm thương lượng các lựa chọn
+và thiết lập master secret chung được gọi là *giao thức bắt tay* (handshake protocol).
+(Việc truyền dữ liệu thực tế được thực hiện bởi *giao thức bản ghi* (record protocol) của TLS.)
+Giao thức bắt tay về bản chất là một giao thức thiết lập khóa phiên,
+với master secret thay cho khóa phiên.
+Vì TLS hỗ trợ nhiều phương pháp thiết lập khóa phiên, nên có các biến thể giao thức tương ứng.
+Hơn nữa, giao thức bắt tay hỗ trợ lựa chọn giữa xác thực lẫn nhau
+của cả hai thành viên, xác thực chỉ một thành viên
+(đây là trường hợp phổ biến nhất, như xác thực một website
+nhưng không xác thực người dùng), hoặc không xác thực gì cả (Diffie-Hellman ẩn danh).
+Do đó, giao thức bắt tay kết hợp nhiều giao thức thiết lập khóa phiên
+thành một giao thức duy nhất.
 
-:numref:`Figure %s <fig-tls-hand>` shows the handshake protocol at a
-high level.  The client initially sends a list of the combinations of
-cryptographic algorithms that it supports, in decreasing order of
-preference. The server responds, giving the single combination of
-cryptographic algorithms it selected from those listed by the
-client. These messages also contain a *client nonce* and a *server
-nonce*, respectively, that will be incorporated in generating the
-master secret later.
+:numref:`Figure %s <fig-tls-hand>` cho thấy giao thức bắt tay ở mức cao.
+Client ban đầu gửi một danh sách các tổ hợp thuật toán mật mã mà nó hỗ trợ,
+theo thứ tự ưu tiên giảm dần.
+Server phản hồi, đưa ra tổ hợp thuật toán mật mã duy nhất mà
+nó chọn từ danh sách của client.
+Các thông điệp này cũng chứa một *client nonce* và một *server nonce*,
+lần lượt sẽ được sử dụng để sinh master secret sau
+này.
 
 .. _fig-tls-hand:
 .. figure:: figures/f08-16-9780123850591.png
    :width: 300px
    :align: center
 
-   Handshake protocol to establish TLS session.
+   Giao thức bắt tay để thiết lập phiên TLS.
 
-At this point, the negotiation phase is complete. The server now sends
-additional messages based on the negotiated session key establishment
-protocol. That could involve sending a public-key certificate or a set
-of Diffie-Hellman parameters. If the server requires authentication of
-the client, it sends a separate message indicating that. The client then
-responds with its part of the negotiated key exchange protocol.
+Tại thời điểm này, giai đoạn thương lượng đã hoàn tất.
+Server bây giờ gửi các thông điệp bổ sung dựa trên giao thức thiết lập khóa phiên đã thương lượng.
+Điều này có thể bao gồm gửi một chứng chỉ khóa công khai
+hoặc một tập hợp các tham số Diffie-Hellman.
+Nếu server yêu cầu xác thực client, nó sẽ gửi một thông điệp riêng để chỉ ra điều đó.
+Client sau đó phản hồi với phần của mình trong giao thức trao đổi khóa đã thương lượng.
 
-Now the client and server each have the information necessary to
-generate the master secret. The “session key” that they exchanged is not
-in fact a key, but instead what TLS calls a *pre-master secret*. The
-master secret is computed (using a published algorithm) from this
-pre-master secret, the client nonce, and the server nonce. Using the
-keys derived from the master secret, the client then sends a message
-that includes a hash of all the preceding handshake messages, to which
-the server responds with a similar message. This enables them to detect
-any discrepancies between the handshake messages they sent and received,
-such as would result, for example, if a man in the middle modified the
-initial unencrypted client message to weaken its choices of
-cryptographic algorithms.
+Bây giờ client và server đều có thông tin cần thiết để sinh master secret.
+“Khóa phiên” mà họ trao đổi thực ra không phải là một khóa,
+mà là cái mà TLS gọi là *pre-master secret*.
+Master secret được tính toán (bằng một thuật toán công khai)
+từ pre-master secret này, client nonce, và server nonce.
+Sử dụng các khóa sinh ra từ master secret, client sau đó gửi một thông điệp
+bao gồm một hàm băm của tất cả các thông điệp bắt tay trước đó,
+server phản hồi lại bằng một thông điệp tương tự.
+Điều này cho phép họ phát hiện bất kỳ sai lệch nào giữa
+các thông điệp bắt tay đã gửi và nhận,
+chẳng hạn như nếu một kẻ tấn công trung gian sửa đổi thông điệp client
+ban đầu chưa mã hóa để làm yếu các lựa chọn thuật toán mật mã.
 
-Record Protocol
-~~~~~~~~~~~~~~~
+Giao Thức Bản Ghi
+~~~~~~~~~~~~~~~~~
 
-Within a session established by the handshake protocol, TLS’s record
-protocol adds confidentiality and integrity to the underlying transport
-service. Messages handed down from the application layer are:
+Trong một phiên được thiết lập bởi giao thức bắt tay, giao thức bản ghi (record protocol)
+ của TLS bổ sung tính bí mật và toàn vẹn cho dịch vụ vận chuyển bên dưới.
+Các thông điệp được gửi xuống từ lớp ứng dụng sẽ:
 
-1. Fragmented or coalesced into blocks of a convenient size for the
-   following steps
+1. Được phân mảnh hoặc gộp thành các khối có kích thước thuận tiện cho
+   các bước tiếp theo
 
-2. Optionally compressed
+2. Có thể được nén
 
-3. Integrity-protected using an HMAC
+3. Được bảo vệ toàn vẹn bằng HMAC
 
-4. Encrypted using a secret-key cipher
+4. Được mã hóa bằng mã hóa khóa bí mật
 
-5. Passed to the transport layer (normally TCP) for transmission
+5. Được chuyển xuống lớp vận chuyển (thường là TCP) để truyền đi
 
-The record protocol uses an HMAC as an authenticator. The HMAC uses
-whichever hash algorithm (MD5, SHA-1, etc.) was negotiated by the
-participants. The client and server have different keys to use when
-computing HMACs, making them even harder to break. Furthermore, each
-record protocol message is assigned a sequence number, which is included
-when the HMAC is computed—even though the sequence number is never
-explicit in the message. This implicit sequence number prevents replays
-or reorderings of messages. This is needed because, although TCP can
-deliver sequential, unduplicated messages to the layer above it under
-normal assumptions, those assumptions do not include an adversary that
-can intercept TCP messages, modify messages, or send bogus ones. On the
-other hand, it is TCP’s delivery guarantees that make it possible for
-TLS to rely on a legitimate TLS message having the next implicit
-sequence number in order.
+Giao thức bản ghi sử dụng HMAC làm bộ xác thực. HMAC sử dụng bất kỳ hàm băm nào
+(MD5, SHA-1, v.v.) đã được các thành viên thương lượng.
+Client và server có các khóa khác nhau để tính HMAC,
+làm cho việc phá mã càng khó hơn.
+Hơn nữa, mỗi thông điệp giao thức bản ghi được gán một số thứ tự,
+số này được đưa vào khi tính HMAC—mặc dù số thứ tự này
+không bao giờ xuất hiện rõ ràng trong thông điệp.
+Số thứ tự ngầm này ngăn chặn các cuộc tấn công phát lại hoặc sắp xếp lại thông điệp.
+Điều này là cần thiết vì, mặc dù TCP có thể chuyển các thông điệp tuần tự,
+không trùng lặp lên lớp trên trong điều kiện bình thường,
+nhưng các giả định đó không bao gồm trường hợp có kẻ tấn công có thể chặn,
+sửa đổi, hoặc gửi thông điệp TCP giả mạo.
+Mặt khác, chính các đảm bảo chuyển giao của TCP cho phép TLS
+dựa vào việc một thông điệp TLS hợp lệ sẽ có số thứ tự ngầm tiếp theo.
 
-Another interesting feature of the TLS protocol is the ability to resume
-a session. To understand the original motivation for this, it is helpful
-to understand how HTTP originally made use of TCP connections. (The
-details of HTTP are presented in the next chapter.) Each HTTP operation,
-such as getting a page from a server, required a new TCP connection to
-be opened. Retrieving a single page with a number of embedded graphical
-objects might take many TCP connections. Opening a TCP connection
-requires a three-way handshake before data transmission can start. Once
-the TCP connection is ready to accept data, the client would then need
-to start the TLS handshake protocol, taking at least another two
-round-trip times (and consuming some amount of processing resources and
-network bandwidth) before actual application data could be sent. The
-resumption capability of TLS was designed to alleviate this problem.
+Một tính năng thú vị khác của giao thức TLS là khả năng
+tiếp tục một phiên (session resumption).
+Để hiểu động cơ ban đầu cho điều này, sẽ hữu ích khi hiểu
+cách HTTP ban đầu sử dụng các kết nối TCP.
+(Một số chi tiết về HTTP sẽ được trình bày ở chương sau.)
+Mỗi thao tác HTTP, như lấy một trang từ server, yêu cầu mở một kết nối TCP mới.
+Lấy một trang duy nhất với nhiều đối tượng đồ họa nhúng có thể cần nhiều kết nối TCP.
+Mở một kết nối TCP yêu cầu một quá trình bắt tay ba bước
+trước khi truyền dữ liệu có thể bắt đầu.
+Khi kết nối TCP đã sẵn sàng nhận dữ liệu, client sau đó cần bắt đầu giao thức bắt tay TLS,
+mất ít nhất hai lần khứ hồi nữa (và tiêu tốn một lượng tài nguyên xử lý
+và băng thông mạng) trước khi dữ liệu ứng dụng thực sự có thể được gửi.
+Khả năng tiếp tục phiên của TLS được thiết kế để giảm bớt vấn đề này.
 
-The idea of session resumption is to optimize away the handshake in
-those cases where the client and the server have already established
-some shared state in the past. The client simply includes the session ID
-from a previously established session in its initial handshake message.
-If the server finds that it still has state for that session, and the
-resumption option was negotiated when that session was originally
-created, then the server can reply to the client with an indication of
-success, and data transmission can begin using the algorithms and
-parameters previously negotiated. If the session ID does not match any
-session state cached at the server, or if resumption was not allowed for
-the session, then the server will fall back to the normal handshake
-process.
+Ý tưởng của tiếp tục phiên là tối ưu hóa bằng cách bỏ qua
+quá trình bắt tay trong những trường hợp client
+và server đã thiết lập một trạng thái chung trước đó.
+Client chỉ cần đưa ID phiên từ một phiên đã thiết lập trước đó vào thông điệp bắt tay ban đầu.
+Nếu server thấy rằng nó vẫn còn trạng thái cho phiên đó,
+và tùy chọn tiếp tục đã được thương lượng khi phiên đó được tạo,
+thì server có thể trả lời client với một chỉ báo thành công,
+và việc truyền dữ liệu có thể bắt đầu sử dụng các thuật toán
+và tham số đã thương lượng trước đó.
+Nếu ID phiên không khớp với bất kỳ trạng thái phiên nào được lưu ở server,
+hoặc nếu tiếp tục không được phép cho phiên đó,
+thì server sẽ quay lại quá trình bắt tay bình thường.
 
-The reason the preceding discussion emphasized the *original*
-motivation is that having to do a TCP handshake for every embedded
-object in a web page led to so much overhead, independent of TLS, that
-HTTP was eventually optimized to support *persistent connections* (also
-discussed in the next chapter). Because optimizing HTTP mitigated the
-value of session resumption in TLS (plus the realization that reusing
-the same session IDs and master secret key in a series of resumed
-sessions is a security risk), TLS changed its approach to resumption in
-the latest version (1.3).
+Lý do phần thảo luận trên nhấn mạnh động cơ *ban đầu* là
+vì việc phải thực hiện bắt tay TCP cho mỗi đối tượng nhúng trong một trang web
+dẫn đến quá nhiều chi phí, độc lập với TLS, nên HTTP cuối cùng đã
+được tối ưu hóa để hỗ trợ *kết nối liên tục* (persistent connections)
+(cũng sẽ được bàn ở chương sau).
+Vì việc tối ưu hóa HTTP đã giảm giá trị
+của tiếp tục phiên trong TLS (cộng với nhận thức rằng việc tái sử dụng cùng ID phiên
+và khóa master secret trong một loạt các phiên tiếp tục là một rủi ro bảo mật),
+TLS đã thay đổi cách tiếp cận tiếp tục phiên trong phiên bản mới nhất (1.3).
 
-In TLS 1.3, the client sends an opaque, server-encrypted *session
-ticket* to the server upon resumption. This ticket contains all the
-information required to resume the session. The same master secret is
-used across handshakes, but the default behavior is to perform a session
-key exchange upon resumption.
+Trong TLS 1.3, client gửi một *session ticket* không rõ nội dung,
+được server mã hóa, cho server khi tiếp tục phiên.
+Ticket này chứa tất cả thông tin cần thiết để tiếp tục phiên.
+Cùng một master secret được sử dụng qua các lần bắt tay,
+nhưng hành vi mặc định là thực hiện trao đổi khóa phiên khi tiếp tục.
 
 .. _key-layering:
-.. admonition:: Key Takeaway
+.. admonition:: Bài Học Rút Ra
 
-   We call attention to this change in TLS because it illustrates the
-   challenge of knowing which layer should solve a given problem. In
-   isolation, session resumption as implemented in the earlier version
-   of TLS seems like a good idea, but it needs to be considered in the
-   context of the dominate use case, which is HTTP. Once the overhead of
-   doing multiple TCP connections was addressed by HTTP, the equation
-   for how resumption should be implemented by TLS changed. The bigger
-   lesson is that we need to avoid rigid thinking about the right
-   layer to implement a given function—the answer changes over time
-   as the network evolves—where a holistic/cross-layer analysis is
-   required to get the design right. :ref:`[Next] <key-naming>`
+   Chúng tôi nhấn mạnh sự thay đổi này trong TLS vì nó minh họa thách thức
+   khi xác định lớp nào nên giải quyết một vấn đề nhất định.
+   Khi xét riêng, tiếp tục phiên như được hiện thực trong
+   phiên bản trước của TLS có vẻ là một ý tưởng hay,
+   nhưng nó cần được xem xét trong bối cảnh trường hợp sử dụng chủ đạo, đó là HTTP.
+   Khi chi phí của việc thực hiện nhiều kết nối TCP đã được HTTP giải quyết,
+   phương trình cho cách tiếp tục nên được TLS hiện thực đã thay đổi.
+   Bài học lớn hơn là chúng ta cần tránh tư duy cứng nhắc về lớp nào là đúng
+   để hiện thực một chức năng—câu trả lời thay đổi theo thời gian
+   khi mạng phát triển—nơi cần một phân tích tổng thể/xuyên lớp
+   để có thiết kế đúng. :ref:`[Next] <key-naming>`
 
-8.5.4 IP Security (IPsec)
+8.5.4 Bảo mật IP
 -------------------------
 
-Probably the most ambitious of all the efforts to integrate security
-into the Internet happens at the IP layer. Support for IPsec, as the
-architecture is called, is optional in IPv4 but mandatory in IPv6.
+Có lẽ nỗ lực tham vọng nhất để tích hợp bảo mật vào Internet diễn ra ở lớp IP.
+Hỗ trợ cho bảo mật IP (IP Security—IPsec), như kiến trúc này được gọi,
+là tùy chọn trong IPv4 nhưng bắt buộc trong IPv6.
 
-IPsec is really a framework (as opposed to a single protocol or system)
-for providing all the security services discussed throughout this
-chapter. IPsec provides three degrees of freedom. First, it is highly
-modular, allowing users (or more likely, system administrators) to
-select from a variety of cryptographic algorithms and specialized
-security protocols. Second, IPsec allows users to select from a large
-menu of security properties, including access control, integrity,
-authentication, originality, and confidentiality. Third, IPsec can be
-used to protect narrow streams (e.g., packets belonging to a particular
-TCP connection being sent between a pair of hosts) or wide streams
-(e.g., all packets flowing between a pair of routers).
+IPsec thực chất là một khung (thay vì một giao thức hoặc hệ thống đơn lẻ)
+để cung cấp tất cả các dịch vụ bảo mật đã thảo luận trong chương này.
+IPsec cung cấp ba mức độ tự do. Thứ nhất, nó có tính mô-đun cao, cho phép người dùng
+(hoặc có lẽ là quản trị viên hệ thống) chọn từ nhiều thuật toán mật mã
+và giao thức bảo mật chuyên biệt. Thứ hai, IPsec cho phép người dùng chọn từ
+một danh mục lớn các thuộc tính bảo mật, bao gồm kiểm soát truy cập,
+toàn vẹn, xác thực, tính nguyên bản, và tính bí mật.
+Thứ ba, IPsec có thể được sử dụng để bảo vệ các luồng hẹp
+(ví dụ, các gói thuộc về một kết nối TCP cụ thể giữa một cặp máy chủ)
+hoặc các luồng rộng (ví dụ, tất cả các gói
+chảy giữa một cặp router).
 
-When viewed from a high level, IPsec consists of two parts. The first
-part is a pair of protocols that implement the available security
-services. They are the Authentication Header (AH), which provides access
-control, connectionless message integrity, authentication, and
-antireplay protection, and the Encapsulating Security Payload (ESP),
-which supports these same services, plus confidentiality. AH is rarely
-used so we focus on ESP here. The second part is support for key
-management, which fits under an umbrella protocol known as the Internet
-Security Association and Key Management Protocol (ISAKMP).
+Khi nhìn ở mức cao, IPsec bao gồm hai phần.
+Phần đầu tiên là một cặp giao thức hiện thực các dịch vụ bảo mật sẵn có.
+Chúng là Authentication Header (AH), cung cấp kiểm soát truy cập,
+toàn vẹn thông điệp không kết nối, xác thực,
+và bảo vệ chống phát lại, và Encapsulating Security Payload (ESP),
+hỗ trợ các dịch vụ này cộng thêm tính bí mật.
+AH hiếm khi được sử dụng nên chúng ta tập trung vào ESP ở đây.
+Phần thứ hai là hỗ trợ quản lý khóa, nằm dưới một giao thức
+gọi là Internet Security Association and Key Management Protocol (ISAKMP).
 
-The abstraction that binds these two pieces together is the *security
-association* (SA). An SA is a simplex (one-way) connection with one or
-more of the available security properties. Securing a bidirectional
-communication between a pair of hosts—corresponding to a TCP connection,
-for example—requires two SAs, one in each direction. Although IP is a
-connectionless protocol, security depends on connection state
-information such as keys and sequence numbers. When created, an SA is
-assigned an ID number called a *security parameters index* (SPI) by the
-receiving machine. A combination of this SPI and the destination IP
-addresses uniquely identifies an SA. An ESP header includes the SPI so
-the receiving host can determine which SA an incoming packet belongs to
-and, hence, what algorithms and keys to apply to the packet.
+Trừu tượng liên kết hai phần này là *security association* (SA).
+SA là một kết nối simplex (một chiều) với một hoặc nhiều thuộc tính bảo mật sẵn có.
+Bảo vệ một giao tiếp hai chiều giữa một cặp
+ máy chủ—tương ứng với một kết nối TCP,
+chẳng hạn—cần hai SA, một cho mỗi chiều.
+Mặc dù IP là một giao thức không kết nối, bảo mật lại phụ thuộc vào
+thông tin trạng thái kết nối như khóa và số thứ tự.
+Khi được tạo, một SA được gán một số ID gọi là
+*security parameters index* (SPI) bởi máy nhận.
+Kết hợp SPI này và địa chỉ IP đích xác định duy nhất một SA.
+Một header ESP bao gồm SPI để máy chủ nhận có thể xác định gói đến thuộc về SA nào
+và do đó áp dụng thuật toán và khóa nào cho gói đó.
 
-SAs are established, negotiated, modified, and deleted using ISAKMP. It
-defines packet formats for exchanging key generation and authentication
-data. These formats aren’t terribly interesting because they provide a
-framework only—the exact form of the keys and authentication data
-depends on the key generation technique, the cipher, and the
-authentication mechanism that is used. Moreover, ISAKMP does not specify
-a particular key exchange protocol, although it does suggest the
-Internet Key Exchange (IKE) as one possibility, and IKE v2 is what is
-used in practice.
+Các SA được thiết lập, thương lượng, sửa đổi, và xóa bằng ISAKMP.
+Nó định nghĩa các định dạng gói để trao đổi dữ liệu sinh khóa và xác thực.
+Các định dạng này không quá thú vị vì chúng chỉ cung cấp một khung—dạng
+cụ thể của khóa và dữ liệu xác thực phụ thuộc vào kỹ thuật sinh khóa,
+mã hóa, và cơ chế xác thực được sử dụng. Hơn nữa,
+ISAKMP không chỉ định
+một giao thức trao đổi khóa cụ thể,
+mặc dù nó gợi ý Internet Key Exchange (IKE) là một khả năng, và IKE v2
+là cái được sử dụng trong thực tế.
 
-ESP is the protocol used to securely transport data over an established
-SA. In IPv4, the ESP header follows the IP header; in IPv6, it is an
-extension header. Its format uses both a header and a trailer, as shown
-in :numref:`Figure %s <fig-esp>`. The ``SPI`` field lets the receiving host
-identify the security association to which the packet belongs. The
-``SeqNum`` field protects against replay attacks. The packet’s
-``PayloadData`` contains the data described by the ``NextHdr`` field. If
-confidentiality is selected, then the data is encrypted using whatever
-cipher was associated with the SA. The ``PadLength`` field records how
-much padding was added to the data; padding is sometimes necessary
-because, for example, the cipher requires the plaintext to be a multiple
-of a certain number of bytes or to ensure that the resulting ciphertext
-terminates on a 4-byte boundary. Finally, the ``AuthenticationData``
-carries the authenticator.
+ESP là giao thức được sử dụng để truyền dữ liệu an toàn qua một SA đã thiết lập.
+Trong IPv4, header ESP nằm sau header IP; trong IPv6, nó là một header mở rộng.
+Định dạng của nó sử dụng cả header và trailer,
+như minh họa trong :numref:`Figure %s <fig-esp>`.
+Trường ``SPI`` cho phép máy chủ nhận xác định security association mà gói thuộc về.
+Trường ``SeqNum`` bảo vệ chống lại các cuộc tấn công phát lại.
+Trường ``PayloadData`` của gói chứa dữ liệu được mô tả bởi trường ``NextHdr``.
+Nếu tính bí mật được chọn, dữ liệu sẽ được mã hóa bằng
+bất kỳ mã hóa nào được liên kết với SA.
+Trường ``PadLength`` ghi lại lượng padding đã thêm vào dữ liệu; padding
+đôi khi cần thiết vì, ví dụ,
+mã hóa yêu cầu bản rõ phải là bội số của một số byte nhất định
+hoặc để đảm bảo ciphertext kết thúc ở ranh giới 4 byte.
+Cuối cùng, ``AuthenticationData`` mang bộ xác thực.
 
 .. _fig-esp:
 .. figure:: figures/f08-17-9780123850591.png
    :width: 500px
    :align: center
 
-   IPSec’s ESP format.
+   Định dạng ESP của IPSec.
 
-IPsec supports a *tunnel mode* as well as the more straightforward
-*transport mode*. Each SA operates in one or the other mode. In a
-transport mode SA, ESP’s payload data is simply a message for a higher
-layer such as UDP or TCP. In this mode, IPsec acts as an intermediate
-protocol layer, much like SSL/TLS does between TCP and a higher layer.
-When an ESP message is received, its payload is passed to the higher
-level protocol.
+IPsec hỗ trợ *tunnel mode* cũng như *transport mode* đơn giản hơn.
+Mỗi SA hoạt động ở một trong hai chế độ này. Trong một SA chế độ transport,
+payload data của ESP đơn giản là một thông điệp cho một lớp cao hơn như UDP hoặc TCP.
+Ở chế độ này, IPsec hoạt động như một lớp giao thức trung gian,
+giống như SSL/TLS giữa TCP và lớp cao hơn.
+Khi nhận được một thông điệp ESP, payload của nó được chuyển lên giao thức lớp
+cao hơn.
 
-In a tunnel mode SA, however, ESP’s payload data is itself an IP
-packet, as in :numref:`Figure %s <fig-espTunnelPacket>`. The source
-and destination of this inner IP packet may be different from those of
-the outer IP packet.  When an ESP message is received, its payload is
-forwarded on as a normal IP packet. The most common way to use the ESP
-is to build an “IPsec tunnel” between two routers, typically
-firewalls. For example, a corporation wanting to link two sites using
-the Internet could open a pair of tunnel-mode SAs between a router at
-one site and a router at the other site. An IP packet outgoing from
-one site would, at the outgoing router, become the payload of an ESP
-message sent to the other site’s router. The receiving router would
-unwrap the payload IP packet and forward it on to its true
-destination.
+Tuy nhiên, trong một SA chế độ tunnel, payload data của ESP bản thân nó
+là một gói IP, như trong :numref:`Figure %s <fig-espTunnelPacket>`.
+Nguồn và đích của gói IP bên trong này
+có thể khác với gói IP bên ngoài.
+Khi nhận được một thông điệp ESP, payload của nó
+được chuyển tiếp như một gói IP bình thường.
+Cách sử dụng ESP phổ biến nhất là xây dựng một “IPsec tunnel”
+giữa hai router, thường là firewall.
+Ví dụ, một công ty muốn kết nối hai site qua Internet
+có thể mở một cặp SA chế độ tunnel giữa một router ở mỗi site.
+Một gói IP đi ra từ một site, tại router đi ra, sẽ trở thành payload
+của một thông điệp ESP gửi đến router ở site kia.
+Router nhận sẽ gỡ bỏ payload IP packet và chuyển tiếp nó đến đích thực sự.
 
 .. _fig-espTunnelPacket:
 .. figure:: figures/f08-18-9780123850591.png
    :width: 600px
    :align: center
 
-   An IP packet with a nested IP packet encapsulated using ESP in tunnel
-   mode. Note that the inner and outer packets have different addresses.
+   Một gói IP với một gói IP lồng bên trong được đóng gói bằng ESP ở chế độ tunnel.
+   Lưu ý rằng các gói bên trong và bên ngoài có địa chỉ khác nhau.
 
-These tunnels may also be configured to use ESP with confidentiality and
-authentication, thus preventing unauthorized access to the data that
-traverses this virtual link and ensuring that no spurious data is
-received at the far end of the tunnel. Furthermore, tunnels can provide
-traffic confidentiality, since multiplexing multiple flows through a
-single tunnel obscures information about how much traffic is flowing
-between particular endpoints. A network of such tunnels can be used to
-implement an entire virtual private network. Hosts communicating over a
-VPN need not even be aware that it exists.
+Các tunnel này cũng có thể được cấu hình để sử dụng ESP với tính bí mật và xác thực,
+do đó ngăn chặn truy cập trái phép vào dữ liệu đi qua liên kết ảo này
+và đảm bảo không có dữ liệu giả mạo nào được nhận ở đầu bên kia của tunnel.
+Hơn nữa, các tunnel có thể cung cấp tính bí mật lưu lượng,
+vì việc ghép nhiều luồng qua một tunnel duy nhất
+che giấu thông tin về lượng lưu lượng
+giữa các điểm cuối cụ thể. Một mạng các tunnel như vậy có thể được sử dụng
+để hiện thực một mạng riêng ảo hoàn chỉnh.
+Các máy chủ giao tiếp qua VPN thậm chí không cần biết rằng nó tồn tại.
 
-8.5.5 Wireless Security (802.11i)
+8.5.5 Bảo Mật Không Dây (802.11i)
 ---------------------------------
 
-Wireless links are particularly exposed to security threats due to the
-lack of any physical security on the medium. While the convenience of
-802.11 has prompted widespread acceptance of the technology, lack of
-security has been a recurring problem. For example, it is all too easy
-for an employee of a corporation to connect an 802.11 access point to
-the corporate network. Since radio waves pass through most walls, if
-the access point lacks the correct security measures, an attacker can
-now gain access to the corporate network from outside the building.
-Similarly, a computer with a wireless network adaptor inside the
-building could connect to an access point outside the building,
-potentially exposing it to attack, not to mention the rest of the
-corporate network if that same computer has, say, an Ethernet
-connection as well.
+Liên kết không dây đặc biệt dễ bị đe dọa bảo mật do thiếu
+bảo vệ vật lý cho môi trường truyền dẫn.
+Mặc dù sự tiện lợi của 802.11 đã thúc đẩy việc chấp nhận rộng rãi công nghệ này,
+thiếu bảo mật đã là một vấn đề lặp đi lặp lại.
+Ví dụ, rất dễ dàng cho một nhân viên của công ty kết nối
+một điểm truy cập 802.11 vào mạng công ty.
+Vì sóng vô tuyến xuyên qua hầu hết các bức tường,
+nếu điểm truy cập không có biện pháp bảo mật đúng,
+một kẻ tấn công có thể truy cập vào mạng công ty từ bên ngoài tòa nhà.
+Tương tự, một máy tính với card mạng không dây bên trong tòa nhà
+có thể kết nối đến một điểm truy cập bên ngoài tòa nhà,
+có thể khiến nó bị tấn công, chưa kể đến phần còn lại của mạng công ty
+nếu máy tính đó cũng có kết nối Ethernet.
 
-Consequently, there has been considerable work on securing Wi-Fi links.
-Somewhat surprisingly, one of the early security techniques developed
-for 802.11, known as Wired Equivalent Privacy (WEP), turned out to be
-seriously flawed and quite easily breakable.
+Do đó, đã có nhiều nỗ lực để bảo vệ các liên kết Wi-Fi.
+Điều khá bất ngờ là một trong những kỹ thuật bảo mật đầu tiên
+phát triển cho 802.11, gọi là Wired Equivalent Privacy (WEP),
+hóa ra lại có lỗ hổng nghiêm trọng và rất dễ bị phá vỡ.
 
-The IEEE 802.11i standard provides authentication, message integrity,
-and confidentiality to 802.11 (Wi-Fi) at the link layer. *WPA3* (Wi-Fi
-Protected Access 3) is often used as a synonym for 802.11i, although it
-is technically a trademark of the Wi-Fi Alliance that certifies product
-compliance with 802.11i.
+Tiêu chuẩn IEEE 802.11i cung cấp xác thực, toàn vẹn thông điệp,
+và tính bí mật cho 802.11 (Wi-Fi) ở lớp liên kết.
+*WPA3* (Wi-Fi Protected Access 3) thường được dùng như một từ đồng nghĩa với 802.11i,
+mặc dù về mặt kỹ thuật nó là một nhãn hiệu của Wi-Fi Alliance
+chứng nhận sản phẩm tuân thủ 802.11i.
 
-For backward compatibility, 802.11i includes definitions of
-first-generation security algorithms—including WEP—that are now known to
-have major security flaws. We will focus here on 802.11i’s newer,
-stronger algorithms.
+Để tương thích ngược, 802.11i bao gồm các định nghĩa về
+các thuật toán bảo mật thế hệ đầu tiên—bao gồm cả WEP—mà
+hiện nay đã được biết là có lỗ hổng bảo mật lớn.
+Chúng ta sẽ tập trung vào các thuật toán mới, mạnh hơn của 802.11i.
 
-802.11i authentication supports two modes. In either mode, the end
-result of successful authentication is a shared Pairwise Master Key.
-*Personal mode*, also known as *Pre-Shared Key (PSK) mode*, provides
-weaker security but is more convenient and economical for situations
-like a home 802.11 network. The wireless device and the Access Point
-(AP) are preconfigured with a shared *passphrase*—essentially a very
-long password—from which the Pairwise Master Key is cryptographically
-derived.
+Xác thực 802.11i hỗ trợ hai chế độ.
+Trong cả hai chế độ, kết quả cuối cùng của xác thực thành công là một Pairwise Master Key chung.
+*Chế độ cá nhân*, còn gọi là *Pre-Shared Key (PSK) mode*,
+cung cấp bảo mật yếu hơn nhưng thuận tiện và kinh tế hơn cho các tình huống
+như mạng 802.11 gia đình.
+Thiết bị không dây và Access Point (AP)
+được cấu hình trước với một *passphrase* chung—về cơ bản là một mật khẩu rất dài—từ đó
+Pairwise Master Key được sinh ra bằng phương pháp mật mã.
 
-802.11i’s stronger authentication mode is based on the IEEE 802.1X
-framework for controlling access to a LAN, which uses an
-Authentication Server (AS) as in :numref:`Figure %s
-<fig-AuthenServer>`. The AS and AP must be connected by a secure
-channel and could even be implemented as a single box, but they are
-logically separate. The AP forwards authentication messages between
-the wireless device and the AS. The protocol used for authentication
-is called the *Extensible Authentication Protocol* (EAP).  EAP is
-designed to support multiple authentication methods—smart cards,
-Kerberos, one-time passwords, public key authentication, and so on—as
-well as both one-sided and mutual authentication. So EAP is better
-thought of as an authentication framework than a protocol. Specific
-EAP-compliant protocols, of which there are many, are called *EAP
-methods*. For example, EAP-TLS is an EAP method based on TLS
-authentication.
+Chế độ xác thực mạnh hơn của 802.11i dựa trên khung IEEE 802.1X
+để kiểm soát truy cập vào LAN,
+sử dụng một Authentication Server (AS)
+như trong :numref:`Figure %s <fig-AuthenServer>`.
+AS và AP phải được kết nối bằng một kênh bảo mật và thậm chí có thể
+được hiện thực như một thiết bị duy nhất,
+nhưng về mặt logic chúng là riêng biệt. AP chuyển tiếp các thông điệp
+xác thực giữa thiết bị không dây và AS.
+Giao thức dùng cho xác thực gọi là *Extensible Authentication Protocol* (EAP).
+EAP được thiết kế để hỗ trợ nhiều phương pháp xác thực—thẻ thông minh,
+Kerberos, mật khẩu dùng một lần,
+xác thực khóa công khai, v.v.—cũng như xác thực một chiều và xác thực lẫn nhau.
+Vì vậy, EAP nên được coi là một khung xác thực hơn là một giao thức.
+Các giao thức cụ thể tuân thủ EAP, trong đó có nhiều loại, được gọi là *EAP methods*.
+Ví dụ, EAP-TLS là một phương pháp EAP dựa trên xác thực TLS.
 
 .. _fig-AuthenServer:
 .. figure:: figures/f08-19-9780123850591.png
    :width: 500px
    :align: center
 
-   Use of an Authentication Server in 802.11i.
+   Sử dụng Authentication Server trong 802.11i.
 
-802.11i does not place any restrictions on what the EAP method can use
-as a basis for authentication. It does, however, require an EAP method
-that performs *mutual* authentication, because not only do we want to
-prevent an adversary from accessing the network via our AP, we also want
-to prevent an adversary from fooling our wireless devices with a bogus,
-malicious AP. The end result of a successful authentication is a
-Pairwise Master Key shared between the wireless device and the AS, which
-the AS then conveys to the AP.
+802.11i không đặt ra bất kỳ giới hạn nào về cơ sở xác thực
+mà phương pháp EAP có thể sử dụng.
+Tuy nhiên, nó yêu cầu một phương pháp EAP thực hiện xác thực *lẫn nhau*,
+vì chúng ta không chỉ muốn ngăn kẻ tấn công truy cập mạng qua AP của mình,
+mà còn muốn ngăn kẻ tấn công lừa thiết bị không dây của mình bằng một AP giả mạo, độc hại.
+Kết quả cuối cùng của xác thực thành công là một Pairwise Master Key
+được chia sẻ giữa thiết bị không dây và AS,
+sau đó AS chuyển nó cho AP.
 
-One of the main differences between the stronger AS-based mode and the
-weaker personal mode is that the former readily supports a unique key
-per client. This in turn makes it easier to change the set of clients
-that can authenticate themselves (e.g., to revoke access to one client)
-without needing to change the secret stored in every client.
+Một trong những khác biệt chính giữa chế độ dựa trên AS mạnh hơn và
+chế độ cá nhân yếu hơn là chế độ đầu tiên dễ dàng hỗ trợ một khóa duy nhất cho mỗi client.
+Điều này giúp dễ dàng thay đổi tập hợp client có thể xác thực bản thân
+(ví dụ, thu hồi quyền truy cập của một client)
+mà không cần thay đổi bí mật lưu trên mọi client.
 
-With a Pairwise Master Key in hand, the wireless device and the AP
-execute a session key establishment protocol called the 4-way handshake
-to establish a Pairwise Transient Key. This Pairwise Transient Key is
-really a collection of keys that includes a session key called a
-*Temporal Key*. This session key is used by the protocol, called *CCMP*,
-that provides 802.11i’s data confidentiality and integrity.
+Khi đã có Pairwise Master Key, thiết bị không dây và AP thực hiện một giao thức
+thiết lập khóa phiên gọi là 4-way handshake
+để thiết lập Pairwise Transient Key. Pairwise Transient Key
+thực chất là một tập hợp các khóa bao gồm một khóa phiên gọi là *Temporal Key*.
+Khóa phiên này được sử dụng bởi giao thức gọi là *CCMP*,
+cung cấp tính bí mật và toàn vẹn dữ liệu cho 802.11i.
 
-CCMP stands for CTR (Counter Mode) with CBC-MAC (Cipher-Block Chaining
-with Message Authentication Code) Protocol. CCMP uses AES in counter
-mode to encrypt for confidentiality. Recall that in counter mode
-encryption successive values of a counter are incorporated into the
-encryption of successive blocks of plaintext.
+CCMP là viết tắt của CTR (Counter Mode) với CBC-MAC
+(Cipher-Block Chaining with Message Authentication Code) Protocol.
+CCMP sử dụng AES ở chế độ counter để mã hóa cho tính bí mật.
+Nhớ lại rằng trong mã hóa counter,
+các giá trị liên tiếp của một bộ đếm được tích hợp vào việc mã hóa các khối bản rõ liên tiếp.
 
-CCMP uses a Message Authentication Code (MAC) as an authenticator. The
-MAC algorithm is based on CBC, even though CCMP doesn’t use CBC in the
-confidentiality encryption. In effect, CBC is performed without
-transmitting any of the CBC-encrypted blocks, solely so that the last
-CBC-encrypted block can be used as a MAC (only its first 8 bytes are
-actually used). The role of initialization vector is played by a
-specially constructed first block that includes a 48-bit packet number—a
-sequence number. (The packet number is also incorporated in the
-confidentiality encryption and serves to expose replay attacks.) The MAC
-is subsequently encrypted along with the plaintext in order to prevent
-birthday attacks, which depend on finding different messages with the
-same authenticator.
+CCMP sử dụng một Message Authentication Code (MAC) làm bộ xác thực.
+Thuật toán MAC dựa trên CBC,
+mặc dù CCMP không sử dụng CBC trong mã hóa bảo mật.
+Thực chất, CBC được thực hiện mà không truyền bất kỳ khối CBC nào,
+chỉ để khối CBC cuối cùng được dùng làm MAC
+(chỉ 8 byte đầu tiên thực sự được sử dụng).
+Vai trò của vector khởi tạo được đảm nhiệm bởi một khối đầu tiên
+được xây dựng đặc biệt bao gồm một số gói 48-bit—một số thứ tự.
+(Số gói này cũng được tích hợp vào mã hóa bảo mật và dùng để phát hiện các cuộc tấn công phát lại.)
+MAC sau đó được mã hóa cùng với bản rõ để ngăn chặn
+các cuộc tấn công ngày sinh nhật,
+vốn dựa vào việc tìm các thông điệp khác nhau có cùng bộ xác thực.
 
-8.5.6 Firewalls
+8.5.6 Tường Lửa
 ---------------
 
-Whereas much of this chapter has focused on the uses of cryptography to
-provide such security features as authentication and confidentiality,
-there is a whole set of security issues that are not readily addressed
-by cryptographic means. For example, worms and viruses spread by
-exploiting bugs in operating systems and application programs (and
-sometimes human gullibility as well), and no amount of cryptography can
-help you if your machine has unpatched vulnerabilities. So other
-approaches are often used to keep out various forms of potentially
-harmful traffic. Firewalls are one of the most common ways to do this.
+Trong khi phần lớn chương này tập trung vào việc sử dụng mật mã
+để cung cấp các tính năng bảo mật như xác thực và tính bí mật,
+có một tập hợp các vấn đề bảo mật không dễ dàng giải quyết bằng các phương tiện mật mã.
+Ví dụ, sâu và virus lây lan bằng cách khai thác lỗi trong hệ điều hành
+và chương trình ứng dụng (và đôi khi cả sự cả tin của con người),
+và không có lượng mật mã nào có thể giúp bạn nếu máy của bạn có lỗ hổng chưa được vá.
+Vì vậy, các phương pháp khác thường được sử dụng để ngăn chặn
+các loại lưu lượng có thể gây hại khác nhau.
+Tường lửa là một trong những cách phổ biến nhất để làm điều này.
 
-A firewall is a system that typically sits at some point of
-connectivity between a site it protects and the rest of the network,
-as illustrated in :numref:`Figure %s <fig-firewall>`. It is usually
-implemented as an “appliance” or part of a router, although a
-“personal firewall” may be implemented on an end-user
-machine. Firewall-based security depends on the firewall being the
-only connectivity to the site from outside; there should be no way to
-bypass the firewall via other gateways, wireless connections, or
-dial-up connections. The wall metaphor is somewhat misleading in the
-context of networks since a great deal of traffic passes through a
-firewall. One way to think of a firewall is that by default it blocks
-traffic unless that traffic is specifically allowed to pass
-through. For example, it might filter out all incoming messages except
-those addresses to a particular set of IP addresses or to particular
-TCP port numbers.
+Tường lửa là một hệ thống thường đặt tại một điểm kết nối
+giữa một site mà nó bảo vệ và phần còn lại của mạng,
+như minh họa trong :numref:`Figure %s <fig-firewall>`.
+Nó thường được hiện thực như một “appliance” hoặc một phần của router,
+mặc dù một “tường lửa cá nhân” có thể được hiện thực trên máy người dùng cuối.
+Bảo mật dựa trên tường lửa phụ thuộc vào việc tường lửa
+là kết nối duy nhất đến site từ bên ngoài;
+không nên có cách nào để vượt qua tường lửa qua các gateway khác,
+kết nối không dây, hoặc kết nối quay số.
+Ẩn dụ “tường” có phần gây hiểu nhầm trong bối cảnh mạng
+vì rất nhiều lưu lượng đi qua tường lửa.
+Một cách để nghĩ về tường lửa là mặc định nó chặn lưu lượng
+trừ phi lưu lượng đó được cho phép đi qua.
+Ví dụ, nó có thể lọc tất cả các thông điệp đến trừ những thông điệp
+gửi đến một tập hợp địa chỉ IP hoặc cổng TCP cụ thể.
 
 .. _fig-firewall:
 .. figure:: figures/f08-20-9780123850591.png
    :width: 600px
    :align: center
 
-   A firewall filters packets flowing between a site and the rest of the
-   Internet.
+   Một tường lửa lọc các gói chảy giữa một site
+   và phần còn lại của Internet.
 
-In effect, a firewall divides a network into a more-trusted zone
-internal to the firewall and a less-trusted zone external to the
-firewall. This is useful if you do not want external users to access a
-particular host or service within your site. Much of the complexity
-comes from the fact that you want to allow different kinds of access to
-different external users, ranging from the general public, to business
-partners, to remotely located members of your organization. A firewall
-may also impose restrictions on outgoing traffic to prevent certain
-attacks and to limit losses if an adversary succeeds in getting access
-inside the firewall.
+Thực chất, tường lửa chia mạng thành một vùng tin cậy hơn bên trong tường lửa
+và một vùng ít tin cậy hơn bên ngoài tường lửa.
+Điều này hữu ích nếu bạn không muốn người dùng bên ngoài
+truy cập vào một máy chủ hoặc dịch vụ cụ thể trong site của mình.
+Phần lớn sự phức tạp đến từ việc bạn muốn cho phép
+các loại truy cập khác nhau cho các người dùng bên ngoài khác nhau,
+từ công chúng nói chung, đối tác kinh doanh, đến các thành viên tổ chức ở xa.
+Tường lửa cũng có thể áp đặt các hạn chế lên lưu lượng đi ra
+để ngăn chặn một số tấn công và hạn chế thiệt hại
+nếu một kẻ tấn công thành công truy cập vào bên trong tường lửa.
 
-The location of a firewall also often happens to be the dividing line
-between globally addressable regions and those that use local
-addresses. Hence, Network Address Translation (NAT) functionality and
-firewall functionality often are found in the same device, even though
-they are logically separate.
+Vị trí của tường lửa cũng thường là ranh giới giữa các vùng
+có thể định địa chỉ toàn cầu và các vùng sử dụng địa chỉ cục bộ.
+Do đó, chức năng Network Address Translation (NAT) và
+chức năng tường lửa thường được tìm thấy trong cùng một thiết bị,
+mặc dù về mặt logic chúng là riêng biệt.
 
-Firewalls may be used to create multiple *zones of trust*, such as a
-hierarchy of increasingly trusted zones. A common arrangement involves
-three zones of trust: the internal network, the *DMZ* (“demilitarized
-zone”); and the rest of the Internet. The DMZ is used to hold services
-such as DNS and email servers that need to be accessible to the outside.
-Both the internal network and the outside world can access the DMZ, but
-hosts in the DMZ cannot access the internal network; therefore, an
-adversary who succeeds in compromising a host in the exposed DMZ still
-cannot access the internal network. The DMZ can be periodically restored
-to a clean state.
+Tường lửa có thể được sử dụng để tạo nhiều *vùng tin cậy* (zones of trust),
+chẳng hạn như một hệ phân cấp các vùng ngày càng tin cậy hơn.
+Một cách sắp xếp phổ biến bao gồm ba vùng tin cậy: mạng nội bộ,
+*DMZ* (“demilitarized zone”); và phần còn lại của Internet.
+DMZ được dùng để chứa các dịch vụ như DNS và máy chủ email cần truy cập từ bên ngoài.
+Cả mạng nội bộ và thế giới bên ngoài đều có thể truy cập DMZ,
+nhưng các máy chủ trong DMZ không thể truy cập mạng nội bộ;
+do đó, một kẻ tấn công thành công xâm nhập một máy chủ trong DMZ
+vẫn không thể truy cập mạng nội bộ.
+DMZ có thể được khôi phục định kỳ về trạng thái sạch.
 
-Firewalls filter based on IP, TCP, and UDP information, among other
-things. They are configured with a table of addresses that characterize
-the packets they will, and will not, forward. By addresses, we mean more
-than just the destination’s IP address, although that is one
-possibility. Generally, each entry in the table is a 4-tuple: It gives
-the IP address and TCP (or UDP) port number for both the source and
-destination.
+Tường lửa lọc dựa trên thông tin IP, TCP, và UDP, cùng các thông tin khác.
+Chúng được cấu hình với một bảng địa chỉ đặc trưng cho các gói
+mà chúng sẽ, và sẽ không, chuyển tiếp.
+Bằng “địa chỉ”, chúng tôi muốn nói nhiều hơn chỉ địa chỉ IP đích,
+mặc dù đó là một khả năng.
+Thông thường, mỗi mục trong bảng là một bộ 4 phần tử:
+Nó cho địa chỉ IP và số cổng TCP (hoặc UDP) cho cả nguồn và đích.
 
-For example, a firewall might be configured to filter out (not forward)
-all packets that match the following description:
+Ví dụ, một tường lửa có thể được cấu hình để lọc (không chuyển tiếp)
+tất cả các gói khớp với mô tả sau:
 
 .. code:: c
 
    (192.12.13.14, 1234, 128.7.6.5, 80)
 
-This pattern says to discard all packets from port 1234 on host
-192.12.13.14 addressed to port 80 on host 128.7.6.5. (Port 80 is the
-well-known TCP port for HTTP.) Of course, it’s often not practical to
-name every source host whose packets you want to filter, so the patterns
-can include wildcards. For example,
+Mẫu này nói rằng hãy loại bỏ tất cả các gói từ cổng 1234
+trên máy 192.12.13.14 gửi đến cổng 80 trên máy 128.7.6.5.
+(Cổng 80 là cổng TCP nổi tiếng cho HTTP.) Tất nhiên,
+thường không thực tế để liệt kê mọi máy nguồn mà bạn muốn lọc gói,
+nên các mẫu có thể bao gồm ký tự đại diện. Ví dụ,
 
 .. code:: c
 
    (*,  *, 128.7.6.5, 80)
 
-says to filter out all packets addressed to port 80 on 128.7.6.5,
-regardless of what source host or port sent the packet. Notice that
-address patterns like these require the firewall to make
-forwarding/filtering decisions based on level 4 port numbers, in
-addition to level 3 host addresses. It is for this reason that network
-layer firewalls are sometimes called *level 4 switches*.
+nói rằng hãy lọc tất cả các gói gửi đến cổng 80 trên 128.7.6.5,
+bất kể máy nguồn hoặc cổng nào gửi gói.
+Lưu ý rằng các mẫu địa chỉ như vậy yêu cầu tường lửa đưa ra quyết định
+chuyển tiếp/lọc dựa trên số cổng lớp 4,
+ngoài địa chỉ máy chủ lớp 3. Vì lý do này,
+tường lửa lớp mạng đôi khi được gọi là *switch lớp 4*.
 
-In the preceding discussion, the firewall forwards everything except
-where specifically instructed to filter out certain kinds of packets. A
-firewall could also filter out everything unless explicitly instructed
-to forward it, or use a mix of the two strategies. For example, instead
-of blocking access to port 80 on host 128.7.6.5, the firewall might be
-instructed to only allow access to port 25 (the SMTP mail port) on a
-particular mail server, such as
+Trong phần thảo luận trên, tường lửa chuyển tiếp mọi thứ trừ khi được chỉ định
+lọc một số loại gói nhất định.
+Một tường lửa cũng có thể lọc mọi thứ trừ khi được chỉ định chuyển tiếp,
+hoặc sử dụng kết hợp hai chiến lược.
+Ví dụ, thay vì chặn truy cập đến cổng 80 trên máy 128.7.6.5,
+tường lửa có thể được chỉ định chỉ cho phép truy cập đến cổng 25
+(cổng SMTP mail) trên một máy chủ mail cụ thể, như
 
 .. code:: c
 
    (*,  *, 128.19.20.21, 25)
 
-but to block all other traffic. Experience has shown that firewalls are
-very frequently configured incorrectly, allowing unsafe access. Part of
-the problem is that filtering rules can overlap in complex ways, making
-it hard for a system administrator to correctly express the intended
-filtering. A design principle that maximizes security is to configure a
-firewall to discard all packets other than those that are explicitly
-allowed. Of course, this means that some valid applications might be
-accidentally disabled; presumably users of those applications eventually
-notice and ask the system administrator to make the appropriate change.
+nhưng chặn tất cả lưu lượng khác. Kinh nghiệm cho thấy tường lửa
+rất thường xuyên được cấu hình sai, cho phép truy cập không an toàn.
+Một phần của vấn đề là các quy tắc lọc có thể chồng lấn nhau một
+cách phức tạp, khiến quản trị viên hệ thống khó diễn đạt đúng ý định lọc.
+Một nguyên tắc thiết kế tối đa hóa bảo mật là cấu hình tường lửa
+để loại bỏ tất cả các gói trừ những gói được cho phép rõ ràng.
+Tất nhiên, điều này có nghĩa là một số ứng dụng hợp lệ có thể bị
+vô hiệu hóa một cách tình cờ; giả sử người dùng của các ứng dụng đó cuối cùng sẽ nhận ra
+và yêu cầu quản trị viên hệ thống thực hiện thay đổi phù hợp.
 
-Many client/server applications dynamically assign a port to the client.
-If a client inside a firewall initiates access to an external server,
-the server’s response would be addressed to the dynamically assigned
-port. This poses a problem: How can a firewall be configured to allow an
-arbitrary server’s response packet but disallow a similar packet for
-which there was no client request? This is not possible with a
-*stateless firewall*, which evaluates each packet in isolation. It
-requires a *stateful firewall*, which keeps track of the state of each
-connection. An incoming packet addressed to a dynamically assigned port
-would then be allowed only if it is a valid response in the current
-state of a connection on that port.
+Nhiều ứng dụng client/server gán động một cổng cho client.
+Nếu một client bên trong tường lửa khởi tạo truy cập đến một server
+bên ngoài, phản hồi của server sẽ được gửi đến cổng được gán động.
+Điều này đặt ra một vấn đề: Làm thế nào để cấu hình tường lửa
+cho phép gói phản hồi của server bất kỳ nhưng không cho phép một gói tương tự
+mà không có yêu cầu từ client? Điều này không thể thực hiện
+với một *tường lửa không trạng thái* (stateless firewall), vì nó đánh giá
+từng gói một cách độc lập. Nó đòi hỏi một *tường lửa có trạng thái* (stateful firewall),
+theo dõi trạng thái của từng kết nối. Một gói đến được gửi đến một cổng
+được gán động sẽ chỉ được cho phép nếu nó là phản hồi hợp lệ
+trong trạng thái hiện tại của kết nối trên cổng đó.
 
-Modern firewalls also understand and filter based on many specific
-application-level protocols such as HTTP, Telnet, or FTP. They use
-information specific to that protocol, such as URLs in the case of HTTP,
-to decide whether to discard a message.
+Tường lửa hiện đại cũng hiểu và lọc dựa trên nhiều giao thức lớp
+ứng dụng cụ thể như HTTP, Telnet, hoặc FTP.
+Chúng sử dụng thông tin cụ thể của giao thức đó, như URL trong
+trường hợp HTTP, để quyết định có loại bỏ một thông điệp hay không.
 
-Strengths and Weaknesses of Firewalls
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ưu Nhược Điểm Của Tường Lửa
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-At best, a firewall protects a network from undesired access from the
-rest of the Internet; it cannot provide security to legitimate
-communication between the inside and the outside of the firewall. In
-contrast, the cryptography-based security mechanisms described in this
-chapter are capable of providing secure communication between any
-participants anywhere. This being the case, why are firewalls so common?
-One reason is that firewalls can be deployed unilaterally, using mature
-commercial products, while cryptography-based security requires support
-at both endpoints of the communication. A more fundamental reason for
-the dominance of firewalls is that they encapsulate security in a
-centralized place, in effect factoring security out of the rest of the
-network. A system administrator can manage the firewall to provide
-security, freeing the users and applications inside the firewall from
-security concerns—at least some kinds of security concerns.
+Tốt nhất, tường lửa bảo vệ một mạng khỏi truy cập không mong muốn
+từ phần còn lại của Internet;
+nó không thể cung cấp bảo mật cho giao tiếp hợp lệ giữa bên trong và bên ngoài tường lửa.
+Ngược lại, các cơ chế bảo mật dựa trên mật mã được mô tả trong chương
+này có khả năng cung cấp giao tiếp an toàn
+giữa bất kỳ thành viên nào ở bất kỳ đâu. Nếu vậy, tại sao tường lửa lại phổ biến đến vậy?
+Một lý do là tường lửa có thể được triển khai một cách đơn phương,
+sử dụng các sản phẩm thương mại trưởng thành,
+trong khi bảo mật dựa trên mật mã đòi hỏi hỗ trợ ở cả hai đầu của giao tiếp.
+Một lý do cơ bản hơn cho sự thống trị của tường lửa là chúng tập trung hóa bảo mật vào một nơi,
+thực chất là tách bảo mật ra khỏi phần còn lại của mạng.
+Quản trị viên hệ thống có thể quản lý tường lửa để cung cấp bảo mật,
+giải phóng người dùng và ứng dụng bên trong tường lửa khỏi các mối quan tâm bảo mật—
+ít nhất là một số loại mối quan tâm bảo mật.
 
-Unfortunately, firewalls have serious limitations. Since a firewall does
-not restrict communication between hosts that are inside the firewall,
-the adversary who does manage to run code internal to a site can access
-all local hosts. How might an adversary get inside the firewall? The
-adversary could be a disgruntled employee with legitimate access, or the
-adversary’s software could be hidden in some software installed from a
-CD or downloaded from the Web. It might be possible to bypass the
-firewall by using wireless communication or dial-up connections.
+Đáng tiếc, tường lửa có những hạn chế nghiêm trọng.
+Vì tường lửa không hạn chế giao tiếp giữa các máy bên trong tường lửa,
+kẻ tấn công nào thành công chạy mã bên trong một site có thể truy cập tất cả các máy cục bộ.
+Làm thế nào kẻ tấn công có thể vào bên trong tường lửa?
+Kẻ tấn công có thể là một nhân viên bất mãn có quyền truy cập hợp lệ,
+hoặc phần mềm của kẻ tấn công có thể được ẩn trong một
+phần mềm được cài đặt từ CD hoặc tải về từ Web.
+Có thể vượt qua tường lửa bằng cách sử dụng kết nối không dây hoặc quay số.
 
-Another problem is that any parties granted access through your
-firewall, such as business partners or externally located employees,
-become a security vulnerability. If their security is not as good as
-yours, then an adversary could penetrate your security by penetrating
-their security.
+Một vấn đề khác là bất kỳ bên nào được cấp quyền truy cập qua
+tường lửa của bạn, như đối tác kinh doanh hoặc nhân viên ở xa,
+trở thành một lỗ hổng bảo mật. Nếu bảo mật của họ không tốt
+như của bạn, kẻ tấn công có thể xâm nhập bảo mật của bạn
+bằng cách xâm nhập bảo mật của họ.
 
-One of the most serious problems for firewalls is their vulnerability to
-the exploitation of bugs in machines inside the firewall. Such bugs are
-discovered regularly, so a system administrator has to constantly
-monitor announcements of them. Administrators frequently fail to do so,
-since firewall security breaches routinely exploit security flaws that
-have been known for some time and have straightforward solutions.
+Một trong những vấn đề nghiêm trọng nhất đối với tường lửa
+là chúng dễ bị khai thác lỗi trong các máy bên trong tường lửa.
+Những lỗi như vậy thường xuyên được phát hiện, nên quản trị viên
+hệ thống phải liên tục theo dõi các thông báo về chúng.
+Quản trị viên thường không làm như vậy, vì các vi phạm bảo mật
+tường lửa thường khai thác các lỗ hổng bảo mật đã được biết đến từ lâu và có giải pháp đơn giản.
 
-*Malware* (for “malicious software”) is the term for software that is
-designed to act on a computer in ways concealed from and unwanted by the
-computer’s user. Viruses, worms, and spyware are common types of
-malware. (*Virus* is sometimes used synonymously with *malware*, but we
-will use it in the narrower sense in which it refers to only a
-particular kind of malware.) Malware code need not be natively
-executable object code; it could as well be interpreted code such as a
-script or an executable macro such as those used by Microsoft Word.
+*Malware* (viết tắt của “malicious software”) là thuật ngữ chỉ
+phần mềm được thiết kế để hoạt động trên máy tính theo cách bị
+che giấu và không mong muốn bởi người dùng máy tính.
+Virus, sâu, và spyware là các loại malware phổ biến. (*Virus*
+đôi khi được dùng đồng nghĩa với *malware*, nhưng chúng tôi sẽ dùng nó theo nghĩa hẹp hơn,
+chỉ một loại malware cụ thể.) Mã malware không nhất thiết phải là
+mã đối tượng thực thi gốc; nó cũng có thể là mã thông dịch như script hoặc macro thực thi
+như các macro dùng trong Microsoft Word.
 
-*Viruses* and *worms* are characterized by the ability to make and
-spread copies of themselves; the difference between them is that a worm
-is a complete program that replicates itself, while a virus is a bit of
-code that is inserted (and inserts copies of itself) into another piece
-of software or a file, so that it is executed as part of the execution
-of that piece of software or as a result of opening the file. Viruses
-and worms typically cause problems such as consuming network bandwidth
-as mere side effects of attempting to spread copies of themselves. Even
-worse, they can also deliberately damage a system or undermine its
-security in various ways. They could, for example, install a
-*backdoor*—software that allows remote access to the system without the
-normal authentication. This could lead to a firewall exposing a service
-that should be providing its own authentication procedures but has been
-undermined by a backdoor.
+*Virus* và *sâu* được đặc trưng bởi khả năng tự sao chép và lây lan;
+sự khác biệt giữa chúng là sâu là một chương trình hoàn chỉnh tự nhân bản,
+trong khi virus là một đoạn mã được chèn
+(và tự chèn bản sao của nó)
+vào một phần mềm hoặc file khác, để nó được thực thi
+như một phần của phần mềm đó
+hoặc khi mở file. Virus và sâu thường gây ra các vấn đề như tiêu tốn
+băng thông mạng chỉ là tác dụng phụ của việc cố gắng lây lan bản sao của chúng.
+Tệ hơn, chúng cũng có thể cố ý phá hoại hệ thống hoặc làm
+suy yếu bảo mật theo nhiều cách khác nhau.
+Chúng có thể, ví dụ, cài đặt một *backdoor*—phần mềm cho phép truy cập
+từ xa vào hệ thống mà không cần xác thực thông thường.
+Điều này có thể dẫn đến việc tường lửa phơi bày một dịch vụ lẽ ra phải
+tự cung cấp quy trình xác thực nhưng đã bị backdoor làm suy yếu.
 
-Spyware is software that, without authorization, collects and transmits
-private information about a computer system or its users. Usually
-spyware is secretly embedded in an otherwise useful program and is
-spread by users deliberately installing copies. The problem for
-firewalls is that the transmission of the private information looks like
-legitimate communication.
+Spyware là phần mềm mà không được phép, thu thập và
+truyền thông tin riêng tư về hệ thống máy tính hoặc người dùng của nó.
+Thường thì spyware được nhúng bí mật vào một chương trình
+hữu ích khác và lây lan khi người dùng cố ý cài đặt bản sao.
+Vấn đề đối với tường lửa là việc truyền thông tin
+riêng tư trông giống như giao tiếp hợp lệ.
 
-A natural question to ask is whether firewalls (or cryptographic
-security) could keep malware out of a system in the first place. Most
-malware is indeed transmitted via networks, although it may also be
-transmitted via portable storage devices such as CDs and memory sticks.
-Certainly this is one argument in favor of the “block everything not
-explicitly allowed” approach taken by many administrators in their
-firewall configurations.
+Một câu hỏi tự nhiên là liệu tường lửa (hoặc bảo mật mật mã)
+có thể ngăn malware xâm nhập hệ thống ngay từ đầu không.
+Phần lớn malware thực sự được truyền qua mạng, mặc dù nó cũng
+có thể được truyền qua thiết bị lưu trữ di động như CD và thẻ nhớ.
+Chắc chắn đây là một lý do ủng hộ cách tiếp cận “chặn mọi thứ
+không được cho phép rõ ràng” mà nhiều quản trị viên
+áp dụng trong cấu hình tường lửa của họ.
 
-One approach that is used to detect malware is to search for segments of
-code from known malware, sometimes called a *signature*. This approach
-has its own challenges, as cleverly designed malware can tweak its
-representation in various ways. There is also a potential impact on
-network performance to perform such detailed inspection of data entering
-a network. Cryptographic security cannot eliminate the problem either,
-although it does provide a means to authenticate the originator of a
-piece of software and detect any tampering, such as when a virus inserts
-a copy of itself.
+Một cách tiếp cận được sử dụng để phát hiện malware là tìm kiếm
+các đoạn mã từ malware đã biết, đôi khi gọi là *chữ ký* (signature).
+Cách tiếp cận này có những thách thức riêng, vì malware
+được thiết kế khéo léo có thể thay đổi biểu diễn của nó theo nhiều cách khác nhau.
+Cũng có thể ảnh hưởng đến hiệu năng mạng khi thực hiện
+kiểm tra chi tiết như vậy với dữ liệu vào mạng.
+Bảo mật mật mã cũng không thể loại bỏ vấn đề này, mặc dù nó
+cung cấp một phương tiện để xác thực nguồn gốc của một phần mềm
+và phát hiện bất kỳ sự giả mạo nào, chẳng hạn như khi virus chèn bản sao của nó.
 
-Related to firewalls are systems known as *intrusion detection systems*
-(IDS) and *intrusion prevention systems* (IPS). These systems try to
-look for anomalous activity, such as an unusually large amount of
-traffic targeting a given host or port number, for example, and generate
-alarms for network managers or perhaps even take direct action to limit
-a possible attack. While there are commercial products in this space
-today, it is still a developing field.
+Liên quan đến tường lửa là các hệ thống gọi là *intrusion detection systems*
+(IDS) và *intrusion prevention systems* (IPS). Các hệ thống này cố gắng
+phát hiện hoạt động bất thường, chẳng hạn như một lượng lớn lưu lượng bất thường
+nhắm vào một máy chủ hoặc số cổng cụ thể, và tạo cảnh báo cho quản trị viên mạng hoặc
+thậm chí thực hiện hành động trực tiếp để hạn chế một cuộc tấn công có thể xảy ra.
+Mặc dù hiện nay đã có các sản phẩm thương mại trong lĩnh vực này,
+nhưng nó vẫn là một lĩnh vực đang phát triển.
