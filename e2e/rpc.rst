@@ -103,7 +103,7 @@ Mặc dù ngữ nghĩa tối đa một lần nghe có vẻ hiển nhiên, không
 Cũng như với tính tin cậy, hai lý do khiến một giao thức RPC có thể triển khai phân mảnh và lắp ráp lại thông điệp là vì nó không được cung cấp bởi tầng giao thức nền hoặc vì nó có thể được triển khai hiệu quả hơn bởi giao thức RPC. Xét trường hợp RPC được triển khai trên UDP/IP và dựa vào IP để phân mảnh/lắp ráp lại. Nếu chỉ một mảnh của thông điệp không đến trong một khoảng thời gian nhất định, IP sẽ loại bỏ các mảnh đã đến và thông điệp bị coi là mất. Cuối cùng, giao thức RPC (giả sử nó triển khai tin cậy) sẽ timeout và gửi lại thông điệp. Ngược lại, một giao thức RPC tự triển khai phân mảnh/lắp ráp lại và tích cực ACK hoặc NACK (xác nhận âm) từng mảnh riêng lẻ. Các mảnh bị mất sẽ được phát hiện và gửi lại nhanh hơn, và chỉ các mảnh bị mất mới được gửi lại, không phải toàn bộ thông điệp.
 
 Giao thức đồng bộ và bất đồng bộ
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Một cách để phân loại giao thức là dựa vào việc nó là *đồng bộ* hay *bất đồng bộ*. Ý nghĩa chính xác của các thuật ngữ này phụ thuộc vào vị trí trong hệ phân cấp giao thức mà bạn sử dụng chúng. Ở tầng vận chuyển, tốt nhất nên xem chúng như xác định hai cực của một phổ thay vì hai lựa chọn loại trừ lẫn nhau. Thuộc tính then chốt của bất kỳ điểm nào trên phổ này là tiến trình gửi biết được gì sau khi thao tác gửi thông điệp trả về. Nói cách khác, nếu giả sử một chương trình ứng dụng gọi thao tác ``send`` trên một giao thức vận chuyển, thì chính xác ứng dụng biết gì về thành công của thao tác khi ``send`` trả về?
 
@@ -112,7 +112,7 @@ Một cách để phân loại giao thức là dựa vào việc nó là *đồn
 Mặc dù chúng ta chưa bàn về chúng trong chương này, có những điểm thú vị nằm giữa hai cực này. Ví dụ, giao thức vận chuyển có thể triển khai ``send`` sao cho nó bị chặn (không trả về) cho đến khi thông điệp đã được nhận thành công tại máy từ xa, nhưng trả về trước khi đối tác trên máy đó thực sự xử lý và phản hồi. Điều này đôi khi được gọi là *giao thức datagram tin cậy*.
 
 5.3.2 Các triển khai RPC (SunRPC, DCE, gRPC)
----------------------------------------------
+--------------------------------------------
 
 Bây giờ chúng ta chuyển sang thảo luận về một số ví dụ triển khai giao thức RPC. Những ví dụ này sẽ làm nổi bật một số lựa chọn thiết kế khác nhau mà các nhà thiết kế giao thức đã thực hiện. Ví dụ đầu tiên là SunRPC, một giao thức RPC được sử dụng rộng rãi còn gọi là Open Network Computing RPC (ONC RPC). Ví dụ thứ hai, gọi là DCE-RPC, là một phần của Môi trường Tính toán Phân tán (DCE). DCE là một tập hợp các tiêu chuẩn và phần mềm để xây dựng hệ thống phân tán do Open Software Foundation (OSF) định nghĩa, một liên minh các công ty máy tính ban đầu gồm IBM, Digital Equipment Corporation, và Hewlett-Packard; ngày nay, OSF được gọi là The Open Group. Ví dụ thứ ba là gRPC, một cơ chế RPC phổ biến mà Google đã mã nguồn mở, dựa trên một cơ chế RPC mà họ đã sử dụng nội bộ để triển khai các dịch vụ đám mây trong các trung tâm dữ liệu của mình.
 
@@ -279,4 +279,3 @@ chỉ ra rằng phần thân thông điệp (được phân định bởi dòng 
 .. admonition:: Bài học then chốt
 
    Điểm mấu chốt là các cơ chế phức tạp như RPC, từng được đóng gói thành một gói phần mềm nguyên khối (như SunRPC và DCE-RPC), ngày nay được xây dựng bằng cách lắp ghép nhiều thành phần nhỏ, mỗi thành phần giải quyết một vấn đề hẹp. gRPC vừa là ví dụ cho cách tiếp cận đó, vừa là công cụ thúc đẩy việc áp dụng rộng rãi hơn. Kiến trúc micro-services đề cập ở trên áp dụng chiến lược “xây từ các phần nhỏ” cho toàn bộ ứng dụng đám mây (ví dụ, Uber, Lyft, Netflix, Yelp, Spotify), nơi gRPC thường là cơ chế giao tiếp giữa các phần nhỏ đó. :ref:`[Tiếp theo] <key-alf>`
-   

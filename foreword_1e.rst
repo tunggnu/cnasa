@@ -1,58 +1,59 @@
-Foreword to the First Edition
-=============================
+Lời giới thiệu cho Ấn bản Thứ nhất
+==================================
 
-The term *spaghetti code* is universally understood as an insult. All good
-computer scientists worship the god of modularity, since modularity
-brings many benefits, including the all-powerful benefit of not having to
-understand all parts of a problem at the same time in order to solve it.
-Modularity thus plays a role in presenting ideas in a book, as well as in
-writing code. If a book’s material is organized
-effectively—Modularly—the reader can start at the
-beginning and actually make it to the end.
+Thuật ngữ *spaghetti code* (mã rối) được hiểu rộng rãi như một lời
+xúc phạm. Tất cả các nhà khoa học máy tính giỏi đều tôn thờ "vị thần
+mô-đun", bởi vì tính mô-đun mang lại nhiều lợi ích, bao gồm lợi ích
+tối thượng là không cần cùng lúc hiểu được tất cả các phần của một vấn đề
+để giải quyết nó. Tính mô-đun do đó đóng vai trò trong việc trình bày ý
+tưởng trong một cuốn sách, cũng như trong việc viết mã. Nếu tài liệu của
+một cuốn sách được tổ chức một cách hiệu quả—mô-đun—người đọc có thể
+bắt đầu từ đầu và thực sự đi đến cuối cùng.
 
-The field of network protocols is perhaps unique in that the “proper”
-modularity has been handed down to us in the form of an international
-standard: the seven-layer reference model of network protocols from
-the ISO. This model, which reflects a layered approach to modularity, is
-almost universally used as a starting point for discussions of protocol
-organization, whether the design in question conforms to the model or
-deviates from it.
+Lĩnh vực giao thức mạng có lẽ là độc nhất vô nhị ở chỗ “tính mô-đun đúng đắn”
+đã được truyền lại cho chúng ta dưới dạng một tiêu chuẩn quốc tế: mô hình
+tham chiếu bảy lớp của các giao thức mạng từ ISO. Mô hình này, phản ánh
+cách tiếp cận phân lớp đối với tính mô-đun, gần như luôn được sử dụng làm
+điểm khởi đầu cho các cuộc thảo luận về tổ chức giao thức, dù thiết kế đó
+tuân theo mô hình hay khác biệt với nó.
 
-It seems obvious to organize a networking book around this layered
-model. However, there is a peril to doing so, because the OSI model
-is not really successful at organizing the core concepts of networking.
-Such basic requirements as reliability, flow control, or security can be
-addressed at most, if not all, of the OSI layers. This fact has led to
-great confusion in trying to understand the reference model. At times it
-even requires a suspension of disbelief. Indeed, a book organized strictly
-according to a layered model has some of the attributes of spaghetti
-code.
+Có vẻ như việc tổ chức một cuốn sách về mạng máy tính xung quanh mô hình
+phân lớp này là điều hiển nhiên. Tuy nhiên, có một nguy cơ khi làm như vậy,
+bởi vì mô hình OSI thực sự không thành công trong việc tổ chức các khái
+niệm cốt lõi của mạng máy tính. Những yêu cầu cơ bản như độ tin cậy, điều
+khiển lưu lượng (flow control), hoặc bảo mật có thể được giải quyết ở hầu
+hết, nếu không phải tất cả, các lớp của OSI. Thực tế này đã dẫn đến sự
+nhầm lẫn lớn trong việc cố gắng hiểu mô hình tham chiếu. Đôi khi nó thậm
+chí còn đòi hỏi phải tạm ngưng sự hoài nghi. Thật vậy, một cuốn sách được
+tổ chức nghiêm ngặt theo mô hình phân lớp có một số đặc điểm của mã
+spaghetti.
 
-Which brings us to this book. Peterson and Davie follow the traditional
-layered model, but they do not pretend that this model actually
-helps in the understanding of the big issues in networking. Instead, the
-authors organize discussion of fundamental concepts in a way that is
-independent of layering. Thus, after reading the book, readers will understand
-flow control, congestion control, reliability enhancement, data
-representation, and synchronization, and will separately understand
-the implications of addressing these issues in one or another of the traditional
-layers.
+Điều này dẫn chúng ta đến cuốn sách này. Peterson và Davie tuân theo mô
+hình phân lớp truyền thống, nhưng họ không giả vờ rằng mô hình này thực sự
+giúp hiểu các vấn đề lớn trong mạng máy tính. Thay vào đó, các tác giả tổ
+chức việc thảo luận các khái niệm cơ bản theo cách độc lập với phân lớp.
+Do đó, sau khi đọc cuốn sách, người đọc sẽ hiểu về điều khiển lưu lượng,
+điều khiển tắc nghẽn (congestion control), tăng cường độ tin cậy, biểu diễn
+dữ liệu (data representation), và đồng bộ hóa (synchronization), và sẽ
+hiểu riêng biệt các tác động của việc giải quyết những vấn đề này ở một
+hoặc một số lớp truyền thống.
 
-This is a timely book. It looks at the important protocols in use
-today—especially the Internet protocols. Peterson and Davie have a long involvement
-in and much experience with the Internet. Thus their book reflects
-not just the theoretical issues in protocol design, but the real factors that
-matter in practice. The book looks at some of the protocols that are just
-emerging now, so the reader can be assured of an up-to-date perspective.
-But most importantly, the discussion of basic issues is presented in
-a way that derives from the fundamental nature of the problem, not the
-constraints of the layered reference model or the details of today’s protocols.
-In this regard, what this book presents is both timely and timeless.
-The combination of real-world relevance, current examples, and careful
-explanation of fundamentals makes this book unique.
+Đây là một cuốn sách kịp thời. Nó xem xét các giao thức quan trọng đang
+được sử dụng ngày nay—đặc biệt là các giao thức Internet. Peterson và
+Davie có sự tham gia lâu dài và nhiều kinh nghiệm với Internet. Do đó,
+cuốn sách của họ phản ánh không chỉ các vấn đề lý thuyết trong thiết kế
+giao thức, mà còn các yếu tố thực tế quan trọng trong thực tiễn. Cuốn sách
+xem xét một số giao thức vừa mới xuất hiện, vì vậy người đọc có thể yên
+tâm về một góc nhìn cập nhật. Nhưng quan trọng nhất, việc thảo luận các
+vấn đề cơ bản được trình bày theo cách xuất phát từ bản chất cơ bản của
+vấn đề, không phải từ các ràng buộc của mô hình tham chiếu phân lớp hay
+các chi tiết của các giao thức ngày nay. Ở khía cạnh này, những gì cuốn
+sách này trình bày vừa mang tính thời sự vừa vượt thời gian. Sự kết hợp
+giữa tính thực tiễn, các ví dụ hiện đại, và giải thích cẩn thận về các
+nguyên lý cơ bản khiến cuốn sách này trở nên độc đáo.
 
 
 
 | David Clark
-| Massachusetts Institute of Technology
+| Viện Công nghệ Massachusetts
 | 1996

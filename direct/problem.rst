@@ -1,5 +1,5 @@
 Vấn đề: Kết nối vào một mạng
----------------------------
+----------------------------
 
 Trong Chương 1, chúng ta đã thấy rằng các mạng bao gồm các liên kết kết nối các nút với nhau. Một trong những vấn đề cơ bản mà chúng ta phải đối mặt là làm thế nào để kết nối hai nút lại với nhau. Chúng ta cũng đã giới thiệu trừu tượng “đám mây” để biểu diễn một mạng mà không tiết lộ tất cả các phức tạp bên trong của nó. Vì vậy, chúng ta cũng cần giải quyết vấn đề tương tự là kết nối một host vào một đám mây. Thực chất, đây chính là vấn đề mà mọi Nhà cung cấp Dịch vụ Internet (ISP) phải đối mặt khi muốn kết nối một khách hàng mới vào mạng của mình.
 

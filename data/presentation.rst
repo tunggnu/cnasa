@@ -27,7 +27,7 @@ Một lý do khác khiến đóng gói đối số trở nên khó khăn là cá
 Mặc dù đóng gói đối số không phải là khoa học tên lửa—chỉ là vấn đề thao tác bit—nhưng có một số lượng đáng ngạc nhiên các lựa chọn thiết kế mà bạn phải giải quyết. Chúng ta bắt đầu bằng cách đưa ra một phân loại đơn giản cho các hệ thống đóng gói đối số. Đây không phải là phân loại duy nhất khả thi, nhưng đủ để bao quát hầu hết các lựa chọn thú vị.
 
 Kiểu dữ liệu
-~~~~~~~~~~~
+~~~~~~~~~~~~
 
 Câu hỏi đầu tiên là hệ thống sẽ hỗ trợ những kiểu dữ liệu nào. Nói chung, chúng ta có thể phân loại các kiểu được hỗ trợ bởi một cơ chế đóng gói đối số ở ba cấp độ. Mỗi cấp độ làm phức tạp thêm nhiệm vụ của hệ thống đóng gói.
 
@@ -47,7 +47,7 @@ Tóm lại, tùy vào mức độ phức tạp của hệ kiểu, nhiệm vụ �
    Đóng gói đối số: chuyển đổi, đóng gói, và tuyến tính hóa
 
 Chiến lược chuyển đổi
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 Khi hệ kiểu đã được xác định, vấn đề tiếp theo là hệ thống đóng gói đối số sẽ sử dụng chiến lược chuyển đổi nào. Có hai lựa chọn chung: *dạng trung gian chuẩn* (canonical intermediate form) và *bên nhận tự xử lý* (receiver-makes-right). Chúng ta sẽ lần lượt xem xét từng cái.
 
@@ -320,7 +320,7 @@ Khác với một số ngôn ngữ schema, XML Schema cung cấp các kiểu d�
 Ý nghĩa của việc XSD định nghĩa mô hình dữ liệu trừu tượng chứ không chỉ cú pháp là có thể có các cách khác ngoài XML để biểu diễn dữ liệu tuân theo mô hình đó. Và XML thực ra có một số hạn chế khi dùng làm biểu diễn trên đường truyền: nó không gọn như các biểu diễn dữ liệu khác, và khá chậm để phân tích cú pháp. Có một số biểu diễn thay thế dạng nhị phân đang được sử dụng. Tổ chức Tiêu chuẩn Quốc tế (ISO) đã công bố một chuẩn gọi là *Fast Infoset*, còn World Wide Web Consortium (W3C) đưa ra đề xuất *Efficient XML Interchange* (EXI). Các biểu diễn nhị phân hy sinh khả năng đọc của con người để đổi lấy độ gọn và tốc độ phân tích cú pháp cao hơn.
 
 Không gian tên XML
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 XML phải giải quyết một vấn đề phổ biến, đó là xung đột tên. Vấn đề phát sinh vì các ngôn ngữ schema như XML Schema hỗ trợ tính mô-đun ở chỗ một schema có thể được tái sử dụng như một phần của schema khác. Giả sử hai XSD được định nghĩa độc lập, và cả hai đều định nghĩa tên markup *idNumber*. Có thể một XSD dùng tên đó để nhận diện nhân viên công ty, còn XSD kia dùng để nhận diện máy tính xách tay của công ty. Chúng ta có thể muốn tái sử dụng hai XSD đó trong một XSD thứ ba để mô tả tài sản nào gắn với nhân viên nào, nhưng để làm vậy cần một cơ chế phân biệt idNumber của nhân viên với idNumber của laptop.
 

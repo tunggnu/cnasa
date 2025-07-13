@@ -1,5 +1,5 @@
 Vấn đề: Phân bổ Tài nguyên
--------------------------
+--------------------------
 
 Đến thời điểm này, chúng ta đã tìm hiểu đủ các lớp của hệ phân cấp giao thức mạng để hiểu cách dữ liệu có thể được truyền giữa các tiến trình qua các mạng không đồng nhất. Bây giờ, chúng ta chuyển sang một vấn đề bao trùm toàn bộ ngăn xếp giao thức—làm thế nào để phân bổ tài nguyên một cách hiệu quả và công bằng giữa một tập hợp người dùng cạnh tranh nhau. Các tài nguyên được chia sẻ bao gồm băng thông của các liên kết và bộ đệm trên các bộ định tuyến hoặc chuyển mạch, nơi các gói tin được xếp hàng chờ truyền đi. Các gói tin *cạnh tranh* tại một bộ định tuyến để sử dụng một liên kết, với mỗi gói cạnh tranh được đặt vào một hàng đợi chờ đến lượt mình được truyền qua liên kết đó. Khi có quá nhiều gói tin cùng cạnh tranh cho một liên kết, hàng đợi sẽ đầy và hai điều không mong muốn xảy ra: các gói tin sẽ bị tăng độ trễ đầu-cuối, và trong trường hợp xấu nhất, hàng đợi bị tràn và các gói tin phải bị loại bỏ. Khi các hàng đợi dài kéo dài và việc loại bỏ gói tin trở nên phổ biến, mạng được gọi là bị *tắc nghẽn*. Hầu hết các mạng đều cung cấp một cơ chế *kiểm soát tắc nghẽn* để xử lý tình huống như vậy.
 

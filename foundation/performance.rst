@@ -73,19 +73,19 @@ Tích số độ trễ × băng thông quan trọng khi xây dựng các mạng 
 Lưu ý rằng hầu hết thời gian chúng ta quan tâm đến trường hợp RTT, mà chúng tôi đơn giản gọi là tích số độ trễ × băng thông, mà không nói rõ “độ trễ” là RTT (tức là lấy độ trễ một chiều nhân đôi). Thông thường, việc “độ trễ” trong tích số độ trễ × băng thông là độ trễ một chiều hay RTT sẽ được làm rõ trong ngữ cảnh. :numref:`Bảng %s <tab-delay-bw>` cho thấy một số ví dụ về tích số RTT × băng thông cho một số liên kết mạng điển hình.
 
 .. _tab-delay-bw:
-.. table::  Một số ví dụ về tích số độ trễ × băng thông.
+.. table:: Một số ví dụ về tích số độ trễ × băng thông.
    :align: center
    :widths: auto
 
-   +---------------------+-----------+------------------+---------+-----------------+
-   | Loại liên kết       | Băng thông| Khoảng cách 1 chiều| RTT    | RTT x Băng thông|
-   +=====================+===========+==================+=========+=================+
-   | Wireless LAN        | 54 Mbps   | 50 m             | 0,33 μs | 18 bit          |
-   +---------------------+-----------+------------------+---------+-----------------+
-   | Vệ tinh             | 1 Gbps    | 35.000 km        | 230 ms  | 230 Mb          |
-   +---------------------+-----------+------------------+---------+-----------------+
-   | Cáp quang xuyên quốc| 10 Gbps   | 4.000 km         | 40 ms   | 400 Mb          |
-   +---------------------+-----------+------------------+---------+-----------------+
+   +-------------------+------------+---------------------+---------+------------------+
+   | Loại liên kết     | Băng thông | Khoảng cách 1 chiều | RTT     | RTT x Băng thông |
+   +===================+============+=====================+=========+==================+
+   | Wireless LAN      | 54 Mbps    | 50 m                | 0,33 μs | 18 bit           |
+   +-------------------+------------+---------------------+---------+------------------+
+   | Vệ tinh           | 1 Gbps     | 35.000 km           | 230 ms  | 230 Mb           |
+   +-------------------+------------+---------------------+---------+------------------+
+   | Cáp quang quốc tế | 10 Gbps    | 4.000 km            | 40 ms   | 400 Mb           |
+   +---------------------+----------+---------------------+---------+------------------+
 
 1.5.3 Mạng tốc độ cao
 ---------------------

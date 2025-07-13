@@ -274,7 +274,7 @@ Cuối cùng, ``swpInWindow`` là một thủ tục con đơn giản kiểm tra 
    }
 
 Thứ Tự Khung và Điều Khiển Luồng
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Giao thức cửa sổ trượt có lẽ là thuật toán nổi tiếng nhất trong mạng máy tính. Tuy nhiên, điều dễ gây nhầm lẫn về thuật toán này là nó có thể phục vụ ba vai trò khác nhau. Vai trò đầu tiên là vai trò mà chúng ta đã tập trung trong phần này—truyền dữ liệu đáng tin cậy qua một liên kết không đáng tin cậy. (Nói chung, thuật toán có thể được sử dụng để truyền tin nhắn đáng tin cậy qua một mạng không đáng tin cậy.) Đây là chức năng cốt lõi của thuật toán.
 

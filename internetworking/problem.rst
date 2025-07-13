@@ -1,5 +1,5 @@
 Vấn đề: Không phải mọi mạng đều kết nối trực tiếp
-------------------------------------------------
+-------------------------------------------------
 
 Như chúng ta đã thấy, có rất nhiều công nghệ có thể được sử dụng để xây dựng các liên kết “dặm cuối” hoặc kết nối một số lượng nhỏ các nút với nhau, nhưng làm thế nào để chúng ta xây dựng các mạng ở quy mô toàn cầu? Một mạng Ethernet đơn lẻ chỉ có thể kết nối tối đa 1024 máy chủ; một liên kết điểm-điểm chỉ kết nối hai thiết bị. Mạng không dây bị giới hạn bởi phạm vi của sóng radio. Để xây dựng một mạng toàn cầu, chúng ta cần một cách để liên kết các loại liên kết và mạng đa truy cập khác nhau này. Khái niệm liên kết các loại mạng khác nhau để xây dựng một mạng lớn, toàn cầu là ý tưởng cốt lõi của Internet và thường được gọi là *liên mạng* (internetworking).
 

@@ -17,6 +17,7 @@ Trong những năm kể từ khi ấn bản đầu tiên của cuốn sách này
 Mặc dù mỗi hệ điều hành đều có thể tự do định nghĩa API mạng của riêng mình (và hầu hết đều có), theo thời gian, một số API này đã trở nên được hỗ trợ rộng rãi; tức là, chúng đã được chuyển sang các hệ điều hành khác ngoài hệ điều hành gốc. Điều này đã xảy ra với *giao diện socket* ban đầu được cung cấp bởi bản phân phối Unix của Berkeley, hiện nay được hỗ trợ trên hầu như tất cả các hệ điều hành phổ biến, và là nền tảng của các giao diện đặc thù ngôn ngữ, như thư viện socket của Java hoặc Python. Chúng tôi sử dụng Linux và C cho tất cả các ví dụ mã trong cuốn sách này, Linux vì nó là mã nguồn mở và C vì nó vẫn là ngôn ngữ được lựa chọn cho các thành phần mạng bên trong. (Cũng có lợi thế là phơi bày tất cả các chi tiết cấp thấp, điều này hữu ích để hiểu các ý tưởng nền tảng.)
 
 .. sidebar:: Sự bùng nổ ứng dụng nhờ Sockets
+
    Thật khó để đánh giá hết tầm quan trọng của Socket API. Nó xác định ranh giới giữa các ứng dụng chạy trên Internet và các chi tiết về cách Internet được triển khai. Nhờ Sockets cung cấp một giao diện rõ ràng và ổn định, việc viết ứng dụng Internet đã bùng nổ thành một ngành công nghiệp hàng tỷ đô la. Bắt đầu từ mô hình client/server đơn giản và một vài chương trình ứng dụng như email, truyền tệp và đăng nhập từ xa, giờ đây ai cũng có thể truy cập vô số ứng dụng đám mây từ điện thoại thông minh của mình. Phần này đặt nền tảng bằng cách nhắc lại sự đơn giản của một chương trình client mở socket để trao đổi thông điệp với chương trình server, nhưng ngày nay một hệ sinh thái phần mềm phong phú đã được xây dựng trên Socket API. Lớp này bao gồm vô số công cụ dựa trên đám mây giúp giảm rào cản cho việc triển khai các ứng dụng có khả năng mở rộng. Chúng tôi sẽ quay lại mối liên hệ giữa đám mây và mạng trong mọi chương, bắt đầu từ phần *Perspective* ở cuối Chương 1.
 
 Trước khi mô tả giao diện socket, điều quan trọng là bạn phải tách biệt hai mối quan tâm trong đầu. Mỗi giao thức cung cấp một tập hợp *dịch vụ* nhất định, và API cung cấp một *cú pháp* để các dịch vụ đó có thể được gọi trên một hệ thống máy tính cụ thể. Việc triển khai sau đó chịu trách nhiệm ánh xạ tập hợp các thao tác và đối tượng cụ thể do API định nghĩa lên tập hợp dịch vụ trừu tượng do giao thức định nghĩa. Nếu bạn làm tốt việc định nghĩa giao diện, thì sẽ có thể sử dụng cú pháp của giao diện để gọi các dịch vụ của nhiều giao thức khác nhau. Tính tổng quát như vậy chắc chắn là mục tiêu của giao diện socket, mặc dù nó còn lâu mới hoàn hảo.
@@ -26,6 +27,7 @@ Trừu tượng chính của giao diện socket, không ngạc nhiên, là *sock
 Bước đầu tiên là tạo một socket, được thực hiện với thao tác sau:
 
 .. code-block:: c
+
    int socket(int domain, int type, int protocol);
 
 Lý do thao tác này nhận ba tham số là vì giao diện socket được thiết kế đủ tổng quát để hỗ trợ bất kỳ bộ giao thức nền tảng nào. Cụ thể, tham số ``domain`` xác định *họ giao thức* sẽ được sử dụng: ``PF_INET`` biểu thị họ Internet, ``PF_UNIX`` biểu thị cơ sở ống Unix, và ``PF_PACKET`` biểu thị truy cập trực tiếp vào giao diện mạng (tức là, bỏ qua ngăn xếp giao thức TCP/IP). Tham số ``type`` chỉ ra ngữ nghĩa của giao tiếp. ``SOCK_STREAM`` dùng để biểu thị luồng byte. ``SOCK_DGRAM`` là lựa chọn thay thế biểu thị dịch vụ hướng thông điệp, như UDP cung cấp. Tham số ``protocol`` xác định giao thức cụ thể sẽ được sử dụng. Trong trường hợp của chúng ta, tham số này là ``UNSPEC`` vì kết hợp ``PF_INET`` và ``SOCK_STREAM`` đã ngầm định là TCP. Cuối cùng, giá trị trả về từ ``socket`` là một *handle* cho socket vừa tạo—tức là, một định danh để chúng ta có thể tham chiếu socket này về sau. Nó được truyền làm tham số cho các thao tác tiếp theo trên socket này.
@@ -33,6 +35,7 @@ Lý do thao tác này nhận ba tham số là vì giao diện socket được th
 Bước tiếp theo phụ thuộc vào việc bạn là client hay server. Trên máy chủ, tiến trình ứng dụng thực hiện *mở thụ động*—server thông báo rằng nó sẵn sàng chấp nhận kết nối, nhưng chưa thực sự thiết lập kết nối. Server làm điều này bằng cách gọi ba thao tác sau:
 
 .. code-block:: c
+
    int bind(int socket, struct sockaddr *address, int addr_len);
    int listen(int socket, int backlog);
    int accept(int socket, struct sockaddr *address, int *addr_len);
@@ -44,6 +47,7 @@ Thao tác ``listen`` sau đó xác định số lượng kết nối có thể c
 Trên máy client, tiến trình ứng dụng thực hiện *mở chủ động*; tức là, nó chỉ định muốn giao tiếp với ai bằng cách gọi thao tác sau:
 
 .. code-block:: c
+
    int connect(int socket, struct sockaddr *address, int addr_len);
 
 Thao tác này không trả về cho đến khi TCP thiết lập kết nối thành công, lúc đó ứng dụng có thể bắt đầu gửi dữ liệu. Trong trường hợp này, ``address`` chứa địa chỉ của thành phần từ xa. Thực tế, client thường chỉ chỉ định địa chỉ của thành phần từ xa và để hệ thống tự điền thông tin cục bộ. Trong khi server thường lắng nghe ở một cổng nổi tiếng, client thường không quan tâm mình dùng cổng nào; hệ điều hành chỉ đơn giản chọn một cổng chưa dùng.
@@ -51,6 +55,7 @@ Thao tác này không trả về cho đến khi TCP thiết lập kết nối th
 Khi kết nối đã được thiết lập, các tiến trình ứng dụng gọi hai thao tác sau để gửi và nhận dữ liệu:
 
 .. code-block:: c
+
    int send(int socket, char *message, int msg_len, int flags);
    int recv(int socket, char *buffer, int buf_len, int flags);
 
@@ -65,6 +70,7 @@ Client
 Chúng ta bắt đầu với phía client, nhận tên máy từ xa làm tham số. Nó gọi tiện ích Linux để chuyển tên này thành địa chỉ IP của host từ xa. Bước tiếp theo là xây dựng cấu trúc dữ liệu địa chỉ (``sin``) mà giao diện socket mong đợi. Lưu ý rằng cấu trúc này chỉ rõ chúng ta sẽ dùng socket để kết nối Internet (``AF_INET``). Trong ví dụ, chúng ta dùng cổng TCP 5432 làm cổng server nổi tiếng; đây là cổng chưa được gán cho dịch vụ Internet nào khác. Bước cuối cùng để thiết lập kết nối là gọi ``socket`` và ``connect``. Khi thao tác trả về, kết nối đã được thiết lập và chương trình client đi vào vòng lặp chính, đọc văn bản từ đầu vào chuẩn và gửi qua socket.
 
 .. code-block:: c
+
    #include <stdio.h>
    #include <sys/types.h>
    #include <sys/socket.h>
@@ -133,6 +139,7 @@ Server
 Server cũng đơn giản không kém. Đầu tiên nó xây dựng cấu trúc dữ liệu địa chỉ bằng cách điền số cổng của chính nó (``SERVER_PORT``). Bằng cách không chỉ định địa chỉ IP, chương trình ứng dụng sẵn sàng chấp nhận kết nối trên bất kỳ địa chỉ IP nào của host cục bộ. Tiếp theo, server thực hiện các bước chuẩn bị cho mở thụ động; nó tạo socket, gắn socket vào địa chỉ cục bộ, và đặt số lượng kết nối chờ tối đa được phép. Cuối cùng, vòng lặp chính chờ một host từ xa cố gắng kết nối, và khi có, nó nhận và in ra các ký tự nhận được trên kết nối.
 
 .. code-block:: c
+
    #include <stdio.h>
    #include <sys/types.h>
    #include <sys/socket.h>

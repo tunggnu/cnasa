@@ -381,9 +381,9 @@ ban đầu chưa mã hóa để làm yếu các lựa chọn thuật toán mật
 Giao Thức Bản Ghi
 ~~~~~~~~~~~~~~~~~
 
-Trong một phiên được thiết lập bởi giao thức bắt tay, giao thức bản ghi (record protocol)
- của TLS bổ sung tính bí mật và toàn vẹn cho dịch vụ vận chuyển bên dưới.
-Các thông điệp được gửi xuống từ lớp ứng dụng sẽ:
+Trong một phiên được thiết lập bởi giao thức bắt tay, giao thức bản ghi
+(record protocol) của TLS bổ sung tính bí mật và toàn vẹn cho dịch vụ
+vận chuyển bên dưới. Các thông điệp được gửi xuống từ lớp ứng dụng sẽ:
 
 1. Được phân mảnh hoặc gộp thành các khối có kích thước thuận tiện cho
    các bước tiếp theo
@@ -501,7 +501,7 @@ gọi là Internet Security Association and Key Management Protocol (ISAKMP).
 Trừu tượng liên kết hai phần này là *security association* (SA).
 SA là một kết nối simplex (một chiều) với một hoặc nhiều thuộc tính bảo mật sẵn có.
 Bảo vệ một giao tiếp hai chiều giữa một cặp
- máy chủ—tương ứng với một kết nối TCP,
+máy chủ—tương ứng với một kết nối TCP,
 chẳng hạn—cần hai SA, một cho mỗi chiều.
 Mặc dù IP là một giao thức không kết nối, bảo mật lại phụ thuộc vào
 thông tin trạng thái kết nối như khóa và số thứ tự.

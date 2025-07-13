@@ -20,5 +20,5 @@ các cuốn sách đồng hành của chúng tôi, nơi đề cập sâu hơn đ
 
 * `Vận hành Đám mây Biên: Một Phương pháp Tiếp cận Hệ thống
   <https://systemsapproach.org/books/#opsbook>`__
-  
+
 * `Điều khiển tắc nghẽn TCP: Một Phương pháp Tiếp cận Hệ thống <https://systemsapproach.org/books/#tcpbook>`__

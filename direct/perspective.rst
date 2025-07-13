@@ -44,19 +44,20 @@ Cho đến giờ, chúng ta hiểu một liên kết là một môi trường v�
 Một cách khác để phân loại liên kết là theo cách chúng được sử dụng. Các vấn đề kinh tế và triển khai khác nhau thường ảnh hưởng đến việc các loại liên kết khác nhau xuất hiện ở đâu. Hầu hết người dùng tương tác với Internet hoặc qua các mạng không dây (mà họ gặp ở quán cà phê, sân bay, trường đại học, v.v.) hoặc qua các liên kết “last-mile” (hoặc còn gọi là *mạng truy nhập*) do ISP cung cấp, như minh họa trong :numref:`Hình %s <fig-isp-access>`. Các loại liên kết này được tóm tắt trong :numref:`Bảng %s <tab-home>`. Chúng thường được chọn vì là cách hiệu quả về chi phí để tiếp cận hàng triệu người dùng. Ví dụ, DSL (Digital Subscriber Line) là một công nghệ cũ được triển khai trên các dây đồng cặp xoắn vốn đã có sẵn cho dịch vụ điện thoại truyền thống; G.Fast là một công nghệ dựa trên dây đồng thường dùng trong các tòa nhà căn hộ nhiều hộ, và PON (Passive Optical Network) là một công nghệ mới hơn thường dùng để kết nối nhà và doanh nghiệp qua cáp quang mới triển khai.
 
 .. _tab-home:
+
 .. table::  Các dịch vụ phổ biến cho kết nối last-mile tới nhà bạn.
    :widths: auto
    :align: center
 
-   +-----------------+----------------+
-   | Dịch vụ         | Băng thông     |
-   +=================+================+
-   | DSL (dây đồng)  | lên tới 100 Mbps|
-   +-----------------+----------------+
-   | G.Fast (dây đồng)| lên tới 1 Gbps |
-   +-----------------+----------------+
-   | PON (quang)     | lên tới 10 Gbps |
-   +-----------------+----------------+
+   +-------------------+------------------+
+   | Dịch vụ           | Băng thông       |
+   +===================+==================+
+   | DSL (dây đồng)    | lên tới 100 Mbps |
+   +-------------------+------------------+
+   | G.Fast (dây đồng) | lên tới 1 Gbps   |
+   +-------------------+------------------+
+   | PON (quang)       | lên tới 10 Gbps  |
+   +-------------------+------------------+
 
 Và tất nhiên còn có mạng *di động* hoặc *cellular* (còn gọi là 4G, nhưng đang nhanh chóng chuyển mình thành 5G) kết nối các thiết bị di động của chúng ta với Internet. Công nghệ này cũng có thể đóng vai trò là kết nối Internet duy nhất vào nhà hoặc văn phòng của chúng ta, nhưng còn có lợi ích bổ sung là cho phép chúng ta duy trì kết nối Internet khi di chuyển từ nơi này sang nơi khác.
 

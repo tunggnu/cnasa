@@ -1,5 +1,5 @@
 Góc nhìn: Mạng ảo ở mọi tầng
-===========================
+============================
 
 Gần như từ khi các mạng chuyển mạch gói xuất hiện, đã có những ý tưởng về cách ảo hóa chúng, bắt đầu từ các mạch ảo. Nhưng chính xác thì ảo hóa một mạng nghĩa là gì?
 

@@ -131,7 +131,7 @@ Như mọi trừu tượng, các kênh logic tiến trình-đến-tiến trình 
 Thách thức là nhận ra chức năng nào các kênh nên cung cấp cho chương trình ứng dụng. Ví dụ, ứng dụng có yêu cầu đảm bảo rằng các thông điệp gửi qua kênh sẽ được chuyển giao, hay chấp nhận nếu một số thông điệp không đến? Có cần thiết các thông điệp đến tiến trình nhận theo đúng thứ tự gửi, hay tiến trình nhận không quan tâm đến thứ tự? Mạng có cần đảm bảo không bên thứ ba nào có thể nghe lén kênh, hay bảo mật không phải là vấn đề? Nói chung, một mạng cung cấp nhiều loại kênh khác nhau, mỗi ứng dụng chọn loại phù hợp nhất với nhu cầu của mình. Phần còn lại của mục này minh họa cách suy nghĩ khi xác định các kênh hữu ích.
 
 Xác định các mẫu giao tiếp chung
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Thiết kế các kênh trừu tượng bắt đầu bằng việc hiểu nhu cầu giao tiếp của một tập hợp ứng dụng đại diện, sau đó rút ra các yêu cầu giao tiếp chung, và cuối cùng tích hợp chức năng đáp ứng các yêu cầu này vào mạng.
 

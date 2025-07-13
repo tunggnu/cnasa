@@ -63,7 +63,7 @@ Vì RTP được thiết kế để hỗ trợ nhiều loại ứng dụng, nó 
    Thiết kế của RTP thể hiện một nguyên lý kiến trúc gọi là *Application Level Framing* (ALF) – Đóng khung ở tầng ứng dụng. Nguyên lý này được Clark và Tennenhouse đề xuất năm 1990 như một cách tiếp cận mới để thiết kế giao thức cho các ứng dụng đa phương tiện mới nổi. Họ nhận ra rằng các ứng dụng này khó có thể được phục vụ tốt bởi các giao thức hiện có như TCP, và hơn nữa, có thể không phù hợp với bất kỳ giao thức “một cho tất cả” nào. Cốt lõi của nguyên lý này là niềm tin rằng ứng dụng hiểu rõ nhất nhu cầu của chính nó. Ví dụ, một ứng dụng video MPEG biết cách tốt nhất để phục hồi khi mất khung hình và phản ứng khác nhau nếu mất khung I hay khung B. Ứng dụng cũng hiểu rõ nhất cách phân mảnh dữ liệu để truyền—ví dụ, tốt hơn nên gửi dữ liệu từ các khung khác nhau trong các datagram khác nhau, để một gói bị mất chỉ làm hỏng một khung, không phải hai. Đó là lý do tại sao RTP để lại nhiều chi tiết giao thức cho các tài liệu profile và format đặc thù ứng dụng. :ref:`[Tiếp theo] <key-congestion>`
 
 Định dạng phần đầu
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 :numref:`Hình %s <fig-rtp-hdr>` cho thấy định dạng phần đầu được sử dụng bởi RTP. 12 byte đầu tiên luôn có mặt, trong khi các định danh nguồn đóng góp chỉ được sử dụng trong một số trường hợp nhất định. Sau phần đầu này có thể có các phần mở rộng tùy chọn, như mô tả bên dưới. Cuối cùng, phần đầu được theo sau bởi payload RTP, định dạng của nó do ứng dụng quyết định. Mục đích của phần đầu này là chỉ chứa các trường có khả năng được nhiều ứng dụng khác nhau sử dụng, vì bất cứ thứ gì quá đặc thù cho một ứng dụng sẽ hiệu quả hơn nếu được mang trong payload RTP chỉ cho ứng dụng đó.
 

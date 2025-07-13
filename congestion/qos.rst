@@ -20,7 +20,7 @@ Trước khi xem xét các giao thức và cơ chế khác nhau có thể đư�
    Một ứng dụng âm thanh.
 
 Ví dụ về âm thanh thời gian thực
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Lấy ví dụ cụ thể về một ứng dụng thời gian thực, hãy xem xét một ứng dụng âm thanh tương tự như minh họa ở :numref:`Hình %s <fig-audio>`. Dữ liệu được tạo ra bằng cách thu thập các mẫu từ micro và số hóa chúng bằng bộ chuyển đổi tương tự-số (A-to-D). Các mẫu số được đặt vào các gói tin, truyền qua mạng và nhận ở đầu bên kia. Ở máy chủ nhận, dữ liệu phải được *phát lại* ở tốc độ phù hợp. Ví dụ, nếu các mẫu thoại được thu thập với tốc độ một mẫu mỗi 125 μs, chúng cũng phải được phát lại với tốc độ đó. Do đó, chúng ta có thể coi mỗi mẫu có một *thời điểm phát lại* cụ thể: thời điểm mà nó cần thiết ở máy chủ nhận. Trong ví dụ thoại, mỗi mẫu có thời điểm phát lại cách mẫu trước đó 125 μs. Nếu dữ liệu đến sau thời điểm phát lại phù hợp, dù do bị trễ trong mạng hay bị mất và truyền lại sau đó, thì về cơ bản nó trở nên vô dụng. Chính sự vô dụng hoàn toàn của dữ liệu đến muộn là đặc trưng của các ứng dụng thời gian thực. Với các ứng dụng co giãn, sẽ tốt hơn nếu dữ liệu đến đúng lúc, nhưng chúng ta vẫn có thể sử dụng khi nó đến muộn.
 

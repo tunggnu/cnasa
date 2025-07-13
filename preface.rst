@@ -1,5 +1,5 @@
 Lời nói đầu
-==========
+===========
 
 Đã gần mười năm kể từ khi ấn bản thứ năm của *Computer Networks: A Systems Approach* được xuất bản. Rất nhiều điều đã thay đổi trong thời gian đó, đáng chú ý nhất là sự bùng nổ của điện toán đám mây và các ứng dụng trên điện thoại thông minh. Ở nhiều khía cạnh, điều này gợi nhớ đến tác động mạnh mẽ mà Web đã có đối với Internet khi chúng tôi xuất bản ấn bản đầu tiên của cuốn sách vào năm 1996.
 

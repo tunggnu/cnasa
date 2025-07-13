@@ -1,610 +1,339 @@
 4.3 Multicast
 =============
 
-Multi-access networks like Ethernet implement multicast in hardware.
-There are, however, applications that need a broader multicasting
-capability that is effective at the scale of the Internet. For example,
-when a radio station is broadcast over the Internet, the same data must
-be sent to all the hosts where a user has tuned in to that station. In
-that example, the communication is one-to-many. Other examples of
-one-to-many applications include transmitting the same news, current
-stock prices, software updates, or TV channels to multiple hosts. The
-latter example is commonly called IPTV.
+Các mạng đa truy nhập như Ethernet hiện thực multicast bằng phần cứng.
+Tuy nhiên, có những ứng dụng cần khả năng multicast rộng hơn, hiệu quả ở quy mô Internet.
+Ví dụ, khi một đài phát thanh được phát sóng qua Internet, cùng một dữ liệu phải được gửi đến tất cả các máy chủ nơi người dùng đã bật kênh đó.
+Trong ví dụ này, giao tiếp là một-nhiều. Các ví dụ khác về ứng dụng một-nhiều bao gồm truyền cùng một tin tức, giá cổ phiếu hiện tại, cập nhật phần mềm,
+hoặc các kênh truyền hình đến nhiều máy chủ. Ví dụ sau thường được gọi là IPTV.
 
-There are also applications whose communication is many-to-many, such as
-multimedia teleconferencing, online multiplayer gaming, or distributed
-simulations. In such cases, members of a group receive data from
-multiple senders, typically each other. From any particular sender, they
-all receive the same data.
+Cũng có những ứng dụng mà giao tiếp là nhiều-nhiều, như hội nghị truyền hình đa phương tiện, trò chơi trực tuyến nhiều người chơi,
+hoặc mô phỏng phân tán. Trong các trường hợp này, các thành viên của một nhóm nhận dữ liệu từ nhiều nguồn gửi, thường là từ nhau.
+Từ bất kỳ nguồn gửi cụ thể nào, tất cả họ đều nhận cùng một dữ liệu.
 
-Normal IP communication, in which each packet must be addressed and sent
-to a single host, is not well suited to such applications. If an
-application has data to send to a group, it would have to send a
-separate packet with the identical data to each member of the group.
-This redundancy consumes more bandwidth than necessary. Furthermore, the
-redundant traffic is not distributed evenly but rather is focused around
-the sending host, and may easily exceed the capacity of the sending host
-and the nearby networks and routers.
+Giao tiếp IP thông thường, trong đó mỗi gói phải được định địa chỉ và gửi đến một máy chủ duy nhất, không phù hợp với các ứng dụng như vậy.
+Nếu một ứng dụng có dữ liệu cần gửi đến một nhóm, nó sẽ phải gửi một gói riêng biệt với dữ liệu giống hệt nhau đến từng thành viên của nhóm.
+Sự dư thừa này tiêu tốn nhiều băng thông hơn mức cần thiết. Hơn nữa, lưu lượng dư thừa này không được phân phối đều mà tập trung quanh máy gửi,
+và có thể dễ dàng vượt quá khả năng của máy gửi và các mạng, router lân cận.
 
-To better support many-to-many and one-to-many communication, IP
-provides an IP-level multicast analogous to the link-level multicast
-provided by multi-access networks like Ethernet. Now that we are
-introducing the concept of multicast for IP, we also need a term for the
-traditional one-to-one service of IP that has been described so far:
-That service is referred to as *unicast*.
+Để hỗ trợ tốt hơn cho giao tiếp nhiều-nhiều và một-nhiều, IP cung cấp multicast ở cấp IP tương tự như multicast ở cấp liên kết
+được cung cấp bởi các mạng đa truy nhập như Ethernet. Bây giờ khi chúng ta giới thiệu khái niệm multicast cho IP,
+chúng ta cũng cần một thuật ngữ cho dịch vụ truyền thống một-một của IP đã được mô tả đến nay: Dịch vụ đó được gọi là *unicast*.
 
-The basic IP multicast model is a many-to-many model based on multicast
-*groups*, where each group has its own IP *multicast address*. The hosts
-that are members of a group receive copies of any packets sent to that
-group’s multicast address. A host can be in multiple groups, and it can
-join and leave groups freely by telling its local router using a
-protocol that we will discuss shortly. Thus, while we think of unicast
-addresses as being associated with a node or an interface, multicast
-addresses are associated with an abstract group, the membership of which
-changes dynamically over time. Further, the original IP multicast
-service model allows *any* host to send multicast traffic to a group; it
-doesn’t have to be a member of the group, and there may be any number of
-such senders to a given group.
+Mô hình multicast IP cơ bản là mô hình nhiều-nhiều dựa trên các *nhóm* multicast, trong đó mỗi nhóm có một *địa chỉ multicast* IP riêng.
+Các máy chủ là thành viên của một nhóm sẽ nhận bản sao của bất kỳ gói nào gửi đến địa chỉ multicast của nhóm đó.
+Một máy chủ có thể thuộc nhiều nhóm, và nó có thể tham gia hoặc rời nhóm tự do bằng cách thông báo cho router cục bộ của nó
+bằng một giao thức mà chúng ta sẽ thảo luận ngay sau đây. Do đó, trong khi chúng ta nghĩ về địa chỉ unicast là gắn với một nút hoặc một giao diện,
+địa chỉ multicast lại gắn với một nhóm trừu tượng, thành viên của nhóm này thay đổi động theo thời gian.
+Hơn nữa, mô hình dịch vụ multicast IP ban đầu cho phép *bất kỳ* máy chủ nào gửi lưu lượng multicast đến một nhóm;
+nó không cần phải là thành viên của nhóm, và có thể có bất kỳ số lượng nguồn gửi nào đến một nhóm nhất định.
 
-Using IP multicast to send the identical packet to each member of the
-group, a host sends a single copy of the packet addressed to the group’s
-multicast address. The sending host doesn’t need to know the individual
-unicast IP address of each member of the group because, as we will see,
-that knowledge is distributed among the routers in the internetwork.
-Similarly, the sending host doesn’t need to send multiple copies of the
-packet because the routers will make copies whenever they have to
-forward the packet over more than one link. Compared to using unicast IP
-to deliver the same packets to many receivers, IP multicast is more
-scalable because it eliminates the redundant traffic (packets) that
-would have been sent many times over the same links, especially those
-near to the sending host.
+Khi sử dụng multicast IP để gửi cùng một gói đến từng thành viên của nhóm, một máy chủ chỉ cần gửi một bản sao của gói được định địa chỉ đến địa chỉ multicast của nhóm.
+Máy gửi không cần biết địa chỉ IP unicast của từng thành viên nhóm vì, như chúng ta sẽ thấy, kiến thức đó được phân phối giữa các router trong liên mạng.
+Tương tự, máy gửi không cần gửi nhiều bản sao của gói vì các router sẽ tạo bản sao bất cứ khi nào chúng phải chuyển tiếp gói qua nhiều liên kết.
+So với việc sử dụng IP unicast để chuyển cùng một gói đến nhiều máy nhận, multicast IP mở rộng tốt hơn vì nó loại bỏ lưu lượng dư thừa (các gói)
+có thể đã được gửi nhiều lần qua cùng một liên kết, đặc biệt là các liên kết gần máy gửi.
 
-IP’s original many-to-many multicast has been supplemented with support
-for a form of one-to-many multicast. In this model of one-to-many
-multicast, called *Source-Specific Multicast* (SSM), a receiving host
-specifies both a multicast group and a specific sending host. The
-receiving host would then receive multicasts addressed to the specified
-group, but only if they are from the specified sender. Many Internet
-multicast applications (e.g., radio broadcasts) fit the SSM model. To
-contrast it with SSM, IP’s original many-to-many model is sometimes
-referred to as *Any Source Multicast* (ASM).
+Multicast nhiều-nhiều ban đầu của IP đã được bổ sung hỗ trợ cho một dạng multicast một-nhiều.
+Trong mô hình multicast một-nhiều này, gọi là *Source-Specific Multicast* (SSM), một máy nhận chỉ định cả một nhóm multicast và một máy gửi cụ thể.
+Máy nhận sau đó sẽ nhận các multicast gửi đến nhóm đã chỉ định, nhưng chỉ nếu chúng đến từ nguồn gửi đã chỉ định.
+Nhiều ứng dụng multicast Internet (ví dụ, phát thanh radio) phù hợp với mô hình SSM.
+Để phân biệt với SSM, mô hình nhiều-nhiều ban đầu của IP đôi khi được gọi là *Any Source Multicast* (ASM).
 
-A host signals its desire to join or leave a multicast group by
-communicating with its local router using a special protocol for just
-that purpose. In IPv4, that protocol is the *Internet Group Management
-Protocol* (IGMP); in IPv6, it is *Multicast Listener Discovery* (MLD).
-The router then has the responsibility for making multicast behave
-correctly with regard to that host. Because a host may fail to leave a
-multicast group when it should (after a crash or other failure, for
-example), the router periodically polls the network to determine which
-groups are still of interest to the attached hosts.
+Một máy chủ báo hiệu mong muốn tham gia hoặc rời một nhóm multicast bằng cách giao tiếp với router cục bộ của nó
+bằng một giao thức đặc biệt cho mục đích đó. Trong IPv4, giao thức đó là *Internet Group Management Protocol* (IGMP);
+trong IPv6, nó là *Multicast Listener Discovery* (MLD).
+Router sau đó có trách nhiệm đảm bảo multicast hoạt động đúng với máy chủ đó.
+Bởi vì một máy chủ có thể không rời khỏi nhóm multicast khi cần thiết (sau khi bị crash hoặc lỗi khác, chẳng hạn),
+router định kỳ thăm dò mạng để xác định những nhóm nào vẫn còn được các máy chủ kết nối quan tâm.
 
-4.3.1 Multicast Addresses
--------------------------
+4.3.1 Địa chỉ Multicast
+-----------------------
 
-IP has a subrange of its address space reserved for multicast addresses.
-In IPv4, these addresses are assigned in the class D address space, and
-IPv6 also has a portion of its address space reserved for multicast
-group addresses. Some subranges of the multicast ranges are reserved for
-intradomain multicast, so they can be reused independently by different
-domains.
+IP có một dải con trong không gian địa chỉ của nó dành riêng cho địa chỉ multicast.
+Trong IPv4, các địa chỉ này được gán trong không gian địa chỉ lớp D, và IPv6 cũng có một phần không gian địa chỉ dành riêng cho địa chỉ nhóm multicast.
+Một số dải con của dải multicast được dành cho multicast nội miền, vì vậy chúng có thể được sử dụng lại độc lập bởi các miền khác nhau.
 
-There are thus 28 bits of possible multicast address in IPv4 when we
-ignore the prefix shared by all multicast addresses. This presents a
-problem when attempting to take advantage of hardware multicasting on a
-local area network (LAN). Let’s take the case of Ethernet. Ethernet
-multicast addresses have only 23 bits when we ignore their shared
-prefix. In other words, to take advantage of Ethernet multicasting, IP
-has to map 28-bit IP multicast addresses into 23-bit Ethernet multicast
-addresses. This is implemented by taking the low-order 23 bits of any IP
-multicast address to use as its Ethernet multicast address and ignoring
-the high-order 5 bits. Thus, 32 (2\ :sup:`5`) IP addresses map into each
-one of the Ethernet addresses.
+Như vậy có 28 bit địa chỉ multicast khả dụng trong IPv4 nếu bỏ qua tiền tố chung của tất cả địa chỉ multicast.
+Điều này gây ra một vấn đề khi cố gắng tận dụng multicast phần cứng trên một mạng LAN.
+Hãy lấy trường hợp của Ethernet. Địa chỉ multicast của Ethernet chỉ có 23 bit nếu bỏ qua tiền tố chung của chúng.
+Nói cách khác, để tận dụng multicast của Ethernet, IP phải ánh xạ địa chỉ multicast IP 28 bit vào địa chỉ multicast Ethernet 23 bit.
+Điều này được hiện thực bằng cách lấy 23 bit thấp nhất của bất kỳ địa chỉ multicast IP nào để dùng làm địa chỉ multicast Ethernet của nó và bỏ qua 5 bit cao nhất.
+Như vậy, 32 (2\ :sup:`5`) địa chỉ IP ánh xạ vào mỗi địa chỉ Ethernet.
 
-   In this section we use Ethernet as a canonical example of a
-   networking technology that supports multicast in hardware, but the
-   same is also true of PON (Passive Optical Networks), which is the
-   access network technology often used to deliver fiber-to-the-home. In
-   fact, IP Multicast over PON is now a common way to deliver IPTV to
-   homes.
+   Trong phần này, chúng tôi sử dụng Ethernet như một ví dụ điển hình về công nghệ mạng hỗ trợ multicast bằng phần cứng,
+   nhưng điều tương tự cũng đúng với PON (Passive Optical Networks), là công nghệ mạng truy nhập thường được dùng để cung cấp cáp quang đến nhà.
+   Thực tế, IP Multicast qua PON hiện là cách phổ biến để cung cấp IPTV đến các hộ gia đình.
 
-When a host on an Ethernet joins an IP multicast group, it configures
-its Ethernet interface to receive any packets with the corresponding
-Ethernet multicast address. Unfortunately, this causes the receiving
-host to receive not only the multicast traffic it desired but also
-traffic sent to any of the other 31 IP multicast groups that map to the
-same Ethernet address, if they are routed to that Ethernet. Therefore,
-IP at the receiving host must examine the IP header of any multicast
-packet to determine whether the packet really belongs to the desired
-group. In summary, the mismatch of multicast address sizes means that
-multicast traffic may place a burden on hosts that are not even
-interested in the group to which the traffic was sent. Fortunately, in
-some switched networks (such as switched Ethernet) this problem can be
-mitigated by schemes wherein the switches recognize unwanted packets and
-discard them.
+Khi một máy chủ trên Ethernet tham gia một nhóm multicast IP, nó cấu hình giao diện Ethernet của mình để nhận bất kỳ gói nào có địa chỉ multicast Ethernet tương ứng.
+Đáng tiếc, điều này khiến máy nhận không chỉ nhận lưu lượng multicast mà nó mong muốn mà còn nhận cả lưu lượng gửi đến bất kỳ nhóm multicast IP nào khác
+cùng ánh xạ vào địa chỉ Ethernet đó, nếu chúng được định tuyến đến Ethernet này.
+Do đó, IP ở máy nhận phải kiểm tra header IP của bất kỳ gói multicast nào để xác định xem gói đó thực sự thuộc về nhóm mong muốn hay không.
+Tóm lại, sự không khớp về kích thước địa chỉ multicast có nghĩa là lưu lượng multicast có thể gây gánh nặng lên các máy chủ thậm chí không quan tâm đến nhóm mà lưu lượng được gửi đến.
+May mắn thay, trong một số mạng chuyển mạch (như Ethernet chuyển mạch), vấn đề này có thể được giảm nhẹ bằng các cơ chế mà switch nhận biết các gói không mong muốn và loại bỏ chúng.
 
-One perplexing question is how senders and receivers learn which
-multicast addresses to use in the first place. This is normally handled
-by out-of-band means, and there are some quite sophisticated tools to
-enable group addresses to be advertised on the Internet.
+Một câu hỏi gây bối rối là làm thế nào các nguồn gửi và máy nhận biết được địa chỉ multicast nào cần sử dụng ngay từ đầu.
+Điều này thường được xử lý bằng các phương tiện ngoài băng tần, và có một số công cụ khá tinh vi để quảng bá địa chỉ nhóm trên Internet.
 
-4.3.2 Multicast Routing (DVMRP, PIM, MSDP)
-------------------------------------------
+4.3.2 Định tuyến Multicast (DVMRP, PIM, MSDP)
+---------------------------------------------
 
-A router’s unicast forwarding tables indicate, for any IP address, which
-link to use to forward the unicast packet. To support multicast, a
-router must additionally have multicast forwarding tables that indicate,
-based on multicast address, which links—possibly more than one—to use to
-forward the multicast packet (the router duplicates the packet if it is
-to be forwarded over multiple links). Thus, where unicast forwarding
-tables collectively specify a set of paths, multicast forwarding tables
-collectively specify a set of trees: *multicast distribution trees*.
-Furthermore, to support Source-Specific Multicast (and, it turns out,
-for some types of Any Source Multicast), the multicast forwarding tables
-must indicate which links to use based on the combination of multicast
-address and the (unicast) IP address of the source, again specifying a
-set of trees.
+Bảng chuyển tiếp unicast của một router chỉ ra, với bất kỳ địa chỉ IP nào, liên kết nào sẽ được dùng để chuyển tiếp gói unicast.
+Để hỗ trợ multicast, một router phải có thêm bảng chuyển tiếp multicast chỉ ra, dựa trên địa chỉ multicast, liên kết nào—có thể nhiều hơn một—sẽ được dùng để chuyển tiếp gói multicast (router sẽ nhân bản gói nếu phải chuyển tiếp qua nhiều liên kết).
+Như vậy, trong khi các bảng chuyển tiếp unicast tập hợp lại chỉ định một tập các đường đi, các bảng chuyển tiếp multicast tập hợp lại chỉ định một tập các cây: *cây phân phối multicast*.
+Hơn nữa, để hỗ trợ Source-Specific Multicast (và, thực tế, cho một số loại Any Source Multicast), các bảng chuyển tiếp multicast phải chỉ ra liên kết nào sẽ được dùng dựa trên kết hợp giữa địa chỉ multicast và địa chỉ IP (unicast) của nguồn gửi, một lần nữa chỉ định một tập các cây.
 
-Multicast routing is the process by which the multicast distribution
-trees are determined or, more concretely, the process by which the
-multicast forwarding tables are built. As with unicast routing, it is
-not enough that a multicast routing protocol “work”; it must also scale
-reasonably well as the network grows, and it must accommodate the
-autonomy of different routing domains.
+Định tuyến multicast là quá trình xác định các cây phân phối multicast hoặc, cụ thể hơn, quá trình xây dựng các bảng chuyển tiếp multicast.
+Cũng như định tuyến unicast, một giao thức định tuyến multicast không chỉ cần “hoạt động”; nó còn phải mở rộng hợp lý khi mạng phát triển, và phải đáp ứng tính tự chủ của các miền định tuyến khác nhau.
 
 DVMRP
 ~~~~~
 
-Distance-vector routing used in unicast can be extended to support
-multicast. The resulting protocol is called *Distance Vector Multicast
-Routing Protocol*, or DVMRP. DVMRP was the first multicast routing
-protocol to see widespread use.
+Định tuyến vector-khoảng cách dùng trong unicast có thể được mở rộng để hỗ trợ multicast.
+Giao thức kết quả được gọi là *Distance Vector Multicast Routing Protocol*, hay DVMRP.
+DVMRP là giao thức định tuyến multicast đầu tiên được sử dụng rộng rãi.
 
-Recall that, in the distance-vector algorithm, each router maintains a
-table of ``Destination, Cost, NextHop`` tuples, and exchanges a list of
-``(Destination, Cost)`` pairs with its directly connected neighbors.
-Extending this algorithm to support multicast is a two-stage process.
-First, we create a broadcast mechanism that allows a packet to be
-forwarded to all the networks on the internet. Second, we need to refine
-this mechanism so that it prunes back networks that do not have hosts
-that belong to the multicast group. Consequently, DVMRP is one of
-several multicast routing protocols described as *flood-and-prune*
-protocols.
+Nhớ lại rằng, trong thuật toán vector-khoảng cách, mỗi router duy trì một bảng các bộ ba ``Destination, Cost, NextHop``,
+và trao đổi danh sách các cặp ``(Destination, Cost)`` với các láng giềng kết nối trực tiếp.
+Mở rộng thuật toán này để hỗ trợ multicast là một quá trình hai giai đoạn.
+Đầu tiên, chúng ta tạo một cơ chế quảng bá cho phép một gói được chuyển tiếp đến tất cả các mạng trên internet.
+Thứ hai, chúng ta cần tinh chỉnh cơ chế này để loại bỏ các mạng không có máy chủ thuộc nhóm multicast.
+Do đó, DVMRP là một trong số các giao thức định tuyến multicast được mô tả là giao thức *flood-and-prune*.
 
-Given a unicast routing table, each router knows that the current
-shortest path to a given ``destination`` goes through ``NextHop``. Thus,
-whenever it receives a multicast packet from source S, the router
-forwards the packet on all outgoing links (except the one on which the
-packet arrived) if and only if the packet arrived over the link that is
-on the shortest path to S (i.e., the packet came *from* the ``NextHop``
-associated with S in the routing table). This strategy effectively
-floods packets outward from S but does not loop packets back toward S.
+Với một bảng định tuyến unicast, mỗi router biết rằng đường đi ngắn nhất hiện tại đến một ``destination`` nào đó đi qua ``NextHop``.
+Do đó, bất cứ khi nào nó nhận được một gói multicast từ nguồn S, router sẽ chuyển tiếp gói trên tất cả các liên kết ra (trừ liên kết mà gói đến)
+nếu và chỉ nếu gói đến qua liên kết nằm trên đường đi ngắn nhất đến S (tức là, gói đến *từ* ``NextHop`` liên kết với S trong bảng định tuyến).
+Chiến lược này thực chất là flood các gói ra ngoài từ S nhưng không vòng lại về S.
 
-There are two major shortcomings to this approach. The first is that it
-truly floods the network; it has no provision for avoiding LANs that
-have no members in the multicast group. We address this problem below.
-The second limitation is that a given packet will be forwarded over a
-LAN by each of the routers connected to that LAN. This is due to the
-forwarding strategy of flooding packets on all links other than the one
-on which the packet arrived, without regard to whether or not those
-links are part of the shortest-path tree rooted at the source.
+Có hai nhược điểm lớn với cách tiếp cận này. Thứ nhất là nó thực sự flood toàn mạng; nó không có cơ chế tránh các LAN không có thành viên nhóm multicast.
+Chúng ta sẽ giải quyết vấn đề này bên dưới. Hạn chế thứ hai là một gói nhất định sẽ được chuyển tiếp qua một LAN bởi mỗi router kết nối với LAN đó.
+Điều này là do chiến lược chuyển tiếp flood gói trên tất cả các liên kết trừ liên kết mà gói đến, mà không quan tâm liệu các liên kết đó có thuộc cây đường đi ngắn nhất gốc tại nguồn hay không.
 
-The solution to this second limitation is to eliminate the duplicate
-broadcast packets that are generated when more than one router is
-connected to a given LAN. One way to do this is to designate one router
-as the *parent* router for each link, relative to the source, where only
-the parent router is allowed to forward multicast packets from that
-source over the LAN. The router that has the shortest path to source S
-is selected as the parent; a tie between two routers would be broken
-according to which router has the smallest address. A given router can
-learn if it is the parent for the LAN (again relative to each possible
-source) based upon the distance-vector messages it exchanges with its
-neighbors.
+Giải pháp cho hạn chế thứ hai này là loại bỏ các gói broadcast trùng lặp được tạo ra khi nhiều hơn một router kết nối với một LAN nhất định.
+Một cách để làm điều này là chỉ định một router làm router *cha* cho mỗi liên kết, so với nguồn, chỉ router cha mới được phép chuyển tiếp gói multicast từ nguồn đó qua LAN.
+Router có đường đi ngắn nhất đến nguồn S được chọn làm cha; nếu hai router hòa nhau thì chọn router có địa chỉ nhỏ nhất.
+Một router có thể biết mình có phải là cha cho LAN (so với từng nguồn) dựa trên các thông điệp vector-khoảng cách nó trao đổi với láng giềng.
 
-Notice that this refinement requires that each router keep, for each
-source, a bit for each of its incident links indicating whether or not
-it is the parent for that source/link pair. Keep in mind that in an
-internet setting, a source is a network, not a host, since an internet
-router is only interested in forwarding packets between networks. The
-resulting mechanism is sometimes called *Reverse Path Broadcast* (RPB)
-or *Reverse Path Forwarding* (RPF). The path is reverse because we are
-considering the shortest path toward the *source* when making our
-forwarding decisions, as compared to unicast routing, which looks for
-the shortest path to a given *destination*.
+Lưu ý rằng tinh chỉnh này yêu cầu mỗi router giữ, cho mỗi nguồn, một bit cho mỗi liên kết của nó để chỉ ra liệu nó có phải là cha cho cặp nguồn/liên kết đó hay không.
+Hãy nhớ rằng trong môi trường internet, một nguồn là một mạng, không phải một máy chủ, vì router internet chỉ quan tâm đến việc chuyển tiếp gói giữa các mạng.
+Cơ chế kết quả đôi khi được gọi là *Reverse Path Broadcast* (RPB) hoặc *Reverse Path Forwarding* (RPF).
+Đường đi là ngược vì chúng ta xét đường đi ngắn nhất về phía *nguồn* khi đưa ra quyết định chuyển tiếp, so với định tuyến unicast, vốn tìm đường đi ngắn nhất đến một *đích*.
 
-The RPB mechanism just described implements shortest-path broadcast. We
-now want to prune the set of networks that receives each packet
-addressed to group G to exclude those that have no hosts that are
-members of G. This can be accomplished in two stages. First, we need to
-recognize when a *leaf* network has no group members. Determining that a
-network is a leaf is easy—if the parent router as described above is the
-only router on the network, then the network is a leaf. Determining if
-any group members reside on the network is accomplished by having each
-host that is a member of group G periodically announce this fact over
-the network, as described in our earlier description of link-state
-multicast. The router then uses this information to decide whether or
-not to forward a multicast packet addressed to G over this LAN.
+Cơ chế RPB vừa mô tả hiện thực quảng bá đường đi ngắn nhất. Bây giờ chúng ta muốn loại bỏ tập các mạng nhận mỗi gói gửi đến nhóm G để loại trừ các mạng không có máy chủ là thành viên của G.
+Điều này có thể thực hiện qua hai giai đoạn. Đầu tiên, chúng ta cần nhận biết khi nào một mạng *lá* không có thành viên nhóm.
+Xác định một mạng là lá thì dễ—nếu router cha như mô tả ở trên là router duy nhất trên mạng, thì mạng đó là lá.
+Xác định xem có thành viên nhóm nào trên mạng không được thực hiện bằng cách để mỗi máy chủ là thành viên nhóm G định kỳ thông báo điều này qua mạng,
+như đã mô tả ở phần multicast link-state trước đó. Router sau đó dùng thông tin này để quyết định có chuyển tiếp gói multicast gửi đến G qua LAN này hay không.
 
-The second stage is to propagate this “no members of G here” information
-up the shortest-path tree. This is done by having the router augment the
-``(Destination, Cost)`` pairs it sends to its neighbors with the set of
-groups for which the leaf network is interested in receiving multicast
-packets. This information can then be propagated from router to router,
-so that for each of its links a given router knows for what groups it
-should forward multicast packets.
+Giai đoạn thứ hai là truyền thông tin “không có thành viên G ở đây” lên cây đường đi ngắn nhất.
+Điều này được thực hiện bằng cách để router bổ sung tập hợp các nhóm mà mạng lá quan tâm nhận gói multicast vào các cặp ``(Destination, Cost)`` nó gửi cho láng giềng.
+Thông tin này sau đó có thể được truyền từ router này sang router khác, để với mỗi liên kết của mình, một router biết cho nhóm nào nó nên chuyển tiếp gói multicast.
 
-Note that including all of this information in the routing update is a
-fairly expensive thing to do. In practice, therefore, this information
-is exchanged only when some source starts sending packets to that group.
-In other words, the strategy is to use RPB, which adds a small amount of
-overhead to the basic distance-vector algorithm, until a particular
-multicast address becomes active. At that time, routers that are not
-interested in receiving packets addressed to that group speak up, and
-that information is propagated to the other routers.
+Lưu ý rằng việc đưa tất cả thông tin này vào bản cập nhật định tuyến là khá tốn kém.
+Trong thực tế, thông tin này chỉ được trao đổi khi một nguồn bắt đầu gửi gói đến nhóm đó.
+Nói cách khác, chiến lược là dùng RPB, chỉ thêm một lượng nhỏ overhead vào thuật toán vector-khoảng cách cơ bản, cho đến khi một địa chỉ multicast cụ thể trở nên hoạt động.
+Lúc đó, các router không quan tâm nhận gói gửi đến nhóm đó sẽ lên tiếng, và thông tin đó được truyền đến các router khác.
 
 PIM-SM
 ~~~~~~
 
-*Protocol Independent Multicast*, or PIM, was developed in response to
-the scaling problems of earlier multicast routing protocols. In
-particular, it was recognized that the existing protocols did not scale
-well in environments where a relatively small proportion of routers want
-to receive traffic for a certain group. For example, broadcasting
-traffic to all routers until they explicitly ask to be removed from the
-distribution is not a good design choice if most routers don’t want to
-receive the traffic in the first place. This situation is sufficiently
-common that PIM divides the problem space into *sparse mode* and *dense
-mode,* where sparse and dense refer to the proportion of routers that
-will want the multicast. PIM dense mode (PIM-DM) uses a flood-and-prune
-algorithm like DVMRP and suffers from the same scalability problem. PIM
-sparse mode (PIM-SM) has become the dominant multicast routing protocol
-and is the focus of our discussion here. The “protocol independent”
-aspect of PIM, by the way, refers to the fact that, unlike earlier
-protocols such as DVMRP, PIM does not depend on any particular sort of
-unicast routing—it can be used with any unicast routing protocol, as we
-will see below.
+*Protocol Independent Multicast*, hay PIM, được phát triển để giải quyết các vấn đề mở rộng của các giao thức định tuyến multicast trước đó.
+Cụ thể, người ta nhận ra rằng các giao thức hiện có không mở rộng tốt trong môi trường mà chỉ một tỷ lệ nhỏ router muốn nhận lưu lượng cho một nhóm nhất định.
+Ví dụ, phát lưu lượng đến tất cả router cho đến khi họ yêu cầu loại bỏ khỏi phân phối không phải là lựa chọn thiết kế tốt nếu hầu hết router không muốn nhận lưu lượng ngay từ đầu.
+Tình huống này đủ phổ biến để PIM chia không gian vấn đề thành *sparse mode* và *dense mode*, trong đó sparse và dense chỉ tỷ lệ router muốn multicast.
+PIM dense mode (PIM-DM) dùng thuật toán flood-and-prune như DVMRP và gặp vấn đề mở rộng tương tự.
+PIM sparse mode (PIM-SM) đã trở thành giao thức định tuyến multicast chủ đạo và là trọng tâm thảo luận ở đây.
+Khía cạnh “protocol independent” của PIM, nhân tiện, chỉ việc, không như các giao thức trước như DVMRP, PIM không phụ thuộc vào bất kỳ loại định tuyến unicast nào—nó có thể dùng với bất kỳ giao thức định tuyến unicast nào, như chúng ta sẽ thấy bên dưới.
 
-In PIM-SM, routers explicitly join the multicast distribution tree using
-PIM protocol messages known as ``Join`` messages. Note the contrast to
-DVMRP’s approach of creating a broadcast tree first and then pruning the
-uninterested routers. The question that arises is where to send those
-``Join`` messages because, after all, any host (and any number of hosts)
-could send to the multicast group. To address this, PIM-SM assigns to
-each group a special router known as the *rendezvous point* (RP). In
-general, a number of routers in a domain are configured to be candidate
-RPs, and PIM-SM defines a set of procedures by which all the routers in
-a domain can agree on the router to use as the RP for a given group.
-These procedures are rather complex, as they must deal with a wide
-variety of scenarios, such as the failure of a candidate RP and the
-partitioning of a domain into two separate networks due to a number of
-link or node failures. For the rest of this discussion, we assume that
-all routers in a domain know the unicast IP address of the RP for a
-given group.
+Trong PIM-SM, các router tham gia rõ ràng vào cây phân phối multicast bằng các thông điệp giao thức PIM gọi là thông điệp ``Join``.
+Lưu ý sự tương phản với cách tiếp cận của DVMRP là tạo cây broadcast trước rồi loại bỏ các router không quan tâm.
+Câu hỏi đặt ra là gửi các thông điệp ``Join`` đó đến đâu vì, rốt cuộc, bất kỳ máy chủ nào (và bất kỳ số lượng máy chủ nào) cũng có thể gửi đến nhóm multicast.
+Để giải quyết điều này, PIM-SM gán cho mỗi nhóm một router đặc biệt gọi là *rendezvous point* (RP).
+Nói chung, một số router trong một miền được cấu hình làm RP ứng viên, và PIM-SM định nghĩa một tập thủ tục để tất cả router trong miền có thể đồng ý về router sẽ dùng làm RP cho một nhóm nhất định.
+Các thủ tục này khá phức tạp, vì chúng phải xử lý nhiều kịch bản khác nhau, như lỗi của một RP ứng viên và việc phân chia miền thành hai mạng riêng biệt do một số lỗi liên kết hoặc nút.
+Trong phần còn lại của thảo luận này, chúng ta giả định tất cả router trong một miền biết địa chỉ IP unicast của RP cho một nhóm nhất định.
 
-A multicast forwarding tree is built as a result of routers sending
-``Join`` messages to the RP. PIM-SM allows two types of trees to be
-constructed: a *shared* tree, which may be used by all senders, and a
-*source-specific* tree, which may be used only by a specific sending
-host. The normal mode of operation creates the shared tree first,
-followed by one or more source-specific trees if there is enough traffic
-to warrant it. Because building trees installs state in the routers
-along the tree, it is important that the default is to have only one
-tree for a group, not one for every sender to a group.
+Một cây chuyển tiếp multicast được xây dựng nhờ các router gửi thông điệp ``Join`` đến RP.
+PIM-SM cho phép xây dựng hai loại cây: *shared* tree, có thể được tất cả nguồn gửi dùng, và *source-specific* tree, chỉ được một nguồn gửi cụ thể dùng.
+Chế độ hoạt động bình thường tạo shared tree trước, sau đó là một hoặc nhiều source-specific tree nếu có đủ lưu lượng để biện minh.
+Vì việc xây dựng cây cài đặt trạng thái vào các router dọc theo cây, điều quan trọng là mặc định chỉ có một cây cho một nhóm, không phải một cây cho mỗi nguồn gửi đến một nhóm.
 
 .. _fig-pim-shared:
 .. figure:: figures/f04-14-9780123850591.png
    :width: 600px
    :align: center
 
-   PIM operation: (a) R4 sends a Join message to RP and joins
-   shared tree; (b) R5 joins shared tree; (c) RP builds
-   source-specific tree to R1 by sending a Join message to R1; (d) R4 and R5
-   build source-specific tree to R1 by sending Join messages to
-   R1.
+   Hoạt động PIM: (a) R4 gửi thông điệp Join đến RP và tham gia shared tree; (b) R5 tham gia shared tree; (c) RP xây dựng source-specific tree đến R1 bằng cách gửi thông điệp Join đến R1; (d) R4 và R5 xây dựng source-specific tree đến R1 bằng cách gửi thông điệp Join đến R1.
 
-When a router sends a ``Join`` message toward the RP for a group G, it
-is sent using normal IP unicast transmission. This is illustrated in
-:numref:`Figure %s(a) <fig-pim-shared>`, in which router R4 is sending
-a ``Join`` to the rendezvous point for some group. The initial
-``Join`` message is “wildcarded”; that is, it applies to all
-senders. A ``Join`` message clearly must pass through some sequence of
-routers before reaching the RP (e.g., R2). Each router along the path
-looks at the ``Join`` and creates a forwarding table entry for the
-shared tree, called a (\*, G) entry (where \* means “all senders”). To
-create the forwarding table entry, it looks at the interface on which
-the ``Join`` arrived and marks that interface as one on which it
-should forward data packets for this group. It then determines which
-interface it will use to forward the ``Join`` toward the RP. This will
-be the only acceptable interface for incoming packets sent to this
-group. It then forwards the ``Join`` toward the RP. Eventually, the
-message arrives at the RP, completing the construction of the tree
-branch. The shared tree thus constructed is shown as a solid line from
-the RP to R4 in :numref:`Figure %s(a) <fig-pim-shared>`.
+Khi một router gửi thông điệp ``Join`` về phía RP cho nhóm G, nó được gửi bằng truyền tải IP unicast thông thường.
+Điều này được minh họa trong :numref:`Figure %s(a) <fig-pim-shared>`, trong đó router R4 gửi một ``Join`` đến rendezvous point cho một nhóm nào đó.
+Thông điệp ``Join`` ban đầu là “wildcarded”; tức là, nó áp dụng cho tất cả nguồn gửi.
+Một thông điệp ``Join`` rõ ràng phải đi qua một chuỗi router trước khi đến RP (ví dụ, R2).
+Mỗi router dọc đường xem xét ``Join`` và tạo một mục bảng chuyển tiếp cho shared tree, gọi là mục (\*, G) (trong đó \* nghĩa là “tất cả nguồn gửi”).
+Để tạo mục bảng chuyển tiếp, nó xem giao diện mà ``Join`` đến và đánh dấu giao diện đó là giao diện mà nó nên chuyển tiếp gói dữ liệu cho nhóm này.
+Sau đó, nó xác định giao diện nào sẽ dùng để chuyển tiếp ``Join`` về phía RP. Đây sẽ là giao diện duy nhất chấp nhận gói đến nhóm này.
+Nó sau đó chuyển tiếp ``Join`` về phía RP. Cuối cùng, thông điệp đến RP, hoàn tất việc xây dựng nhánh cây.
+Shared tree được xây dựng như vậy được thể hiện bằng đường liền nét từ RP đến R4 trong :numref:`Figure %s(a) <fig-pim-shared>`.
 
-As more routers send ``Join``\ s toward the RP, they cause new branches
-to be added to the tree, as illustrated in :numref:`Figure
-%s(b) <fig-pim-shared>`. Note that, in this case, the ``Join`` only needs
-to travel to R2, which can add the new branch to the tree simply by
-adding a new outgoing interface to the forwarding table entry created
-for this group. R2 need not forward the ``Join`` on to the RP. Note also
-that the end result of this process is to build a tree whose root is the
-RP.
+Khi nhiều router gửi ``Join`` về phía RP, chúng tạo ra các nhánh mới cho cây, như minh họa trong :numref:`Figure %s(b) <fig-pim-shared>`.
+Lưu ý rằng, trong trường hợp này, ``Join`` chỉ cần đi đến R2, router này có thể thêm nhánh mới vào cây chỉ bằng cách thêm một giao diện ra mới vào mục bảng chuyển tiếp đã tạo cho nhóm này.
+R2 không cần chuyển tiếp ``Join`` đến RP. Cũng lưu ý rằng kết quả cuối cùng của quá trình này là xây dựng một cây có gốc là RP.
 
-At this point, suppose a host wishes to send a message to the
-group. To do so, it constructs a packet with the appropriate multicast
-group address as its destination and sends it to a router on its local
-network known as the *designated router* (DR). Suppose the DR is R1 in
-:numref:`Figure %s <fig-pim-shared>`. There is no state for this
-multicast group between R1 and the RP at this point, so instead of
-simply forwarding the multicast packet, R1 *tunnels* it to the
-RP. That is, R1 encapsulates the multicast packet inside a PIM
-``Register`` message that it sends to the unicast IP address of the
-RP. Just like an IP tunnel endpoint, the RP receives the packet
-addressed to it, looks at the payload of the ``Register`` message, and
-finds inside an IP packet addressed to the multicast address of this
-group. The RP, of course, does know what to do with such a packet—it
-sends it out onto the shared tree of which the RP is the root. In the
-example of :numref:`Figure %s <fig-pim-shared>`, this means that the
-RP sends the packet on to R2, which is able to forward it on to R4 and
-R5. The complete delivery of a packet from R1 to R4 and R5 is shown in
-:numref:`Figure %s <fig-pim-deliver>`. We see the tunneled packet
-travel from R1 to the RP with an extra IP header containing the
-unicast address of RP, and then the multicast packet addressed to G
-making its way along the shared tree to R4 and R5.
+Tại thời điểm này, giả sử một máy chủ muốn gửi thông điệp đến nhóm.
+Để làm điều này, nó tạo một gói với địa chỉ nhóm multicast phù hợp làm đích và gửi nó đến một router trên mạng cục bộ của nó gọi là *designated router* (DR).
+Giả sử DR là R1 trong :numref:`Figure %s <fig-pim-shared>`.
+Hiện tại không có trạng thái nào cho nhóm multicast này giữa R1 và RP, nên thay vì chỉ chuyển tiếp gói multicast, R1 *tunnel* nó đến RP.
+Tức là, R1 đóng gói gói multicast bên trong một thông điệp PIM ``Register`` mà nó gửi đến địa chỉ IP unicast của RP.
+Giống như một đầu cuối tunnel IP, RP nhận gói gửi đến nó, xem payload của thông điệp ``Register``, và tìm thấy bên trong một gói IP gửi đến địa chỉ multicast của nhóm này.
+RP, tất nhiên, biết phải làm gì với gói như vậy—nó gửi gói ra shared tree mà RP là gốc.
+Trong ví dụ :numref:`Figure %s <fig-pim-shared>`, điều này nghĩa là RP gửi gói đến R2, router này có thể chuyển tiếp đến R4 và R5.
+Việc chuyển phát hoàn chỉnh một gói từ R1 đến R4 và R5 được thể hiện trong :numref:`Figure %s <fig-pim-deliver>`.
+Chúng ta thấy gói tunnel đi từ R1 đến RP với một header IP bổ sung chứa địa chỉ unicast của RP, và sau đó gói multicast gửi đến G đi dọc theo shared tree đến R4 và R5.
 
-At this point, we might be tempted to declare success, since all hosts
-can send to all receivers this way. However, there is some bandwidth
-inefficiency and processing cost in the encapsulation and decapsulation
-of packets on the way to the RP, so the RP forces knowledge about this
-group into the intervening routers so tunneling can be avoided. It sends
-a ``Join`` message toward the sending host (:numref:`Figure
-%s(c) <fig-pim-shared>`). As this ``Join`` travels toward the host, it
-causes the routers along the path (R3) to learn about the group, so that
-it will be possible for the DR to send the packet to the group as
-*native* (i.e., not tunneled) multicast packets.
+Tại thời điểm này, chúng ta có thể bị cám dỗ tuyên bố thành công, vì tất cả máy chủ đều có thể gửi đến tất cả máy nhận theo cách này.
+Tuy nhiên, có một số không hiệu quả về băng thông và chi phí xử lý trong việc đóng gói và giải đóng gói các gói trên đường đến RP,
+nên RP buộc các router trung gian phải biết về nhóm này để tránh tunnel.
+Nó gửi một thông điệp ``Join`` về phía máy gửi (:numref:`Figure %s(c) <fig-pim-shared>`).
+Khi ``Join`` này đi về phía máy gửi, nó khiến các router dọc đường (R3) biết về nhóm, để DR có thể gửi gói đến nhóm dưới dạng multicast *gốc* (tức là, không tunnel).
 
 .. _fig-pim-deliver:
 .. figure:: figures/f04-15-9780123850591.png
    :width: 500px
    :align: center
 
-   Delivery of a packet along a shared tree. R1 tunnels
-   the packet to the RP, which forwards it along the shared tree to
-   R4 and R5.
+   Chuyển phát một gói dọc theo shared tree. R1 tunnel gói đến RP, RP chuyển tiếp gói dọc theo shared tree đến R4 và R5.
 
-An important detail to note at this stage is that the ``Join`` message
-sent by the RP to the sending host is specific to that sender, whereas
-the previous ones sent by R4 and R5 applied to all senders. Thus, the
-effect of the new ``Join`` is to create *sender-specific* state in the
-routers between the identified source and the RP. This is referred to
-as (S, G) state, since it applies to one sender to one group, and
-contrasts with the (\*, G) state that was installed between the
-receivers and the RP that applies to all senders. Thus, in
-:numref:`Figure %s(c) <fig-pim-shared>`, we see a source-specific
-route from R1 to the RP (indicated by the dashed line) and a tree that
-is valid for all senders from the RP to the receivers (indicated by
-the solid line).
+Một chi tiết quan trọng cần lưu ý ở giai đoạn này là thông điệp ``Join`` do RP gửi đến máy gửi là dành riêng cho nguồn gửi đó,
+trong khi các thông điệp trước đó do R4 và R5 gửi áp dụng cho tất cả nguồn gửi.
+Do đó, hiệu ứng của ``Join`` mới là tạo trạng thái *dành riêng cho nguồn gửi* trong các router giữa nguồn xác định và RP.
+Điều này được gọi là trạng thái (S, G), vì nó áp dụng cho một nguồn gửi đến một nhóm, và đối lập với trạng thái (\*, G) được cài đặt giữa các máy nhận và RP áp dụng cho tất cả nguồn gửi.
+Như vậy, trong :numref:`Figure %s(c) <fig-pim-shared>`, ta thấy một đường đi dành riêng cho nguồn từ R1 đến RP (đường nét đứt) và một cây hợp lệ cho tất cả nguồn gửi từ RP đến máy nhận (đường liền nét).
 
-The next possible optimization is to replace the entire shared tree
-with a source-specific tree. This is desirable because the path from
-sender to receiver via the RP might be significantly longer than the
-shortest possible path. This again is likely to be triggered by a high
-data rate being observed from some sender. In this case, the router at
-the downstream end of the tree—say, R4 in our example—sends a
-source-specific ``Join`` toward the source. As it follows the shortest
-path toward the source, the routers along the way create (S, G) state
-for this tree, and the result is a tree that has its root at the
-source, rather than the RP. Assuming both R4 and R5 made the switch to
-the source-specific tree, we would end up with the tree shown in
-:numref:`Figure %s(d) <fig-pim-shared>`. Note that this tree no longer
-involves the RP at all. We have removed the shared tree from this
-picture to simplify the diagram, but in reality all routers with
-receivers for a group must stay on the shared tree in case new senders
-show up.
+Tối ưu hóa tiếp theo có thể là thay thế toàn bộ shared tree bằng một source-specific tree.
+Điều này là mong muốn vì đường đi từ nguồn gửi đến máy nhận qua RP có thể dài hơn đáng kể so với đường đi ngắn nhất có thể.
+Điều này một lần nữa có thể được kích hoạt bởi tốc độ dữ liệu cao từ một nguồn gửi nào đó.
+Trong trường hợp này, router ở đầu hạ lưu của cây—giả sử R4 trong ví dụ—gửi một thông điệp ``Join`` dành riêng cho nguồn về phía nguồn.
+Khi nó đi theo đường đi ngắn nhất về phía nguồn, các router dọc đường tạo trạng thái (S, G) cho cây này, và kết quả là một cây có gốc tại nguồn, thay vì RP.
+Giả sử cả R4 và R5 đều chuyển sang source-specific tree, ta sẽ có cây như trong :numref:`Figure %s(d) <fig-pim-shared>`.
+Lưu ý rằng cây này không còn liên quan đến RP nữa. Chúng tôi đã loại bỏ shared tree khỏi hình để đơn giản hóa sơ đồ,
+nhưng thực tế tất cả router có máy nhận cho một nhóm phải ở lại shared tree phòng khi có nguồn gửi mới xuất hiện.
 
-We can now see why PIM is protocol independent. All of its mechanisms
-for building and maintaining trees take advantage of unicast routing
-without depending on any particular unicast routing protocol. The
-formation of trees is entirely determined by the paths that ``Join``
-messages follow, which is determined by the choice of shortest paths
-made by unicast routing. Thus, to be precise, PIM is “unicast routing
-protocol independent,” as compared to DVMRP. Note that PIM is very much
-bound up with the Internet Protocol—it is not protocol independent in
-terms of network-layer protocols.
+Bây giờ chúng ta có thể thấy tại sao PIM là protocol independent.
+Tất cả các cơ chế xây dựng và duy trì cây của nó tận dụng định tuyến unicast mà không phụ thuộc vào bất kỳ giao thức định tuyến unicast cụ thể nào.
+Việc hình thành cây hoàn toàn được xác định bởi các đường đi mà thông điệp ``Join`` đi theo, được xác định bởi lựa chọn đường đi ngắn nhất của định tuyến unicast.
+Do đó, chính xác thì PIM là “unicast routing protocol independent”, so với DVMRP.
+Lưu ý rằng PIM rất gắn bó với Internet Protocol—nó không độc lập về mặt giao thức lớp mạng.
 
-The design of PIM-SM again illustrates the challenges in building
-scalable networks and how scalability is sometimes pitted against some
-sort of optimality. The shared tree is certainly more scalable than a
-source-specific tree, in the sense that it reduces the total state in
-routers to be on the order of the number of groups rather than the
-number of senders times the number of groups. However, the
-source-specific tree is likely to be necessary to achieve efficient
-routing and effective use of link bandwidth.
+Thiết kế của PIM-SM một lần nữa minh họa những thách thức trong việc xây dựng các mạng mở rộng và cách mà khả năng mở rộng đôi khi đối lập với một số loại tối ưu nào đó.
+Shared tree chắc chắn mở rộng tốt hơn source-specific tree, vì nó giảm tổng trạng thái trong router xuống còn bậc số nhóm thay vì số nguồn gửi nhân số nhóm.
+Tuy nhiên, source-specific tree có thể cần thiết để đạt hiệu quả định tuyến và sử dụng băng thông liên kết hiệu quả.
 
 Interdomain Multicast (MSDP)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PIM-SM has some significant shortcomings when it comes to interdomain
-multicast. In particular, the existence of a single RP for a group goes
-against the principle that domains are autonomous. For a given multicast
-group, all the participating domains would be dependent on the domain
-where the RP is located. Furthermore, if there is a particular multicast
-group for which a sender and some receivers shared a single domain, the
-multicast traffic would still have to be routed initially from the
-sender to those receivers via whatever domain has the RP for that
-multicast group. Consequently, the PIM-SM protocol is typically not used
-across domains, only within a domain.
+PIM-SM có một số hạn chế đáng kể khi nói đến multicast liên miền.
+Cụ thể, sự tồn tại của một RP duy nhất cho một nhóm đi ngược lại nguyên tắc rằng các miền là tự chủ.
+Với một nhóm multicast nhất định, tất cả các miền tham gia sẽ phụ thuộc vào miền nơi RP được đặt.
+Hơn nữa, nếu có một nhóm multicast cụ thể mà một nguồn gửi và một số máy nhận cùng chia sẻ một miền,
+lưu lượng multicast vẫn phải được định tuyến ban đầu từ nguồn gửi đến các máy nhận đó qua bất kỳ miền nào có RP cho nhóm multicast đó.
+Do đó, giao thức PIM-SM thường không được sử dụng qua các miền, chỉ trong một miền.
 
-To extend multicast across domains using PIM-SM, the Multicast Source
-Discovery Protocol (MSDP) was devised. MSDP is used to connect different
-domains—each running PIM-SM internally, with its own RPs—by connecting
-the RPs of the different domains. Each RP has one or more MSDP peer RPs
-in other domains. Each pair of MSDP peers is connected by a TCP
-connection over which the MSDP protocol runs. Together, all the MSDP
-peers for a given multicast group form a loose mesh that is used as a
-broadcast network. MSDP messages are broadcast through the mesh of peer
-RPs using the Reverse Path Broadcast algorithm that we discussed in the
-context of DVMRP.
+Để mở rộng multicast qua các miền sử dụng PIM-SM, giao thức Multicast Source Discovery Protocol (MSDP) đã được phát triển.
+MSDP được dùng để kết nối các miền khác nhau—mỗi miền chạy PIM-SM nội bộ, với RP riêng—bằng cách kết nối các RP của các miền khác nhau.
+Mỗi RP có một hoặc nhiều RP MSDP peer ở các miền khác. Mỗi cặp MSDP peer được kết nối bằng một kết nối TCP mà giao thức MSDP chạy trên đó.
+Tất cả các MSDP peer cho một nhóm multicast nhất định tạo thành một mesh lỏng lẻo được dùng như một mạng broadcast.
+Các thông điệp MSDP được broadcast qua mesh các RP peer bằng thuật toán Reverse Path Broadcast mà chúng ta đã thảo luận trong ngữ cảnh DVMRP.
 
-What information does MSDP broadcast through the mesh of RPs? Not group
-membership information; when a host joins a group, the furthest that
-information will flow is its own domain’s RP. Instead, it is
-source—multicast sender—information. Each RP knows the sources in its
-own domain because it receives a ``Register`` message whenever a new
-source arises. Each RP periodically uses MSDP to broadcast
-``Source Active`` messages to its peers, giving the IP address of the
-source, the multicast group address, and the IP address of the
-originating RP.
+MSDP broadcast thông tin gì qua mesh các RP? Không phải thông tin thành viên nhóm; khi một máy chủ tham gia nhóm, thông tin đó chỉ đi xa nhất là RP của miền nó.
+Thay vào đó, đó là thông tin nguồn gửi—multicast sender.
+Mỗi RP biết các nguồn gửi trong miền của nó vì nó nhận được thông điệp ``Register`` bất cứ khi nào có nguồn gửi mới xuất hiện.
+Mỗi RP định kỳ dùng MSDP để broadcast thông điệp ``Source Active`` đến các peer, cung cấp địa chỉ IP của nguồn gửi, địa chỉ nhóm multicast, và địa chỉ IP của RP gốc.
 
 .. _fig-msdp:
 .. figure:: figures/f04-16-9780123850591.png
    :width: 500px
    :align: center
 
-   MSDP operation: (a) The source SR sends a Register message
-   to its domain's RP, RP1; then RP1 sends a source-specific Join message
-   to SR and an MSDP Source Active message to its MSDP peer in Domain B,
-   RP2; then RP2 sends a source-specific Join message to SR. (b) As a
-   result, RP1 and RP2 are in the source-specific tree for source
-   SR.
+   Hoạt động MSDP: (a) Nguồn gửi SR gửi thông điệp Register đến RP của miền nó, RP1; sau đó RP1 gửi thông điệp Join dành riêng cho nguồn đến SR và một thông điệp MSDP Source Active đến MSDP peer ở Miền B, RP2; sau đó RP2 gửi thông điệp Join dành riêng cho nguồn đến SR. (b) Kết quả là RP1 và RP2 nằm trong source-specific tree cho nguồn gửi SR.
 
-If an MSDP peer RP that receives one of these broadcasts has active
-receivers for that multicast group, it sends a source-specific
-``Join``, on that RP’s own behalf, to the source host, as shown in
-:numref:`Figure %s(a) <fig-msdp>`. The ``Join`` message builds a
-branch of the source-specific tree to this RP, as shown in
-:numref:`Figure %s(b) <fig-msdp>`.  The result is that every RP that
-is part of the MSDP network and has active receivers for a particular
-multicast group is added to the source-specific tree of the new
-source. When an RP receives a multicast from the source, the RP uses
-its shared tree to forward the multicast to the receivers in its
-domain.
+Nếu một MSDP peer RP nhận được một broadcast như vậy có máy nhận hoạt động cho nhóm multicast đó, nó gửi một thông điệp ``Join`` dành riêng cho nguồn, thay mặt RP đó, đến máy chủ nguồn gửi, như minh họa trong :numref:`Figure %s(a) <fig-msdp>`.
+Thông điệp ``Join`` xây dựng một nhánh của source-specific tree đến RP này, như trong :numref:`Figure %s(b) <fig-msdp>`.
+Kết quả là mọi RP thuộc mạng MSDP và có máy nhận hoạt động cho một nhóm multicast cụ thể đều được thêm vào source-specific tree của nguồn gửi mới.
+Khi một RP nhận được multicast từ nguồn gửi, RP dùng shared tree của nó để chuyển tiếp multicast đến các máy nhận trong miền của nó.
 
 Source-Specific Multicast (PIM-SSM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The original service model of PIM was, like earlier multicast protocols,
-a many-to-many model. Receivers joined a group, and any host could send
-to the group. However, it was recognized in the late 1990s that it might
-be useful to add a one-to-many model. Lots of multicast applications,
-after all, have only one legitimate sender, such as the speaker at a
-conference being sent over the Internet. We already saw that PIM-SM can
-create source-specific shortest path trees as an optimization after
-using the shared tree initially. In the original PIM design, this
-optimization was invisible to hosts—only routers joined source-specific
-trees. However, once the need for a one-to-many service model was
-recognized, it was decided to make the source-specific routing
-capability of PIM-SM explicitly available to hosts. It turns out that
-this mainly required changes to IGMP and its IPv6 analog, MLD, rather
-than PIM itself. The newly exposed capability is now known as PIM-SSM
-(PIM Source-Specific Multicast).
+Mô hình dịch vụ ban đầu của PIM, giống như các giao thức multicast trước đó, là mô hình nhiều-nhiều.
+Máy nhận tham gia một nhóm, và bất kỳ máy chủ nào cũng có thể gửi đến nhóm.
+Tuy nhiên, vào cuối những năm 1990, người ta nhận ra rằng có thể hữu ích khi bổ sung mô hình một-nhiều.
+Rất nhiều ứng dụng multicast, rốt cuộc, chỉ có một nguồn gửi hợp lệ, như diễn giả tại một hội nghị được truyền qua Internet.
+Chúng ta đã thấy rằng PIM-SM có thể tạo cây đường đi ngắn nhất dành riêng cho nguồn như một tối ưu hóa sau khi dùng shared tree ban đầu.
+Trong thiết kế PIM ban đầu, tối ưu hóa này là vô hình với máy chủ—chỉ router tham gia cây dành riêng cho nguồn.
+Tuy nhiên, khi nhu cầu về mô hình dịch vụ một-nhiều được nhận ra, người ta quyết định làm cho khả năng định tuyến dành riêng cho nguồn của PIM-SM rõ ràng cho máy chủ.
+Thực tế, điều này chủ yếu yêu cầu thay đổi IGMP và tương tự của nó trong IPv6, MLD, hơn là PIM.
+Khả năng mới được công khai này hiện được gọi là PIM-SSM (PIM Source-Specific Multicast).
 
-PIM-SSM introduces a new concept, the *channel*, which is the
-combination of a source address S and a group address G. The group
-address G looks just like a normal IP multicast address, and both IPv4
-and IPv6 have allocated subranges of the multicast address space for
-SSM. To use PIM-SSM, a host specifies both the group and the source in
-an IGMP Membership Report message to its local router. That router then
-sends a PIM-SM source-specific ``Join`` message toward the source,
-thereby adding a branch to itself in the source-specific tree, just as
-was described above for “normal” PIM-SM, but bypassing the whole
-shared-tree stage. Since the tree that results is source specific, only
-the designated source can send packets on that tree.
+PIM-SSM giới thiệu một khái niệm mới, *channel*, là sự kết hợp giữa địa chỉ nguồn S và địa chỉ nhóm G.
+Địa chỉ nhóm G trông giống như một địa chỉ multicast IP thông thường, và cả IPv4 và IPv6 đều đã phân bổ dải con của không gian địa chỉ multicast cho SSM.
+Để sử dụng PIM-SSM, một máy chủ chỉ định cả nhóm và nguồn trong thông điệp IGMP Membership Report gửi đến router cục bộ.
+Router đó sau đó gửi một thông điệp ``Join`` dành riêng cho nguồn của PIM-SM về phía nguồn, do đó thêm một nhánh cho chính nó vào source-specific tree,
+giống như đã mô tả ở trên cho PIM-SM “bình thường”, nhưng bỏ qua toàn bộ giai đoạn shared-tree.
+Vì cây kết quả là dành riêng cho nguồn, chỉ nguồn gửi được chỉ định mới có thể gửi gói trên cây đó.
 
-The introduction of PIM-SSM has provided some significant benefits,
-particularly since there is relatively high demand for one-to-many
-multicasting:
+Việc giới thiệu PIM-SSM đã mang lại một số lợi ích đáng kể, đặc biệt vì nhu cầu multicast một-nhiều tương đối cao:
 
--  Multicasts travel more directly to receivers.
+-  Multicast đi trực tiếp hơn đến máy nhận.
 
--  The address of a channel is effectively a multicast group address
-   plus a source address. Therefore, given that a certain range of
-   multicast group addresses will be used for SSM exclusively, multiple
-   domains can use the same multicast group address independently and
-   without conflict, as long as they use it only with sources in their
-   own domains.
+-  Địa chỉ của một channel thực chất là địa chỉ nhóm multicast cộng với địa chỉ nguồn.
+   Do đó, với một dải địa chỉ nhóm multicast nhất định sẽ chỉ dùng cho SSM, nhiều miền có thể sử dụng cùng một địa chỉ nhóm multicast độc lập và không xung đột,
+   miễn là họ chỉ dùng nó với nguồn gửi trong miền của mình.
 
--  Because only the specified source can send to an SSM group, there is
-   less risk of attacks based on malicious hosts overwhelming the
-   routers or receivers with bogus multicast traffic.
+-  Vì chỉ nguồn gửi được chỉ định mới có thể gửi đến một nhóm SSM, nguy cơ tấn công dựa trên máy chủ độc hại làm quá tải router hoặc máy nhận bằng lưu lượng multicast giả mạo giảm đi.
 
--  PIM-SSM can be used across domains exactly as it is used within a
-   domain, without reliance on anything like MSDP.
+-  PIM-SSM có thể được sử dụng qua các miền giống hệt như trong một miền, không cần dựa vào thứ gì như MSDP.
 
-SSM, therefore, is quite a useful addition to the multicast service
-model.
+Do đó, SSM là một bổ sung rất hữu ích cho mô hình dịch vụ multicast.
 
 Bidirectional Trees (BIDIR-PIM)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We round off our discussion of multicast with another enhancement to
-PIM known as *Bidirectional PIM*. BIDIR-PIM is a recent variant of
-PIM-SM that is well suited to many-to-many multicasting within a
-domain, especially when senders and receivers to a group may be the
-same, as in a multiparty videoconference, for example. As in PIM-SM,
-would-be receivers join groups by sending IGMP Membership Report
-messages (which must not be source specific), and a shared tree rooted
-at an RP is used to forward multicast packets to receivers. Unlike
-PIM-SM, however, the shared tree also has branches to the
-*sources*. That wouldn’t make any sense with PIM-SM’s unidirectional
-tree, but BIDIR-PIM’s trees are bidirectional—a router that receives a
-multicast packet from a downstream branch can forward it both up the
-tree and down other branches. The route followed to deliver a packet
-to any particular receiver goes only as far up the tree as necessary
-before going down the branch to that receiver. See the multicast route
-from R1 to R2 in :numref:`Figure %s(b) <fig-pim-bidir>` for an
-example. R4 forwards a multicast packet downstream to R2 at the same
-time that it forwards a copy of the same packet upstream to R5.
+Chúng ta kết thúc phần thảo luận về multicast với một cải tiến khác cho PIM gọi là *Bidirectional PIM*.
+BIDIR-PIM là một biến thể gần đây của PIM-SM rất phù hợp cho multicast nhiều-nhiều trong một miền,
+đặc biệt khi nguồn gửi và máy nhận cho một nhóm có thể là cùng một máy, như trong hội nghị truyền hình đa bên, chẳng hạn.
+Như trong PIM-SM, máy nhận tiềm năng tham gia nhóm bằng cách gửi thông điệp IGMP Membership Report (không được dành riêng cho nguồn),
+và một shared tree gốc tại RP được dùng để chuyển tiếp gói multicast đến máy nhận.
+Tuy nhiên, không như PIM-SM, shared tree cũng có các nhánh đến *nguồn gửi*.
+Điều này sẽ không có ý nghĩa với cây một chiều của PIM-SM, nhưng cây của BIDIR-PIM là hai chiều—một router nhận gói multicast từ một nhánh hạ lưu có thể chuyển tiếp nó cả lên cây và xuống các nhánh khác.
+Đường đi để chuyển một gói đến bất kỳ máy nhận nào chỉ đi lên cây xa nhất cần thiết trước khi đi xuống nhánh đến máy nhận đó.
+Xem đường multicast từ R1 đến R2 trong :numref:`Figure %s(b) <fig-pim-bidir>` để biết ví dụ.
+R4 chuyển tiếp một gói multicast xuống R2 cùng lúc chuyển một bản sao của gói đó lên R5.
 
-A surprising aspect of BIDIR-PIM is that there need not actually be an
-RP. All that is needed is a routable address, which is known as an RP
-address even though it need not be the address of an RP or anything at
-all. How can this be? A ``Join`` from a receiver is forwarded toward
-the RP address until it reaches a router with an interface on the link
-where the RP address would reside, where the Join
-terminates. :numref:`Figure %s(a) <fig-pim-bidir>` shows a ``Join``
-from R2 terminating at R5, and a ``Join`` from R3 terminating at
-R6. The upstream forwarding of a multicast packet similarly flows
-toward the RP address until it reaches a router with an interface on
-the link where the RP address would reside, but then the router
-forwards the multicast packet onto that link as the final step of
-upstream forwarding, ensuring that all other routers on that link
-receive the packet. :numref:`Figure %s(b) <fig-pim-bidir>` illustrates
-the flow of multicast traffic originating at R1.
+Một điểm đáng ngạc nhiên của BIDIR-PIM là thực tế không cần có RP.
+Tất cả những gì cần là một địa chỉ có thể định tuyến, được gọi là địa chỉ RP mặc dù nó không nhất thiết là địa chỉ của một RP hay bất cứ thứ gì cả.
+Sao lại như vậy? Một ``Join`` từ máy nhận được chuyển tiếp về phía địa chỉ RP cho đến khi nó đến một router có giao diện trên liên kết nơi địa chỉ RP sẽ tồn tại, nơi Join kết thúc.
+:numref:`Figure %s(a) <fig-pim-bidir>` cho thấy một ``Join`` từ R2 kết thúc tại R5, và một ``Join`` từ R3 kết thúc tại R6.
+Việc chuyển tiếp lên của một gói multicast tương tự cũng chảy về phía địa chỉ RP cho đến khi nó đến một router có giao diện trên liên kết nơi địa chỉ RP sẽ tồn tại,
+sau đó router chuyển tiếp gói multicast lên liên kết đó như bước cuối cùng của chuyển tiếp lên, đảm bảo tất cả router khác trên liên kết đó nhận được gói.
+:numref:`Figure %s(b) <fig-pim-bidir>` minh họa luồng lưu lượng multicast bắt nguồn từ R1.
 
 .. _fig-pim-bidir:
 .. figure:: figures/f04-17-9780123850591.png
    :width: 400px
    :align: center
 
-   BIDIR-PIM operation: (a) R2 and R3 send Join messages toward
-   the RP address that terminate when they reach a router on the RP
-   address's link. (b) A multicast packet from R1 is forwarded
-   upstream to the RP address's link and downstream wherever it
-   intersects a group member branch.
+   Hoạt động BIDIR-PIM: (a) R2 và R3 gửi thông điệp Join về phía địa chỉ RP, kết thúc khi đến một router trên liên kết địa chỉ RP. (b) Một gói multicast từ R1 được chuyển tiếp lên liên kết địa chỉ RP và xuống bất cứ đâu nó giao với một nhánh thành viên nhóm.
 
-BIDIR-PIM cannot thus far be used across domains. On the other hand, it
-has several advantages over PIM-SM for many-to-many multicast within a
-domain:
+BIDIR-PIM cho đến nay không thể dùng qua các miền. Mặt khác, nó có một số ưu điểm so với PIM-SM cho multicast nhiều-nhiều trong một miền:
 
--  There is no source registration process because the routers already
-   know how to route a multicast packet toward the RP address.
+-  Không có quá trình đăng ký nguồn gửi vì các router đã biết cách định tuyến gói multicast về phía địa chỉ RP.
 
--  The routes are more direct than those that use PIM-SM’s shared tree
-   because they go only as far up the tree as necessary, not all the way
-   to the RP.
+-  Các đường đi trực tiếp hơn so với dùng shared tree của PIM-SM vì chúng chỉ đi lên cây xa nhất cần thiết, không phải đến tận RP.
 
--  Bidirectional trees use much less state than the source-specific
-   trees of PIM-SM because there is never any source-specific state. (On
-   the other hand, the routes will be longer than those of
-   source-specific trees.)
+-  Cây hai chiều dùng ít trạng thái hơn nhiều so với cây dành riêng cho nguồn của PIM-SM vì không bao giờ có trạng thái dành riêng cho nguồn. (Mặt khác, đường đi sẽ dài hơn so với cây dành riêng cho nguồn.)
 
--  The RP cannot be a bottleneck, and indeed no actual RP is needed.
+-  RP không thể là nút cổ chai, và thực tế không cần RP thực sự.
 
-One conclusion to draw from the fact that there are so many different
-approaches to multicast just within PIM is that multicast is a difficult
-problem space in which to find optimal solutions. You need to decide
-which criteria you want to optimize (bandwidth usage, router state, path
-length, etc.) and what sort of application you are trying to support
-(one-to-many, many-to-many, etc.) before you can make a choice of the
-“best” multicast mode for the task.
+Một kết luận có thể rút ra từ việc có quá nhiều cách tiếp cận khác nhau với multicast chỉ trong PIM là multicast là một không gian vấn đề khó để tìm giải pháp tối ưu.
+Bạn cần quyết định tiêu chí nào muốn tối ưu (sử dụng băng thông, trạng thái router, độ dài đường đi, v.v.) và loại ứng dụng nào bạn đang cố hỗ trợ (một-nhiều, nhiều-nhiều, v.v.)
+trước khi có thể chọn chế độ multicast “tốt nhất” cho nhiệm vụ.

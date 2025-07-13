@@ -1,63 +1,66 @@
-Foreword
-========
+Lời giới thiệu
+==============
 
-Readers: before you start the book, first take a moment and set your
-time machine to 1996. That is when the first edition of this book was
-published. Do you remember 1996? Were you alive then?  People forget
-how long ago the foundations of the Internet were laid.
+Bạn đọc: trước khi bắt đầu cuốn sách, hãy dành một chút thời gian và đặt
+cỗ máy thời gian của bạn về năm 1996. Đó là khi ấn bản đầu tiên của cuốn
+sách này được xuất bản. Bạn có nhớ năm 1996 không? Khi đó bạn đã ra đời
+chưa? Mọi người thường quên rằng nền tảng của Internet đã được đặt ra từ
+rất lâu rồi.
 
-In 1996, the NSFNET had just been decommissioned, and the commercial
-phase of the Internet was just beginning. The first search engine
-(Alta Vista—do you remember?) had just been demonstrated. Content
-delivery networks did not exist—Akamai was founded two years later
-in 1998, the same year Google was officially born. Cloud was only a
-distant haze on the horizon. And there was no such thing as
-residential broadband or consumer wireless.  We used dialup modems—the
-56K modem had just been invented. There were packet radios before
-then, but they were slower than dialup and the size of a beer
-fridge. You needed a truck or at least a Jeep to be mobile.
+Năm 1996, NSFNET vừa mới bị ngừng hoạt động, và giai đoạn thương mại hóa
+của Internet chỉ mới bắt đầu. Công cụ tìm kiếm đầu tiên (Alta Vista—bạn có
+nhớ không?) vừa mới được trình diễn. Mạng phân phối nội dung (content
+delivery network) chưa tồn tại—Akamai được thành lập hai năm sau đó vào
+năm 1998, cùng năm Google chính thức ra đời. Cloud khi đó chỉ là một khái
+niệm mờ ảo ở chân trời. Và chưa có khái niệm gì về băng thông rộng dân
+dụng (residential broadband) hay mạng không dây cho người dùng cuối. Chúng
+ta dùng modem quay số—modem 56K vừa mới được phát minh. Trước đó đã có
+packet radio, nhưng chúng còn chậm hơn cả quay số và to bằng một chiếc tủ
+lạnh đựng bia. Bạn cần một chiếc xe tải hoặc ít nhất là một chiếc Jeep để
+có thể di động.
 
-And in 1995 or so, Larry and Bruce decided to write this book. It may
-be hard, from today’s perspective, to remember how important a book
-like this was in 1996. It captured a lot of tacit knowledge and made
-it available to anyone who would read. And rather than just reciting a
-series of protocol descriptions, it taught how the parts fit
-together. It taught how the Internet worked, not just what the parts
-were.
+Và vào khoảng năm 1995, Larry và Bruce quyết định viết cuốn sách này. Có
+thể, từ góc nhìn ngày nay, bạn sẽ thấy khó nhớ được một cuốn sách như thế
+này quan trọng thế nào vào năm 1996. Nó đã ghi lại rất nhiều kiến thức
+ngầm và làm cho bất kỳ ai muốn đọc đều có thể tiếp cận. Và thay vì chỉ kể
+lại một loạt mô tả về các giao thức, nó dạy cách các phần kết nối với
+nhau. Nó dạy cách Internet hoạt động, không chỉ đơn giản là các thành phần
+là gì.
 
-One way to think about how the Internet has evolved is through the
-lens of the application designer. After all, the purpose of the
-Internet as a packet transport system is to support apps. Only geeks
-and performance freaks send packets for the fun of it.  In 1996, if
-you wanted to build an application, the ecosystem included the IP
-packet transport service, TCP to smooth out the losses at the Internet
-layer, the DNS, and that was about it. Anything else the application
-designer needed had to be built from scratch.
+Một cách để suy nghĩ về sự phát triển của Internet là qua lăng kính của
+người thiết kế ứng dụng. Suy cho cùng, mục đích của Internet như một hệ
+thống truyền tải gói tin là để hỗ trợ các ứng dụng. Chỉ có dân kỹ thuật và
+những người đam mê hiệu năng mới gửi gói tin chỉ để cho vui. Năm 1996, nếu
+bạn muốn xây dựng một ứng dụng, hệ sinh thái khi đó chỉ có dịch vụ truyền
+tải gói tin IP, TCP để làm mượt các mất mát ở tầng Internet, DNS, và chỉ
+có vậy. Bất cứ thứ gì khác mà người thiết kế ứng dụng cần đều phải tự xây
+dựng từ đầu.
 
-Now an application designer has lots of resources to build on: cloud
-and cloud networks, other global networks that can hook services
-together, CDNs, app development environments and so on. Some of these
-may seem quite different from what we had in 1996 and in detail they
-are. Consider cloud. (I hate the choice of the term—to me “cloud”
-suggests something soft and fluffy, but if you have ever seen a data
-center the size of a football field that sucks megawatts, you would
-not think soft and fluffy. But never mind…) Data centers have become
-very sophisticated about cost, energy efficiency, performance and
-resilience. There is a lot to learn about how to build a modern data
-center. But the fundamentals are the same: packet forwarding,
-statistical capacity sharing, transport protocols, routing protocols,
-the pursuit of generality and broad utility, and the like.
+Bây giờ, một người thiết kế ứng dụng có rất nhiều tài nguyên để xây dựng:
+cloud và các mạng cloud, các mạng toàn cầu khác có thể kết nối các dịch vụ
+với nhau, CDN, môi trường phát triển ứng dụng, v.v. Một số thứ này có vẻ
+rất khác so với những gì chúng ta có năm 1996 và thực tế thì đúng là như
+vậy. Hãy xét về cloud. (Tôi không thích cách đặt tên này—với tôi “cloud”
+gợi lên điều gì đó mềm mại và bồng bềnh, nhưng nếu bạn từng thấy một trung
+tâm dữ liệu to bằng sân bóng đá tiêu thụ hàng megawatt điện, bạn sẽ không
+nghĩ nó mềm mại đâu. Nhưng thôi bỏ qua…) Các trung tâm dữ liệu đã trở nên
+rất tinh vi về chi phí, hiệu quả năng lượng, hiệu năng và khả năng chịu
+lỗi. Có rất nhiều điều để học về cách xây dựng một trung tâm dữ liệu hiện
+đại. Nhưng các nguyên lý cơ bản vẫn giống nhau: chuyển tiếp gói tin
+(packet forwarding), chia sẻ dung lượng theo thống kê, giao thức truyền
+tải (transport protocol), giao thức định tuyến (routing protocol), theo
+đuổi tính tổng quát và tiện ích rộng rãi, v.v.
 
-Looking forward, technologies such as cloud are clearly central and
-this edition devotes considerable attention to cloud. Requirements
-such as improving security are critical, and the book discusses
-additional issues related to security: trust, identity, and the latest
-hot topic—blockchain.  However, if you were to look at the first
-edition, many of the foundational concepts are the same. But this
-edition is the modern version of the story, with up to date examples
-and modern technology. Enjoy.
+Nhìn về phía trước, các công nghệ như cloud rõ ràng là trung tâm và ấn bản
+này dành nhiều sự chú ý cho cloud. Các yêu cầu như tăng cường bảo mật là
+rất quan trọng, và cuốn sách bàn thêm về các vấn đề liên quan đến bảo mật:
+niềm tin (trust), nhận dạng (identity), và chủ đề nóng nhất hiện nay—
+blockchain. Tuy nhiên, nếu bạn nhìn lại ấn bản đầu tiên, nhiều khái niệm
+nền tảng vẫn giống nhau. Nhưng ấn bản này là phiên bản hiện đại của câu
+chuyện, với các ví dụ cập nhật và công nghệ hiện đại. Chúc bạn đọc vui
+vẻ.
 
 
 | David Clark
 | MIT
-| October 2020
+| Tháng 10 năm 2020

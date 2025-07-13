@@ -41,7 +41,7 @@ Ngược lại, :numref:`Bảng %s <tab-ftab>` đưa ra ví dụ về một dòn
 Trước khi đi vào chi tiết về định tuyến, chúng ta cần tự nhắc lại câu hỏi then chốt nên đặt ra bất cứ khi nào cố gắng xây dựng một cơ chế cho Internet: “Giải pháp này có khả mở không?” Câu trả lời cho các thuật toán và giao thức được mô tả trong phần này là “không nhiều lắm.” Chúng được thiết kế cho các mạng có quy mô vừa phải—tối đa vài trăm nút, trên thực tế. Tuy nhiên, các giải pháp mà chúng tôi mô tả đóng vai trò là nền tảng cho hạ tầng định tuyến phân cấp được sử dụng trong Internet ngày nay. Cụ thể, các giao thức được mô tả trong phần này được gọi chung là các giao thức định tuyến *nội miền* (intradomain), hay *giao thức cổng nội bộ* (Interior Gateway Protocols - IGPs). Để hiểu các thuật ngữ này, chúng ta cần định nghĩa một *miền định tuyến* (routing domain). Một định nghĩa thực tế là một liên mạng trong đó tất cả các router đều dưới cùng một sự kiểm soát quản trị (ví dụ, một khuôn viên trường đại học, hoặc mạng của một nhà cung cấp dịch vụ Internet). Ý nghĩa của định nghĩa này sẽ rõ ràng hơn ở chương sau khi chúng ta xem xét các giao thức định tuyến *liên miền* (interdomain). Hiện tại, điều quan trọng cần nhớ là chúng ta đang xét vấn đề định tuyến trong bối cảnh các mạng nhỏ đến vừa, không phải một mạng có quy mô như Internet.
 
 3.4.1 Mạng dưới dạng đồ thị
---------------------------
+---------------------------
 
 Về bản chất, định tuyến là một bài toán lý thuyết đồ thị. :numref:`Hình %s <fig-graph-route>` cho thấy một đồ thị biểu diễn một mạng. Các nút của đồ thị, được gán nhãn từ A đến F, có thể là host, switch, router hoặc mạng. Trong phần thảo luận ban đầu, chúng ta sẽ tập trung vào trường hợp các nút là router. Các cạnh của đồ thị tương ứng với các liên kết mạng. Mỗi cạnh có một *chi phí* (cost) liên kết, cho biết mức độ mong muốn khi gửi lưu lượng qua liên kết đó. Việc gán chi phí cho các cạnh sẽ được thảo luận ở phần sau.
 
@@ -189,7 +189,7 @@ Có một số giải pháp một phần cho vấn đề này. Đầu tiên là 
 Một kỹ thuật để cải thiện thời gian hội tụ định tuyến gọi là *split horizon*. Ý tưởng là khi một nút gửi bản cập nhật định tuyến cho các láng giềng, nó không gửi lại các tuyến mà nó học được từ mỗi láng giềng cho chính láng giềng đó. Ví dụ, nếu B có tuyến (E, 2, A) trong bảng, thì nó biết chắc đã học tuyến này từ A, nên bất cứ khi nào B gửi cập nhật định tuyến cho A, nó không bao gồm tuyến (E, 2) trong cập nhật đó. Trong một biến thể mạnh hơn gọi là *split horizon with poison reverse*, B thực sự gửi tuyến đó lại cho A, nhưng gán thông tin âm cho tuyến để đảm bảo rằng A sẽ không sử dụng B để đến E. Ví dụ, B gửi tuyến (E, ∞) cho A. Vấn đề với cả hai kỹ thuật này là chúng chỉ hiệu quả với các vòng lặp định tuyến liên quan đến hai nút. Với các vòng lặp lớn hơn, cần các biện pháp mạnh hơn. Tiếp tục ví dụ trên, nếu B và C chờ một thời gian sau khi nghe về lỗi liên kết từ A trước khi quảng bá các tuyến đến E, họ sẽ phát hiện ra rằng không ai thực sự có tuyến đến E. Đáng tiếc, cách tiếp cận này làm chậm quá trình hội tụ của giao thức; tốc độ hội tụ là một trong những ưu điểm chính của đối thủ, định tuyến trạng thái liên kết, sẽ được thảo luận ở phần sau.
 
 Hiện thực hóa
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 Mã hiện thực thuật toán này rất đơn giản; chúng tôi chỉ trình bày một số phần cơ bản ở đây. Cấu trúc ``Route`` định nghĩa mỗi mục trong bảng định tuyến, và hằng số ``MAX_TTL`` xác định thời gian một mục được giữ trong bảng trước khi bị loại bỏ.
 

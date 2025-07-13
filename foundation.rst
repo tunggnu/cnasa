@@ -1,8 +1,8 @@
 Chương 1: Nền tảng
 ==================
 
-   Tôi phải tạo ra một Hệ thống, hoặc sẽ bị làm nô lệ bởi Hệ thống của người khác; tôi sẽ không
-   Lý luận và So sánh: công việc của tôi là Sáng tạo.
+   Tôi phải tạo ra một Hệ thống, hoặc sẽ bị làm nô lệ bởi Hệ thống của người
+   khác; tôi sẽ không Lý luận và So sánh: công việc của tôi là Sáng tạo.
 
    *—William Blake*
 
