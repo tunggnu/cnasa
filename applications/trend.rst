@@ -1,70 +1,70 @@
-Perspective: The Cloud is the New Internet
+Góc nhìn: Đám mây là Internet mới
 ==========================================
 
-As we saw at the end of :ref:`Section 9.1 <9.1 Traditional
-Applications>`, there has been a migration of traditional Internet
-applications like email and web servers from machines running
-on-premises to VMs running in commodity clouds. This corresponds to a
-shift in terminology (from “Web Services” to “Cloud Services”) and in
-many of the underlying technologies being used (from Virtual Machines
-to Cloud Native micro-services). But the Cloud’s impact on how network
-applications are implemented today is even bigger than this migration
-suggests. It is the combination of commodity clouds and overlay
-networks (similar to those described in :ref:`Section 9.4 <9.4 Overlay
-Networks>`) that may eventually have the most impact.
+Như chúng ta đã thấy ở cuối :ref:`Mục 9.1 <9.1 Traditional
+Applications>`, đã có một sự chuyển dịch các ứng dụng Internet truyền
+thống như email và máy chủ web từ các máy chạy tại chỗ sang các máy ảo
+chạy trong các đám mây phổ thông. Điều này tương ứng với một sự thay đổi
+về thuật ngữ (từ “Dịch vụ Web” sang “Dịch vụ Đám mây”) và trong nhiều
+công nghệ nền tảng được sử dụng (từ Máy ảo sang micro-services Cloud
+Native). Nhưng tác động của Đám mây lên cách các ứng dụng mạng được triển
+khai ngày nay còn lớn hơn những gì sự chuyển dịch này gợi ý. Chính sự
+kết hợp giữa các đám mây phổ thông và mạng phủ (overlay network) (tương
+tự như những gì được mô tả ở :ref:`Mục 9.4 <9.4 Overlay
+Networks>`) có thể cuối cùng sẽ tạo ra tác động lớn nhất.
 
-The biggest thing an overlay-based application needs to be effective is
-a wide footprint, that is, many points-of-presence around the world. IP
-routers are widely deployed, so if you have permission to use a set of
-them as the underlying nodes in your overlay network, then you’re
-good-to-go. But that’s not going to happen, as there are exactly zero
-network operators or enterprise administrators that are willing to let
-random people load overlay software onto their routers.
+Điều lớn nhất mà một ứng dụng dựa trên overlay cần để hoạt động hiệu quả
+là một phạm vi phủ rộng, tức là, nhiều điểm hiện diện trên toàn thế giới.
+Các router IP được triển khai rộng rãi, nên nếu bạn có quyền sử dụng một
+tập hợp các router này làm các nút nền tảng trong mạng overlay của mình,
+thì bạn đã sẵn sàng. Nhưng điều đó sẽ không xảy ra, vì không có nhà vận
+hành mạng hay quản trị viên doanh nghiệp nào sẵn sàng để người lạ cài đặt
+phần mềm overlay lên router của họ.
 
-Your next choice might be to crowdsource hosting sites for your overlay
-software. Depending on the kindness of strangers works if you all share
-a common goal, like downloading free music, but it’s difficult for a new
-overlay application to go viral, and even if it does, making sure there
-is sufficient capacity at any given time to carry all the traffic your
-application generates is often problematic. It sometimes works for free
-services, but not any application you might hope to monetize.
+Lựa chọn tiếp theo của bạn có thể là huy động cộng đồng để cung cấp các
+điểm đặt phần mềm overlay của bạn. Dựa vào lòng tốt của người lạ có thể
+hiệu quả nếu tất cả cùng chia sẻ một mục tiêu chung, như tải nhạc miễn
+phí, nhưng rất khó để một ứng dụng overlay mới lan truyền, và ngay cả khi
+nó làm được, việc đảm bảo có đủ năng lực tại bất kỳ thời điểm nào để xử
+lý toàn bộ lưu lượng mà ứng dụng của bạn tạo ra thường là vấn đề nan giải.
+Đôi khi cách này hiệu quả với các dịch vụ miễn phí, nhưng không phù hợp
+với bất kỳ ứng dụng nào bạn hy vọng kiếm tiền từ đó.
 
-If only there were a way to pay someone for the right to load and run
-your software on servers spread all over the world. Of course, that’s
-exactly what commodity clouds like Amazon AWS, Microsoft Azure, and
-the Google Cloud Platform provide. To many, the cloud offers a
-seemingly unlimited number of servers, but it’s actually just as
-important—if not more important—where these servers are located. As we
-discussed at the end of :ref:`Chapter 4 <Perspective: The Cloud is
-Eating the Internet>`, they are widely distributed across 150+
-well-connected sites.
+Giá như có một cách để trả tiền cho ai đó để được quyền cài đặt và chạy
+phần mềm của bạn trên các máy chủ phân tán khắp thế giới. Tất nhiên, đó
+chính là những gì các đám mây phổ thông như Amazon AWS, Microsoft Azure,
+và Google Cloud Platform cung cấp. Với nhiều người, đám mây mang lại một
+số lượng máy chủ dường như không giới hạn, nhưng thực ra điều quan trọng
+không kém—thậm chí còn quan trọng hơn—là vị trí của các máy chủ này. Như
+chúng ta đã bàn ở cuối :ref:`Chương 4 <Perspective: The Cloud is
+Eating the Internet>`, chúng được phân bố rộng khắp hơn 150 địa điểm
+kết nối tốt.
 
-Suppose, for example, that you want to stream a collection of live video
-or audio channels to millions of users, or you want to support thousands
-of video conferencing sessions, each of which connects a dozen widely
-distributed participants. In both cases, you construct an overlay
-multicast tree (one per video channel in the first example, and one per
-conference session in the second example), with the overlay nodes in the
-tree located at some combination of those 150 cloud sites. Then you
-allow the end-users, from their general-purpose web browsers or
-purpose-built smartphone apps, connect to the multicast tree(s) of their
-choice. If you need to store some of the video/audio content to play at
-a later time (e.g., to support time shifting) then you might also buy
-some storage capacity at some or all of those cloud sites, effectively
-building your own Content Distribution Network.
+Giả sử, ví dụ, bạn muốn truyền phát một bộ sưu tập các kênh video hoặc
+audio trực tiếp đến hàng triệu người dùng, hoặc bạn muốn hỗ trợ hàng
+nghìn phiên họp hội nghị truyền hình, mỗi phiên kết nối một tá người tham
+gia phân tán rộng rãi. Trong cả hai trường hợp, bạn xây dựng một cây
+multicast overlay (một cây cho mỗi kênh video trong ví dụ đầu, và một cây
+cho mỗi phiên hội nghị trong ví dụ thứ hai), với các nút overlay trong
+cây được đặt tại một số tổ hợp các địa điểm đám mây trong số 150 địa điểm
+đó. Sau đó bạn cho phép người dùng cuối, từ trình duyệt web đa năng hoặc
+ứng dụng điện thoại thông minh chuyên dụng, kết nối đến cây multicast mà
+họ chọn. Nếu bạn cần lưu trữ một số nội dung video/audio để phát lại sau
+(như để hỗ trợ tua lại thời gian) thì bạn cũng có thể mua thêm dung lượng
+lưu trữ tại một số hoặc tất cả các địa điểm đám mây đó, về cơ bản là tự
+xây dựng một Mạng Phân phối Nội dung (CDN) của riêng mình.
 
-Taking the long view, while the Internet was originally conceived as a
-pure communication service, with arbitrary compute-and-storage
-applications allowed to flourish around the edges, today application
-software is for all practical purposes embedded within (distributed
-across) the network, and it is increasingly difficult to tell where
-the Internet stops and the Cloud starts. This blending will only
-continue to deepen as the cloud moves closer and closer to the edge
-(e.g., to thousands of sites where access networks are anchored) and
-the economies-of-scale drive the hardware devices used to build
-Internet/Cloud sites increasingly towards commonality.
+Nhìn về lâu dài, trong khi Internet ban đầu được hình dung như một dịch
+vụ truyền thông thuần túy, với các ứng dụng tính toán và lưu trữ tùy ý
+được phát triển ở rìa mạng, thì ngày nay phần mềm ứng dụng trên thực tế
+đã được nhúng vào (phân tán trên) mạng, và ngày càng khó xác định ranh
+giới giữa Internet và Đám mây. Sự hòa trộn này sẽ chỉ ngày càng sâu sắc
+khi đám mây tiến gần hơn đến rìa mạng (ví dụ, đến hàng nghìn địa điểm nơi
+các mạng truy nhập được neo giữ) và hiệu quả kinh tế quy mô thúc đẩy các
+thiết bị phần cứng dùng để xây dựng các site Internet/Cloud ngày càng trở
+nên đồng nhất.
 
-.. admonition:: Broader Perspective
+.. admonition:: Góc nhìn rộng hơn
 
-   To remind yourself of why the cloudification of the Internet is
-   important, see :ref:`Perspective: Feature Velocity`.
+   Để nhắc nhở bản thân về lý do tại sao quá trình "cloud hóa" Internet
+   lại quan trọng, hãy xem :ref:`Perspective: Feature Velocity`.

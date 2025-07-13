@@ -1,5 +1,5 @@
 Vấn đề: Mở rộng tới hàng tỷ thiết bị
------------------------------------
+------------------------------------
 
 Chúng ta vừa xem cách xây dựng một liên mạng bao gồm nhiều mạng thuộc các loại khác nhau. Tức là, chúng ta đã giải quyết vấn đề *không đồng nhất*. Vấn đề quan trọng thứ hai trong liên mạng—có lẽ là vấn đề cơ bản nhất của mọi hệ thống mạng—là *khả năng mở rộng*. Để hiểu vấn đề mở rộng một mạng, đáng để xem xét sự phát triển của Internet, vốn đã tăng gấp đôi về kích thước mỗi năm trong suốt 30 năm. Kiểu tăng trưởng này buộc chúng ta phải đối mặt với một loạt thách thức.
 

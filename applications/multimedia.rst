@@ -1,104 +1,101 @@
-9.2 Multimedia Applications
+9.2 Ứng dụng Đa phương tiện
 ===========================
 
-Just like the traditional applications described in the previous
-section, multimedia applications such as telephony and videoconferencing
-need their own protocols. Much of the initial experience in designing
-protocols for multimedia applications came from the MBone
-tools—applications such as ``vat`` and ``vic`` that were developed for
-use on the MBone, an overlay network that supports IP multicast to
-enable multiparty conferencing. (More on overlay networks including the
-MBone in the next section.) Initially, each application implemented its
-own protocol (or protocols), but it became apparent that many multimedia
-applications have common requirements. This ultimately led to the
-development of a number of general-purpose protocols for use by
-multimedia applications.
+Cũng giống như các ứng dụng truyền thống được mô tả ở phần trước,
+các ứng dụng đa phương tiện như điện thoại và hội nghị truyền hình
+cần có các giao thức riêng. Phần lớn kinh nghiệm ban đầu trong việc
+thiết kế các giao thức cho ứng dụng đa phương tiện đến từ các công cụ
+MBone—các ứng dụng như ``vat`` và ``vic`` được phát triển cho
+MBone, một mạng phủ hỗ trợ IP multicast để cho phép hội nghị nhiều
+bên. (Sẽ nói thêm về mạng phủ bao gồm cả MBone ở phần tiếp theo.)
+Ban đầu, mỗi ứng dụng tự triển khai giao thức (hoặc các giao thức)
+riêng của mình, nhưng sau đó nhận ra rằng nhiều ứng dụng đa phương
+tiện có các yêu cầu chung. Điều này cuối cùng đã dẫn đến sự phát triển
+của một số giao thức đa năng dành cho các ứng dụng đa phương tiện.
 
-We have already seen a number of protocols that multimedia applications
-use. The Real-Time Transport Protocol (RTP) provides many of the
-functions that are common to multimedia applications such as conveying
-timing information and identifying the coding schemes and media types of
-an application.
+Chúng ta đã thấy một số giao thức mà các ứng dụng đa phương tiện sử
+dụng. Giao thức Truyền tải Thời gian Thực (RTP) cung cấp nhiều chức
+năng chung cho các ứng dụng đa phương tiện như truyền tải thông tin
+thời gian và xác định các phương thức mã hóa và loại phương tiện của
+một ứng dụng.
 
-The Resource Reservation Protocol (RSVP) can be used to request the
-allocation of resources in the network so that the desired quality of
-service (QoS) can be provided to an application. We will see how
-resource allocation interacts with other aspects of multimedia
-applications later in this section.
+Giao thức Đặt trước Tài nguyên (RSVP) có thể được sử dụng để yêu cầu
+phân bổ tài nguyên trong mạng nhằm đảm bảo chất lượng dịch vụ (QoS)
+mong muốn cho một ứng dụng. Chúng ta sẽ xem cách phân bổ tài nguyên
+tương tác với các khía cạnh khác của ứng dụng đa phương tiện ở phần
+sau của mục này.
 
-In addition to these protocols for multimedia transport and resource
-allocation, many multimedia applications also need a signalling or
-*session control* protocol. For example, suppose that we wanted to be
-able to make telephone calls across the Internet (Voice over IP, or
-VoIP). We would need some mechanism to notify the intended recipient of
-such a call that we wanted to talk to her, such as by sending a message
-to some multimedia device that would cause it to make a ringing sound.
-We would also like to be able to support features like call forwarding,
-three-way calling, etc. The Session Initiation Protocol (SIP) and H.323
-are examples of protocols that address the issues of session control; we
-begin our discussion of multimedia applications by examining these
-protocols.
+Ngoài các giao thức cho truyền tải đa phương tiện và phân bổ tài
+nguyên, nhiều ứng dụng đa phương tiện cũng cần một giao thức báo hiệu
+hoặc giao thức *điều khiển phiên*. Ví dụ, giả sử bạn muốn thực hiện
+các cuộc gọi điện thoại qua Internet (Voice over IP, hay VoIP). Bạn
+cần một cơ chế để thông báo cho người nhận dự định của cuộc gọi rằng
+bạn muốn nói chuyện với cô ấy, chẳng hạn bằng cách gửi một thông báo
+đến một thiết bị đa phương tiện nào đó để nó phát ra âm thanh chuông.
+Bạn cũng muốn hỗ trợ các tính năng như chuyển tiếp cuộc gọi, gọi ba
+bên, v.v. Giao thức Khởi tạo Phiên (SIP) và H.323 là các ví dụ về các
+giao thức giải quyết các vấn đề điều khiển phiên; chúng ta sẽ bắt đầu
+bàn về các ứng dụng đa phương tiện bằng cách xem xét các giao thức này.
 
-9.2.1 Session Control and Call Control (SDP, SIP, H.323)
---------------------------------------------------------
+9.2.1 Điều khiển phiên và điều khiển cuộc gọi (SDP, SIP, H.323)
+---------------------------------------------------------------
 
-To understand some of the issues of session control, consider the
-following problem. Suppose you want to hold a videoconference at a
-certain time and make it available to a wide number of participants.
-Perhaps you have decided to encode the video stream using the MPEG-2
-standard, to use the multicast IP address 224.1.1.1 for transmission of
-the data, and to send it using RTP over UDP port number 4000. How would
-you make all that information available to the intended participants?
-One way would be to put all that information in an email and send it
-out, but ideally there should be a standard format and protocol for
-disseminating this sort of information. The IETF has defined protocols
-for just this purpose. The protocols that have been defined include
+Để hiểu một số vấn đề của điều khiển phiên, hãy xem xét vấn đề sau.
+Giả sử bạn muốn tổ chức một hội nghị truyền hình vào một thời điểm
+nhất định và cung cấp nó cho nhiều người tham gia. Có thể bạn đã quyết
+định mã hóa luồng video bằng chuẩn MPEG-2, sử dụng địa chỉ multicast
+IP 224.1.1.1 để truyền dữ liệu, và gửi nó bằng RTP qua cổng UDP số
+4000. Làm thế nào để bạn cung cấp tất cả thông tin đó cho những người
+tham gia dự kiến? Một cách là đưa tất cả thông tin đó vào email và gửi
+đi, nhưng lý tưởng là nên có một định dạng và giao thức chuẩn để phổ
+biến loại thông tin này. IETF đã định nghĩa các giao thức cho mục đích
+này. Các giao thức đã được định nghĩa bao gồm
 
--  Session Description Protocol (SDP)
+-  Giao thức Mô tả Phiên (SDP)
 
--  Session Announcement Protocol (SAP)
+-  Giao thức Thông báo Phiên (SAP)
 
--  Session Initiation Protocol (SIP)
+-  Giao thức Khởi tạo Phiên (SIP)
 
--  Simple Conference Control Protocol (SCCP)
+-  Giao thức Điều khiển Hội nghị Đơn giản (SCCP)
 
-You might think that this is a lot of protocols for a seemingly simple
-task, but there are many aspects of the problem and several different
-situations in which it must be addressed. For example, there is a
-difference between announcing the fact that a certain conference session
-is going to be made available on the MBone (which would be done using
-SDP and SAP) and trying to make an Internet phone call to a certain user
-at a particular time (which could be done using SDP and SIP). In the
-former case, you could consider your job done once you have sent all the
-session information in a standard format to a well-known multicast
-address. In the latter, you would need to locate one or more users, get
-a message to them announcing your desire to talk (analogous to ringing
-their phone), and perhaps negotiate a suitable audio encoding among all
-parties. We will look first at SDP, which is common to many
-applications, then at SIP, which is widely used for a number of
-interactive applications such as Internet telephony.
+Bạn có thể nghĩ rằng có quá nhiều giao thức cho một nhiệm vụ có vẻ đơn
+giản, nhưng có nhiều khía cạnh của vấn đề và nhiều tình huống khác
+nhau cần giải quyết. Ví dụ, có sự khác biệt giữa việc thông báo rằng
+một phiên hội nghị nào đó sẽ được tổ chức trên MBone (việc này sẽ được
+thực hiện bằng SDP và SAP) và việc cố gắng thực hiện một cuộc gọi điện
+thoại Internet cho một người dùng nào đó vào một thời điểm cụ thể (có
+thể thực hiện bằng SDP và SIP). Trong trường hợp đầu tiên, bạn có thể
+coi nhiệm vụ của mình đã hoàn thành khi đã gửi tất cả thông tin phiên
+theo định dạng chuẩn đến một địa chỉ multicast đã biết. Trong trường
+hợp sau, bạn cần xác định vị trí một hoặc nhiều người dùng, gửi thông
+báo cho họ về mong muốn nói chuyện (tương tự như gọi chuông điện
+thoại), và có thể đàm phán một phương thức mã hóa âm thanh phù hợp cho
+tất cả các bên. Chúng ta sẽ xem xét trước về SDP, giao thức chung cho
+nhiều ứng dụng, sau đó là SIP, giao thức được sử dụng rộng rãi cho
+nhiều ứng dụng tương tác như điện thoại Internet.
 
-Session Description Protocol (SDP)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Giao thức Mô tả Phiên (SDP)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Session Description Protocol (SDP) is a rather general protocol that
-can be used in a variety of situations and is typically used in
-conjunction with one or more other protocols (e.g., SIP). It conveys the
-following information:
+Giao thức Mô tả Phiên (SDP) là một giao thức khá tổng quát có thể sử
+dụng trong nhiều tình huống và thường được sử dụng kết hợp với một
+hoặc nhiều giao thức khác (ví dụ, SIP). Nó truyền tải các thông tin
+sau:
 
--  The name and purpose of the session
+-  Tên và mục đích của phiên
 
--  Start and end times for the session
+-  Thời gian bắt đầu và kết thúc của phiên
 
--  The media types (e.g., audio, video) that comprise the session
+-  Các loại phương tiện (ví dụ, âm thanh, video) tạo thành phiên
 
--  Detailed information required to receive the session (e.g., the
-   multicast address to which data will be sent, the transport protocol
-   to be used, the port numbers, the encoding scheme)
+-  Thông tin chi tiết cần thiết để nhận phiên (ví dụ, địa chỉ multicast
+   mà dữ liệu sẽ được gửi đến, giao thức truyền tải sẽ sử dụng, số cổng,
+   phương thức mã hóa)
 
-SDP provides this information formatted in ASCII using a sequence of
-lines of text, each of the form ``<type>=<value>``. An example of an SDP
-message will illustrate the main points.
+SDP cung cấp thông tin này được định dạng bằng ASCII sử dụng một chuỗi
+các dòng văn bản, mỗi dòng có dạng ``<type>=<value>``. Một ví dụ về
+thông điệp SDP sẽ minh họa các điểm chính.
 
 ::
 
@@ -114,177 +111,170 @@ message will illustrate the main points.
    m=video 51372 RTP/AVP 31
    m=application 32416 udp wb
 
-Note that SDP, like HTML, is fairly easy for a human to read but has
-strict formatting rules that make it possible for machines to interpret
-the data unambiguously. For example, the SDP specification defines all
-the possible information types that are allowed to appear, the order in
-which they must appear, and the format and reserved words for every type
-that is defined.
+Lưu ý rằng SDP, giống như HTML, khá dễ đọc đối với con người nhưng có
+các quy tắc định dạng nghiêm ngặt giúp máy móc có thể diễn giải dữ liệu
+một cách rõ ràng. Ví dụ, đặc tả SDP định nghĩa tất cả các loại thông
+tin có thể xuất hiện, thứ tự xuất hiện, định dạng và các từ khóa dành
+riêng cho từng loại được định nghĩa.
 
-The first thing to notice is that each information type is identified by
-a single character. For example, the line tells us that “version” has
-the value zero; that is, this message is formatted according to version
-zero of SDP. The next line provides the “origin” of the session which
-contains enough information to uniquely identify the session. ``larry``
-is a username of the session creator, and ``128.112.136.10`` is the IP
-address of his computer. The number following ``larry`` is a session
-identifier that is chosen to be unique to that machine. This is followed
-by a “version” number for the SDP announcement; if the session information
-was updated by a later message, the version number would be increased.
+Điều đầu tiên cần chú ý là mỗi loại thông tin được xác định bằng một ký
+tự duy nhất. Ví dụ, dòng này cho biết “version” có giá trị bằng 0; tức
+là thông điệp này được định dạng theo phiên bản 0 của SDP. Dòng tiếp
+theo cung cấp “origin” của phiên, chứa đủ thông tin để xác định duy
+nhất phiên. ``larry`` là tên người dùng tạo phiên, và ``128.112.136.10``
+là địa chỉ IP của máy tính của anh ấy. Số theo sau ``larry`` là một
+định danh phiên được chọn để duy nhất trên máy đó. Tiếp theo là số
+“version” cho thông báo SDP; nếu thông tin phiên được cập nhật bởi một
+thông điệp sau đó, số version sẽ được tăng lên.
 
-The next three lines (``i``, ``s`` and ``u``) provide the session name,
-a session description, and a session Uniform Resource Identifier (URI,
-as described earlier in this chapter)—information that would be helpful
-to a user in deciding whether to participate in this session. Such
-information could be displayed in the user interface of a session
-directory tool that shows current and upcoming events that have been
-advertised using SDP. The next line (``e=...``) contains an email
-address of a person to contact regarding the session. :numref:`Figure %s
-<fig-sdr>` shows a screen shot of a (now archaic) session
-directory tool called ``sdr`` along with the descriptions of several
-sessions that had been announced at the time the picture was taken.
+Ba dòng tiếp theo (``i``, ``s`` và ``u``) cung cấp tên phiên, mô tả
+phiên và Uniform Resource Identifier (URI, như đã mô tả ở phần trước
+trong chương này)—thông tin hữu ích cho người dùng khi quyết định có
+tham gia phiên này hay không. Thông tin như vậy có thể được hiển thị
+trên giao diện người dùng của công cụ thư mục phiên hiển thị các sự
+kiện hiện tại và sắp tới đã được quảng bá bằng SDP. Dòng tiếp theo
+(``e=...``) chứa địa chỉ email của người liên hệ về phiên. :numref:`Hình
+%s <fig-sdr>` hiển thị ảnh chụp màn hình của một công cụ thư mục phiên
+(đã lỗi thời) gọi là ``sdr`` cùng với mô tả của một số phiên đã được
+thông báo tại thời điểm chụp ảnh.
 
 .. _fig-sdr:
 .. figure:: figures/f09-07-9780123850591.png
    :width: 500px
    :align: center
 
-   A session directory tool displays information extracted from SDP
-   messages.
+   Một công cụ thư mục phiên hiển thị thông tin trích xuất từ các thông
+   điệp SDP.
 
-Next we get to the technical details that would enable an application
-program to participate in the session. The line beginning ``c=...``
-provides the IP multicast address to which data for this session will be
-sent; a user would need to join this multicast group to receive the
-session. Next we see the start and end times for the session (encoded as
-integers according to the Network Time Protocol). Finally, we get to the
-information about the media for this session. This session has three
-media types available—audio, video, and a shared whiteboard application
-known as ``wb``. For each media type there is one line of information
-formatted as follows:
+Tiếp theo là các chi tiết kỹ thuật cho phép một chương trình ứng dụng
+tham gia phiên. Dòng bắt đầu bằng ``c=...`` cung cấp địa chỉ IP
+multicast mà dữ liệu cho phiên này sẽ được gửi đến; người dùng cần tham
+gia nhóm multicast này để nhận phiên. Tiếp theo là thời gian bắt đầu và
+kết thúc của phiên (được mã hóa dưới dạng số nguyên theo Giao thức Thời
+gian Mạng - NTP). Cuối cùng, chúng ta đến thông tin về các phương tiện
+cho phiên này. Phiên này có ba loại phương tiện—âm thanh, video và ứng
+dụng bảng trắng chia sẻ gọi là ``wb``. Với mỗi loại phương tiện có một
+dòng thông tin được định dạng như sau:
 
 ::
 
    m=<media> <port> <transport> <format>
 
-The media types are self-explanatory, and the port numbers in each case
-are UDP ports. When we look at the “transport” field, we can see that
-the ``wb`` application runs directly over UDP, while the audio and video
-are transported using “RTP/AVP”. This means that they run over RTP and
-use the *application profile* known as *AVP*. That application profile
-defines a number of different encoding schemes for audio and video; we
-can see in this case that the audio is using encoding 0 (which is an
-encoding using an 8-kHz sampling rate and 8 bits per sample) and the
-video is using encoding 31, which represents the H.261 encoding scheme.
-These “magic numbers” for the encoding schemes are defined in the RFC
-that defines the AVP profile; it is also possible to describe
-nonstandard coding schemes in SDP.
+Các loại phương tiện khá dễ hiểu, và số cổng trong mỗi trường hợp là
+cổng UDP. Khi xem trường “transport”, ta thấy ứng dụng ``wb`` chạy trực
+tiếp trên UDP, trong khi âm thanh và video được truyền tải bằng
+“RTP/AVP”. Điều này có nghĩa là chúng chạy trên RTP và sử dụng *hồ sơ
+ứng dụng* gọi là *AVP*. Hồ sơ ứng dụng này định nghĩa một số phương
+thức mã hóa khác nhau cho âm thanh và video; trong trường hợp này, âm
+thanh sử dụng mã hóa 0 (là mã hóa sử dụng tần số lấy mẫu 8 kHz và 8 bit
+mỗi mẫu) và video sử dụng mã hóa 31, đại diện cho phương thức mã hóa
+H.261. Các “magic number” cho các phương thức mã hóa này được định
+nghĩa trong RFC định nghĩa hồ sơ AVP; cũng có thể mô tả các phương thức
+mã hóa không chuẩn trong SDP.
 
-Finally, we see a description of the “wb” media type. All the encoding
-information for this data is specific to the ``wb`` application, and so
-it is sufficient just to provide the name of the application in the
-“format” field. This is analogous to putting ``application/wb`` in a
-MIME message.
+Cuối cùng, chúng ta thấy mô tả về loại phương tiện “wb”. Tất cả thông
+tin mã hóa cho dữ liệu này là đặc thù cho ứng dụng ``wb``, do đó chỉ
+cần cung cấp tên ứng dụng trong trường “format”. Điều này tương tự như
+việc đặt ``application/wb`` trong một thông điệp MIME.
 
-Now that we know how to describe sessions, we can look at how they can
-be initiated. One way in which SDP is used is to announce multimedia
-conferences, by sending SDP messages to a well-known multicast address.
-The session directory tool shown in :numref:`Figure %s <fig-sdr>` would function
-by joining that multicast group and displaying information that it
-gleans from received SDP messages. SDP is also used in the delivery of
-entertainment video of IP (often called IPTV) to provide information
-about the video content on each TV channel.
+Bây giờ chúng ta đã biết cách mô tả các phiên, hãy xem cách chúng có
+thể được khởi tạo. Một cách sử dụng SDP là thông báo các hội nghị đa
+phương tiện, bằng cách gửi các thông điệp SDP đến một địa chỉ multicast
+đã biết. Công cụ thư mục phiên được hiển thị trong :numref:`Hình %s
+<fig-sdr>` sẽ hoạt động bằng cách tham gia nhóm multicast đó và hiển
+thị thông tin thu thập được từ các thông điệp SDP nhận được. SDP cũng
+được sử dụng trong việc cung cấp video giải trí qua IP (thường gọi là
+IPTV) để cung cấp thông tin về nội dung video trên mỗi kênh truyền hình.
 
-SDP also plays an important role in conjunction with the Session
-Initiation Protocol (SIP). With the widespread adoption of Voice over IP
-(i.e., the support of telephony-like applications over IP networks) and
-IP-based video conferencing, SIP is now one of the more important
-members of the Internet protocol suite.
+SDP cũng đóng vai trò quan trọng khi kết hợp với Giao thức Khởi tạo
+Phiên (SIP). Với việc VoIP được sử dụng rộng rãi (tức là hỗ trợ các
+ứng dụng giống điện thoại qua mạng IP) và hội nghị truyền hình dựa
+trên IP, SIP hiện là một trong những thành viên quan trọng của bộ giao
+thức Internet.
 
 SIP
 ~~~
 
-SIP is an application layer protocol that bears a certain resemblance to
-HTTP, being based on a similar request/response model. However, it is
-designed with rather different sorts of applications in mind and thus
-provides quite different capabilities than HTTP. The capabilities
-provided by SIP can be grouped into five categories:
+SIP là một giao thức tầng ứng dụng có nét tương đồng với HTTP, dựa trên
+mô hình request/response tương tự. Tuy nhiên, nó được thiết kế cho các
+loại ứng dụng khá khác biệt và do đó cung cấp các khả năng rất khác so
+với HTTP. Các khả năng do SIP cung cấp có thể được nhóm thành năm loại:
 
--  User location—Determining the correct device with which to
-   communicate to reach a particular user
+-  Xác định vị trí người dùng—Xác định thiết bị đúng để liên lạc nhằm
+   kết nối với một người dùng cụ thể
 
--  User availability—Determining if the user is willing or able to take
-   part in a particular communication session
+-  Khả năng sẵn sàng của người dùng—Xác định xem người dùng có sẵn sàng
+   hoặc có thể tham gia một phiên giao tiếp cụ thể hay không
 
--  User capabilities—Determining such items as the choice of media and
-   coding scheme to use
+-  Khả năng của người dùng—Xác định các yếu tố như lựa chọn phương tiện
+   và phương thức mã hóa sẽ sử dụng
 
--  Session setup—Establishing session parameters such as port numbers to
-   be used by the communicating parties
+-  Thiết lập phiên—Thiết lập các tham số phiên như số cổng sẽ được các
+   bên giao tiếp sử dụng
 
--  Session management—A range of functions including transferring
-   sessions (e.g., to implement “call forwarding”) and modifying session
-   parameters
+-  Quản lý phiên—Một loạt chức năng bao gồm chuyển tiếp phiên (ví dụ,
+   để thực hiện “chuyển tiếp cuộc gọi”) và thay đổi các tham số phiên
 
-Most of these functions are easy enough to understand, but the issue of
-location bears some further discussion. One important difference between
-SIP and, say, HTTP, is that SIP is primarily used for human-to-human
-communication. Thus, it is important to be able to locate individual
-*users*, not just machines. And, unlike email, it’s not good enough just
-to locate a server that the user will be checking on at some later date
-and dump the message there—we need to know where the user is right now
-if we want to be able to communicate with him in real time. This is
-further complicated by the fact that a user might choose to communicate
-using a range of different devices, such as using his desktop PC when
-he’s in the office and using a handheld device when traveling. Multiple
-devices might be active at the same time and might have widely different
-capabilities (e.g., an alphanumeric pager and a PC-based video “phone”).
-Ideally, it should be possible for other users to be able to locate and
-communicate with the appropriate device at any time. Furthermore, the
-user must be able to have control over when, where, and from whom he
-receives calls.
+Hầu hết các chức năng này khá dễ hiểu, nhưng vấn đề xác định vị trí
+cần được bàn thêm. Một điểm khác biệt quan trọng giữa SIP và, chẳng
+hạn, HTTP, là SIP chủ yếu được sử dụng cho giao tiếp giữa người với
+người. Do đó, việc xác định vị trí các *người dùng* cá nhân là rất
+quan trọng, không chỉ là máy tính. Và, không giống như email, chỉ xác
+định vị trí máy chủ mà người dùng sẽ kiểm tra sau này và gửi thông điệp
+đến đó là không đủ—chúng ta cần biết người dùng đang ở đâu *ngay bây
+giờ* nếu muốn giao tiếp với họ theo thời gian thực. Điều này càng phức
+tạp hơn bởi thực tế là một người dùng có thể chọn giao tiếp bằng nhiều
+thiết bị khác nhau, chẳng hạn sử dụng máy tính để bàn khi ở văn phòng
+và thiết bị cầm tay khi đi công tác. Nhiều thiết bị có thể hoạt động
+đồng thời và có khả năng rất khác nhau (ví dụ, một máy nhắn tin chữ và
+một “điện thoại” video trên PC). Lý tưởng là người dùng khác có thể xác
+định vị trí và giao tiếp với thiết bị phù hợp vào bất kỳ thời điểm nào.
+Hơn nữa, người dùng phải có quyền kiểm soát khi nào, ở đâu và từ ai họ
+nhận cuộc gọi.
 
-To enable a user to exercise the appropriate level of control over his
-calls, SIP introduces the notion of a proxy. A SIP proxy can be thought
-of as a point of contact for a user to which initial requests for
-communication with him are sent. Proxies also perform functions on
-behalf of callers. We can see how proxies work best through an example.
+Để cho phép người dùng kiểm soát mức độ phù hợp đối với các cuộc gọi
+của mình, SIP giới thiệu khái niệm proxy. Một proxy SIP có thể được
+xem như một điểm liên lạc cho người dùng mà các yêu cầu liên lạc ban
+đầu với họ sẽ được gửi đến. Proxy cũng thực hiện các chức năng thay mặt
+người gọi. Chúng ta có thể thấy proxy hoạt động như thế nào qua một ví
+dụ.
 
 .. _fig-sipproxy:
 .. figure:: figures/f09-08-9780123850591.png
    :width: 600px
    :align: center
 
-   Establishing communication through SIP proxies.
+   Thiết lập liên lạc thông qua các proxy SIP.
 
-Consider the two users in :numref:`Figure %s <fig-sipproxy>`. The
-first thing to notice is that each user has a name in the format
-``user@domain``, very much like an email address. When user Bruce
-wants to initiate a session with Larry, he sends his initial SIP
-message to the local proxy for his domain, ``cisco.com``. Among other
-things, this initial message contains a *SIP URI*—these are a form of
-uniform resource identifier which look like this:
+Xem xét hai người dùng trong :numref:`Hình %s <fig-sipproxy>`. Điều
+đầu tiên cần chú ý là mỗi người dùng có một tên theo định dạng
+``user@domain``, rất giống địa chỉ email. Khi người dùng Bruce muốn
+khởi tạo một phiên với Larry, anh ấy gửi thông điệp SIP ban đầu đến
+proxy cục bộ cho miền của mình, ``cisco.com``. Trong số các thông tin
+khác, thông điệp ban đầu này chứa một *SIP URI*—đây là một dạng định
+danh tài nguyên thống nhất trông như sau:
 
 ::
 
    SIP:larry@princeton.edu
 
-A SIP URI provides complete identification of a user, but (unlike a URL)
-does not provide his location, since that may change over time. We will
-see shortly how the location of a user can be determined.
+Một SIP URI cung cấp nhận diện đầy đủ cho người dùng, nhưng (khác với
+URL) không cung cấp vị trí của họ, vì vị trí đó có thể thay đổi theo
+thời gian. Chúng ta sẽ xem cách xác định vị trí người dùng ngay sau
+đây.
 
-Upon receiving the initial message from Bruce, the proxy looks at the
-SIP URI and deduces that this message should be sent to the proxy. For
-now, we assume that the proxy has access to some database that enables
-it to obtain a mapping from the name to the IP address of one or more
-devices at which Larry currently wishes to receive messages. The proxy
-can therefore forward the message on to Larry’s chosen device(s).
-Sending the message to more than one device is called *forking* and may
-be done either in parallel or in series (e.g., send it to his mobile
-phone if he doesn’t answer the phone at his desk).
+Khi nhận được thông điệp ban đầu từ Bruce, proxy xem xét SIP URI và
+suy ra rằng thông điệp này nên được gửi đến proxy. Tạm thời, giả sử
+proxy có quyền truy cập vào một cơ sở dữ liệu nào đó cho phép nó lấy
+được ánh xạ từ tên sang địa chỉ IP của một hoặc nhiều thiết bị mà Larry
+hiện muốn nhận thông điệp. Proxy do đó có thể chuyển tiếp thông điệp
+đến thiết bị (các thiết bị) mà Larry chọn. Gửi thông điệp đến nhiều
+thiết bị được gọi là *forking* và có thể thực hiện song song hoặc nối
+tiếp (ví dụ, gửi đến điện thoại di động nếu anh ấy không trả lời điện
+thoại bàn).
 
-The initial message from Bruce to Larry is likely to be a SIP ``invite``
-message, which looks something like the following:
+Thông điệp ban đầu từ Bruce đến Larry có thể là thông điệp SIP
+``invite``, trông như sau:
 
 ::
 
@@ -298,370 +288,351 @@ message, which looks something like the following:
    Content-Type: application/sdp
    Content-Length: 142
 
-The first line identifies the type of function to be performed
-(``invite``); the resource on which to perform it, the called party
-(``sip:larry@princeton.edu`` ); and the protocol version (2.0). The
-subsequent header lines probably look somewhat familiar because of
-their resemblance to the header lines in an email message. SIP defines
-a large number of header fields, only some of which we describe
-here. Note that the ``Via:`` header in this example identifies the
-device from which this message originated. The ``Content-Type:`` and
-``Content-Length:`` headers describe the contents of the message
-following the header, just as in a MIME-encoded email message. In this
-case, the content is an SDP message. That message would describe such
-things as the type of media (audio, video, etc.) that Bruce would like
-to exchange with Larry and other properties of the session such as
-codec types that he supports. Note that the field in SIP provides the
-capability to use any protocol for this purpose, although SDP is the
-most common.
+Dòng đầu tiên xác định loại chức năng cần thực hiện (``invite``); tài
+nguyên cần thực hiện, bên được gọi (``sip:larry@princeton.edu``); và
+phiên bản giao thức (2.0). Các dòng header tiếp theo có lẽ trông quen
+thuộc vì giống với các dòng header trong thông điệp email. SIP định
+nghĩa rất nhiều trường header, chỉ một số trường được mô tả ở đây. Lưu
+ý rằng header ``Via:`` trong ví dụ này xác định thiết bị gửi thông điệp
+này. Các header ``Content-Type:`` và ``Content-Length:`` mô tả nội dung
+của thông điệp sau phần header, giống như trong thông điệp email mã hóa
+MIME. Trong trường hợp này, nội dung là một thông điệp SDP. Thông điệp
+này sẽ mô tả các yếu tố như loại phương tiện (âm thanh, video, v.v.)
+mà Bruce muốn trao đổi với Larry và các thuộc tính khác của phiên như
+các loại codec mà anh ấy hỗ trợ. Lưu ý rằng trường trong SIP cho phép
+sử dụng bất kỳ giao thức nào cho mục đích này, mặc dù SDP là phổ biến
+nhất.
 
-Returning to the example, when the ``invite`` message arrives at the
-proxy, not only does the proxy forward the message on toward
-``princeton.edu``, but it also responds to the sender of the ``invite``.
-Just as in HTTP, all responses have a response code, and the
-organization of codes is similar to that for HTTP. In :numref:`Figure %s
-<fig-sipeg>` we can see a sequence of SIP messages and responses.
+Quay lại ví dụ, khi thông điệp ``invite`` đến proxy, không chỉ proxy
+chuyển tiếp thông điệp đến ``princeton.edu``, mà nó còn phản hồi cho
+người gửi ``invite``. Cũng giống như HTTP, tất cả các phản hồi đều có
+mã phản hồi, và tổ chức mã cũng tương tự như HTTP. Trong :numref:`Hình
+%s <fig-sipeg>` chúng ta có thể thấy một chuỗi các thông điệp và phản
+hồi SIP.
 
 .. _fig-sipeg:
 .. figure:: figures/f09-09-9780123850591.png
    :width: 650px
    :align: center
 
-   Message flow for a basic SIP session.
+   Luồng thông điệp cho một phiên SIP cơ bản.
 
-The first response message in this figure is the provisional response
-``100 trying``, which indicates that the message was received without
-error by the caller’s proxy. Once the ``invite`` is delivered to Larry’s
-phone, it alerts Larry and responds with a ``180 ringing`` message. The
-arrival of this message at Bruce’s computer is a sign that it can
-generate a “ringtone”. Assuming Larry is willing and able to communicate
-with Bruce, he could pick up his phone, causing the message ``200 OK``
-to be sent. Bruce’s computer responds with an ``ACK``, and media (e.g.,
-an RTP-encapsulated audio stream) can now begin to flow between the two
-parties. Note that at this point the parties know each others’
-addresses, so the ``ACK`` can be sent directly, bypassing the proxies.
-The proxies are now no longer involved in the call. Note that the media
-will therefore typically take a different path through the network than
-the original signalling messages. Furthermore, even if one or both of
-the proxies were to crash at this point, the call could continue on
-normally. Finally, when one party wishes to end the session, it sends a
-``BYE`` message, which elicits a ``200 OK`` response under normal
-circumstances.
+Thông điệp phản hồi đầu tiên trong hình này là phản hồi tạm thời
+``100 trying``, cho biết thông điệp đã được proxy của người gọi nhận mà
+không có lỗi. Khi ``invite`` được chuyển đến điện thoại của Larry, nó
+báo hiệu cho Larry và phản hồi bằng thông điệp ``180 ringing``. Khi
+thông điệp này đến máy tính của Bruce, nó có thể phát ra “nhạc chuông”.
+Giả sử Larry sẵn sàng và có thể giao tiếp với Bruce, anh ấy có thể nhấc
+máy, khiến thông điệp ``200 OK`` được gửi đi. Máy tính của Bruce phản
+hồi bằng ``ACK``, và phương tiện (ví dụ, luồng âm thanh đóng gói RTP)
+có thể bắt đầu truyền giữa hai bên. Lưu ý rằng tại thời điểm này hai
+bên đã biết địa chỉ của nhau, nên ``ACK`` có thể được gửi trực tiếp,
+bỏ qua các proxy. Các proxy giờ không còn tham gia vào cuộc gọi nữa.
+Lưu ý rằng luồng phương tiện do đó thường sẽ đi theo một đường khác
+trong mạng so với các thông điệp báo hiệu ban đầu. Hơn nữa, ngay cả khi
+một hoặc cả hai proxy bị lỗi tại thời điểm này, cuộc gọi vẫn có thể
+tiếp tục bình thường. Cuối cùng, khi một bên muốn kết thúc phiên, nó
+gửi thông điệp ``BYE``, thông điệp này sẽ nhận được phản hồi ``200 OK``
+trong điều kiện bình thường.
 
-There are a few details that we have glossed over. One is the
-negotiation of session characteristics. Perhaps Bruce would have liked
-to communicate using both audio and video but Larry’s phone only
-supports audio. Thus, Larry’s phone would send an SDP message in its
-``200 OK`` describing the properties of the session that will be
-acceptable to Larry and the device, considering the options that were
-proposed in Bruce’s ``invite``. In this way, mutually acceptable session
-parameters are agreed to before the media flow starts.
+Có một số chi tiết chúng ta đã lướt qua. Một là việc đàm phán các đặc
+tính phiên. Có thể Bruce muốn giao tiếp bằng cả âm thanh và video nhưng
+điện thoại của Larry chỉ hỗ trợ âm thanh. Do đó, điện thoại của Larry
+sẽ gửi một thông điệp SDP trong ``200 OK`` mô tả các thuộc tính phiên
+có thể chấp nhận được đối với Larry và thiết bị, xét đến các tùy chọn
+được đề xuất trong ``invite`` của Bruce. Bằng cách này, các tham số
+phiên được cả hai bên chấp nhận sẽ được thống nhất trước khi luồng
+phương tiện bắt đầu.
 
-The other big issue we have glossed over is that of locating the correct
-device for Larry. First, Bruce’s computer had to send its ``invite`` to
-the ``cisco.com`` proxy. This could have been a configured piece of
-information in the computer, or it could have been learned by DHCP. Then
-the ``cisco.com`` proxy had to find the ``princeton.edu`` proxy. This
-could be done using a special sort of DNS lookup that would return the
-IP address of the SIP proxy for the domain. (We’ll discuss how DNS can
-do this in the next section.) Finally, the ``princeton.edu`` proxy had to
-find a device on which Larry could be contacted. Typically, a proxy
-server has access to a location database that can be populated in
-several ways. Manual configuration is one option, but a more flexible
-option is to use the *registration* capabilities of SIP.
+Vấn đề lớn khác mà chúng ta đã lướt qua là xác định đúng thiết bị cho
+Larry. Đầu tiên, máy tính của Bruce phải gửi ``invite`` đến proxy
+``cisco.com``. Thông tin này có thể được cấu hình sẵn trên máy tính,
+hoặc có thể học được qua DHCP. Sau đó, proxy ``cisco.com`` phải tìm
+proxy ``princeton.edu``. Việc này có thể thực hiện bằng một loại tra
+cứu DNS đặc biệt sẽ trả về địa chỉ IP của proxy SIP cho miền đó. (Chúng
+ta sẽ bàn về cách DNS làm điều này ở phần tiếp theo.) Cuối cùng, proxy
+``princeton.edu`` phải tìm một thiết bị mà Larry có thể liên lạc. Thông
+thường, một máy chủ proxy có quyền truy cập vào cơ sở dữ liệu vị trí có
+thể được cập nhật bằng nhiều cách. Cấu hình thủ công là một lựa chọn,
+nhưng một lựa chọn linh hoạt hơn là sử dụng khả năng *đăng ký* của SIP.
 
-A user can register with a location service by sending a SIP
-``register`` message to the “registrar” for his domain. This message
-creates a binding between an “address of record” and a “contact
-address”. An “address of record” is likely to be a SIP URI that is the
-well-known address for the user (e.g., ``sip:larry@princeton.edu``) and
-the “contact address” will be the address at which the user can
-currently be found (e.g., ``sip:larry@llp-ph.cs.princeton.edu``). This
-is exactly the binding that was needed by the proxy ``princeton.edu`` in
-our example.
+Người dùng có thể đăng ký với dịch vụ vị trí bằng cách gửi thông điệp
+SIP ``register`` đến “registrar” cho miền của mình. Thông điệp này tạo
+liên kết giữa “address of record” và “contact address”. “Address of
+record” có thể là một SIP URI là địa chỉ đã biết của người dùng (ví dụ,
+``sip:larry@princeton.edu``) và “contact address” sẽ là địa chỉ mà người
+dùng hiện có thể liên lạc (ví dụ, ``sip:larry@llp-ph.cs.princeton.edu``).
+Đây chính là liên kết mà proxy ``princeton.edu`` cần trong ví dụ của
+chúng ta.
 
-Note that a user may register at several locations and that multiple
-users may register at a single device. For example, one can imagine a
-group of people walking into a conference room that is equipped with an
-IP phone and all of them registering on it so that they can receive
-calls on that phone.
+Lưu ý rằng một người dùng có thể đăng ký ở nhiều vị trí và nhiều người
+dùng có thể đăng ký trên một thiết bị. Ví dụ, có thể tưởng tượng một
+nhóm người bước vào phòng họp được trang bị điện thoại IP và tất cả họ
+đăng ký trên đó để có thể nhận cuộc gọi trên điện thoại đó.
 
-SIP is a very rich and flexible protocol that can support a wide range
-of complex calling scenarios as well as applications that have little or
-nothing to do with telephony. For example, SIP supports operations that
-enable a call to be routed to a “music-on-hold” server or a voicemail
-server. It is also easy to see how it could be used for applications
-like instant messaging, and standardization of SIP extensions for such
-purposes is ongoing.
+SIP là một giao thức rất phong phú và linh hoạt, có thể hỗ trợ nhiều
+kịch bản gọi phức tạp cũng như các ứng dụng ít hoặc không liên quan gì
+đến điện thoại. Ví dụ, SIP hỗ trợ các thao tác cho phép chuyển cuộc gọi
+đến máy chủ “music-on-hold” hoặc máy chủ hộp thư thoại. Cũng dễ thấy
+nó có thể được sử dụng cho các ứng dụng như nhắn tin tức thời, và việc
+chuẩn hóa các phần mở rộng SIP cho các mục đích như vậy vẫn đang được
+tiến hành.
 
 H.323
 ~~~~~
 
-The International Telecommunication Union (ITU) has also been very
-active in the call control area, which is not surprising given its
-relevance to telephony, the traditional realm of that body. Fortunately,
-there has been considerable coordination between the IETF and the ITU in
-this instance, so that the various protocols are somewhat interoperable.
-The major ITU recommendation for multimedia communication over packet
-networks is known as *H.323*, which ties together many other
-recommendations, including H.225 for call control. The full set of
-recommendations covered by H.323 runs to many hundreds of pages, and the
-protocol is known for its complexity, so it is only possible to give a
-brief overview of it here.
+Liên minh Viễn thông Quốc tế (ITU) cũng rất tích cực trong lĩnh vực
+điều khiển cuộc gọi, điều này không có gì ngạc nhiên vì nó liên quan
+đến điện thoại, lĩnh vực truyền thống của tổ chức này. May mắn thay,
+đã có sự phối hợp đáng kể giữa IETF và ITU trong trường hợp này, nên
+các giao thức phần nào tương thích với nhau. Khuyến nghị chính của ITU
+cho truyền thông đa phương tiện qua mạng gói được gọi là *H.323*, kết
+nối nhiều khuyến nghị khác, bao gồm H.225 cho điều khiển cuộc gọi. Bộ
+khuyến nghị đầy đủ của H.323 lên đến hàng trăm trang, và giao thức này
+nổi tiếng là phức tạp, nên chỉ có thể giới thiệu ngắn gọn ở đây.
 
-H.323 is popular as a protocol for Internet telephony, including video
-calls, and we consider that class of application here. A device that
-originates or terminates calls is known as an H.323 terminal; this might
-be a workstation running an Internet telephony application, or it might
-be a specially designed “appliance”—a telephone-like device with
-networking software and an Ethernet port, for example. H.323 terminals
-can talk to each other directly, but the calls are frequently mediated
-by a device known as a *gatekeeper*. Gatekeepers perform a number of
-functions such as translating among the various address formats used for
-phone calls and controlling how many calls can be placed at a given time
-to limit the bandwidth used by the H.323 applications. H.323 also
-includes the concept of a *gateway*, which connects the H.323 network to
-other types of networks. The most common use of a gateway is to connect
-an H.323 network to the public switched telephone network (PSTN) as
-illustrated in :numref:`Figure %s <fig-h323>`. This enables a user running an
-H.323 application on a computer to talk to a person using a conventional
-phone on the public telephone network. One useful function performed by
-the gatekeeper is to help a terminal find a gateway, perhaps choosing
-among several options to find one that is relatively close to the
-ultimate destination of the call. This is clearly useful in a world
-where conventional phones greatly outnumber PC-based phones. When an
-H.323 terminal makes a call to an endpoint that is a conventional phone,
-the gateway becomes the effective endpoint for the H.323 call and is
-responsible for performing the appropriate translation of both
-signalling information and the media stream that need to be carried over
-the telephone network.
+H.323 phổ biến như một giao thức cho điện thoại Internet, bao gồm cả
+cuộc gọi video, và chúng ta sẽ xem xét loại ứng dụng này ở đây. Một
+thiết bị khởi tạo hoặc kết thúc cuộc gọi được gọi là thiết bị đầu cuối
+H.323; có thể là một máy trạm chạy ứng dụng điện thoại Internet, hoặc
+một “thiết bị” được thiết kế riêng—một thiết bị giống điện thoại với
+phần mềm mạng và cổng Ethernet, chẳng hạn. Các thiết bị đầu cuối H.323
+có thể nói chuyện trực tiếp với nhau, nhưng các cuộc gọi thường được
+trung gian bởi một thiết bị gọi là *gatekeeper*. Gatekeeper thực hiện
+nhiều chức năng như chuyển đổi giữa các định dạng địa chỉ khác nhau
+được sử dụng cho cuộc gọi điện thoại và kiểm soát số lượng cuộc gọi có
+thể thực hiện cùng lúc để giới hạn băng thông sử dụng bởi các ứng dụng
+H.323. H.323 cũng bao gồm khái niệm *gateway*, kết nối mạng H.323 với
+các loại mạng khác. Sử dụng phổ biến nhất của gateway là kết nối mạng
+H.323 với mạng điện thoại chuyển mạch công cộng (PSTN) như minh họa
+trong :numref:`Hình %s <fig-h323>`. Điều này cho phép người dùng chạy
+ứng dụng H.323 trên máy tính nói chuyện với người dùng điện thoại thông
+thường trên mạng điện thoại công cộng. Một chức năng hữu ích của
+gatekeeper là giúp thiết bị đầu cuối tìm gateway, có thể chọn trong
+nhiều lựa chọn để tìm gateway gần đích cuối cùng của cuộc gọi. Điều này
+rõ ràng hữu ích trong thế giới mà điện thoại thông thường nhiều hơn
+điện thoại trên PC rất nhiều. Khi thiết bị đầu cuối H.323 gọi đến một
+điểm cuối là điện thoại thông thường, gateway trở thành điểm cuối thực
+sự cho cuộc gọi H.323 và chịu trách nhiệm chuyển đổi phù hợp cả thông
+tin báo hiệu và luồng phương tiện cần truyền qua mạng điện thoại.
 
 .. _fig-h323:
 .. figure:: figures/f09-10-9780123850591.png
    :width: 500px
    :align: center
 
-   Devices in an H.323 network.
+   Các thiết bị trong mạng H.323.
 
-An important part of H.323 is the H.245 protocol, which is used to
-negotiate the properties of the call, somewhat analogously to the use of
-SDP described above. H.245 messages might list a number of different
-audio codec standards that it can support; the far endpoint of the call
-would reply with a list of its own supported codecs, and the two ends
-could pick a coding standard that they can both live with. H.245 can
-also be used to signal the UDP port numbers that will be used by RTP and
-Real-Time Control Protocol (RTCP) for the media stream (or streams—a
-call might include both audio and video, for example) for this call.
-Once this is accomplished, the call can proceed, with RTP being used to
-transport the media streams and RTCP carrying the relevant control
-information.
+Một phần quan trọng của H.323 là giao thức H.245, được sử dụng để đàm
+phán các thuộc tính của cuộc gọi, tương tự như việc sử dụng SDP mô tả
+ở trên. Các thông điệp H.245 có thể liệt kê một số chuẩn codec âm
+thanh mà nó có thể hỗ trợ; điểm cuối xa của cuộc gọi sẽ trả lời bằng
+danh sách các codec mà nó hỗ trợ, và hai bên có thể chọn một chuẩn mã
+hóa mà cả hai đều chấp nhận được. H.245 cũng có thể được sử dụng để
+báo hiệu số cổng UDP sẽ được RTP và Real-Time Control Protocol (RTCP)
+sử dụng cho luồng phương tiện (hoặc nhiều luồng—một cuộc gọi có thể bao
+gồm cả âm thanh và video, chẳng hạn) cho cuộc gọi này. Khi việc này
+hoàn tất, cuộc gọi có thể tiến hành, với RTP được sử dụng để truyền
+tải các luồng phương tiện và RTCP mang thông tin điều khiển liên quan.
 
-9.2.2 Resource Allocation for Multimedia Applications
+9.2.2 Phân bổ tài nguyên cho ứng dụng đa phương tiện
 -----------------------------------------------------
 
-As we have just seen, session control protocols like SIP and H.323 can
-be used to initiate and control communication in multimedia
-applications, while RTP provides transport-level functions for the data
-streams of the applications. A final piece of the puzzle in getting
-multimedia applications to work is making sure that suitable resources
-are allocated inside the network to ensure that the quality of service
-needs of the application are met. We presented a number of methods for
-resource allocation in an earlier chapter. The motivation for developing
-these technologies was largely for the support of multimedia
-applications. So how do applications take advantage of the underlying
-resource allocation capabilities of the network?
+Như chúng ta vừa thấy, các giao thức điều khiển phiên như SIP và H.323
+có thể được sử dụng để khởi tạo và kiểm soát giao tiếp trong các ứng
+dụng đa phương tiện, trong khi RTP cung cấp các chức năng tầng truyền
+tải cho các luồng dữ liệu của ứng dụng. Mảnh ghép cuối cùng để các ứng
+dụng đa phương tiện hoạt động là đảm bảo rằng các tài nguyên phù hợp
+được phân bổ trong mạng để đáp ứng nhu cầu chất lượng dịch vụ của ứng
+dụng. Chúng ta đã trình bày một số phương pháp phân bổ tài nguyên ở
+chương trước. Động lực phát triển các công nghệ này chủ yếu là để hỗ
+trợ các ứng dụng đa phương tiện. Vậy các ứng dụng tận dụng khả năng
+phân bổ tài nguyên của mạng như thế nào?
 
-It is worth noting that many multimedia applications run successfully
-over “best-effort” networks, such as the public Internet. The wide array
-of commercial VoIP services (such as Skype) are a testimony to the fact
-that you only have to worry about resource allocation when resources are
-not abundant—and in many parts of today’s Internet, resource abundance
-is the norm.
+Cần lưu ý rằng nhiều ứng dụng đa phương tiện chạy thành công trên các
+mạng “best-effort”, như Internet công cộng. Sự đa dạng của các dịch vụ
+VoIP thương mại (như Skype) là minh chứng cho việc bạn chỉ cần lo lắng
+về phân bổ tài nguyên khi tài nguyên không dồi dào—và ở nhiều nơi trên
+Internet ngày nay, tài nguyên dồi dào là điều bình thường.
 
-A protocol like RTCP can help applications in best-effort networks, by
-giving the application detailed information about the quality of service
-that is being delivered by the network. Recall that RTCP carries
-information about the loss rate and delay characteristics between
-participants in a multimedia application. An application can use this
-information to change its coding scheme—changing to a lower bitrate
-codec, for example, when bandwidth is scarce. Note that, while it might
-be tempting to change to a codec that sends additional, redundant
-information when loss rates are high, this is frowned upon; it is
-analogous to *increasing* the window size of TCP in the presence of
-loss, the exact opposite of what is required to avoid congestion
-collapse.
+Một giao thức như RTCP có thể giúp các ứng dụng trên mạng best-effort,
+bằng cách cung cấp cho ứng dụng thông tin chi tiết về chất lượng dịch
+vụ mà mạng đang cung cấp. Hãy nhớ rằng RTCP mang thông tin về tỷ lệ
+mất gói và đặc tính trễ giữa các bên tham gia ứng dụng đa phương tiện.
+Ứng dụng có thể sử dụng thông tin này để thay đổi phương thức mã hóa—
+chuyển sang codec tốc độ thấp hơn, chẳng hạn, khi băng thông khan hiếm.
+Lưu ý rằng, mặc dù có thể bị cám dỗ chuyển sang codec gửi thêm thông
+tin dư thừa khi tỷ lệ mất gói cao, điều này không được khuyến khích;
+nó tương tự như *tăng* kích thước cửa sổ của TCP khi có mất gói, hoàn
+toàn ngược lại với những gì cần làm để tránh sụp đổ nghẽn.
 
-As discussed in an earlier chapter, Differentiated Services (DiffServ)
-can be used to provide fairly basic and scalable resource allocation to
-applications. A multimedia application can set the differentiated
-services code point (DSCP) in the IP header of the packets that it
-generates in an effort to ensure that both the media and control packets
-receive appropriate quality of service. For example, it is common to
-mark voice media packets as “EF” (expedited forwarding) to cause them to
-be placed in a low-latency or priority queue in routers along the path,
-while the call signalling (e.g., SIP) packets are often marked with some
-sort of “AF” (assured forwarding) to enable them to be queued separately
-from best-effort traffic and thus reduce their risk of loss.
+Như đã bàn ở chương trước, Dịch vụ Phân biệt (DiffServ) có thể được sử
+dụng để cung cấp phân bổ tài nguyên khá cơ bản và có khả năng mở rộng
+cho các ứng dụng. Một ứng dụng đa phương tiện có thể đặt mã điểm dịch
+vụ phân biệt (DSCP) trong header IP của các gói mà nó tạo ra nhằm đảm
+bảo cả gói phương tiện và gói điều khiển nhận được chất lượng dịch vụ
+phù hợp. Ví dụ, thông thường các gói phương tiện thoại được đánh dấu là
+“EF” (expedited forwarding) để chúng được xếp vào hàng đợi độ trễ thấp
+hoặc ưu tiên trong các router trên đường đi, trong khi các gói báo hiệu
+cuộc gọi (ví dụ, SIP) thường được đánh dấu với một loại “AF” (assured
+forwarding) nào đó để chúng được xếp hàng riêng biệt với lưu lượng
+best-effort và do đó giảm nguy cơ bị mất.
 
-Of course, it only makes sense to mark the packets inside the sending
-host or appliance if network devices such as routers pay attention to
-the DSCP. In general, routers in the public Internet ignore the DSCP,
-providing best-effort service to all packets. However, enterprise or
-corporate networks have the ability to use DiffServ for their internal
-multimedia traffic, and frequently do so. Also, even residential users
-of the Internet can often improve the quality of VoIP or other
-multimedia applications just by using DiffServ on the outbound
-direction of their Internet connections, as illustrated in
-:numref:`Figure %s <fig-ds-bb>`.  This is effective because of the
-asymmetry of many broadband Internet connections: If the outbound link
-is substantially slower (i.e., more resource constrained) than the
-inbound, then resource allocation using DiffServ on that link may be
-enough to make all the difference in quality for latency- and
-loss-sensitive applications.
+Tất nhiên, chỉ nên đánh dấu các gói bên trong máy chủ gửi hoặc thiết bị
+nếu các thiết bị mạng như router chú ý đến DSCP. Thông thường, các
+router trên Internet công cộng bỏ qua DSCP, cung cấp dịch vụ best-effort
+cho tất cả các gói. Tuy nhiên, các mạng doanh nghiệp hoặc công ty có
+khả năng sử dụng DiffServ cho lưu lượng đa phương tiện nội bộ của họ,
+và thường làm như vậy. Ngoài ra, ngay cả người dùng Internet gia đình
+cũng có thể cải thiện chất lượng VoIP hoặc các ứng dụng đa phương tiện
+khác chỉ bằng cách sử dụng DiffServ trên hướng gửi đi của kết nối
+Internet, như minh họa trong :numref:`Hình %s <fig-ds-bb>`. Điều này
+hiệu quả vì sự bất đối xứng của nhiều kết nối Internet băng rộng: Nếu
+liên kết gửi đi chậm hơn đáng kể (tức là hạn chế tài nguyên hơn) so với
+liên kết nhận, thì phân bổ tài nguyên bằng DiffServ trên liên kết đó có
+thể đủ để tạo ra sự khác biệt về chất lượng cho các ứng dụng nhạy cảm
+với độ trễ và mất mát.
 
 .. _fig-ds-bb:
 .. figure:: figures/f09-11-9780123850591.png
    :width: 500px
    :align: center
 
-   Differentiated Services applied to a VoIP application. DiffServ queuing
-   is applied only on the upstream link from customer router to ISP.
+   Dịch vụ Phân biệt áp dụng cho ứng dụng VoIP. Xếp hàng DiffServ chỉ áp
+   dụng trên liên kết gửi đi từ router khách hàng đến ISP.
 
-While DiffServ is appealing for its simplicity, it is clear that it
-cannot meet the needs of applications under all conditions. For example,
-suppose the upstream bandwidth in :numref:`Figure %s <fig-ds-bb>` is only
-100 kbps, and the customer attempts to place two VoIP calls, each with a
-64-kbps codec. Clearly the upstream link is now more than 100% loaded,
-which will lead to large queuing delays and lost packets. No amount of
-clever queuing in the customer’s router can fix that.
+Mặc dù DiffServ hấp dẫn vì sự đơn giản, rõ ràng nó không thể đáp ứng
+nhu cầu của ứng dụng trong mọi điều kiện. Ví dụ, giả sử băng thông gửi
+đi trong :numref:`Hình %s <fig-ds-bb>` chỉ là 100 kbps, và khách hàng
+cố gắng thực hiện hai cuộc gọi VoIP, mỗi cuộc sử dụng codec 64 kbps.
+Rõ ràng liên kết gửi đi giờ đã quá tải hơn 100%, điều này sẽ dẫn đến
+độ trễ xếp hàng lớn và mất gói. Không có cách xếp hàng thông minh nào
+trong router của khách hàng có thể khắc phục điều đó.
 
-The characteristics of many multimedia applications are such that,
-rather than try to squeeze too many calls into a too-narrow pipe, it
-would be better to block one call while allowing another to proceed.
-That is, it is better to have one person carrying on a conversation
-successfully while another hears a busy signal than to have both callers
-experiencing unacceptable audio quality at the same time. We sometimes
-refer to such applications as having a *steep utility curve*, meaning
-that the utility (usefulness) of the application drops rapidly as the
-quality of service provided by the network degrades. Multimedia
-applications often have this property, whereas many traditional
-applications do not. Email, for example, continues to work quite well
-even if delays run into the hours.
+Đặc điểm của nhiều ứng dụng đa phương tiện là, thay vì cố nhồi nhét quá
+nhiều cuộc gọi vào một đường truyền quá hẹp, tốt hơn là chặn một cuộc
+gọi trong khi cho phép cuộc gọi khác tiếp tục. Tức là, tốt hơn là một
+người có thể trò chuyện thành công trong khi người khác nghe tín hiệu
+bận, hơn là cả hai đều trải nghiệm chất lượng âm thanh không chấp nhận
+được cùng lúc. Chúng ta đôi khi gọi các ứng dụng như vậy là có *đường
+tiện ích dốc*, nghĩa là tiện ích (tính hữu ích) của ứng dụng giảm mạnh
+khi chất lượng dịch vụ do mạng cung cấp giảm. Các ứng dụng đa phương
+tiện thường có đặc điểm này, trong khi nhiều ứng dụng truyền thống thì
+không. Email, chẳng hạn, vẫn hoạt động tốt ngay cả khi độ trễ lên đến
+hàng giờ.
 
-Applications with steep utility curves are often well suited to some
-form of admission control. If you cannot be sure that sufficient
-resources will always be available to support the offered load of the
-applications, then admission control provides a way to say “no” to some
-applications while allowing others to get the resources they need.
+Các ứng dụng có đường tiện ích dốc thường phù hợp với một số hình thức
+kiểm soát truy nhập (admission control). Nếu bạn không thể chắc chắn
+rằng tài nguyên luôn đủ để hỗ trợ tải của ứng dụng, thì kiểm soát truy
+nhập cung cấp cách nói “không” với một số ứng dụng trong khi cho phép
+ứng dụng khác nhận tài nguyên cần thiết.
 
-We saw one way to do admission control using RSVP in an earlier chapter,
-and we will return to that shortly, but multimedia applications that use
-session control protocols provide some other admission control options.
-The key point to observe here is that session control protocols like SIP
-or H.323 often involve some sort of message exchange between an endpoint
-and another entity (SIP proxy or H.323 gatekeeper) at the beginning of a
-call or session. This can provide a handy means to say “no” to a new
-call for which sufficient resources are not available.
+Chúng ta đã thấy một cách thực hiện kiểm soát truy nhập bằng RSVP ở
+chương trước, và sẽ quay lại vấn đề này ngay sau đây, nhưng các ứng
+dụng đa phương tiện sử dụng giao thức điều khiển phiên cung cấp một số
+lựa chọn kiểm soát truy nhập khác. Điểm mấu chốt ở đây là các giao thức
+điều khiển phiên như SIP hoặc H.323 thường liên quan đến một số trao
+đổi thông điệp giữa điểm cuối và một thực thể khác (proxy SIP hoặc
+gatekeeper H.323) khi bắt đầu cuộc gọi hoặc phiên. Điều này cung cấp
+một cách thuận tiện để nói “không” với một cuộc gọi mới khi tài nguyên
+không đủ.
 
-As an example, consider the network in :numref:`Figure %s
-<fig-cm-cac>`. Suppose the wide area link from the branch office to
-the head office has enough bandwidth to accommodate three VoIP calls
-simultaneously using 64-kbps codecs. Each phone already needs to
-communicate with the local SIP proxy or H.323 gatekeeper when it
-begins to place a call, so it is easy enough for the proxy/gatekeeper
-to send back a message that tells the IP phone to play a busy signal
-if that link is already fully loaded. The proxy or gatekeeper can even
-deal with the possibility that a particular IP phone might be making
-multiple calls at the same time and that different codec speeds might
-be used. However, this scheme will work only if no other device can
-overload the link without first talking to the gatekeeper or
-proxy. DiffServ queuing can be used to ensure that, for example, a PC
-engaged in a file transfer doesn’t interfere with the VoIP calls. But,
-suppose some VoIP application that doesn’t first talk to the
-gatekeeper or proxy is enabled in the remote office. Such an
-application, if it can get its packets marked appropriately and in the
-same queue as the existing VoIP traffic, can clearly drive the link to
-the point of overload with no feedback from the proxy or gatekeeper.
+Ví dụ, hãy xem xét mạng trong :numref:`Hình %s <fig-cm-cac>`. Giả sử
+liên kết diện rộng từ văn phòng chi nhánh đến văn phòng chính có đủ băng
+thông cho ba cuộc gọi VoIP đồng thời sử dụng codec 64 kbps. Mỗi điện
+thoại đều cần liên lạc với proxy SIP hoặc gatekeeper H.323 cục bộ khi
+bắt đầu cuộc gọi, nên proxy/gatekeeper có thể dễ dàng gửi lại thông
+điệp yêu cầu điện thoại IP phát tín hiệu bận nếu liên kết đó đã đầy.
+Proxy hoặc gatekeeper thậm chí có thể xử lý trường hợp một điện thoại
+IP thực hiện nhiều cuộc gọi cùng lúc và các tốc độ codec khác nhau có
+thể được sử dụng. Tuy nhiên, sơ đồ này chỉ hoạt động nếu không thiết bị
+nào khác có thể làm quá tải liên kết mà không thông qua gatekeeper hoặc
+proxy trước. Xếp hàng DiffServ có thể được sử dụng để đảm bảo, ví dụ,
+một PC truyền tệp không ảnh hưởng đến các cuộc gọi VoIP. Nhưng, giả sử
+một ứng dụng VoIP nào đó không liên lạc với gatekeeper hoặc proxy được
+kích hoạt ở văn phòng từ xa. Ứng dụng như vậy, nếu có thể đánh dấu gói
+phù hợp và vào cùng hàng đợi với lưu lượng VoIP hiện có, rõ ràng có thể
+làm quá tải liên kết mà không nhận được phản hồi từ proxy hoặc
+gatekeeper.
 
 .. _fig-cm-cac:
 .. figure:: figures/f09-12-9780123850591.png
    :width: 500px
    :align: center
 
-   Admission control using session control protocol.
+   Kiểm soát truy nhập sử dụng giao thức điều khiển phiên.
 
-Another problem with the approach just described is that it depends on
-the gatekeeper or proxy having knowledge of the path that each
-application will use. In the simple topology of :numref:`Figure %s
-<fig-cm-cac>` this isn’t a big issue, but in more complex networks it
-can quickly become unmanageable. We only need to imagine the case
-where the remote office has two different connections to the outside
-world to see that we are asking the proxy or gatekeeper to understand
-not just SIP or H.323 but also routing, link failures, and current
-network conditions. This can quickly become unmanageable.
+Một vấn đề khác với phương pháp vừa mô tả là nó phụ thuộc vào việc
+gatekeeper hoặc proxy biết đường đi mà mỗi ứng dụng sẽ sử dụng. Trong
+topo đơn giản của :numref:`Hình %s <fig-cm-cac>` điều này không phải là
+vấn đề lớn, nhưng trong các mạng phức tạp hơn nó có thể nhanh chóng trở
+nên không thể quản lý. Chỉ cần tưởng tượng trường hợp văn phòng từ xa
+có hai kết nối khác nhau ra bên ngoài để thấy rằng chúng ta đang yêu
+cầu proxy hoặc gatekeeper hiểu không chỉ SIP hoặc H.323 mà còn cả
+định tuyến, sự cố liên kết và điều kiện mạng hiện tại. Điều này có thể
+nhanh chóng trở nên không thể quản lý.
 
-We refer to the sort of admission control just described as *off-path*,
-in the sense that the device making admission control decisions does not
-sit on the data path where resources need to be allocated. The obvious
-alternative is *on-path* admission control, and the standard example of
-a protocol that does on-path admission control in IP networks is the
-Resource Reservation Protocol (RSVP). We saw in an earlier chapter how
-RSVP can be used to ensure that sufficient resources are allocated along
-a path, and it is straightforward to use RSVP in applications like those
-described in this section. The one detail that still needs to be filled
-in is how the admission control protocol interacts with the session
-control protocol.
+Chúng ta gọi loại kiểm soát truy nhập vừa mô tả là *off-path*, nghĩa là
+thiết bị đưa ra quyết định kiểm soát truy nhập không nằm trên đường dữ
+liệu nơi cần phân bổ tài nguyên. Lựa chọn rõ ràng là kiểm soát truy
+nhập *on-path*, và ví dụ tiêu chuẩn về giao thức thực hiện kiểm soát
+truy nhập on-path trong mạng IP là Giao thức Đặt trước Tài nguyên
+(RSVP). Chúng ta đã thấy ở chương trước cách RSVP có thể được sử dụng
+để đảm bảo tài nguyên được phân bổ dọc theo đường đi, và việc sử dụng
+RSVP trong các ứng dụng như mô tả ở phần này là khá đơn giản. Chi tiết
+còn lại là cách giao thức kiểm soát truy nhập tương tác với giao thức
+điều khiển phiên.
 
 .. _fig-sip-sync:
 .. figure:: figures/f09-13-9780123850591.png
    :width: 500px
    :align: center
 
-   Coordination of SIP signalling and resource reservation.
+   Phối hợp báo hiệu SIP và đặt trước tài nguyên.
 
-Coordinating the actions of an admission control (or resource
-reservation) protocol and a session control protocol is not rocket
-science, but it does require some attention to details. As an example,
-consider a simple telephone call between two parties. Before you can
-make a reservation, you need to know how much bandwidth the call is
-going to use, which means you need to know what codecs are to be used.
-That implies you need to do some of the session control first, to
-exchange information about the codecs supported by the two phones.
-However, you can’t do *all* the session control first, because you
-wouldn’t want the phone to ring before the admission control decision
-had been made, in case admission control failed. :numref:`Figure %s
-<fig-sip-sync>` illustrates this situation where SIP is used for
-session control and RSVP is used to make the admission control decision
-(successfully in this case).
+Phối hợp các hành động của giao thức kiểm soát truy nhập (hoặc đặt
+trước tài nguyên) và giao thức điều khiển phiên không phải là khoa học
+tên lửa, nhưng cần chú ý đến chi tiết. Ví dụ, hãy xem xét một cuộc gọi
+điện thoại đơn giản giữa hai bên. Trước khi có thể đặt trước tài
+nguyên, bạn cần biết cuộc gọi sẽ sử dụng bao nhiêu băng thông, nghĩa là
+cần biết các codec sẽ sử dụng. Điều đó ngụ ý cần thực hiện một phần
+điều khiển phiên trước, để trao đổi thông tin về các codec mà hai điện
+thoại hỗ trợ. Tuy nhiên, bạn không thể thực hiện *toàn bộ* điều khiển
+phiên trước, vì không muốn điện thoại đổ chuông trước khi quyết định
+kiểm soát truy nhập được đưa ra, phòng trường hợp kiểm soát truy nhập
+thất bại. :numref:`Hình %s <fig-sip-sync>` minh họa tình huống này nơi
+SIP được sử dụng cho điều khiển phiên và RSVP được sử dụng để đưa ra
+quyết định kiểm soát truy nhập (thành công trong trường hợp này).
 
-The main thing to notice here is the interleaving of session control and
-resource allocation tasks. Solid lines represent SIP messages, dashed
-lines represent RSVP messages. Note that SIP messages are transmitted
-direction from phone to phone in this example (i.e., we have not shown
-any SIP proxies), whereas the RSVP messages are also processed by the
-routers in the middle as the check for sufficient resources to admit the
-call.
+Điều chính cần chú ý ở đây là sự xen kẽ giữa các tác vụ điều khiển
+phiên và phân bổ tài nguyên. Các đường liền nét đại diện cho thông điệp
+SIP, các đường đứt nét đại diện cho thông điệp RSVP. Lưu ý rằng các
+thông điệp SIP được truyền trực tiếp từ điện thoại đến điện thoại trong
+ví dụ này (tức là không hiển thị proxy SIP), trong khi các thông điệp
+RSVP cũng được xử lý bởi các router ở giữa khi kiểm tra tài nguyên đủ
+để chấp nhận cuộc gọi.
 
-We begin with an initial exchange of codec information in the first two
-SIP messages (recall that SDP is used to list available codecs, among
-other things). ``PRACK`` is a “provisional acknowledgment”. Once these
-messages have been exchanged, RSVP ``PATH`` messages, which contain a
-description of the amount of resources that will be required, can be
-sent as the first step in reserving resources in both directions of the
-call. Next, ``RESV`` messages can be sent back to actually reserve the
-resources. Once a ``RESV`` is received by the initiating phone, it can
-send an updated SDP message reporting the fact that resources have been
-reserved in one direction. When the called phone has received both that
-message and the ``RESV`` from the other phone, it can start to ring and
-tell the other phone that resources are now reserved in both directions
-(with the SDP message) and also notify the calling phone that it is
-ringing. From here on, normal SIP signalling and media flow, similar to
-that shown in :numref:`Figure %s <fig-sipeg>`, proceeds.
+Chúng ta bắt đầu với trao đổi thông tin codec ban đầu trong hai thông
+điệp SIP đầu tiên (hãy nhớ rằng SDP được sử dụng để liệt kê các codec
+khả dụng, cùng các thông tin khác). ``PRACK`` là “provisional
+acknowledgment”. Khi các thông điệp này đã được trao đổi, các thông
+điệp RSVP ``PATH``, chứa mô tả về lượng tài nguyên sẽ cần, có thể được
+gửi như bước đầu tiên để đặt trước tài nguyên theo cả hai hướng của
+cuộc gọi. Tiếp theo, các thông điệp ``RESV`` có thể được gửi lại để
+thực sự đặt trước tài nguyên. Khi điện thoại khởi tạo nhận được ``RESV``,
+nó có thể gửi thông điệp SDP cập nhật báo cáo rằng tài nguyên đã được
+đặt trước theo một hướng. Khi điện thoại được gọi nhận được cả thông
+điệp đó và ``RESV`` từ điện thoại kia, nó có thể bắt đầu đổ chuông và
+thông báo cho điện thoại kia rằng tài nguyên đã được đặt trước theo cả
+hai hướng (bằng thông điệp SDP) và cũng thông báo cho điện thoại gọi
+rằng nó đang đổ chuông. Từ đây, báo hiệu SIP và luồng phương tiện bình
+thường, tương tự như minh họa trong :numref:`Hình %s <fig-sipeg>`, sẽ
+tiếp tục.
 
-Again we see how building applications requires us to understand the
-interaction between different building blocks (SIP and RSVP, in this
-case). The designers of SIP actually made some changes to the protocol
-to enable this interleaving of functions between protocols with
-different jobs, hence our repeated emphasis in this book on focusing on
-complete systems rather than just looking at one layer or component in
-isolation from the other parts of the system.
+Một lần nữa chúng ta thấy việc xây dựng ứng dụng đòi hỏi phải hiểu sự
+tương tác giữa các khối xây dựng khác nhau (SIP và RSVP, trong trường
+hợp này). Các nhà thiết kế SIP thực tế đã thực hiện một số thay đổi
+trong giao thức để cho phép sự xen kẽ chức năng giữa các giao thức có
+nhiệm vụ khác nhau, do đó chúng tôi nhấn mạnh nhiều lần trong cuốn sách
+này về việc tập trung vào hệ thống hoàn chỉnh thay vì chỉ nhìn vào một
+lớp hoặc thành phần riêng biệt với các phần khác của hệ thống.

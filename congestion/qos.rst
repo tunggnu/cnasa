@@ -96,7 +96,7 @@ Mục tiêu của dịch vụ tải có kiểm soát là mô phỏng một mạn
 Rõ ràng, hai lớp dịch vụ này chỉ là một tập con của tất cả các lớp có thể cung cấp. Thực tế, các dịch vụ khác đã được đặc tả nhưng chưa bao giờ được chuẩn hóa trong công việc của IETF. Cho đến nay, hai dịch vụ trên (cùng với best effort truyền thống) đã chứng tỏ đủ linh hoạt để đáp ứng nhu cầu của nhiều loại ứng dụng.
 
 Tổng quan về các cơ chế
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Bây giờ chúng ta đã bổ sung một số lớp dịch vụ mới vào mô hình best-effort, câu hỏi tiếp theo là làm thế nào để triển khai một mạng cung cấp các dịch vụ này cho ứng dụng. Phần này phác thảo các cơ chế chính. Lưu ý khi đọc phần này rằng các cơ chế được mô tả vẫn đang được cộng đồng thiết kế Internet hoàn thiện. Điều quan trọng là hiểu tổng thể các thành phần liên quan đến việc hỗ trợ mô hình dịch vụ đã nêu.
 
@@ -140,7 +140,7 @@ Kiểm soát truy cập không nên nhầm lẫn với *kiểm soát* (policing)
 Kiểm soát truy cập liên quan chặt chẽ đến vấn đề *chính sách* (policy). Ví dụ, quản trị viên mạng có thể muốn cho phép các đặt trước do CEO công ty thực hiện được chấp nhận, trong khi từ chối các đặt trước của nhân viên cấp thấp hơn. Tất nhiên, yêu cầu của CEO vẫn có thể bị từ chối nếu tài nguyên không đủ, nên cả vấn đề chính sách và tài nguyên đều có thể được xem xét khi quyết định kiểm soát truy cập. Việc áp dụng chính sách vào mạng là lĩnh vực đang được quan tâm nhiều vào thời điểm viết sách này.
 
 Giao thức đặt trước
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Trong khi các mạng hướng kết nối luôn cần một giao thức thiết lập để tạo trạng thái mạch ảo cần thiết trong switch, các mạng không kết nối như Internet không có các giao thức như vậy. Tuy nhiên, như đã trình bày ở phần này, chúng ta cần cung cấp nhiều thông tin hơn cho mạng khi muốn nhận dịch vụ thời gian thực. Dù đã có nhiều giao thức thiết lập được đề xuất cho Internet, giao thức được chú ý nhiều nhất hiện nay là RSVP. Nó đặc biệt thú vị vì khác biệt đáng kể với các giao thức báo hiệu truyền thống cho mạng hướng kết nối.
 
@@ -183,7 +183,7 @@ Rõ ràng, một hàng đợi FIFO đơn giản trong router sẽ không đủ �
 Chi tiết lập lịch gói lý tưởng không nên quy định trong mô hình dịch vụ. Thay vào đó, đây là lĩnh vực mà các nhà triển khai có thể sáng tạo để hiện thực hóa mô hình dịch vụ hiệu quả. Với dịch vụ đảm bảo, đã xác định rằng kỷ luật xếp hàng công bằng có trọng số, trong đó mỗi luồng có hàng đợi riêng với một phần băng thông nhất định, sẽ cung cấp giới hạn trễ đầu-cuối có thể tính toán được. Với tải có kiểm soát, có thể dùng các phương án đơn giản hơn. Một khả năng là coi toàn bộ lưu lượng tải có kiểm soát như một luồng tổng hợp (về mặt cơ chế lập lịch), với trọng số cho luồng này được đặt dựa trên tổng lưu lượng đã được chấp nhận trong lớp tải có kiểm soát. Vấn đề trở nên khó hơn khi xét rằng trong một router, nhiều dịch vụ khác nhau có thể được cung cấp đồng thời và mỗi dịch vụ có thể yêu cầu thuật toán lập lịch khác nhau. Do đó, cần một thuật toán quản lý hàng đợi tổng thể để quản lý tài nguyên giữa các dịch vụ khác nhau.
 
 Vấn đề mở rộng quy mô
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 Dù kiến trúc Dịch vụ tích hợp và RSVP là một cải tiến đáng kể so với mô hình best-effort của IP, nhiều nhà cung cấp dịch vụ Internet cảm thấy nó không phù hợp để triển khai. Lý do liên quan đến một trong những mục tiêu thiết kế cơ bản của IP: khả năng mở rộng. Trong mô hình best-effort, các router trong Internet lưu rất ít hoặc không lưu trạng thái về các luồng riêng lẻ đi qua. Do đó, khi Internet phát triển, điều duy nhất router cần làm để theo kịp là truyền nhiều bit hơn mỗi giây và xử lý bảng định tuyến lớn hơn, nhưng RSVP đặt ra khả năng mỗi luồng đi qua router có một đặt trước tương ứng. Để hiểu mức độ nghiêm trọng của vấn đề, giả sử mỗi luồng trên một liên kết OC-48 (2,5 Gbps) là một luồng âm thanh 64 kbps. Số luồng như vậy là
 
@@ -249,7 +249,7 @@ Tức là, đã dành 20% băng thông cho gói cao cấp, nên nếu tải trun
 Giống như WRED, có thể tổng quát hóa cách tiếp cận dựa trên WFQ này để cho phép nhiều hơn hai lớp đại diện bởi các điểm mã khác nhau. Hơn nữa, có thể kết hợp ý tưởng chọn hàng đợi với ưu tiên loại bỏ. Ví dụ, với 12 điểm mã có thể có bốn hàng đợi với trọng số khác nhau, mỗi hàng đợi có ba mức ưu tiên loại bỏ. Đây chính là cách IETF đã định nghĩa “dịch vụ đảm bảo”.
 
 6.5.4 Điều khiển tắc nghẽn dựa trên phương trình
------------------------------------------------
+------------------------------------------------
 
 Chúng ta kết thúc phần bàn về QoS bằng cách quay lại điều khiển tắc nghẽn TCP, nhưng lần này trong bối cảnh ứng dụng thời gian thực. Nhớ rằng TCP điều chỉnh cửa sổ tắc nghẽn của máy gửi (và do đó tốc độ truyền) dựa trên các sự kiện ACK và timeout. Một điểm mạnh của cách tiếp cận này là không cần sự hợp tác từ router mạng; đây là chiến lược hoàn toàn dựa trên máy chủ. Chiến lược này bổ sung cho các cơ chế QoS đã bàn, vì (1) ứng dụng có thể dùng giải pháp dựa trên máy chủ mà không phụ thuộc vào hỗ trợ của router, và (2) ngay cả khi DiffServ được triển khai đầy đủ, vẫn có thể xảy ra hàng đợi router bị quá tải, và chúng ta muốn ứng dụng thời gian thực phản ứng hợp lý khi điều này xảy ra.
 

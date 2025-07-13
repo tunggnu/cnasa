@@ -1,270 +1,254 @@
-9.4 Overlay Networks
-====================
+9.4 Mạng phủ (Overlay Networks)
+===============================
 
-From its inception, the Internet has adopted a clean model, in which the
-routers inside the network are responsible for forwarding packets from
-source to destination, and application programs run on the hosts
-connected to the edges of the network. The client/server paradigm
-illustrated by the applications discussed in the first two sections of
-this chapter certainly adhere to this model.
+Từ khi ra đời, Internet đã áp dụng một mô hình rõ ràng, trong đó các
+router bên trong mạng chịu trách nhiệm chuyển tiếp gói tin từ nguồn đến
+đích, và các chương trình ứng dụng chạy trên các máy chủ kết nối ở rìa
+mạng. Mô hình client/server được minh họa bởi các ứng dụng được thảo
+luận trong hai phần đầu của chương này chắc chắn tuân thủ mô hình này.
 
-In the last few years, however, the distinction between *packet
-forwarding* and *application processing* has become less clear. New
-applications are being distributed across the Internet, and in many
-cases these applications make their own forwarding decisions. These new
-hybrid applications can sometimes be implemented by extending
-traditional routers and switches to support a modest amount of
-application-specific processing. For example, so-called *level-7
-switches* sit in front of server clusters and forward HTTP requests to a
-specific server based on the requested URL. However, *overlay networks*
-are quickly emerging as the mechanism of choice for introducing new
-functionality into the Internet.
+Tuy nhiên, trong vài năm gần đây, ranh giới giữa *chuyển tiếp gói tin*
+và *xử lý ứng dụng* đã trở nên mờ nhạt hơn. Các ứng dụng mới đang được
+phân tán trên toàn Internet, và trong nhiều trường hợp các ứng dụng này
+tự đưa ra quyết định chuyển tiếp riêng. Những ứng dụng lai mới này đôi
+khi có thể được triển khai bằng cách mở rộng các router và switch truyền
+thống để hỗ trợ một lượng nhỏ xử lý đặc thù ứng dụng. Ví dụ, các
+*switch lớp 7* (level-7 switches) được đặt trước các cụm máy chủ và
+chuyển tiếp các yêu cầu HTTP đến một máy chủ cụ thể dựa trên URL được
+yêu cầu. Tuy nhiên, *mạng phủ* (overlay networks) đang nhanh chóng nổi
+lên như một cơ chế được lựa chọn để đưa các chức năng mới vào Internet.
 
 .. _fig-overlay-net:
 .. figure:: figures/f09-19-9780123850591.png
    :width: 300px
    :align: center
 
-   Overlay network layered on top of a physical network.
+   Mạng phủ được xếp lớp trên một mạng vật lý.
 
-You can think of an overlay as a logical network implemented on top of
-some underlying network. By this definition, the Internet started out
-as an overlay network on top of the links provided by the old
-telephone network. :numref:`Figure %s <fig-overlay-net>` depicts an
-overlay implemented on top of an underlying network. Each node in the
-overlay also exists in the underlying network; it processes and
-forwards packets in an application-specific way. The links that
-connect the overlay nodes are implemented as tunnels through the
-underlying network. Multiple overlay networks can exist on top of the
-same underlying network—each implementing its own application-specific
-behavior—and overlays can be nested, one on top of another. For
-example, all of the example overlay networks discussed in this section
-treat today’s Internet as the underlying network.
+Bạn có thể nghĩ về một overlay như một mạng logic được triển khai trên
+một mạng nền tảng nào đó. Theo định nghĩa này, Internet ban đầu là một
+mạng phủ trên các liên kết do mạng điện thoại cũ cung cấp.
+:numref:`Hình %s <fig-overlay-net>` mô tả một overlay được triển khai
+trên một mạng nền tảng. Mỗi nút trong overlay cũng tồn tại trong mạng
+nền tảng; nó xử lý và chuyển tiếp các gói tin theo cách đặc thù ứng
+dụng. Các liên kết kết nối các nút overlay được triển khai dưới dạng các
+tunnel xuyên qua mạng nền tảng. Nhiều mạng phủ có thể cùng tồn tại trên
+một mạng nền tảng—mỗi mạng triển khai hành vi đặc thù ứng dụng riêng—
+và các overlay có thể được lồng nhau, lớp này trên lớp khác. Ví dụ, tất
+cả các mạng phủ được thảo luận trong phần này đều coi Internet ngày nay
+là mạng nền tảng.
 
 .. _fig-overlay-tunnel:
 .. figure:: figures/f09-20-9780123850591.png
    :width: 500px
    :align: center
 
-   Overlay nodes tunnel through physical nodes.
+   Các nút overlay tunnel qua các nút vật lý.
 
-We have already seen examples of tunneling, for example, to implement
-virtual private networks (VPNs). As a brief refresher, the nodes on
-either end of a tunnel treat the multi-hop path between them as a
-single logical link, the nodes that are tunneled through forward
-packets based on the outer header, never aware that the end nodes have
-attached an inner header. :numref:`Figure %s <fig-overlay-tunnel>`
-shows three overlay nodes (A, B, and C) connected by a pair of
-tunnels. In this example, overlay node B might make a forwarding
-decision for packets from A to C based on the inner header (``IHdr``),
-and then attach an outer header (``OHdr``) that identifies C as the
-destination in the underlying network. Nodes A, B, and C are able to
-interpret both the inner and outer header, whereas the intermediate
-routers understand only the outer header. Similarly, A, B, and C have
-addresses in both the overlay network and the underlying network, but
-they are not necessarily the same; for example, their underlying
-address might be a 32-bit IP address, while their overlay address
-might be an experimental 128-bit address. In fact, the overlay need
-not use conventional addresses at all but may route based on URLs,
-domain names, an XML query, or even the content of the packet.
+Chúng ta đã thấy các ví dụ về tunneling, ví dụ, để triển khai mạng riêng
+ảo (VPN). Để nhắc lại ngắn gọn, các nút ở hai đầu tunnel coi đường đi
+multi-hop giữa chúng như một liên kết logic đơn, các nút bị tunnel qua
+chuyển tiếp gói tin dựa trên header ngoài, không bao giờ biết rằng các
+nút đầu cuối đã gắn thêm một header bên trong. :numref:`Hình %s
+<fig-overlay-tunnel>` cho thấy ba nút overlay (A, B, và C) được kết nối
+bởi một cặp tunnel. Trong ví dụ này, nút overlay B có thể đưa ra quyết
+định chuyển tiếp cho các gói tin từ A đến C dựa trên header bên trong
+(``IHdr``), sau đó gắn một header ngoài (``OHdr``) xác định C là đích
+trong mạng nền tảng. Các nút A, B, và C có thể diễn giải cả header trong
+và ngoài, trong khi các router trung gian chỉ hiểu header ngoài. Tương
+tự, A, B, và C có địa chỉ trong cả mạng overlay và mạng nền tảng, nhưng
+chúng không nhất thiết giống nhau; ví dụ, địa chỉ nền tảng của chúng có
+thể là địa chỉ IP 32-bit, trong khi địa chỉ overlay có thể là địa chỉ
+thử nghiệm 128-bit. Thực tế, overlay không nhất thiết phải dùng địa chỉ
+truyền thống mà có thể định tuyến dựa trên URL, tên miền, truy vấn XML,
+hoặc thậm chí nội dung của gói tin.
 
-9.4.1 Routing Overlays
-----------------------
+9.4.1 Overlay định tuyến (Routing Overlays)
+-------------------------------------------
 
-The simplest kind of overlay is one that exists purely to support an
-alternative routing strategy; no additional application-level processing
-is performed at the overlay nodes. You can view a virtual private
-network (VPN) as an example of a routing overlay, but one that doesn’t
-so much define an alternative strategy or algorithm as it does
-alternative routing table entries to be processed by the standard IP
-forwarding algorithm. In this particular case, the overlay is said to
-use “IP tunnels,” and the ability to utilize these VPNs is supported in
-many commercial routers.
+Loại overlay đơn giản nhất là loại chỉ tồn tại để hỗ trợ một chiến lược
+định tuyến thay thế; không có xử lý mức ứng dụng bổ sung nào được thực
+hiện tại các nút overlay. Bạn có thể coi mạng riêng ảo (VPN) là một ví
+dụ về overlay định tuyến, nhưng nó không định nghĩa một chiến lược hay
+thuật toán thay thế mà chỉ là các mục bảng định tuyến thay thế để được
+xử lý bởi thuật toán chuyển tiếp IP tiêu chuẩn. Trong trường hợp này,
+overlay được cho là sử dụng “IP tunnel”, và khả năng sử dụng các VPN này
+được hỗ trợ trong nhiều router thương mại.
 
-Suppose, however, you wanted to use a routing algorithm that commercial
-router vendors were not willing to include in their products. How would
-you go about doing it? You could simply run your algorithm on a
-collection of end hosts, and tunnel through the Internet routers. These
-hosts would behave like routers in the overlay network: As hosts they
-are probably connected to the Internet by only one physical link, but as
-a node in the overlay they would be connected to multiple neighbors via
-tunnels.
+Tuy nhiên, giả sử bạn muốn sử dụng một thuật toán định tuyến mà các nhà
+sản xuất router thương mại không sẵn lòng tích hợp vào sản phẩm của họ.
+Bạn sẽ làm thế nào? Bạn chỉ cần chạy thuật toán của mình trên một tập
+hợp các máy đầu cuối, và tunnel qua các router Internet. Các máy này sẽ
+hành xử như các router trong mạng overlay: Là máy chủ, chúng có thể chỉ
+kết nối với Internet qua một liên kết vật lý, nhưng là một nút trong
+overlay, chúng sẽ kết nối với nhiều láng giềng qua các tunnel.
 
-Since overlays, almost by definition, are a way to introduce new
-technologies independent of the standardization process, there are no
-standard overlays we can point to as examples. Instead, we illustrate
-the general idea of routing overlays by describing several experimental
-systems that have been built by network researchers.
+Vì overlay, gần như theo định nghĩa, là một cách để đưa công nghệ mới
+vào mà không phụ thuộc vào quá trình chuẩn hóa, nên không có overlay
+chuẩn nào để chúng ta lấy làm ví dụ. Thay vào đó, chúng tôi minh họa ý
+tưởng chung về overlay định tuyến bằng cách mô tả một số hệ thống thử
+nghiệm đã được các nhà nghiên cứu mạng xây dựng.
 
-Experimental Versions of IP
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Các phiên bản thử nghiệm của IP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Overlays are ideal for deploying experimental versions of IP that you
-hope will eventually take over the world. For example, IP multicast
-started off as an extension to IP and even today is not enabled in
-many Internet routers. The MBone (multicast backbone) was an overlay
-network that implemented IP multicast on top of the unicast routing
-provided by the Internet. A number of multimedia conference tools were
-developed for and deployed on the Mbone. For example, IETF
-meetings—which are a week long and attract thousands of
-participants—were for many years broadcast over the MBone. (Today, the
-wide availability of commercial conferencing tools have replaced the
-MBone-based approach.)
+Overlay là lý tưởng để triển khai các phiên bản thử nghiệm của IP mà bạn
+hy vọng cuối cùng sẽ thay thế toàn bộ thế giới. Ví dụ, IP multicast bắt
+đầu như một phần mở rộng của IP và thậm chí đến ngày nay vẫn chưa được
+kích hoạt trên nhiều router Internet. MBone (multicast backbone) là một
+mạng phủ triển khai IP multicast trên nền định tuyến unicast do Internet
+cung cấp. Một số công cụ hội nghị đa phương tiện đã được phát triển và
+triển khai trên MBone. Ví dụ, các cuộc họp IETF—kéo dài một tuần và thu
+hút hàng nghìn người tham dự—trong nhiều năm đã được phát sóng qua
+MBone. (Ngày nay, sự phổ biến rộng rãi của các công cụ hội nghị thương
+mại đã thay thế cách tiếp cận dựa trên MBone.)
 
-Like VPNs, the MBone used both IP tunnels and IP addresses, but unlike
-VPNs, the MBone implemented a different forwarding algorithm—forwarding
-packets to all downstream neighbors in the shortest path multicast tree.
-As an overlay, multicast-aware routers tunnel through legacy routers,
-with the hope that one day there will be no more legacy routers.
+Giống như VPN, MBone sử dụng cả IP tunnel và địa chỉ IP, nhưng không
+giống VPN, MBone triển khai một thuật toán chuyển tiếp khác—chuyển tiếp
+gói tin đến tất cả các láng giềng phía dưới trong cây multicast đường đi
+ngắn nhất. Là một overlay, các router hiểu multicast tunnel qua các
+router legacy, với hy vọng một ngày nào đó sẽ không còn router legacy
+nữa.
 
-The 6-BONE was a similar overlay that was used to incrementally deploy
-IPv6. Like the MBone, the 6-BONE used tunnels to forward packets
-through IPv4 routers. Unlike the MBone, however, 6-BONE nodes did not
-simply provide a new interpretation of IPv4’s 32-bit
-addresses. Instead, they forwarded packets based on IPv6’s 128-bit
-address space. The 6-BONE also supported IPv6 multicast. (Today,
-commercial routers support IPv6, but again, overlays are a valuable
-approach while a new technology is being evaluated and tuned.)
+6-BONE là một overlay tương tự được sử dụng để triển khai IPv6 một cách
+từng bước. Giống như MBone, 6-BONE sử dụng tunnel để chuyển tiếp gói tin
+qua các router IPv4. Tuy nhiên, không giống MBone, các nút 6-BONE không
+chỉ đơn giản cung cấp một cách diễn giải mới cho địa chỉ 32-bit của
+IPv4. Thay vào đó, chúng chuyển tiếp gói tin dựa trên không gian địa chỉ
+128-bit của IPv6. 6-BONE cũng hỗ trợ multicast IPv6. (Ngày nay, các
+router thương mại đã hỗ trợ IPv6, nhưng một lần nữa, overlay là một cách
+tiếp cận giá trị trong khi một công nghệ mới đang được đánh giá và tinh
+chỉnh.)
 
 End System Multicast
 ~~~~~~~~~~~~~~~~~~~~
 
-Although IP multicast is popular with researchers and certain segments
-of the networking community, its deployment in the global Internet has
-been limited at best. In response, multicast-based applications like
-videoconferencing have recently turned to an alternative strategy,
-called *end system multicast*. The idea of end system multicast is to
-accept that IP multicast will never become ubiquitous and to instead let
-the end hosts that are participating in a particular multicast-based
-application implement their own multicast trees.
+Mặc dù IP multicast phổ biến với các nhà nghiên cứu và một số phân khúc
+cộng đồng mạng, việc triển khai nó trên Internet toàn cầu vẫn còn rất
+hạn chế. Đáp lại, các ứng dụng dựa trên multicast như hội nghị truyền
+hình gần đây đã chuyển sang một chiến lược thay thế, gọi là *end system
+multicast*. Ý tưởng của end system multicast là chấp nhận rằng IP
+multicast sẽ không bao giờ trở nên phổ biến và thay vào đó để các máy
+chủ đầu cuối tham gia vào một ứng dụng multicast cụ thể tự triển khai
+cây multicast của riêng mình.
 
-Before describing how end system multicast works, it is important to
-first understand that, unlike VPNs and the MBone, end system multicast
-assumes that only Internet hosts (as opposed to Internet routers)
-participate in the overlay. Moreover, these hosts typically exchange
-messages with each other through UDP tunnels rather than IP tunnels,
-making it easy to implement as regular application programs. This makes
-it possible to view the underlying network as a fully connected graph,
-since every host in the Internet is able to send a message to every
-other host. Abstractly, then, end system multicast solves the following
-problem: Starting with a fully connected graph representing the
-Internet, the goal is to find the embedded multicast tree that spans all
-the group members.
+Trước khi mô tả cách end system multicast hoạt động, điều quan trọng là
+phải hiểu rằng, không giống như VPN và MBone, end system multicast giả
+định chỉ các máy chủ Internet (trái ngược với router Internet) tham gia
+vào overlay. Hơn nữa, các máy chủ này thường trao đổi thông điệp với
+nhau qua UDP tunnel thay vì IP tunnel, giúp dễ dàng triển khai dưới dạng
+chương trình ứng dụng thông thường. Điều này cho phép coi mạng nền tảng
+là một đồ thị đầy đủ kết nối, vì mọi máy chủ trong Internet đều có thể
+gửi thông điệp đến mọi máy chủ khác. Trừu tượng hóa, end system
+multicast giải quyết bài toán sau: Bắt đầu với một đồ thị đầy đủ kết
+nối đại diện cho Internet, mục tiêu là tìm cây multicast nhúng bao phủ
+tất cả các thành viên nhóm.
 
-Note that there is a simpler version of this problem, enabled by the
-ready availability of cloud-hosted VMs around the world. The
-multicast-aware “end systems” can be VMs running at multiple sites.
-As these sites are well-known and relatively fixed, it’s possible to
-construct a static multicast tree in the cloud, and have the actual
-end-hosts simply connect to the nearest cloud location. But for the
-sake of completeness, the following describes the approach in its full
-glory.
+Lưu ý rằng có một phiên bản đơn giản hơn của bài toán này, được hỗ trợ
+bởi sự sẵn có dễ dàng của các máy ảo cloud-hosted trên toàn thế giới.
+Các “end system” hiểu multicast có thể là các máy ảo chạy tại nhiều site.
+Vì các site này nổi tiếng và tương đối cố định, có thể xây dựng một cây
+multicast tĩnh trong đám mây, và các máy chủ đầu cuối thực tế chỉ cần kết
+nối đến vị trí cloud gần nhất. Nhưng để đầy đủ, phần sau mô tả cách tiếp
+cận ở dạng tổng quát nhất.
 
 .. _fig-topology:
 .. figure:: figures/f09-21-9780123850591.png
    :width: 400px
    :align: center
 
-   Alternative multicast trees mapped onto a physical topology.
+   Các cây multicast thay thế được ánh xạ lên một topo vật lý.
 
-Since we take the underlying Internet to be fully connected, a naive
-solution would be to have each source directly connected to each
-member of the group. In other words, end system multicast could be
-implemented by having each node send unicast messages to every group
-member. To see the problem in doing this, especially compared to
-implementing IP multicast in routers, consider the example topology in
-:numref:`Figure %s <fig-topology>`. :numref:`Figure %s <fig-topology>`
-depicts an example physical topology, where R1 and R2 are routers
-connected by a low-bandwidth transcontinental link; A, B, C, and D are
-end hosts; and link delays are given as edge weights. Assuming A wants
-to send a multicast message to the other three hosts, :numref:`Figure
-%s <fig-topology>` shows how naive unicast transmission would
-work. This is clearly undesirable because the same message must
-traverse the link A-R1 three times, and two copies of the message
-traverse R1-R2. :numref:`Figure %s <fig-topology>` depicts the IP
-multicast tree constructed by the Distance Vector Multicast Routing
-Protocol (DVMRP). Clearly, this approach eliminates the redundant
-messages. Without support from the routers, however, the best one can
-hope for with end system multicast is a tree similar to the one shown
-in :numref:`Figure %s <fig-topology>`. End system multicast defines an
-architecture for constructing this tree.
+Vì chúng ta coi Internet nền tảng là đầy đủ kết nối, một giải pháp ngây
+thơ là để mỗi nguồn kết nối trực tiếp đến từng thành viên nhóm. Nói cách
+khác, end system multicast có thể được triển khai bằng cách để mỗi nút
+gửi thông điệp unicast đến mọi thành viên nhóm. Để thấy vấn đề của cách
+làm này, đặc biệt so với việc triển khai IP multicast trong router, hãy
+xem topo ví dụ trong :numref:`Hình %s <fig-topology>`.
+:numref:`Hình %s <fig-topology>` mô tả một topo vật lý ví dụ, nơi R1 và
+R2 là các router được kết nối bởi một liên kết xuyên lục địa băng thông
+thấp; A, B, C, và D là các máy chủ đầu cuối; và độ trễ liên kết được cho
+dưới dạng trọng số cạnh. Giả sử A muốn gửi một thông điệp multicast đến
+ba máy chủ còn lại, :numref:`Hình %s <fig-topology>` cho thấy cách truyền
+unicast ngây thơ sẽ hoạt động. Rõ ràng đây là điều không mong muốn vì
+cùng một thông điệp phải đi qua liên kết A-R1 ba lần, và hai bản sao của
+thông điệp đi qua R1-R2. :numref:`Hình %s <fig-topology>` mô tả cây IP
+multicast được xây dựng bởi Distance Vector Multicast Routing Protocol
+(DVMRP). Rõ ràng, cách tiếp cận này loại bỏ các thông điệp dư thừa.
+Không có sự hỗ trợ từ các router, điều tốt nhất có thể hy vọng với end
+system multicast là một cây tương tự như cây được hiển thị trong
+:numref:`Hình %s <fig-topology>`. End system multicast định nghĩa một kiến
+trúc để xây dựng cây này.
 
 .. _fig-layered-overlays:
 .. figure:: figures/f09-22-9780123850591.png
    :width: 300px
    :align: center
 
-   Multicast tree embedded in an overlay network.
+   Cây multicast nhúng trong một mạng phủ.
 
-The general approach is to support multiple levels of overlay
-networks, each of which extracts a subgraph from the overlay below it,
-until we have selected the subgraph that the application expects. For
-end system multicast, in particular, this happens in two stages: First
-we construct a simple *mesh* overlay on top of the fully connected
-Internet, and then we select a multicast tree within this mesh. The
-idea is illustrated in :numref:`Figure %s <fig-layered-overlays>`,
-again assuming the four end hosts A, B, C, and D. The first step is
-the critical one: Once we have selected a suitable mesh overlay, we
-simply run a standard multicast routing algorithm (e.g., DVMRP) on top
-of it to build the multicast tree. We also have the luxury of ignoring
-the scalability issue that Internet-wide multicast faces since the
-intermediate mesh can be selected to include only those nodes that
-want to participate in a particular multicast group.
+Cách tiếp cận chung là hỗ trợ nhiều lớp mạng phủ, mỗi lớp trích xuất một
+đồ thị con từ overlay bên dưới, cho đến khi chúng ta chọn được đồ thị con
+mà ứng dụng mong muốn. Đối với end system multicast, điều này diễn ra
+trong hai giai đoạn: Đầu tiên, chúng ta xây dựng một overlay *mesh* đơn
+giản trên Internet đầy đủ kết nối, sau đó chọn một cây multicast trong
+mesh này. Ý tưởng được minh họa trong :numref:`Hình %s
+<fig-layered-overlays>`, giả sử bốn máy chủ đầu cuối A, B, C, và D. Bước
+đầu tiên là quan trọng: Khi đã chọn được một mesh overlay phù hợp, chỉ
+cần chạy một thuật toán định tuyến multicast tiêu chuẩn (ví dụ, DVMRP)
+trên đó để xây dựng cây multicast. Chúng ta cũng có thể bỏ qua vấn đề
+khả năng mở rộng mà multicast toàn Internet phải đối mặt vì mesh trung
+gian có thể được chọn chỉ bao gồm các nút muốn tham gia vào một nhóm
+multicast cụ thể.
 
-The key to constructing the intermediate mesh overlay is to select a
-topology that roughly corresponds to the physical topology of the
-underlying Internet, but we have to do this without anyone telling us
-what the underlying Internet actually looks like since we are running
-only on end hosts and not routers. The general strategy is for the end
-hosts to measure the roundtrip latency to other nodes and decide to add
-links to the mesh only when they like what they see. This works as
-follows.
+Chìa khóa để xây dựng mesh overlay trung gian là chọn một topo xấp xỉ
+topo vật lý của Internet nền tảng, nhưng chúng ta phải làm điều này mà
+không ai nói cho biết Internet nền tảng thực sự trông như thế nào vì chỉ
+chạy trên các máy chủ đầu cuối chứ không phải router. Chiến lược chung
+là để các máy chủ đầu cuối đo độ trễ roundtrip đến các nút khác và chỉ
+thêm liên kết vào mesh khi họ hài lòng với kết quả đo được. Cách làm như
+sau.
 
-First, assuming a mesh already exists, each node exchanges the list of
-all other nodes it believes is part of the mesh with its directly
-connected neighbors. When a node receives such a membership list from a
-neighbor, it incorporates that information into its membership list and
-forwards the resulting list to its neighbors. This information
-eventually propagates through the mesh, much as in a distance vector
-routing protocol.
+Đầu tiên, giả sử mesh đã tồn tại, mỗi nút trao đổi danh sách tất cả các
+nút khác mà nó tin là thành phần của mesh với các láng giềng kết nối trực
+tiếp. Khi một nút nhận được danh sách thành viên từ một láng giềng, nó
+kết hợp thông tin đó vào danh sách thành viên của mình và chuyển tiếp danh
+sách kết quả cho các láng giềng. Thông tin này cuối cùng lan truyền qua
+mesh, giống như trong một giao thức định tuyến vector khoảng cách.
 
-When a host wants to join the multicast overlay, it must know the IP
-address of at least one other node already in the overlay. It then sends
-a “join mesh” message to this node. This connects the new node to the
-mesh by an edge to the known node. In general, the new node might send a
-join message to multiple current nodes, thereby joining the mesh by
-multiple links. Once a node is connected to the mesh by a set of links,
-it periodically sends “keepalive” messages to its neighbors, letting
-them know that it still wants to be part of the group.
+Khi một máy chủ muốn tham gia overlay multicast, nó phải biết địa chỉ IP
+của ít nhất một nút khác đã ở trong overlay. Nó gửi một thông điệp “join
+mesh” đến nút này. Điều này kết nối nút mới vào mesh bằng một cạnh đến
+nút đã biết. Nói chung, nút mới có thể gửi thông điệp join đến nhiều nút
+hiện tại, do đó tham gia mesh bằng nhiều liên kết. Khi một nút đã kết nối
+vào mesh bằng một tập hợp liên kết, nó định kỳ gửi thông điệp “keepalive”
+cho các láng giềng, cho họ biết rằng nó vẫn muốn là thành viên nhóm.
 
-When a node leaves the group, it sends a “leave mesh” message to its
-directly connected neighbors, and this information is propagated to the
-other nodes in the mesh via the membership list described above.
-Alternatively, a node can fail or just silently decide to quit the
-group, in which case its neighbors detect that it is no longer sending
-“keep alive” messages. Some node departures have little effect on the
-mesh, but should a node detect that the mesh has become partitioned due
-to a departing node, it creates a new edge to a node in the other
-partition by sending it a “join mesh” message. Note that multiple
-neighbors can simultaneously decide that a partition has occurred in the
-mesh, leading to multiple cross-partition edges being added to the mesh.
+Khi một nút rời nhóm, nó gửi thông điệp “leave mesh” cho các láng giềng
+kết nối trực tiếp, và thông tin này được lan truyền đến các nút khác trong
+mesh qua danh sách thành viên như mô tả ở trên. Ngoài ra, một nút có thể
+bị lỗi hoặc chỉ đơn giản quyết định rời nhóm mà không báo trước, trong
+trường hợp đó các láng giềng phát hiện ra rằng nó không còn gửi thông điệp
+“keep alive” nữa. Một số nút rời đi không ảnh hưởng nhiều đến mesh, nhưng
+nếu một nút phát hiện mesh bị phân mảnh do một nút rời đi, nó tạo một cạnh
+mới đến một nút ở phân mảnh khác bằng cách gửi thông điệp “join mesh”. Lưu
+ý rằng nhiều láng giềng có thể đồng thời quyết định rằng mesh đã bị phân
+mảnh, dẫn đến nhiều cạnh nối chéo được thêm vào mesh.
 
-As described so far, we will end up with a mesh that is a subgraph of
-the original fully connected Internet, but it may have suboptimal
-performance because (1) initial neighbor selection adds random links to
-the topology, (2) partition repair might add edges that are essential at
-the moment but not useful in the long run, (3) group membership may
-change due to dynamic joins and departures, and (4) underlying network
-conditions may change. What needs to happen is that the system must
-evaluate the value of each edge, resulting in new edges being added to
-the mesh and existing edges being removed over time.
+Như mô tả đến đây, chúng ta sẽ có một mesh là đồ thị con của Internet đầy
+đủ kết nối ban đầu, nhưng có thể hiệu năng chưa tối ưu vì (1) lựa chọn
+láng giềng ban đầu thêm các liên kết ngẫu nhiên vào topo, (2) sửa chữa
+phân mảnh có thể thêm các cạnh cần thiết lúc đó nhưng không hữu ích lâu
+dài, (3) thành viên nhóm có thể thay đổi do các nút động tham gia/rời đi,
+và (4) điều kiện mạng nền tảng có thể thay đổi. Điều cần làm là hệ thống
+phải đánh giá giá trị của từng cạnh, dẫn đến việc thêm các cạnh mới vào
+mesh và loại bỏ các cạnh hiện có theo thời gian.
 
-To add new edges, each node *i* periodically probes some random member
-*j* that it is not currently connected to in the mesh, measures the
-round-trip latency of edge *(i,j)*, and then evaluates the utility of
-adding this edge. If the utility is above a certain threshold, link
-*(i,j)* is added to the mesh. Evaluating the utility of adding edge
-*(i,j)* might look something like this:
+Để thêm cạnh mới, mỗi nút *i* định kỳ thăm dò một thành viên ngẫu nhiên
+*j* mà nó chưa kết nối trong mesh, đo độ trễ round-trip của cạnh *(i,j)*,
+sau đó đánh giá lợi ích của việc thêm cạnh này. Nếu lợi ích vượt quá một
+ngưỡng nhất định, liên kết *(i,j)* được thêm vào mesh. Đánh giá lợi ích
+của việc thêm cạnh *(i,j)* có thể như sau:
 
 ::
 
@@ -277,8 +261,8 @@ adding this edge. If the utility is above a certain threshold, link
                utility += (CL - NL)/CL
        return utility
 
-Deciding to remove an edge is similar, except each node *i* computes the
-cost of each link to current neighbor *j* as follows:
+Việc quyết định loại bỏ một cạnh cũng tương tự, ngoại trừ mỗi nút *i* tính
+toán chi phí của từng liên kết đến láng giềng hiện tại *j* như sau:
 
 ::
 
@@ -287,350 +271,307 @@ cost of each link to current neighbor *j* as follows:
        Cost[j,i] = number of members for which j uses i as next hop
        return max(Cost[i,j], Cost[j,i])
 
-It then picks the neighbor with the lowest cost, and drops it if the
-cost falls below a certain threshold.
+Sau đó nó chọn láng giềng có chi phí thấp nhất, và loại bỏ nếu chi phí
+thấp hơn một ngưỡng nhất định.
 
-Finally, since the mesh is maintained using what is essentially a
-distance vector protocol, it is trivial to run DVMRP to find an
-appropriate multicast tree in the mesh. Note that, although it is not
-possible to prove that the protocol just described results in the
-optimum mesh network, thereby allowing DVMRP to select the best possible
-multicast tree, both simulation and extensive practical experience
-suggests that it does a good job.
+Cuối cùng, vì mesh được duy trì bằng một giao thức gần giống vector khoảng
+cách, việc chạy DVMRP để tìm cây multicast phù hợp trong mesh là điều đơn
+giản. Lưu ý rằng, mặc dù không thể chứng minh giao thức vừa mô tả sẽ tạo
+ra mạng mesh tối ưu, cho phép DVMRP chọn cây multicast tốt nhất, cả mô
+phỏng và kinh nghiệm thực tế đều cho thấy nó hoạt động khá tốt.
 
-Resilient Overlay Networks
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mạng phủ chống chịu lỗi (Resilient Overlay Networks)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Another function that can be performed by an overlay is to find
-alternative routes for traditional unicast applications. Such overlays
-exploit the observation that the triangle inequality does not hold in
-the Internet. :numref:`Figure %s <fig-triangle>` illustrates what we
-mean by this.  It is not uncommon to find three sites in the
-Internet—call them A, B, and C—such that the latency between A and B
-is greater than the sum of the latencies from A to C and from C
-to B. That is, sometimes you would be better off indirectly sending
-your packets via some intermediate node than sending them directly to
-the destination.
+Một chức năng khác mà overlay có thể thực hiện là tìm các tuyến thay thế
+cho các ứng dụng unicast truyền thống. Các overlay như vậy khai thác quan
+sát rằng bất đẳng thức tam giác không đúng trong Internet.
+:numref:`Hình %s <fig-triangle>` minh họa điều này. Không hiếm khi tìm
+thấy ba site trong Internet—gọi là A, B, và C—sao cho độ trễ giữa A và B
+lớn hơn tổng độ trễ từ A đến C và từ C đến B. Tức là, đôi khi bạn sẽ tốt
+hơn nếu gửi gói tin gián tiếp qua một nút trung gian thay vì gửi trực tiếp
+đến đích.
 
 .. _fig-triangle:
 .. figure:: figures/f09-23-9780123850591.png
    :width: 600px
    :align: center
 
-   The triangle inequality does not necessarily hold in networks.
+   Bất đẳng thức tam giác không nhất thiết đúng trong mạng.
 
-How can this be? Well, the Border Gateway Protocol (BGP) never promised
-that it would find the *shortest* route between any two sites; it only
-tries to find *some* route. To make matters more complex, BGP’s routes
-are heavily influenced by policy issues, such as who is paying whom to
-carry their traffic. This often happens, for example, at peering points
-between major backbone ISPs. In short, that the triangle inequality does
-not hold in the Internet should not come as a surprise.
+Tại sao lại như vậy? Giao thức Border Gateway Protocol (BGP) chưa bao giờ
+hứa sẽ tìm tuyến *ngắn nhất* giữa hai site bất kỳ; nó chỉ cố gắng tìm
+*một* tuyến nào đó. Làm cho vấn đề phức tạp hơn, các tuyến của BGP bị ảnh
+hưởng mạnh bởi các vấn đề chính sách, như ai trả tiền cho ai để chuyển
+lưu lượng của họ. Điều này thường xảy ra, ví dụ, tại các điểm peering giữa
+các ISP backbone lớn. Tóm lại, việc bất đẳng thức tam giác không đúng
+trong Internet không có gì đáng ngạc nhiên.
 
-How do we exploit this observation? The first step is to realize that
-there is a fundamental tradeoff between the scalability and optimality
-of a routing algorithm. On the one hand, BGP scales to very large
-networks, but often does not select the best possible route and is slow
-to adapt to network outages. On the other hand, if you were only worried
-about finding the best route among a handful of sites, you could do a
-much better job of monitoring the quality of every path you might use,
-thereby allowing you to select the best possible route at any moment in
-time.
+Chúng ta khai thác quan sát này như thế nào? Bước đầu tiên là nhận ra có
+một sự đánh đổi cơ bản giữa khả năng mở rộng và tối ưu của thuật toán định
+tuyến. Một mặt, BGP mở rộng đến các mạng rất lớn, nhưng thường không chọn
+được tuyến tốt nhất và phản ứng chậm với sự cố mạng. Mặt khác, nếu bạn chỉ
+quan tâm đến việc tìm tuyến tốt nhất giữa một số ít site, bạn có thể làm
+tốt hơn nhiều trong việc giám sát chất lượng mọi đường đi có thể dùng, cho
+phép bạn chọn tuyến tốt nhất tại mọi thời điểm.
 
-An experimental overlay, called the Resilient Overlay Network (RON), did
-exactly this. RON scaled to only a few dozen nodes because it used an *N
-× N* strategy of closely monitoring (via active probes) three aspects of
-path quality—latency, available bandwidth, and loss probability—between
-every pair of sites. It was then able to both select the optimal route
-between any pair of nodes, and rapidly change routes should network
-conditions change. Experience showed that RON was able to deliver modest
-performance improvements to applications, but more importantly, it
-recovered from network failures much more quickly. For example, during
-one 64-hour period in 2001, an instance of RON running on 12 nodes
-detected 32 outages lasting over 30 minutes, and it was able to recover
-from all of them in less than 20 seconds on average. This experiment
-also suggested that forwarding data through just one intermediate node
-is usually sufficient to recover from Internet failures.
+Một overlay thử nghiệm, gọi là Resilient Overlay Network (RON), đã làm
+chính xác điều này. RON chỉ mở rộng đến vài chục nút vì nó sử dụng chiến
+lược *N × N* để giám sát chặt chẽ (bằng thăm dò chủ động) ba khía cạnh
+chất lượng đường đi—độ trễ, băng thông khả dụng, và xác suất mất gói—
+giữa mọi cặp site. Nhờ đó, nó có thể vừa chọn tuyến tối ưu giữa mọi cặp
+nút, vừa nhanh chóng thay đổi tuyến khi điều kiện mạng thay đổi. Kinh
+nghiệm cho thấy RON có thể mang lại cải thiện hiệu năng vừa phải cho các
+ứng dụng, nhưng quan trọng hơn, nó phục hồi sau sự cố mạng nhanh hơn rất
+nhiều. Ví dụ, trong một khoảng thời gian 64 giờ năm 2001, một instance
+RON chạy trên 12 nút phát hiện 32 sự cố kéo dài hơn 30 phút, và có thể
+phục hồi tất cả trong chưa đầy 20 giây trung bình. Thí nghiệm này cũng
+gợi ý rằng chuyển tiếp dữ liệu qua chỉ một nút trung gian thường đủ để
+phục hồi sau sự cố Internet.
 
-Since RON was not designed to be a scalable approach, it is not possible
-to use RON to help random host A communicate with random host B; A and B
-have to know ahead of time that they are likely to communicate and then
-join the same RON. However, RON seems like a good idea in certain
-settings, such as when connecting a few dozen corporate sites spread
-across the Internet or allowing you and 50 of your friends to establish
-your own private overlay for the sake of running some application.
-(Today, this idea is put to practice with the marketing name
-*Software-Defined WAN*, or *SD-WAN*.) The real question, though, is what
-happens when everyone starts to run their own RON. Does the overhead of
-millions of RONs aggressively probing paths swamp the network, and does
-anyone see improved behavior when many RONs compete for the same paths?
-These questions are still unanswered.
+Vì RON không được thiết kế để mở rộng, không thể dùng RON để giúp máy A
+ngẫu nhiên giao tiếp với máy B ngẫu nhiên; A và B phải biết trước rằng họ
+có khả năng giao tiếp và cùng tham gia một RON. Tuy nhiên, RON có vẻ là
+ý tưởng tốt trong một số bối cảnh, như khi kết nối vài chục site doanh
+nghiệp trải rộng trên Internet hoặc cho phép bạn và 50 người bạn lập overlay
+riêng để chạy một ứng dụng nào đó. (Ngày nay, ý tưởng này được áp dụng
+thực tế với tên gọi tiếp thị *Software-Defined WAN*, hay *SD-WAN*.) Câu
+hỏi thực sự là điều gì xảy ra khi ai cũng chạy RON riêng của mình. Liệu
+việc hàng triệu RON thăm dò đường đi tích cực có làm ngập mạng, và liệu
+có ai thấy hành vi cải thiện khi nhiều RON cạnh tranh cùng đường đi?
+Những câu hỏi này vẫn chưa có lời giải.
 
 .. _key-virtualization:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   All of these overlays illustrate a concept that is central to
-   computer networks in general: *virtualization*. That is, it is
-   possible to build a virtual network from abstract (logical) resources
-   on top of a physical network constructed from physical resources.
-   Moreover, it is possible to stack these virtualized networks on top
-   of each other and for multiple virtual networks to coexist at the same
-   level. Each virtual network, in turn, provides new capabilities that
-   are of value to some set of users, applications, or higher-level
-   networks. :ref:`[Next] <key-nested>`
+   Tất cả các overlay này minh họa một khái niệm trung tâm của mạng máy
+   tính nói chung: *ảo hóa* (virtualization). Tức là, có thể xây dựng
+   một mạng ảo từ các tài nguyên trừu tượng (logic) trên một mạng vật lý
+   được xây dựng từ các tài nguyên vật lý. Hơn nữa, có thể xếp chồng các
+   mạng ảo này lên nhau và cho nhiều mạng ảo cùng tồn tại ở cùng một
+   tầng. Mỗi mạng ảo, đến lượt nó, cung cấp các khả năng mới có giá trị
+   cho một tập người dùng, ứng dụng, hoặc mạng tầng cao hơn nào đó.
+   :ref:`[Next] <key-nested>`
 
-9.4.2 Peer-to-Peer Networks
----------------------------
+9.4.2 Mạng ngang hàng (Peer-to-Peer Networks)
+---------------------------------------------
 
-Music-sharing applications like Napster and KaZaA introduced the term
-“peer-to-peer” into the popular vernacular. But what exactly does it
-mean for a system to be “peer-to-peer”? Certainly in the context of
-sharing MP3 files it means not having to download music from a central
-site, but instead being able to access music files directly from whoever
-in the Internet happens to have a copy stored on their computer. More
-generally then, we could say that a peer-to-peer network allows a
-community of users to pool their resources (content, storage, network
-bandwidth, disk bandwidth, CPU), thereby providing access to a larger
-archival store, larger video/audio conferences, more complex searches
-and computations, and so on than any one user could afford individually.
+Các ứng dụng chia sẻ nhạc như Napster và KaZaA đã đưa thuật ngữ
+“peer-to-peer” vào ngôn ngữ phổ thông. Nhưng thực sự “peer-to-peer” có
+nghĩa là gì? Chắc chắn trong bối cảnh chia sẻ file MP3 nó có nghĩa là
+không phải tải nhạc từ một site trung tâm, mà thay vào đó có thể truy cập
+file nhạc trực tiếp từ bất kỳ ai trên Internet tình cờ có bản sao lưu trữ
+trên máy tính của họ. Nói rộng hơn, chúng ta có thể nói rằng một mạng
+peer-to-peer cho phép một cộng đồng người dùng gộp tài nguyên của họ (nội
+dung, lưu trữ, băng thông mạng, băng thông đĩa, CPU), nhờ đó cung cấp
+khả năng truy cập kho lưu trữ lớn hơn, hội nghị video/audio lớn hơn, tìm
+kiếm và tính toán phức tạp hơn, v.v. so với bất kỳ người dùng đơn lẻ nào
+có thể tự mình chi trả.
 
-Quite often, attributes like *decentralized* and *self-organizing* are
-mentioned when discussing peer-to-peer networks, meaning that individual
-nodes organize themselves into a network without any centralized
-coordination. If you think about it, terms like these could be used to
-describe the Internet itself. Ironically, however, Napster was not a
-true peer-to-peer system by this definition since it depended on a
-central registry of known files, and users had to search this directory
-to find what machine offered a particular file. It was only the last
-step—actually downloading the file—that took place between machines that
-belong to two users, but this is little more than a traditional
-client/server transaction. The only difference is that the server is
-owned by someone just like you rather than a large corporation.
+Rất thường xuyên, các thuộc tính như *phi tập trung* (decentralized) và
+*tự tổ chức* (self-organizing) được nhắc đến khi bàn về mạng peer-to-peer,
+nghĩa là các nút tự tổ chức thành mạng mà không cần điều phối tập trung.
+Nếu bạn nghĩ kỹ, các thuật ngữ này cũng có thể dùng để mô tả chính
+Internet. Trớ trêu thay, Napster không phải là hệ thống peer-to-peer thực
+sự theo định nghĩa này vì nó phụ thuộc vào một registry trung tâm các file
+đã biết, và người dùng phải tìm kiếm trong thư mục này để biết máy nào
+cung cấp file cụ thể. Chỉ bước cuối cùng—thực sự tải file—diễn ra giữa
+hai máy của hai người dùng, nhưng đây chỉ là một giao dịch client/server
+truyền thống. Khác biệt duy nhất là server thuộc sở hữu của ai đó giống
+bạn thay vì một tập đoàn lớn.
 
-So we are back to the original question: What’s interesting about
-peer-to-peer networks? One answer is that both the process of locating
-an object of interest and the process of downloading that object onto
-your local machine happen without your having to contact a centralized
-authority, and at the same time the system is able to scale to millions
-of nodes. A peer-to-peer system that can accomplish these two tasks in a
-decentralized manner turns out to be an overlay network, where the nodes
-are those hosts that are willing to share objects of interest (e.g.,
-music and other assorted files), and the links (tunnels) connecting
-these nodes represent the sequence of machines that you have to visit to
-track down the object you want. This description will become clearer
-after we look at two examples.
+Vậy chúng ta quay lại câu hỏi ban đầu: Điều gì thú vị ở mạng peer-to-peer?
+Một câu trả lời là cả quá trình xác định vị trí một đối tượng quan tâm và
+quá trình tải đối tượng đó về máy cục bộ đều diễn ra mà không cần liên hệ
+với một cơ quan trung tâm, đồng thời hệ thống có thể mở rộng đến hàng
+triệu nút. Một hệ thống peer-to-peer có thể thực hiện hai nhiệm vụ này
+một cách phi tập trung hóa ra lại là một mạng phủ, nơi các nút là các máy
+chủ sẵn sàng chia sẻ đối tượng quan tâm (ví dụ, nhạc và các file khác),
+và các liên kết (tunnel) kết nối các nút này đại diện cho chuỗi máy bạn
+phải ghé qua để truy tìm đối tượng mong muốn. Mô tả này sẽ rõ ràng hơn
+sau khi chúng ta xem hai ví dụ.
 
 Gnutella
 ~~~~~~~~
 
-Gnutella is an early peer-to-peer network that attempted to
-distinguish between exchanging music (which likely violates somebody’s
-copyright) and the general sharing of files (which must be good since
-we’ve been taught to share since the age of two). What’s interesting
-about Gnutella is that it was one of the first such systems to not
-depend on a centralized registry of objects. Instead, Gnutella
-participants arrange themselves into an overlay network similar to the
-one shown in :numref:`Figure %s <fig-gnutella>`. That is, each node
-that runs the Gnutella software (i.e., implements the Gnutella
-protocol) knows about some set of other machines that also run the
-Gnutella software. The relationship “A and B know each other”
-corresponds to the edges in this graph. (We’ll talk about how this
-graph is formed in a moment.)
+Gnutella là một mạng peer-to-peer đầu tiên cố gắng phân biệt giữa việc
+trao đổi nhạc (có thể vi phạm bản quyền của ai đó) và chia sẻ file nói
+chung (chắc chắn là tốt vì chúng ta được dạy chia sẻ từ nhỏ). Điều thú vị
+ở Gnutella là nó là một trong những hệ thống đầu tiên không phụ thuộc vào
+registry trung tâm các đối tượng. Thay vào đó, các thành viên Gnutella tự
+sắp xếp thành một mạng phủ giống như :numref:`Hình %s <fig-gnutella>`.
+Tức là, mỗi nút chạy phần mềm Gnutella (tức là hiện thực giao thức
+Gnutella) biết về một tập hợp các máy khác cũng chạy phần mềm Gnutella.
+Quan hệ “A và B biết nhau” tương ứng với các cạnh trong đồ thị này. (Chúng
+ta sẽ nói về cách đồ thị này hình thành sau.)
 
 .. _fig-gnutella:
 .. figure:: figures/f09-24-9780123850591.png
    :width: 300px
    :align: center
 
-   Example topology of a gnutella peer-to-peer network.
+   Topo ví dụ của một mạng peer-to-peer Gnutella.
 
-Whenever the user on a given node wants to find an object, Gnutella
-sends a QUERY message for the object—for example, specifying the file’s
-name—to its neighbors in the graph. If one of the neighbors has the
-object, it responds to the node that sent it the query with a QUERY
-RESPONSE message, specifying where the object can be downloaded (e.g.,
-an IP address and TCP port number). That node can subsequently use GET
-or PUT messages to access the object. If the node cannot resolve the
-query, it forwards the QUERY message to each of its neighbors (except
-the one that sent it the query), and the process repeats. In other
-words, Gnutella floods the overlay to locate the desired object.
-Gnutella sets a TTL on each query so this flood does not continue
-indefinitely.
+Bất cứ khi nào người dùng trên một nút muốn tìm một đối tượng, Gnutella
+gửi một thông điệp QUERY cho đối tượng đó—ví dụ, chỉ định tên file—đến các
+láng giềng trong đồ thị. Nếu một trong các láng giềng có đối tượng, nó
+phản hồi cho nút gửi truy vấn bằng thông điệp QUERY RESPONSE, chỉ ra nơi
+có thể tải đối tượng (ví dụ, địa chỉ IP và cổng TCP). Nút đó sau đó có
+thể dùng thông điệp GET hoặc PUT để truy cập đối tượng. Nếu nút không thể
+giải quyết truy vấn, nó chuyển tiếp thông điệp QUERY đến từng láng giềng
+(trừ nút đã gửi truy vấn), và quá trình lặp lại. Nói cách khác, Gnutella
+flood overlay để tìm đối tượng mong muốn. Gnutella đặt TTL cho mỗi truy
+vấn để flood không kéo dài vô hạn.
 
-In addition to the TTL and query string, each QUERY message contains a
-unique query identifier (QID), but it does not contain the identity of
-the original message source. Instead, each node maintains a record of
-the QUERY messages it has seen recently: both the QID and the neighbor
-that sent it the QUERY. It uses this history in two ways. First, if it
-ever receives a QUERY with a QID that matches one it has seen recently,
-the node does not forward the QUERY message. This serves to cut off
-forwarding loops more quickly than the TTL might have done. Second,
-whenever the node receives a QUERY RESPONSE from a downstream neighbor,
-it knows to forward the response to the upstream neighbor that
-originally sent it the QUERY message. In this way, the response works
-its way back to the original node without any of the intermediate nodes
-knowing who wanted to locate this particular object in the first place.
+Ngoài TTL và chuỗi truy vấn, mỗi thông điệp QUERY chứa một định danh truy
+vấn duy nhất (QID), nhưng không chứa danh tính nguồn gốc thông điệp. Thay
+vào đó, mỗi nút duy trì bản ghi các thông điệp QUERY đã thấy gần đây: cả
+QID và láng giềng đã gửi QUERY. Nó dùng lịch sử này theo hai cách. Thứ
+nhất, nếu nó nhận được QUERY có QID trùng với cái đã thấy gần đây, nút sẽ
+không chuyển tiếp QUERY. Điều này giúp cắt vòng lặp chuyển tiếp nhanh hơn
+TTL. Thứ hai, bất cứ khi nào nút nhận được QUERY RESPONSE từ láng giềng
+phía dưới, nó biết phải chuyển tiếp phản hồi cho láng giềng phía trên đã
+gửi QUERY. Nhờ đó, phản hồi quay lại nút gốc mà không nút trung gian nào
+biết ai là người muốn tìm đối tượng này ban đầu.
 
-Returning to the question of how the graph evolves, a node certainly has
-to know about at least one other node when it joins a Gnutella overlay.
-The new node is attached to the overlay by at least this one link. After
-that, a given node learns about other nodes as the result of QUERY
-RESPONSE messages, both for objects it requested and for responses that
-just happen to pass through it. A node is free to decide which of the
-nodes it discovers in this way that it wants to keep as a neighbor. The
-Gnutella protocol provides PING and PONG messages by which a node probes
-whether or not a given neighbor still exists and that neighbor’s
-response, respectively.
+Quay lại câu hỏi về cách đồ thị phát triển, một nút chắc chắn phải biết
+ít nhất một nút khác khi tham gia overlay Gnutella. Nút mới được gắn vào
+overlay bằng ít nhất một liên kết này. Sau đó, một nút học về các nút khác
+nhờ các thông điệp QUERY RESPONSE, cả cho các đối tượng nó yêu cầu và các
+phản hồi tình cờ đi qua nó. Một nút tự do quyết định giữ nút nào trong số
+các nút phát hiện được làm láng giềng. Giao thức Gnutella cung cấp các
+thông điệp PING và PONG để một nút kiểm tra xem láng giềng còn tồn tại
+không và nhận phản hồi tương ứng.
 
-It should be clear that Gnutella as described here is not a particularly
-clever protocol, and subsequent systems have tried to improve upon it.
-One dimension along which improvements are possible is in how queries
-are propagated. Flooding has the nice property that it is guaranteed to
-find the desired object in the fewest possible hops, but it does not
-scale well. It is possible to forward queries randomly, or according to
-the probability of success based on past results. A second dimension is
-to proactively replicate the objects, since the more copies of a given
-object there are, the easier it should be to find a copy. Alternatively,
-one could develop a completely different strategy, which is the topic we
-consider next.
+Rõ ràng Gnutella như mô tả ở đây không phải là giao thức đặc biệt thông
+minh, và các hệ thống sau này đã cố gắng cải thiện nó. Một hướng cải tiến
+là cách truyền truy vấn. Flooding có ưu điểm là đảm bảo tìm được đối tượng
+mong muốn với số hop ít nhất, nhưng không mở rộng tốt. Có thể chuyển tiếp
+truy vấn ngẫu nhiên, hoặc theo xác suất thành công dựa trên kết quả quá
+khứ. Một hướng khác là chủ động sao chép đối tượng, vì càng nhiều bản sao
+của một đối tượng thì càng dễ tìm thấy. Hoặc có thể phát triển một chiến
+lược hoàn toàn khác, sẽ được bàn tiếp theo.
 
-Structured Overlays
-~~~~~~~~~~~~~~~~~~~
+Overlay có cấu trúc (Structured Overlays)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-At the same time file sharing systems started fighting to fill the void
-left by Napster, the research community began to explore an alternative
-design for peer-to-peer networks. We refer to these networks as
-*structured*, to contrast them with the essentially random
-(unstructured) way in which a Gnutella network evolves. Unstructured
-overlays like Gnutella employ trivial overlay construction and
-maintenance algorithms, but the best they can offer is unreliable,
-random search. In contrast, structured overlays are designed to conform
-to a particular graph structure that allows reliable and efficient
-(probabilistically bounded delay) object location, in return for
-additional complexity during overlay construction and maintenance.
+Cùng lúc các hệ thống chia sẻ file cố gắng lấp đầy khoảng trống Napster
+để lại, cộng đồng nghiên cứu bắt đầu khám phá một thiết kế thay thế cho
+mạng peer-to-peer. Chúng tôi gọi các mạng này là *có cấu trúc*
+(structured), để phân biệt với cách phát triển ngẫu nhiên (không cấu
+trúc) của mạng Gnutella. Overlay không cấu trúc như Gnutella dùng thuật
+toán xây dựng và duy trì overlay đơn giản, nhưng chỉ cung cấp tìm kiếm
+ngẫu nhiên, không đáng tin cậy. Ngược lại, overlay có cấu trúc được thiết
+kế để tuân theo một cấu trúc đồ thị cụ thể cho phép xác định vị trí đối
+tượng đáng tin cậy và hiệu quả (độ trễ được giới hạn xác suất), đổi lại
+là tăng độ phức tạp khi xây dựng và duy trì overlay.
 
-If you think about what we are trying to do at a high level, there are
-two questions to consider: (1) How do we map objects onto nodes, and (2)
-How do we route a request to the node that is responsible for a given
-object? We start with the first question, which has a simple statement:
-How do we map an object with name *x* into the address of some node *n*
-that is able to serve that object? While traditional peer-to-peer
-networks have no control over which node hosts object *x*, if we could
-control how objects get distributed over the network, we might be able
-to do a better job of finding those objects at a later time.
+Nếu bạn nghĩ về mục tiêu ở mức cao, có hai câu hỏi cần xem xét: (1) Làm
+thế nào để ánh xạ đối tượng lên các nút, và (2) Làm thế nào để định tuyến
+một yêu cầu đến nút chịu trách nhiệm cho một đối tượng nhất định? Bắt đầu
+với câu hỏi đầu tiên, có thể phát biểu đơn giản: Làm thế nào để ánh xạ
+một đối tượng có tên *x* thành địa chỉ của một nút *n* có thể phục vụ đối
+tượng đó? Trong khi mạng peer-to-peer truyền thống không kiểm soát được
+nút nào lưu trữ đối tượng *x*, nếu chúng ta kiểm soát được cách phân phối
+đối tượng trên mạng, có thể sẽ tìm được đối tượng dễ dàng hơn sau này.
 
-A well-known technique for mapping names into an address is to use a
-hash table, so that
+Một kỹ thuật nổi tiếng để ánh xạ tên thành địa chỉ là dùng bảng băm
+(hash table), sao cho
 
 .. centered:: *hash(x) → n*
 
-implies object *x* is first placed on node *n*, and at a later time a
-client trying to locate *x* would only have to perform the hash of *x*
-to determine that it is on node *n*. A hash-based approach has the nice
-property that it tends to spread the objects evenly across the set of
-nodes, but straightforward hashing algorithms suffer from a fatal flaw:
-How many possible values of *n* should we allow? (In hashing
-terminology, how many buckets should there be?) Naively, we could decide
-that there are, say, 101 possible hash values, and we use a modulo hash
-function; that is,
+ngụ ý đối tượng *x* được đặt trên nút *n*, và sau này client muốn tìm *x*
+chỉ cần băm *x* để xác định nó nằm trên nút *n*. Cách tiếp cận dựa trên
+băm có ưu điểm là phân phối đối tượng đều trên tập nút, nhưng thuật toán
+băm thông thường gặp vấn đề nghiêm trọng: Cho phép bao nhiêu giá trị *n*?
+(Nói theo thuật ngữ băm, có bao nhiêu bucket?) Ngây thơ, ta có thể quyết
+định có, ví dụ, 101 giá trị băm, và dùng hàm băm modulo; tức là,
 
 ::
 
    hash(x)
        return x % 101
 
-Unfortunately, if there are more than 101 nodes willing to host objects,
-then we can’t take advantage of all of them. On the other hand, if we
-select a number larger than the largest possible number of nodes, then
-there will be some values of *x* that will hash into an address for a
-node that does not exist. There is also the not-so-small issue of
-translating the value returned by the hash function into an actual IP
-address.
+Không may, nếu có nhiều hơn 101 nút sẵn sàng lưu trữ đối tượng, thì không
+tận dụng được tất cả. Ngược lại, nếu chọn số lớn hơn số nút tối đa, sẽ có
+giá trị *x* băm ra địa chỉ không tồn tại. Cũng có vấn đề không nhỏ là
+chuyển giá trị trả về của hàm băm thành địa chỉ IP thực tế.
 
 .. _fig-unitcircle:
 .. figure:: figures/f09-25-9780123850591.png
    :width: 300px
    :align: center
 
-   Both nodes and objects map (hash) onto the ID space, where objects are
-   maintained at the nearest node in this space.
+   Cả nút và đối tượng đều được băm vào không gian ID, đối tượng được lưu
+   tại nút gần nhất trong không gian này.
 
-To address these issues, structured peer-to-peer networks use an
-algorithm known as *consistent hashing*, which hashes a set of objects
-*x* uniformly across a large ID space. :numref:`Figure %s <fig-unitcircle>`
-visualizes a 128-bit ID space as a circle, where we use the algorithm to
-place both objects
+Để giải quyết các vấn đề này, mạng peer-to-peer có cấu trúc dùng thuật
+toán gọi là *consistent hashing*, băm tập đối tượng *x* đều trên một
+không gian ID lớn. :numref:`Hình %s <fig-unitcircle>` hình dung không gian
+ID 128-bit như một vòng tròn, nơi thuật toán được dùng để đặt cả đối tượng
 
 .. centered:: *hash(ObjectName) → ObjectID*
 
-and nodes
+và nút
 
 .. centered:: *hash(IPAddr) → NodeID*
 
-onto this circle. Since a 128-bit ID space is enormous, it is unlikely
-that an object will hash to exactly the same ID as a machine’s IP
-address hashes to. To account for this unlikelihood, each object is
-maintained on the node whose ID is *closest*, in this 128-bit space, to
-the object ID. In other words, the idea is to use a high-quality hash
-function to map both nodes and objects into the same large, sparse ID
-space; you then map objects to nodes by numerical proximity of their
-respective identifiers. Like ordinary hashing, this distributes objects
-fairly evenly across nodes, but, unlike ordinary hashing, only a small
-number of objects have to move when a node (hash bucket) joins or
-leaves.
+lên vòng tròn này. Vì không gian ID 128-bit là rất lớn, khó có khả năng
+một đối tượng băm ra đúng ID mà IP của máy nào đó băm ra. Để xử lý điều
+này, mỗi đối tượng được lưu trên nút có ID *gần nhất* trong không gian
+128-bit với ID của đối tượng. Nói cách khác, dùng hàm băm chất lượng cao
+để ánh xạ cả nút và đối tượng vào cùng một không gian ID lớn, thưa; sau
+đó ánh xạ đối tượng vào nút dựa trên khoảng cách số học giữa các ID. Như
+băm thông thường, cách này phân phối đối tượng khá đều trên các nút,
+nhưng, không như băm thông thường, chỉ một số ít đối tượng phải di chuyển
+khi một nút (bucket) tham gia hoặc rời đi.
 
 .. _fig-locate:
 .. figure:: figures/f09-26-9780123850591.png
    :width: 300px
    :align: center
 
-   Objects are located by routing through the peer-to-peer overlay network.
+   Đối tượng được xác định vị trí bằng cách định tuyến qua mạng phủ
+   peer-to-peer.
 
-We now turn to the second question—how does a user that wants to access
-object *x* know which node is closest in *x*\ ’s ID in this space? One
-possible answer is that each node keeps a complete table of node IDs and
-their associated IP addresses, but this would not be practical for a
-large network. The alternative, which is the approach used by structured
-peer-to-peer networks, is to *route a message to this node!* In other
-words, if we construct the overlay in a clever way—which is the same as
-saying that we need to choose entries for a node’s routing table in a
-clever way—then we find a node simply by routing toward it.
-Collectively, this approach is sometimes called a *distributed hash
-table* (DHT), since conceptually, the hash table is distributed over all
-the nodes in the network.
+Chuyển sang câu hỏi thứ hai—làm sao người dùng muốn truy cập đối tượng *x*
+biết nút nào gần nhất với ID của *x* trong không gian này? Một câu trả lời
+có thể là mỗi nút giữ bảng đầy đủ các ID nút và địa chỉ IP tương ứng, nhưng
+điều này không thực tế với mạng lớn. Cách thay thế, được mạng peer-to-peer
+có cấu trúc sử dụng, là *định tuyến thông điệp đến nút này!* Nói cách
+khác, nếu xây dựng overlay một cách thông minh—tức là chọn các mục bảng
+định tuyến của nút một cách thông minh—thì có thể tìm nút chỉ bằng cách
+định tuyến dần về phía nó. Cách tiếp cận này đôi khi được gọi là *bảng
+băm phân tán* (DHT), vì về mặt khái niệm, bảng băm được phân tán trên tất
+cả các nút trong mạng.
 
-:numref:`Figure %s <fig-locate>` illustrates what happens for a simple
-28-bit ID space. To keep the discussion as concrete as possible, we
-consider the approach used by a particular peer-to-peer network called
-*Pastry*.  Other systems work in a similar manner.
+:numref:`Hình %s <fig-locate>` minh họa điều gì xảy ra với không gian ID
+28-bit đơn giản. Để thảo luận cụ thể, ta xét cách tiếp cận của mạng
+peer-to-peer gọi là *Pastry*. Các hệ thống khác hoạt động tương tự.
 
-Suppose you are at the node with id ``65a1fc`` (hex) and you are trying
-to locate the object with ID ``d46a1c``. You realize that your ID shares
-nothing with the object’s, but you know of a node that shares at least
-the prefix ``d``. That node is closer than you in the 128-bit ID space,
-so you forward the message to it. (We do not give the format of the
-message being forwarded, but you can think of it as saying “locate
-object ``d46a1c``”.) Assuming node ``d13da3`` knows of another node that
-shares an even longer prefix with the object, it forwards the message
-on. This process of moving closer in ID-space continues until you reach
-a node that knows of no closer node. This node is, by definition, the
-one that hosts the object. Keep in mind that as we logically move
-through “ID space” the message is actually being forwarded, node to
-node, through the underlying Internet.
+Giả sử bạn ở nút có id ``65a1fc`` (hex) và muốn tìm đối tượng có ID
+``d46a1c``. Bạn nhận ra ID của mình không chung gì với đối tượng, nhưng
+biết một nút có chung ít nhất tiền tố ``d``. Nút đó gần hơn bạn trong
+không gian ID 128-bit, nên bạn chuyển tiếp thông điệp cho nó. (Chúng tôi
+không đưa ra định dạng thông điệp, nhưng bạn có thể nghĩ nó như “locate
+object ``d46a1c``”.) Giả sử nút ``d13da3`` biết một nút khác có tiền tố
+chung dài hơn với đối tượng, nó lại chuyển tiếp thông điệp. Quá trình này
+tiếp tục cho đến khi đến một nút không biết nút nào gần hơn. Nút này, theo
+định nghĩa, là nút lưu trữ đối tượng. Lưu ý rằng khi di chuyển logic qua
+“không gian ID”, thông điệp thực tế được chuyển tiếp, nút này sang nút
+khác, qua Internet nền tảng.
 
-Each node maintains a both routing table (more below) and the IP
-addresses of a small set of numerically larger and smaller node IDs.
-This is called the node’s *leaf set*. The relevance of the leaf set is
-that, once a message is routed to any node in the same leaf set as the
-node that hosts the object, that node can directly forward the message
-to the ultimate destination. Said another way, the leaf set facilitates
-correct and efficient delivery of a message to the numerically closest
-node, even though multiple nodes may exist that share a maximal length
-prefix with the object ID. Moreover, the leaf set makes routing more
-robust because any of the nodes in a leaf set can route a message just
-as well as any other node in the same set. Thus, if one node is unable
-to make progress routing a message, one of its neighbors in the leaf set
-may be able to. In summary, the routing procedure is defined as follows:
+Mỗi nút duy trì cả bảng định tuyến (sẽ nói sau) và địa chỉ IP của một tập
+hợp nhỏ các ID nút lớn hơn và nhỏ hơn về số học. Đây gọi là *leaf set* của
+nút. Leaf set có ý nghĩa là, khi thông điệp được định tuyến đến bất kỳ nút
+nào trong leaf set của nút lưu trữ đối tượng, nút đó có thể chuyển tiếp
+trực tiếp đến đích cuối cùng. Nói cách khác, leaf set giúp chuyển thông
+điệp đúng và hiệu quả đến nút gần nhất về số học, dù có thể có nhiều nút
+chung tiền tố dài nhất với ID đối tượng. Hơn nữa, leaf set làm cho định
+tuyến bền vững hơn vì bất kỳ nút nào trong leaf set đều có thể định tuyến
+thông điệp tốt như nhau. Nếu một nút không thể tiếp tục định tuyến, một
+láng giềng trong leaf set có thể làm thay. Tóm lại, thủ tục định tuyến
+được định nghĩa như sau:
 
 ::
 
@@ -646,116 +587,99 @@ may be able to. In summary, the routing procedure is defined as follows:
                forward to known node with at least as long a shared prefix
                and numerically closer than this node
 
-The routing table, denoted ``RouteTab``, is a two-dimensional array. It
-has a row for every hex digit in an ID (there such 32 digits in a
-128-bit ID) and a column for every hex value (there are obviously 16
-such values). Every entry in row *i* shares a prefix of length *i* with
-this node, and within this row the entry in column *j* has the hex value
-*j* in the *i+1*-th position. :numref:`Figure %s <fig-rt>` shows the first three
-rows of an example routing table for node ``65a1fcx``, where *x* denotes
-an unspecified suffix. This figure shows the ID prefix matched by every
-entry in the table. It does not show the actual value contained in this
-entry—the IP address of the next node to route to.
+Bảng định tuyến, ký hiệu ``RouteTab``, là một mảng hai chiều. Nó có một
+dòng cho mỗi chữ số hex trong ID (có 32 chữ số như vậy trong ID 128-bit)
+và một cột cho mỗi giá trị hex (rõ ràng có 16 giá trị). Mỗi mục ở dòng *i*
+chung tiền tố độ dài *i* với nút này, và trong dòng đó, mục ở cột *j* có
+giá trị hex *j* ở vị trí *i+1*. :numref:`Hình %s <fig-rt>` cho thấy ba
+dòng đầu của bảng định tuyến ví dụ cho nút ``65a1fcx``, với *x* là hậu tố
+không xác định. Hình này cho thấy tiền tố ID được mỗi mục trong bảng khớp.
+Không hiển thị giá trị thực tế trong mục—đó là địa chỉ IP của nút tiếp
+theo để định tuyến.
 
 .. _fig-rt:
 .. figure:: figures/f09-27-9780123850591.png
    :width: 500px
    :align: center
 
-   Example routing table at the node with ID 65alcx
+   Bảng định tuyến ví dụ tại nút có ID 65alcx
 
 .. _fig-addnode:
 .. figure:: figures/f09-28-9780123850591.png
    :width: 500px
    :align: center
 
-   Adding a node to the network.
+   Thêm một nút vào mạng.
 
-Adding a node to the overlay works much like routing a “locate object
-message” to an object. The new node must know of at least one current
-member. It asks this member to route an “add node message” to the node
-numerically closest to the ID of the joining node, as shown in
-:numref:`Figure %s <fig-addnode>`. It is through this routing process
-that the new node learns about other nodes with a shared prefix and is
-able to begin filling out its routing table. Over time, as additional
-nodes join the overlay, existing nodes also have the option of
-including information about the newly joined node in their routing
-tables. They do this when the new node adds a longer prefix than they
-currently have in their table. Neighbors in the leaf sets also
-exchange routing tables with each other, which means that over time
-routing information propagates through the overlay.
+Thêm một nút vào overlay hoạt động giống như định tuyến thông điệp “locate
+object” đến một đối tượng. Nút mới phải biết ít nhất một thành viên hiện
+tại. Nó yêu cầu thành viên này định tuyến thông điệp “add node” đến nút
+gần nhất về số học với ID của nút tham gia, như minh họa trong
+:numref:`Hình %s <fig-addnode>`. Qua quá trình định tuyến này, nút mới học
+về các nút có tiền tố chung và bắt đầu điền bảng định tuyến. Theo thời
+gian, khi các nút khác tham gia overlay, các nút hiện có cũng có thể thêm
+thông tin về nút mới vào bảng định tuyến nếu nút mới thêm tiền tố dài hơn
+so với bảng hiện tại. Các láng giềng trong leaf set cũng trao đổi bảng
+định tuyến với nhau, nghĩa là theo thời gian thông tin định tuyến lan
+truyền qua overlay.
 
-The reader may have noticed that although structured overlays provide a
-probabilistic bound on the number of routing hops required to locate a
-given object—the number of hops in Pastry is bounded by :math:`log_{16}N`,
-where N is the number of nodes in the overlay—each hop may contribute
-substantial delay. This is because each intermediate node may be at a
-random location in the Internet. (In the worst case, each node is on a
-different continent!) In fact, in a world-wide overlay network using the
-algorithm as described above, the expected delay of each hop is the
-average delay among all pairs of nodes in the Internet! Fortunately, one
-can do much better in practice. The idea is to choose each routing table
-entry such that it refers to a nearby node in the underlying physical
-network, among all nodes with an ID prefix that is appropriate for the
-entry. It turns out that doing so achieves end-to-end routing delays
-that are within a small factor of the delay between source and
-destination node.
+Bạn đọc có thể nhận thấy rằng mặc dù overlay có cấu trúc cung cấp giới hạn
+xác suất về số hop định tuyến cần để xác định vị trí một đối tượng—số hop
+trong Pastry bị giới hạn bởi :math:`log_{16}N`, với N là số nút trong
+overlay—mỗi hop có thể góp phần đáng kể vào độ trễ. Đó là vì mỗi nút trung
+gian có thể ở vị trí ngẫu nhiên trên Internet. (Trường hợp xấu nhất, mỗi
+nút ở một châu lục khác nhau!) Thực tế, trong một overlay toàn cầu dùng
+thuật toán như trên, độ trễ kỳ vọng của mỗi hop là trung bình độ trễ giữa
+mọi cặp nút trên Internet! May mắn thay, có thể làm tốt hơn nhiều trong
+thực tế. Ý tưởng là chọn mỗi mục bảng định tuyến sao cho nó trỏ đến một
+nút gần về vật lý trong mạng nền tảng, trong số các nút có tiền tố ID phù
+hợp cho mục đó. Làm như vậy đạt được độ trễ định tuyến đầu-cuối chỉ lớn
+hơn một chút so với độ trễ giữa nguồn và đích.
 
-Finally, the discussion up to this point has focused on the general
-problem of locating objects in a peer-to-peer network. Given such a
-routing infrastructure, it is possible to build different services. For
-example, a file sharing service would use file names as object names. To
-locate a file, you first hash its name into a corresponding object ID
-and then route a “locate object message” to this ID. The system might
-also replicate each file across multiple nodes to improve availability.
-Storing multiple copies on the leaf set of the node to which a given
-file normally routes would be one way of doing this. Keep in mind that
-even though these nodes are neighbors in the ID space, they are likely
-to be physically distributed across the Internet. Thus, while a power
-outage in an entire city might take down physically close replicas of a
-file in a traditional file system, one or more replicas would likely
-survive such a failure in a peer-to-peer network.
+Cuối cùng, thảo luận đến đây tập trung vào bài toán tổng quát xác định vị
+trí đối tượng trong mạng peer-to-peer. Với hạ tầng định tuyến như vậy, có
+thể xây dựng các dịch vụ khác nhau. Ví dụ, dịch vụ chia sẻ file sẽ dùng
+tên file làm tên đối tượng. Để xác định vị trí file, bạn băm tên file ra
+ID đối tượng tương ứng rồi định tuyến thông điệp “locate object” đến ID
+này. Hệ thống cũng có thể sao chép mỗi file trên nhiều nút để tăng khả
+dụng. Lưu nhiều bản trên leaf set của nút mà file thường được định tuyến
+đến là một cách. Lưu ý rằng dù các nút này là láng giềng trong không gian
+ID, chúng có thể phân tán vật lý trên Internet. Do đó, mất điện toàn thành
+phố có thể làm sập các bản sao vật lý gần nhau trong hệ thống file truyền
+thống, nhưng một hoặc nhiều bản sao vẫn sống sót trong mạng peer-to-peer.
 
-Services other than file sharing can also be built on top of distributed
-hash tables. Consider multicast applications, for example. Instead of
-constructing a multicast tree from a mesh, one could construct the tree
-from edges in the structured overlay, thereby amortizing the cost of
-overlay construction and maintenance across several applications and
-multicast groups.
+Các dịch vụ khác ngoài chia sẻ file cũng có thể xây dựng trên bảng băm
+phân tán. Xét ứng dụng multicast, chẳng hạn. Thay vì xây dựng cây
+multicast từ mesh, có thể xây dựng cây từ các cạnh trong overlay có cấu
+trúc, nhờ đó phân bổ chi phí xây dựng và duy trì overlay cho nhiều ứng
+dụng và nhóm multicast.
 
 BitTorrent
 ~~~~~~~~~~
 
-BitTorrent is a peer-to-peer file sharing protocol devised by Bram
-Cohen. It is based on replicating the file or, rather, replicating
-segments of the file, which are called *pieces*. Any particular piece
-can usually be downloaded from multiple peers, even if only one peer has
-the entire file. The primary benefit of BitTorrent’s replication is
-avoiding the bottleneck of having only one source for a file. This is
-particularly useful when you consider that any given computer has a
-limited speed at which it can serve files over its uplink to the
-Internet, often quite a low limit due to the asymmetric nature of most
-broadband networks. The beauty of BitTorrent is that replication is a
-natural side effect of the downloading process: As soon as a peer
-downloads a particular piece, it becomes another source for that piece.
-The more peers downloading pieces of the file, the more piece
-replication occurs, distributing the load proportionately, and the more
-total bandwidth is available to share the file with others. Pieces are
-downloaded in random order to avoid a situation where peers find
-themselves lacking the same set of pieces.
+BitTorrent là một giao thức chia sẻ file peer-to-peer do Bram Cohen phát
+triển. Nó dựa trên việc sao chép file hoặc, đúng hơn, sao chép các đoạn
+file, gọi là *piece*. Bất kỳ piece nào thường có thể tải từ nhiều peer,
+dù chỉ một peer có toàn bộ file. Lợi ích chính của việc sao chép trong
+BitTorrent là tránh nút cổ chai khi chỉ có một nguồn cho file. Điều này
+đặc biệt hữu ích khi xét rằng bất kỳ máy tính nào cũng có tốc độ phục vụ
+file qua uplink Internet giới hạn, thường khá thấp do tính bất đối xứng
+của hầu hết mạng băng rộng. Vẻ đẹp của BitTorrent là việc sao chép diễn
+ra tự nhiên trong quá trình tải: Ngay khi một peer tải xong một piece, nó
+trở thành nguồn cho piece đó. Càng nhiều peer tải các piece, càng nhiều
+piece được sao chép, phân bổ tải hợp lý, và càng nhiều tổng băng thông để
+chia sẻ file với người khác. Các piece được tải theo thứ tự ngẫu nhiên để
+tránh tình trạng các peer đều thiếu cùng một tập piece.
 
-Each file is shared via its own independent BitTorrent network, called a
-*swarm*. (A swarm could potentially share a set of files, but we
-describe the single file case for simplicity.) The lifecycle of a
-typical swarm is as follows. The swarm starts as a singleton peer with a
-complete copy of the file. A node that wants to download the file joins
-the swarm, becoming its second member, and begins downloading pieces of
-the file from the original peer. In doing so, it becomes another source
-for the pieces it has downloaded, even if it has not yet downloaded the
-entire file. (In fact, it is common for peers to leave the swarm once
-they have completed their downloads, although they are encouraged to
-stay longer.) Other nodes join the swarm and begin downloading pieces
-from multiple peers, not just the original peer. See :numref:`Figure %s
+Mỗi file được chia sẻ qua một mạng BitTorrent độc lập, gọi là *swarm*.
+(Một swarm có thể chia sẻ một tập file, nhưng ta mô tả trường hợp một file
+cho đơn giản.) Vòng đời của một swarm điển hình như sau. Swarm bắt đầu là
+một peer đơn lẻ có bản sao đầy đủ file. Một nút muốn tải file tham gia
+swarm, trở thành thành viên thứ hai, và bắt đầu tải các piece từ peer gốc.
+Khi làm vậy, nó trở thành nguồn cho các piece đã tải, dù chưa tải xong
+toàn bộ file. (Thực tế, peer thường rời swarm sau khi tải xong, dù được
+khuyến khích ở lại lâu hơn.) Các nút khác tham gia swarm và bắt đầu tải
+piece từ nhiều peer, không chỉ peer gốc. Xem :numref:`Hình %s
 <fig-bitTorrentSwarm>`.
 
 .. _fig-bitTorrentSwarm:
@@ -763,360 +687,288 @@ from multiple peers, not just the original peer. See :numref:`Figure %s
    :width: 500px
    :align: center
 
-   Peers in a BitTorrent swarm download from other peers that may not yet
-   have the complete file.
+   Các peer trong một swarm BitTorrent tải từ các peer khác có thể chưa có
+   toàn bộ file.
 
-If the file remains in high demand, with a stream of new peers replacing
-those who leave the swarm, the swarm could remain active indefinitely;
-if not, it could shrink back to include only the original peer until new
-peers join the swarm.
+Nếu file vẫn được nhiều người quan tâm, với dòng peer mới thay thế những
+người rời swarm, swarm có thể hoạt động vô thời hạn; nếu không, nó có thể
+thu nhỏ lại chỉ còn peer gốc cho đến khi có peer mới tham gia.
 
-Now that we have an overview of BitTorrent, we can ask how requests are
-routed to the peers that have a given piece. To make requests, a
-would-be downloader must first join the swarm. It starts by downloading
-a file containing meta-information about the file and swarm. The file,
-which may be easily replicated, is typically downloaded from a web
-server and discovered by following links from Web pages. It contains:
+Sau khi có cái nhìn tổng quan về BitTorrent, ta có thể hỏi làm sao các
+yêu cầu được định tuyến đến peer có piece mong muốn. Để gửi yêu cầu, một
+người muốn tải phải tham gia swarm. Nó bắt đầu bằng cách tải một file chứa
+meta-information về file và swarm. File này, có thể được sao chép dễ dàng,
+thường được tải từ web server và tìm thấy qua các liên kết trên trang web.
+Nó chứa:
 
--  The target file’s size
+-  Kích thước file mục tiêu
 
--  The piece size
+-  Kích thước piece
 
--  SHA-1 hash values precomputed from each piece
+-  Giá trị băm SHA-1 tính trước cho từng piece
 
--  The URL of the swarm’s *tracker*
+-  URL của *tracker* của swarm
 
-A tracker is a server that tracks a swarm’s current membership. We’ll
-see later that BitTorrent can be extended to eliminate this point of
-centralization, with its attendant potential for bottleneck or failure.
+Tracker là một server theo dõi thành viên hiện tại của swarm. Ta sẽ thấy
+sau này BitTorrent có thể mở rộng để loại bỏ điểm tập trung này, cùng nguy
+cơ nghẽn hoặc lỗi.
 
-The would-be downloader then joins the swarm, becoming a peer, by
-sending a message to the tracker giving its network address and a peer
-ID that it has generated randomly for itself. The message also carries a
-SHA-1 hash of the main part of the file, which is used as a swarm ID.
+Người muốn tải sau đó tham gia swarm, trở thành peer, bằng cách gửi thông
+điệp cho tracker với địa chỉ mạng và peer ID tự sinh ngẫu nhiên. Thông
+điệp cũng mang băm SHA-1 của phần chính file, dùng làm swarm ID.
 
-Let’s call the new peer P. The tracker replies to P with a partial list
-of peers giving their IDs and network addresses, and P establishes
-connections, over TCP, with some of these peers. Note that P is directly
-connected to just a subset of the swarm, although it may decide to
-contact additional peers or even request more peers from the tracker. To
-establish a BitTorrent connection with a particular peer after their TCP
-connection has been established, P sends P’s own peer ID and swarm ID,
-and the peer replies with its peer ID and swarm ID. If the swarm IDs
-don’t match, or the reply peer ID is not what P expects, the connection
-is aborted.
+Gọi peer mới là P. Tracker trả lời P với danh sách một phần các peer gồm
+ID và địa chỉ mạng, và P thiết lập kết nối TCP với một số peer này. Lưu ý
+P chỉ kết nối trực tiếp với một tập con của swarm, dù có thể liên hệ thêm
+peer hoặc yêu cầu tracker cung cấp thêm. Để thiết lập kết nối BitTorrent
+với một peer sau khi đã có kết nối TCP, P gửi peer ID và swarm ID của mình,
+peer kia trả lời với peer ID và swarm ID của nó. Nếu swarm ID không khớp,
+hoặc peer ID trả về không đúng mong đợi, kết nối bị hủy.
 
-The resulting BitTorrent connection is symmetric: Each end can download
-from the other. Each end begins by sending the other a bitmap reporting
-which pieces it has, so each peer knows the other’s initial state.
-Whenever a downloader (D) finishes downloading another piece, it sends a
-message identifying that piece to each of its directly connected peers,
-so those peers can update their internal representation of D’s state.
-This, finally, is the answer to the question of how a download request
-for a piece is routed to a peer that has the piece, because it means
-that each peer knows which directly connected peers have the piece. If D
-needs a piece that none of its connections has, it could connect to more
-or different peers (it can get more from the tracker) or occupy itself
-with other pieces in hopes that some of its connections will obtain the
-piece from their connections.
+Kết nối BitTorrent kết quả là đối xứng: Mỗi bên có thể tải từ bên kia. Mỗi
+bên bắt đầu bằng cách gửi bitmap báo piece mình có, để mỗi peer biết trạng
+thái ban đầu của bên kia. Bất cứ khi nào downloader (D) tải xong một piece,
+nó gửi thông điệp xác định piece đó cho từng peer kết nối trực tiếp, để
+các peer cập nhật trạng thái của D. Đây chính là câu trả lời cho câu hỏi
+làm sao yêu cầu tải piece được định tuyến đến peer có piece, vì mỗi peer
+biết peer kết nối trực tiếp nào có piece. Nếu D cần piece mà không peer
+nào kết nối có, nó có thể kết nối thêm peer (có thể lấy thêm từ tracker)
+hoặc tải các piece khác hy vọng peer kết nối sẽ lấy được piece từ các peer
+khác của họ.
 
-How are objects—in this case, pieces—mapped onto peer nodes? Of course
-each peer eventually obtains all the pieces, so the question is really
-about which pieces a peer has at a given time before it has all the
-pieces or, equivalently, about the order in which a peer downloads
-pieces. The answer is that they download pieces in random order, to keep
-them from having a strict subset or superset of the pieces of any of
-their peers.
+Đối tượng—ở đây là piece—được ánh xạ lên các peer như thế nào? Thực ra mỗi
+peer cuối cùng sẽ có tất cả piece, nên câu hỏi là peer có piece nào tại
+một thời điểm trước khi có đủ, hoặc tương đương, thứ tự tải piece. Câu trả
+lời là họ tải piece theo thứ tự ngẫu nhiên, để tránh có tập piece là tập
+con hoặc tập cha nghiêm ngặt của peer khác.
 
-The BitTorrent described so far utilizes a central tracker that
-constitutes a single point of failure for the swarm and could
-potentially be a performance bottleneck. Also, providing a tracker can
-be a nuisance for someone who would like to make a file available via
-BitTorrent. Newer versions of BitTorrent additionally support
-“trackerless” swarms that use a DHT-based implementation. BitTorrent
-client software that is trackerless capable implements not just a
-BitTorrent peer but also what we’ll call a *peer finder* (the BitTorrent
-terminology is simply *node*), which the peer uses to find peers.
+BitTorrent mô tả đến đây sử dụng tracker trung tâm, là điểm lỗi duy nhất
+cho swarm và có thể là nút cổ chai hiệu năng. Ngoài ra, cung cấp tracker
+có thể phiền phức cho ai muốn chia sẻ file qua BitTorrent. Các phiên bản
+BitTorrent mới hơn hỗ trợ swarm “không tracker” dùng hiện thực dựa trên
+DHT. Phần mềm client BitTorrent hỗ trợ trackerless hiện thực không chỉ
+peer BitTorrent mà còn cái gọi là *peer finder* (BitTorrent gọi đơn giản
+là *node*), peer dùng để tìm peer.
 
-Peer finders form their own overlay network, using their own protocol
-over UDP to implement a DHT. Furthermore, a peer finder network includes
-peer finders whose associated peers belong to different swarms. In other
-words, while each swarm forms a distinct network of BitTorrent peers, a
-peer finder network instead spans swarms.
+Peer finder tạo mạng phủ riêng, dùng giao thức riêng qua UDP để hiện thực
+DHT. Hơn nữa, mạng peer finder gồm các peer finder có peer liên kết thuộc
+các swarm khác nhau. Nói cách khác, mỗi swarm tạo một mạng peer BitTorrent
+riêng, còn mạng peer finder trải rộng các swarm.
 
-Peer finders randomly generate their own finder IDs, which are the same
-size (160 bits) as swarm IDs. Each finder maintains a modest table
-containing primarily finders (and their associated peers) whose IDs are
-close to its own, plus some finders whose IDs are more distant. The
-following algorithm ensures that finders whose IDs are close to a given
-swarm ID are likely to know of peers from that swarm; the algorithm
-simultaneously provides a way to look them up. When a finder F needs to
-find peers from a particular swarm, it sends a request to the finders in
-its table whose IDs are close to that swarm’s ID. If a contacted finder
-knows of any peers for that swarm, it replies with their contact
-information. Otherwise, it replies with the contact information of the
-finders in its table that are close to the swarm, so that F can
-iteratively query those finders.
+Peer finder tự sinh finder ID ngẫu nhiên, cùng kích thước (160 bit) với
+swarm ID. Mỗi finder duy trì bảng nhỏ chủ yếu gồm các finder (và peer liên
+kết) có ID gần với mình, cộng một số finder ID xa hơn. Thuật toán sau đảm
+bảo finder có ID gần swarm ID sẽ biết về peer của swarm đó; đồng thời cung
+cấp cách tra cứu. Khi finder F cần tìm peer của swarm, nó gửi yêu cầu cho
+các finder trong bảng có ID gần swarm ID. Nếu finder liên hệ biết peer
+nào, nó trả về thông tin liên hệ. Nếu không, nó trả về thông tin liên hệ
+của các finder trong bảng gần swarm, để F truy vấn tiếp.
 
-After the search is exhausted, because there are no finders closer to
-the swarm, F inserts the contact information for itself and its
-associated peer into the finders closest to the swarm. The net effect is
-that peers for a particular swarm get entered in the tables of the
-finders that are close to that swarm.
+Sau khi tìm kiếm cạn kiệt, vì không còn finder nào gần swarm hơn, F chèn
+thông tin liên hệ của mình và peer liên kết vào các finder gần swarm nhất.
+Kết quả là peer của swarm được đưa vào bảng của các finder gần swarm.
 
-The above scheme assumes that F is already part of the finder network,
-that it already knows how to contact some other finders. This assumption
-is true for finder installations that have run previously, because they
-are supposed to save information about other finders, even across
-executions. If a swarm uses a tracker, its peers are able to tell their
-finders about other finders (in a reversal of the peer and finder roles)
-because the BitTorrent peer protocol has been extended to exchange
-finder contact information. But, how can a newly installed finder
-discover other finders? The files for trackerless swarms include contact
-information for one or a few finders, instead of a tracker URL, for just
-that situation.
+Cách trên giả định F đã là thành viên mạng finder, đã biết cách liên hệ
+một số finder khác. Điều này đúng với các cài đặt finder đã chạy trước đó,
+vì họ phải lưu thông tin về finder khác, kể cả qua các lần chạy. Nếu swarm
+dùng tracker, peer của nó có thể báo cho finder về finder khác (đảo vai
+peer và finder) vì giao thức peer BitTorrent đã mở rộng để trao đổi thông
+tin liên hệ finder. Nhưng, làm sao finder mới cài biết finder khác? File
+cho swarm không tracker chứa thông tin liên hệ một hoặc vài finder, thay
+vì tracker URL, cho trường hợp này.
 
-An unusual aspect of BitTorrent is that it deals head-on with the issue
-of fairness, or good “network citizenship.” Protocols often depend on
-the good behavior of individual peers without being able to enforce it.
-For example, an unscrupulous Ethernet peer could get better performance
-by using a backoff algorithm that is more aggressive than exponential
-backoff, or an unscrupulous TCP peer could get better performance by not
-cooperating in congestion control.
+Một điểm đặc biệt của BitTorrent là nó đối mặt trực tiếp với vấn đề công
+bằng, hay “công dân mạng” tốt. Giao thức thường phụ thuộc vào hành vi tốt
+của peer mà không thể cưỡng chế. Ví dụ, một peer Ethernet không trung thực
+có thể đạt hiệu năng tốt hơn bằng thuật toán backoff tích cực hơn exponential
+backoff, hoặc peer TCP không trung thực có thể đạt hiệu năng tốt hơn bằng
+cách không hợp tác kiểm soát nghẽn.
 
-The good behavior that BitTorrent depends on is peers uploading pieces
-to other peers. Since the typical BitTorrent user just wants to download
-the file as quickly as possible, there is a temptation to implement a
-peer that tries to download all the pieces while doing as little
-uploading as possible—this is a bad peer. To discourage bad behavior,
-the BitTorrent protocol includes mechanisms that allow peers to reward
-or punish each other. If a peer is misbehaving by not nicely uploading
-to another peer, the second peer can *choke* the bad peer: It can decide
-to stop uploading to the bad peer, at least temporarily, and send it a
-message saying so. There is also a message type for telling a peer that
-it has been unchoked. The choking mechanism is also used by a peer to
-limit the number of its active BitTorrent connections, to maintain good
-TCP performance. There are many possible choking algorithms, and
-devising a good one is an art.
+Hành vi tốt mà BitTorrent phụ thuộc là peer upload piece cho peer khác. Vì
+người dùng BitTorrent điển hình chỉ muốn tải file càng nhanh càng tốt, có
+cám dỗ hiện thực peer cố tải hết piece mà upload càng ít càng tốt—đây là
+peer xấu. Để ngăn hành vi xấu, giao thức BitTorrent có cơ chế cho phép
+peer thưởng hoặc phạt nhau. Nếu một peer cư xử xấu bằng cách không upload
+cho peer khác, peer thứ hai có thể *choke* peer xấu: quyết định ngừng upload
+cho peer xấu, ít nhất tạm thời, và gửi thông điệp báo như vậy. Cũng có loại
+thông điệp báo peer đã được unchoke. Cơ chế choke cũng được dùng để peer
+giới hạn số kết nối BitTorrent đang hoạt động, để duy trì hiệu năng TCP tốt.
+Có nhiều thuật toán choke, và thiết kế một thuật toán tốt là một nghệ thuật.
 
-9.4.3 Content Distribution Networks
------------------------------------
+9.4.3 Mạng phân phối nội dung (Content Distribution Networks)
+-------------------------------------------------------------
 
-We have already seen how HTTP running over TCP allows web browsers to
-retrieve pages from web servers. However, anyone who has waited an
-eternity for a Web page to return knows that the system is far from
-perfect. Considering that the backbone of the Internet is now
-constructed from 40-Gbps links, it’s not obvious why this should happen.
-It is generally agreed that when it comes to downloading Web pages there
-are four potential bottlenecks in the system:
+Chúng ta đã thấy HTTP chạy trên TCP cho phép trình duyệt web lấy trang từ
+máy chủ web. Tuy nhiên, ai từng chờ đợi lâu để một trang web trả về đều
+biết hệ thống còn xa mới hoàn hảo. Xét rằng backbone Internet giờ được xây
+dựng từ các liên kết 40-Gbps, không rõ tại sao lại như vậy. Nói chung,
+khi tải trang web có bốn nút cổ chai tiềm năng:
 
--  *The first mile.* The Internet may have high-capacity links in it,
-   but that doesn’t help you download a Web page any faster when you’re
-   connected by a 1.5Mbps DSL line or a poorly performing wireless link.
+-  *Dặm đầu tiên* (first mile). Internet có thể có liên kết dung lượng
+   cao, nhưng điều đó không giúp bạn tải trang nhanh hơn khi bạn kết nối
+   bằng đường DSL 1.5Mbps hoặc liên kết không dây kém.
 
--  *The last mile.* The link that connects the server to the Internet
-   can be overloaded by too many requests, even if the aggregate
-   bandwidth of that link is quite high.
+-  *Dặm cuối* (last mile). Liên kết kết nối server với Internet có thể bị
+   quá tải bởi quá nhiều yêu cầu, dù tổng băng thông của liên kết khá cao.
 
--  *The server itself.* A server has a finite amount of resources (CPU,
-   memory, disk bandwidth, etc.) and can be overloaded by too many
-   concurrent requests.
+-  *Chính server*. Server có lượng tài nguyên hữu hạn (CPU, RAM, băng
+   thông đĩa, v.v.) và có thể bị quá tải bởi quá nhiều yêu cầu đồng thời.
 
--  *Peering points.* The handful of ISPs that collectively implement the
-   backbone of the Internet may internally have high-bandwidth pipes,
-   but they have little motivation to provide high-capacity connectivity
-   to their peers. If you are connected to ISP A and the server is
-   connected to ISP B, then the page you request may get dropped at the
-   point where A and B peer with each other.
+-  *Điểm peering*. Một số ít ISP cùng nhau tạo backbone Internet có thể có
+   đường ống băng thông cao nội bộ, nhưng họ không có động lực cung cấp
+   kết nối dung lượng cao cho các peer. Nếu bạn kết nối ISP A và server
+   kết nối ISP B, trang bạn yêu cầu có thể bị drop tại điểm A và B peering.
 
-There’s not a lot anyone except you can do about the first problem, but
-it is possible to use replication to address the remaining problems.
-Systems that do this are often called *Content Distribution Networks*
-(CDNs). Akamai operates what is probably the best-known CDN.
+Không ai ngoài bạn có thể làm gì với vấn đề đầu tiên, nhưng có thể dùng
+sao chép để giải quyết các vấn đề còn lại. Các hệ thống làm điều này
+thường gọi là *Mạng phân phối nội dung* (Content Distribution Networks,
+CDN). Akamai vận hành CDN nổi tiếng nhất.
 
-The idea of a CDN is to geographically distribute a collection of
-*server surrogates* that cache pages normally maintained in some set
-of *backend servers*. Thus, rather than having millions of users wait
-forever to contact when a big news story breaks—such a situation is
-known as a *flash crowd*—it is possible to spread this load across
-many servers. Moreover, rather than having to traverse multiple ISPs
-to reach ``www.cnn.com``, if these surrogate servers happen to be
-spread across all the backbone ISPs, then it should be possible to
-reach one without having to cross a peering point. Clearly,
-maintaining thousands of surrogate servers all over the Internet is
-too expensive for any one site that wants to provide better access to
-its Web pages. Commercial CDNs provide this service for many sites,
-thereby amortizing the cost across many customers.
+Ý tưởng của CDN là phân phối địa lý một tập hợp *server surrogate* lưu
+cache các trang thường được duy trì ở một tập *backend server*. Nhờ đó,
+thay vì hàng triệu người dùng phải chờ khi có tin nóng—tình huống này gọi
+là *flash crowd*—có thể phân bổ tải này trên nhiều server. Hơn nữa, thay
+vì phải đi qua nhiều ISP để đến ``www.cnn.com``, nếu các server surrogate
+được phân bổ trên tất cả ISP backbone, thì có thể đến một server mà không
+phải qua điểm peering. Rõ ràng, duy trì hàng nghìn server surrogate trên
+Internet là quá đắt cho bất kỳ site nào muốn cung cấp truy cập tốt hơn cho
+trang web của mình. CDN thương mại cung cấp dịch vụ này cho nhiều site,
+nhờ đó phân bổ chi phí cho nhiều khách hàng.
 
-Although we call them surrogate servers, in fact, they can just as
-correctly be viewed as caches. If they don’t have a page that has been
-requested by a client, they ask the backend server for it. In practice,
-however, the backend servers proactively replicate their data across the
-surrogates rather than wait for surrogates to request it on demand. It’s
-also the case that only static pages, as opposed to dynamic content, are
-distributed across the surrogates. Clients have to go to the backend
-server for any content that either changes frequently (e.g., sports
-scores and stock quotes) or is produced as the result of some
-computation (e.g., a database query).
+Dù gọi là server surrogate, thực ra chúng cũng có thể coi là cache. Nếu
+không có trang được client yêu cầu, chúng hỏi backend server. Trong thực
+tế, backend server chủ động sao chép dữ liệu sang các surrogate thay vì
+chờ surrogate yêu cầu khi cần. Cũng chỉ các trang tĩnh, không phải nội
+dung động, được phân phối trên surrogate. Client phải đến backend server
+cho nội dung thay đổi thường xuyên (ví dụ, điểm thể thao, giá cổ phiếu)
+hoặc sinh ra từ tính toán (ví dụ, truy vấn database).
 
 .. _fig-cdn:
 .. figure:: figures/f09-30-9780123850591.png
    :width: 600px
    :align: center
 
-   Components in a Content Distribution Network (CDN).
+   Các thành phần trong một Mạng phân phối nội dung (CDN).
 
-Having a large set of geographically distributed servers does not fully
-solve the problem. To complete the picture, CDNs also need to provide a
-set of *redirectors* that forward client requests to the most
-appropriate server, as shown in :numref:`Figure %s <fig-cdn>`. The primary
-objective of the redirectors is to select the server for each request
-that results in the best *response time* for the client. A secondary
-objective is for the system as a whole to process as many requests per
-second as the underlying hardware (network links and web servers) is
-able to support. The average number of requests that can be satisfied in
-a given time period—known as the *system throughput*—is primarily an
-issue when the system is under heavy load, such as when a flash crowd is
-accessing a small set of pages or a Distributed Denial of Service (DDoS)
-attacker is targeting a particular site, as happened to CNN, Yahoo, and
-several other high-profile sites in February 2000.
+Có một tập server phân phối địa lý lớn chưa giải quyết hết vấn đề. Để hoàn
+chỉnh, CDN cũng cần cung cấp một tập *redirector* chuyển tiếp yêu cầu
+client đến server phù hợp nhất, như minh họa trong :numref:`Hình %s
+<fig-cdn>`. Mục tiêu chính của redirector là chọn server cho mỗi yêu cầu
+sao cho *thời gian đáp ứng* cho client là tốt nhất. Mục tiêu phụ là hệ
+thống xử lý được nhiều yêu cầu mỗi giây nhất có thể dựa trên phần cứng
+(network link và web server) hỗ trợ. Số yêu cầu trung bình có thể đáp ứng
+trong một khoảng thời gian—gọi là *throughput hệ thống*—chủ yếu là vấn đề
+khi hệ thống quá tải, như khi flash crowd truy cập một tập trang nhỏ hoặc
+kẻ tấn công DDoS nhắm vào một site, như đã xảy ra với CNN, Yahoo, và một
+số site nổi tiếng khác tháng 2/2000.
 
-CDNs use several factors to decide how to distribute client requests.
-For example, to minimize response time, a redirector might select a
-server based on its *network proximity*. In contrast, to improve the
-overall system throughput, it is desirable to evenly *balance* the load
-across a set of servers. Both throughput and response time are improved
-if the distribution mechanism takes *locality* into consideration; that
-is, it selects a server that is likely to already have the page being
-requested in its cache. The exact combination of factors that should be
-employed by a CDN is open to debate. This section considers some of the
-possibilities.
+CDN dùng nhiều yếu tố để quyết định phân phối yêu cầu client. Ví dụ, để
+giảm thời gian đáp ứng, redirector có thể chọn server dựa trên *gần về
+mạng* (network proximity). Ngược lại, để tăng throughput toàn hệ thống,
+nên cân bằng tải đều trên tập server. Cả throughput và thời gian đáp ứng
+đều được cải thiện nếu cơ chế phân phối xét đến *locality*; tức là, chọn
+server có khả năng đã có trang được yêu cầu trong cache. Kết hợp chính xác
+các yếu tố nào nên dùng trong CDN vẫn còn tranh luận. Phần này xét một số
+khả năng.
 
-Mechanisms
-~~~~~~~~~~
+Cơ chế (Mechanisms)
+~~~~~~~~~~~~~~~~~~~
 
-As described so far, a redirector is just an abstract function, although
-it sounds like what something a router might be asked to do since it
-logically forwards a request message much like a router forwards
-packets. In fact, there are several mechanisms that can be used to
-implement redirection. Note that for the purpose of this discussion we
-assume that each redirector knows the address of every available server.
-(From here on, we drop the “surrogate” qualifier and talk simply in
-terms of a set of servers.) In practice, some form of out-of-band
-communication takes place to keep this information up-to-date as servers
-come and go.
+Như mô tả đến đây, redirector chỉ là một hàm trừu tượng, dù nghe giống
+việc router có thể làm vì nó logic chuyển tiếp thông điệp yêu cầu giống
+như router chuyển tiếp gói tin. Thực tế, có một số cơ chế có thể dùng để
+hiện thực chuyển tiếp. Lưu ý, cho mục đích thảo luận này, giả định mỗi
+redirector biết địa chỉ mọi server sẵn có. (Từ đây, bỏ từ “surrogate” và
+chỉ nói về tập server.) Trong thực tế, một số hình thức trao đổi thông tin
+out-of-band diễn ra để cập nhật thông tin khi server đến/đi.
 
-First, redirection could be implemented by augmenting DNS to return
-different server addresses to clients. For example, when a client asks
-to resolve the name ``www.cnn.com``, the DNS server could return the
-IP address of a server hosting CNN’s Web pages that is known to have
-the lightest load.  Alternatively, for a given set of servers, it
-might just return addresses in a round-robin fashion. Note that the
-granularity of DNS-based redirection is usually at the level of a site
-(e.g., ``cnn.com``) rather than a specific URL (e.g.,
-``https://www.cnn.com/2020/11/12/politics/biden-wins-arizona/index.html``). However,
-when returning an embedded link, the server can rewrite the URL,
-thereby effectively pointing the client at the most appropriate server
-for that specific object.
+Đầu tiên, chuyển tiếp có thể hiện thực bằng cách tăng cường DNS để trả về
+địa chỉ server khác nhau cho client. Ví dụ, khi client hỏi phân giải tên
+``www.cnn.com``, DNS server có thể trả về địa chỉ IP của server lưu trang
+CNN được biết là tải nhẹ nhất. Hoặc, với một tập server, chỉ cần trả về
+địa chỉ theo vòng tròn. Lưu ý, độ hạt của chuyển tiếp dựa trên DNS thường
+ở mức site (ví dụ, ``cnn.com``) thay vì URL cụ thể (ví dụ,
+``https://www.cnn.com/2020/11/12/politics/biden-wins-arizona/index.html``).
+Tuy nhiên, khi trả về liên kết nhúng, server có thể rewrite URL, nhờ đó
+chỉ client đến server phù hợp nhất cho đối tượng cụ thể.
 
-Commercial CDNs essentially use a combination of URL rewriting and
-DNS-based redirection. For scalability reasons, the high-level DNS
-server first points to a regional-level DNS server, which replies with
-the actual server address. In order to respond to changes quickly, the
-DNS servers tweak the TTL of the resource records they return to a very
-short period, such as 20 seconds. This is necessary so clients don’t
-cache results and thus fail to go back to the DNS server for the most
-recent URL-to-server mapping.
+CDN thương mại về cơ bản dùng kết hợp rewrite URL và chuyển tiếp dựa trên
+DNS. Vì lý do khả năng mở rộng, DNS cấp cao trước tiên trỏ đến DNS cấp
+vùng, DNS này trả về địa chỉ server thực tế. Để phản ứng nhanh với thay
+đổi, DNS chỉnh TTL của resource record trả về thành thời gian rất ngắn,
+ví dụ 20 giây. Điều này cần thiết để client không cache kết quả và do đó
+không quay lại DNS lấy ánh xạ URL-server mới nhất.
 
-Another possibility is to use the HTTP redirect feature: The client
-sends a request message to a server, which responds with a new (better)
-server that the client should contact for the page. Unfortunately,
-server-based redirection incurs an additional round-trip time across the
-Internet, and, even worse, servers can be vulnerable to being overloaded
-by the redirection task itself. Instead, if there is a node close to the
-client (e.g., a local Web proxy) that is aware of the available servers,
-then it can intercept the request message and instruct the client to
-instead request the page from an appropriate server. In this case,
-either the redirector would need to be on a choke point so that all
-requests leaving the site pass through it, or the client would have to
-cooperate by explicitly addressing the proxy (as with a classical,
-rather than transparent, proxy).
+Một khả năng khác là dùng tính năng HTTP redirect: Client gửi yêu cầu đến
+server, server trả về server mới (tốt hơn) mà client nên liên hệ để lấy
+trang. Không may, chuyển tiếp dựa trên server gây thêm một round-trip qua
+Internet, và tệ hơn, server có thể bị quá tải bởi chính nhiệm vụ chuyển
+tiếp. Thay vào đó, nếu có một nút gần client (ví dụ, proxy web cục bộ) biết
+các server sẵn có, nó có thể chặn thông điệp yêu cầu và hướng client yêu
+cầu trang từ server phù hợp. Trong trường hợp này, redirector phải nằm ở
+điểm choke để mọi yêu cầu rời site đi qua nó, hoặc client phải hợp tác bằng
+cách gửi yêu cầu trực tiếp cho proxy (như proxy truyền thống, không phải
+proxy trong suốt).
 
-At this point you may be wondering what CDNs have to do with overlay
-networks, and while viewing a CDN as an overlay is a bit of a stretch,
-they do share one very important trait in common. Like an overlay node,
-a proxy-based redirector makes an application-level routing decision.
-Rather than forward a packet based on an address and its knowledge of
-the network topology, it forwards HTTP requests based on a URL and its
-knowledge of the location and load of a set of servers. Today’s Internet
-architecture does not support redirection directly—where by “directly”
-we mean the client sends the HTTP request to the redirector, which
-forwards to the destination—so instead redirection is typically
-implemented indirectly by having the redirector return the appropriate
-destination address and the client contacts the server itself.
+Lúc này bạn có thể tự hỏi CDN liên quan gì đến mạng phủ, và dù coi CDN là
+overlay có phần gượng ép, chúng chia sẻ một đặc điểm rất quan trọng. Như
+một nút overlay, redirector dựa trên proxy đưa ra quyết định định tuyến ở
+mức ứng dụng. Thay vì chuyển tiếp gói tin dựa trên địa chỉ và hiểu biết về
+topo mạng, nó chuyển tiếp yêu cầu HTTP dựa trên URL và hiểu biết về vị trí
+và tải của tập server. Kiến trúc Internet hiện nay không hỗ trợ chuyển tiếp
+trực tiếp—ý là client gửi yêu cầu HTTP cho redirector, redirector chuyển
+tiếp đến đích—nên chuyển tiếp thường được hiện thực gián tiếp bằng cách
+redirector trả về địa chỉ đích phù hợp và client tự liên hệ server.
 
-Policies
-~~~~~~~~
+Chính sách (Policies)
+~~~~~~~~~~~~~~~~~~~~~
 
-We now consider some example policies that redirectors might use to
-forward requests. Actually, we have already suggested one simple
-policy—round-robin. A similar scheme would be to simply select one of
-the available servers at random. Both of these approaches do a good job
-of spreading the load evenly across the CDN, but they do not do a
-particularly good job of lowering the client-perceived response time.
+Giờ xét một số chính sách ví dụ mà redirector có thể dùng để chuyển tiếp
+yêu cầu. Thực ra, ta đã gợi ý một chính sách đơn giản—vòng tròn (round-robin).
+Một cách tương tự là chọn ngẫu nhiên một server sẵn có. Cả hai cách này đều
+phân bổ tải đều trên CDN, nhưng không giảm thời gian đáp ứng cảm nhận của
+client.
 
-It’s obvious that neither of these two schemes takes network proximity
-into consideration, but, just as importantly, they also ignore locality.
-That is, requests for the same URL are forwarded to different servers,
-making it less likely that the page will be served from the selected
-server’s in-memory cache. This forces the server to retrieve the page
-from its disk, or possibly even from the backend server. How can a
-distributed set of redirectors cause requests for the same page to go to
-the same server (or small set of servers) without global coordination?
-The answer is surprisingly simple: All redirectors use some form of
-hashing to deterministically map URLs into a small range of values. The
-primary benefit of this approach is that no inter-redirector
-communication is required to achieve coordinated operation; no matter
-which redirector receives a URL, the hashing process produces the same
-output.
+Rõ ràng cả hai cách trên đều không xét đến gần về mạng, nhưng, quan trọng
+không kém, cũng bỏ qua locality. Tức là, các yêu cầu cho cùng một URL được
+chuyển đến các server khác nhau, làm giảm khả năng trang được phục vụ từ
+cache RAM của server được chọn. Điều này buộc server phải lấy trang từ đĩa,
+hoặc thậm chí từ backend server. Làm sao một tập redirector phân tán có thể
+khiến các yêu cầu cho cùng một trang đến cùng một server (hoặc một tập nhỏ
+server) mà không cần phối hợp toàn cục? Câu trả lời rất đơn giản: Tất cả
+redirector dùng một dạng băm nào đó để ánh xạ URL một cách xác định vào một
+tập giá trị nhỏ. Lợi ích chính là không cần trao đổi thông tin giữa các
+redirector để đạt phối hợp; bất kể redirector nào nhận URL, quá trình băm
+cho cùng kết quả.
 
-So what makes for a good hashing scheme? The classic *modulo* hashing
-scheme—which hashes each URL modulo the number of servers—is not
-suitable for this environment. This is because should the number of
-servers change, the modulo calculation will result in a diminishing
-fraction of the pages keeping their same server assignments. While we do
-not expect frequent changes in the set of servers, the fact that the
-addition of new servers into the set will cause massive reassignment is
-undesirable.
+Vậy thế nào là một thuật toán băm tốt? Thuật toán băm *modulo* cổ điển—
+băm mỗi URL modulo số server—không phù hợp cho môi trường này. Vì nếu số
+server thay đổi, phép tính modulo sẽ khiến phần lớn trang đổi server. Dù
+không mong đợi tập server thay đổi thường xuyên, việc thêm server mới gây
+tái phân bổ lớn là không mong muốn.
 
-An alternative is to use the same *consistent hashing* algorithm
-discussed in the previous section. Specifically, each redirector first
-hashes every server into the unit circle. Then, for each URL that
-arrives, the redirector also hashes the URL to a value on the unit
-circle, and the URL is assigned to the server that lies closest on the
-circle to its hash value. If a node fails in this scheme, its load
-shifts to its neighbors (on the unit circle), so the addition or removal
-of a server only causes local changes in request assignments. Note that
-unlike the peer-to-peer case, where a message is routed from one node to
-another in order to find the server whose ID is closest to the objects,
-each redirector knows how the set of servers map onto the unit circle,
-so they can each, independently, select the “nearest” one.
+Một cách thay thế là dùng cùng thuật toán *consistent hashing* đã bàn ở
+phần trước. Cụ thể, mỗi redirector trước tiên băm mọi server vào vòng tròn
+đơn vị. Sau đó, với mỗi URL đến, redirector cũng băm URL ra một giá trị
+trên vòng tròn, và URL được gán cho server gần nhất trên vòng tròn với giá
+trị băm của nó. Nếu một nút lỗi trong sơ đồ này, tải của nó chuyển sang
+láng giềng (trên vòng tròn), nên thêm hoặc loại bỏ server chỉ gây thay đổi
+cục bộ trong phân bổ yêu cầu. Lưu ý, khác với peer-to-peer, nơi thông điệp
+được định tuyến từ nút này sang nút khác để tìm server có ID gần đối tượng,
+mỗi redirector biết cách tập server ánh xạ lên vòng tròn, nên có thể tự
+chọn server “gần nhất”.
 
-This strategy can easily be extended to take server load into account.
-Assume the redirector knows the current load of each of the available
-servers. This information may not be perfectly up-to-date, but we can
-imagine the redirector simply counting how many times it has forwarded a
-request to each server in the last few seconds and using this count as
-an estimate of that server’s current load. Upon receiving a URL, the
-redirector hashes the URL plus each of the available servers and sorts
-the resulting values. This sorted list effectively defines the order in
-which the redirector will consider the available servers. The redirector
-then walks down this list until it finds a server whose load is below
-some threshold. The benefit of this approach compared to plain
-consistent hashing is that server order is different for each URL, so if
-one server fails, its load is distributed evenly among the other
-machines. This approach is the basis for the Cache Array Routing
-Protocol (CARP) and is shown in pseudocode below.
+Chiến lược này dễ dàng mở rộng để xét đến tải server. Giả sử redirector
+biết tải hiện tại của mỗi server sẵn có. Thông tin này có thể không hoàn
+toàn cập nhật, nhưng có thể tưởng tượng redirector chỉ cần đếm số lần đã
+chuyển tiếp yêu cầu cho mỗi server trong vài giây gần nhất và dùng số này
+làm ước lượng tải hiện tại. Khi nhận URL, redirector băm URL cộng từng
+server sẵn có và sắp xếp các giá trị. Danh sách đã sắp xếp này xác định
+thứ tự redirector sẽ xét các server. Redirector duyệt danh sách cho đến
+khi tìm server có tải dưới ngưỡng. Lợi ích so với băm đều là thứ tự server
+khác nhau cho mỗi URL, nên nếu một server lỗi, tải của nó được phân bổ đều
+cho các máy khác. Cách này là cơ sở cho Cache Array Routing Protocol (CARP)
+và được mô tả giả mã dưới đây.
 
 ::
 
@@ -1129,32 +981,24 @@ Protocol (CARP) and is shown in pseudocode below.
                return s
        return server with highest score
 
-As the load increases, this scheme changes from using only the first
-server on the sorted list to spreading requests across several servers.
-Some pages normally handled by busy servers will also start being
-handled by less busy servers. Since this process is based on aggregate
-server load rather than the popularity of individual pages, servers
-hosting some popular pages may find more servers sharing their load than
-servers hosting collectively unpopular pages. In the process, some
-unpopular pages will be replicated in the system simply because they
-happen to be primarily hosted on busy servers. At the same time, if some
-pages become extremely popular, it is conceivable that all of the
-servers in the system could be responsible for serving them.
+Khi tải tăng, sơ đồ này chuyển từ chỉ dùng server đầu tiên trong danh sách
+sang phân bổ yêu cầu trên nhiều server. Một số trang thường do server bận
+xử lý cũng sẽ được server ít bận hơn chia sẻ tải. Vì quá trình này dựa trên
+tải tổng thể server chứ không phải độ phổ biến từng trang, server lưu một
+số trang phổ biến có thể thấy nhiều server chia sẻ tải hơn server lưu trang
+không phổ biến. Trong quá trình này, một số trang không phổ biến sẽ được
+sao chép trong hệ thống chỉ vì chúng chủ yếu được lưu trên server bận. Đồng
+thời, nếu một số trang trở nên cực kỳ phổ biến, có thể tất cả server trong
+hệ thống sẽ chịu trách nhiệm phục vụ chúng.
 
-Finally, it is possible to introduce network proximity into the
-equation in at least two different ways. The first is to blur the
-distinction between server load and network proximity by monitoring
-how long a server takes to respond to requests and using this
-measurement as the “server load” parameter in the preceding
-algorithm. This strategy tends to prefer nearby/lightly loaded servers
-over distant/heavily loaded servers. A second approach is to factor
-proximity into the decision at an earlier stage by limiting the
-candidate set of servers considered by the above algorithms (*S*) to
-only those that are nearby. The harder problem is deciding which of
-the potentially many servers are suitably close. One approach would be
-to select only those servers that are available on the same ISP as the
-client. A slightly more sophisticated approach would be to look at the
-map of autonomous systems produced by BGP and select only those
-servers within some number of hops from the client as candidate
-servers.  Finding the right balance between network proximity and
-server cache locality is a subject of ongoing research.
+Cuối cùng, có thể đưa gần về mạng vào bài toán theo ít nhất hai cách. Đầu
+tiên là làm mờ ranh giới giữa tải server và gần về mạng bằng cách đo thời
+gian server phản hồi yêu cầu và dùng số đo này làm tham số “tải server” cho
+thuật toán trên. Chiến lược này ưu tiên server gần/ít tải hơn server xa/nhiều
+tải. Cách thứ hai là xét gần về mạng ở giai đoạn sớm hơn bằng cách giới hạn
+tập server ứng viên (*S*) cho thuật toán trên chỉ gồm các server gần. Vấn
+đề khó hơn là xác định server nào đủ gần. Một cách là chỉ chọn server cùng
+ISP với client. Cách tinh vi hơn là xem bản đồ hệ tự trị (autonomous system)
+do BGP tạo ra và chỉ chọn server trong một số hop từ client làm ứng viên.
+Tìm cân bằng đúng giữa gần về mạng và locality cache server là chủ đề nghiên
+cứu đang tiếp diễn.

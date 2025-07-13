@@ -52,6 +52,8 @@ Quy trình xây dựng được lưu trong ``Makefile`` và yêu cầu đã cài
 
 Để tạo HTML trong ``_build/html``, chạy ``make html``.
 
+Để tạo EPUB trong ``epub``, chạy ``make epub``.
+
 Để kiểm tra định dạng của sách, chạy ``make lint``.
 
 Để kiểm tra chính tả, chạy ``make spelling``. Nếu có thêm từ, tên riêng, hoặc từ viết tắt nào được đánh vần đúng nhưng không có trong từ điển, vui lòng thêm chúng vào file ``dict.txt``.

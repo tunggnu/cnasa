@@ -1,5 +1,5 @@
 6.3 Kiểm soát tắc nghẽn TCP
-==========================
+===========================
 
 Phần này mô tả ví dụ nổi bật nhất về kiểm soát tắc nghẽn đầu-cuối đang được sử dụng hiện nay, được triển khai bởi TCP. Chiến lược cốt lõi của TCP là gửi các gói vào mạng mà không cần đặt trước và sau đó phản ứng với các sự kiện quan sát được xảy ra. TCP chỉ giả định hàng đợi FIFO trong các bộ định tuyến của mạng, nhưng cũng hoạt động với các chiến lược xếp hàng khác.
 

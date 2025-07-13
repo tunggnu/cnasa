@@ -1,248 +1,241 @@
-9.3 Infrastructure Applications
-===============================
+9.3 Ứng dụng hạ tầng (Infrastructure Applications)
+==================================================
 
-There are some protocols that are essential to the smooth running of the
-Internet but that don’t fit neatly into the strictly layered model. One
-of these is the Domain Name System (DNS)—not an application that users
-normally invoke directly, but rather a service that almost all other
-applications depend upon. This is because the name service is used to
-translate host names into host addresses; the existence of such an
-application allows the users of other applications to refer to remote
-hosts by name rather than by address. In other words, a name service is
-usually used by other applications, rather than by humans.
+Có một số giao thức là thiết yếu cho hoạt động trơn tru của Internet
+nhưng lại không phù hợp hoàn toàn với mô hình phân lớp nghiêm ngặt.
+Một trong số đó là Hệ thống tên miền (DNS)—không phải là một ứng dụng
+mà người dùng thường trực tiếp sử dụng, mà là một dịch vụ mà hầu như
+tất cả các ứng dụng khác đều phụ thuộc vào. Điều này là do dịch vụ tên
+được dùng để chuyển đổi tên máy chủ thành địa chỉ máy chủ; sự tồn tại
+của một ứng dụng như vậy cho phép người dùng các ứng dụng khác tham
+chiếu đến các máy chủ từ xa bằng tên thay vì bằng địa chỉ. Nói cách
+khác, một dịch vụ tên thường được các ứng dụng khác sử dụng, thay vì
+bởi con người.
 
-A second critical function is network management, which although not so
-familiar to the average user, is performed most often by the people that
-operate the network on behalf of users. Network management is widely
-considered one of the hard problems of networking and continues to be
-the focus of much innovation. We’ll look at some of the issues and
-approaches to the problem below.
+Một chức năng quan trọng thứ hai là quản lý mạng, mặc dù không quen
+thuộc với người dùng phổ thông, nhưng lại được thực hiện chủ yếu bởi
+những người vận hành mạng thay mặt cho người dùng. Quản lý mạng được
+coi là một trong những vấn đề khó của mạng máy tính và tiếp tục là tâm
+điểm của nhiều đổi mới. Chúng ta sẽ xem xét một số vấn đề và cách tiếp
+cận cho vấn đề này bên dưới.
 
-9.3.1 Name Service (DNS)
-------------------------
+9.3.1 Dịch vụ tên (DNS)
+-----------------------
 
-In most of this book, we have been using addresses to identify hosts.
-While perfectly suited for processing by routers, addresses are not
-exactly user friendly. It is for this reason that a unique *name* is
-also typically assigned to each host in a network. Already in this
-section we have seen application protocols like HTTP using names such as
-``www.princeton.edu``. We now describe how a naming service can be
-developed to map user-friendly names into router-friendly addresses.
-Name services are sometimes called *middleware* because they fill a gap
-between applications and the underlying network.
+Trong phần lớn cuốn sách này, chúng ta đã sử dụng địa chỉ để xác định
+máy chủ. Mặc dù rất phù hợp cho việc xử lý bởi các router, địa chỉ lại
+không thân thiện với người dùng. Vì lý do này, một *tên* duy nhất cũng
+thường được gán cho mỗi máy chủ trong mạng. Ngay trong phần này, chúng
+ta đã thấy các giao thức ứng dụng như HTTP sử dụng các tên như
+``www.princeton.edu``. Bây giờ chúng ta sẽ mô tả cách một dịch vụ tên
+có thể được phát triển để ánh xạ các tên thân thiện với người dùng
+thành các địa chỉ thân thiện với router. Dịch vụ tên đôi khi được gọi
+là *middleware* vì nó lấp đầy khoảng trống giữa các ứng dụng và mạng
+cơ sở bên dưới.
 
-Host names differ from host addresses in two important ways. First, they
-are usually of variable length and mnemonic, thereby making them easier
-for humans to remember. (In contrast, fixed-length numeric addresses are
-easier for routers to process.) Second, names typically contain no
-information that helps the network locate (route packets toward) the
-host. Addresses, in contrast, sometimes have routing information
-embedded in them; *flat* addresses (those not divisible into component
-parts) are the exception.
+Tên máy chủ khác với địa chỉ máy chủ ở hai điểm quan trọng. Thứ nhất,
+chúng thường có độ dài thay đổi và dễ nhớ, nhờ đó giúp con người dễ
+ghi nhớ hơn. (Ngược lại, các địa chỉ số có độ dài cố định lại dễ xử lý
+hơn đối với router.) Thứ hai, tên thường không chứa thông tin nào giúp
+mạng xác định vị trí (định tuyến gói tin đến) máy chủ. Địa chỉ, ngược
+lại, đôi khi có thông tin định tuyến nhúng trong đó; địa chỉ *phẳng*
+(tức là không thể chia thành các thành phần) là ngoại lệ.
 
-Before getting into the details of how hosts are named in a network, we
-first introduce some basic terminology. First, a *name space* defines
-the set of possible names. A name space can be either *flat* (names are
-not divisible into components) or *hierarchical* (Unix file names are an
-obvious example). Second, the naming system maintains a collection of
-*bindings* of names to values. The value can be anything we want the
-naming system to return when presented with a name; in many cases, it is
-an address. Finally, a *resolution mechanism* is a procedure that, when
-invoked with a name, returns the corresponding value. A *name server* is
-a specific implementation of a resolution mechanism that is available on
-a network and that can be queried by sending it a message.
+Trước khi đi vào chi tiết cách đặt tên máy chủ trong mạng, trước tiên
+chúng ta giới thiệu một số thuật ngữ cơ bản. Thứ nhất, một *không gian
+tên* (name space) định nghĩa tập hợp các tên có thể có. Một không gian
+tên có thể là *phẳng* (tên không thể chia thành các thành phần) hoặc
+*phân cấp* (tên file Unix là một ví dụ rõ ràng). Thứ hai, hệ thống đặt
+tên duy trì một tập hợp các *ràng buộc* (bindings) giữa tên và giá trị.
+Giá trị có thể là bất cứ thứ gì mà hệ thống đặt tên trả về khi được
+truy vấn bằng một tên; trong nhiều trường hợp, đó là một địa chỉ. Cuối
+cùng, một *cơ chế phân giải* (resolution mechanism) là một thủ tục mà
+khi được gọi với một tên, sẽ trả về giá trị tương ứng. Một *máy chủ tên*
+(name server) là một hiện thực cụ thể của cơ chế phân giải, có sẵn trên
+mạng và có thể được truy vấn bằng cách gửi thông điệp cho nó.
 
-Because of its large size, the Internet has a particularly
-well-developed naming system in place—the Domain Name System (DNS). We
-therefore use DNS as a framework for discussing the problem of naming
-hosts. Note that the Internet did not always use DNS. Early in its
-history, when there were only a few hundred hosts on the Internet, a
-central authority called the *Network Information Center* (NIC)
-maintained a flat table of name-to-address bindings; this table was
-called ``HOSTS.TXT``.\ [#]_ Whenever a site wanted to add a new host to the
-Internet, the site administrator sent email to the NIC giving the new
-host’s name/address pair. This information was manually entered into the
-table, the modified table was mailed out to the various sites every few
-days, and the system administrator at each site installed the table on
-every host at the site. Name resolution was then simply implemented by a
-procedure that looked up a host’s name in the local copy of the table
-and returned the corresponding address.
+Vì kích thước lớn, Internet có một hệ thống đặt tên phát triển đặc biệt
+—Hệ thống tên miền (DNS). Do đó, chúng ta sử dụng DNS làm khuôn khổ để
+thảo luận về vấn đề đặt tên máy chủ. Lưu ý rằng Internet không phải lúc
+nào cũng dùng DNS. Đầu những năm phát triển, khi chỉ có vài trăm máy
+chủ trên Internet, một cơ quan trung tâm gọi là *Network Information
+Center* (NIC) duy trì một bảng phẳng các ràng buộc tên-địa chỉ; bảng
+này được gọi là ``HOSTS.TXT``.\ [#]_ Bất cứ khi nào một site muốn thêm
+một máy chủ mới vào Internet, quản trị viên site sẽ gửi email cho NIC
+cung cấp cặp tên/địa chỉ mới. Thông tin này được nhập thủ công vào
+bảng, bảng đã chỉnh sửa được gửi qua email đến các site vài ngày một
+lần, và quản trị viên hệ thống tại mỗi site cài đặt bảng này lên mọi
+máy chủ tại site. Việc phân giải tên sau đó chỉ đơn giản là một thủ tục
+tra cứu tên máy chủ trong bản sao cục bộ của bảng và trả về địa chỉ
+tương ứng.
 
-.. [#] Believe it or not, there was also a paper book (like a phone
-       book) published periodically that listed all the machines
-       connected to the Internet and all the people that had an
-       Internet email account.
+.. [#] Tin hay không thì tùy, còn có cả một cuốn sách giấy (giống như
+       danh bạ điện thoại) được xuất bản định kỳ liệt kê tất cả các máy
+       kết nối Internet và tất cả những người có tài khoản email Internet.
 
-It should come as no surprise that the approach to naming did not work
-well as the number of hosts in the Internet started to grow. Therefore,
-in the mid-1980s, the Domain Naming System was put into place. DNS
-employs a hierarchical name space rather than a flat name space, and the
-“table” of bindings that implements this name space is partitioned into
-disjoint pieces and distributed throughout the Internet. These subtables
-are made available in name servers that can be queried over the network.
+Không có gì ngạc nhiên khi cách tiếp cận đặt tên này không hoạt động
+tốt khi số lượng máy chủ trên Internet bắt đầu tăng lên. Do đó, vào
+giữa những năm 1980, Hệ thống tên miền (DNS) được đưa vào sử dụng. DNS
+sử dụng không gian tên phân cấp thay vì không gian tên phẳng, và “bảng”
+các ràng buộc hiện thực không gian tên này được chia thành các phần rời
+rạc và phân phối trên toàn Internet. Các bảng con này được cung cấp
+trong các máy chủ tên có thể được truy vấn qua mạng.
 
-What happens in the Internet is that a user presents a host name to an
-application program (possibly embedded in a compound name such as an
-email address or URL), and this program engages the naming system to
-translate this name into a host address. The application then opens a
-connection to this host by presenting some transport protocol (e.g.,
-TCP) with the host’s IP address. This situation is illustrated (in the
-case of sending email) in :numref:`Figure %s <fig-names>`. While this picture
-makes the name resolution task look simple enough, there is a bit more
-to it, as we shall see.
+Điều xảy ra trên Internet là người dùng cung cấp một tên máy chủ cho
+một chương trình ứng dụng (có thể được nhúng trong một tên phức hợp như
+địa chỉ email hoặc URL), và chương trình này sử dụng hệ thống đặt tên
+để chuyển đổi tên này thành địa chỉ máy chủ. Ứng dụng sau đó mở một
+kết nối đến máy chủ này bằng cách cung cấp cho một giao thức vận chuyển
+(như TCP) địa chỉ IP của máy chủ. Tình huống này được minh họa (trong
+trường hợp gửi email) ở :numref:`Hình %s <fig-names>`. Mặc dù hình này
+khiến nhiệm vụ phân giải tên trông có vẻ đơn giản, nhưng thực tế còn
+nhiều chi tiết hơn, như chúng ta sẽ thấy.
 
 .. _fig-names:
 .. figure:: figures/f09-14-9780123850591.png
    :width: 400px
    :align: center
 
-   Names translated into addresses, where the numbers 1 to 5 show the
-   sequence of steps in the process.
+   Tên được chuyển thành địa chỉ, các số từ 1 đến 5 cho thấy trình tự
+   các bước trong quá trình.
 
-Domain Hierarchy
-~~~~~~~~~~~~~~~~
+Phân cấp miền (Domain Hierarchy)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DNS implements a hierarchical name space for Internet objects. Unlike
-Unix file names, which are processed from left to right with the naming
-components separated with slashes, DNS names are processed from right to
-left and use periods as the separator. (Although they are processed from
-right to left, humans still read domain names from left to right.) An
-example domain name for a host is ``cicada.cs.princeton.edu``. Notice
-that we said domain names are used to name Internet “objects.” What we
-mean by this is that DNS is not strictly used to map host names into
-host addresses. It is more accurate to say that DNS maps domain names
-into values. For the time being, we assume that these values are IP
-addresses; we will come back to this issue later in this section.
+DNS hiện thực một không gian tên phân cấp cho các đối tượng Internet.
+Không giống như tên file Unix, được xử lý từ trái sang phải với các
+thành phần tên được phân tách bằng dấu gạch chéo, tên DNS được xử lý
+từ phải sang trái và sử dụng dấu chấm làm ký tự phân tách. (Mặc dù được
+xử lý từ phải sang trái, con người vẫn đọc tên miền từ trái sang phải.)
+Một ví dụ về tên miền cho một máy chủ là ``cicada.cs.princeton.edu``.
+Lưu ý rằng chúng ta nói tên miền được dùng để đặt tên cho các “đối
+tượng” Internet. Ý chúng ta là DNS không chỉ dùng để ánh xạ tên máy
+chủ thành địa chỉ máy chủ. Chính xác hơn, DNS ánh xạ tên miền thành
+giá trị. Tạm thời, chúng ta giả định các giá trị này là địa chỉ IP; sẽ
+quay lại vấn đề này sau trong phần này.
 
 .. _fig-domains:
 .. figure:: figures/f09-15-9780123850591.png
    :width: 700px
    :align: center
 
-   Example of a domain hierarchy.
+   Ví dụ về phân cấp miền.
 
-Like the Unix file hierarchy, the DNS hierarchy can be visualized as a
-tree, where each node in the tree corresponds to a domain, and the
-leaves in the tree correspond to the hosts being named. :numref:`Figure
-%s <fig-domains>` gives an example of a domain hierarchy. Note that we
-should not assign any semantics to the term *domain* other than that it
-is simply a context in which additional names can be defined.\ [#]_
+Giống như phân cấp file Unix, phân cấp DNS có thể được hình dung như
+một cây, trong đó mỗi nút trong cây tương ứng với một miền, và các lá
+trong cây tương ứng với các máy chủ được đặt tên. :numref:`Hình %s
+<fig-domains>` đưa ra một ví dụ về phân cấp miền. Lưu ý rằng chúng ta
+không nên gán bất kỳ ý nghĩa nào cho thuật ngữ *miền* ngoài việc nó
+chỉ đơn giản là một ngữ cảnh trong đó có thể định nghĩa thêm các tên
+khác.\ [#]_
 
-.. [#] Confusingly, the word *domain* is also used in Internet
-       routing, where it means something different than it does in
-       DNS, being roughly equivalent to the term *autonomous system*.
+.. [#] Gây nhầm lẫn là từ *domain* cũng được dùng trong định tuyến
+       Internet, nơi nó mang ý nghĩa khác với trong DNS, gần tương
+       đương với thuật ngữ *autonomous system*.
 
-There was actually a substantial amount of discussion that took place
-when the domain name hierarchy was first being developed as to what
-conventions would govern the names that were to be handed out near the
-top of the hierarchy. Without going into that discussion in any detail,
-notice that the hierarchy is not very wide at the first level. There are
-domains for each country, plus the “big six” domains: ``.edu``,
-``.com``, ``.gov``, ``.mil``, ``.org``, and ``.net``. These six domains
-were all originally based in the United States (where the Internet and
-DNS were invented); for example, only U.S.-accredited educational
-institutions can register an ``.edu`` domain name. In recent years, the
-number of top-level domains has been expanded, partly to deal with the
-high demand for ``.com`` domains names. The newer top-level domains
-include ``.biz``, ``.coop``, and ``.info``. There are now over 1200
-top-level domains.
+Thực tế đã có rất nhiều thảo luận khi phân cấp tên miền lần đầu tiên
+được phát triển về các quy ước sẽ điều chỉnh các tên được cấp gần đỉnh
+của phân cấp. Không đi sâu vào chi tiết, hãy chú ý rằng phân cấp này
+không quá rộng ở cấp đầu tiên. Có các miền cho mỗi quốc gia, cộng với
+“sáu miền lớn”: ``.edu``, ``.com``, ``.gov``, ``.mil``, ``.org``, và
+``.net``. Sáu miền này ban đầu đều có trụ sở tại Hoa Kỳ (nơi Internet
+và DNS được phát minh); ví dụ, chỉ các tổ chức giáo dục được công nhận
+ở Hoa Kỳ mới có thể đăng ký tên miền ``.edu``. Những năm gần đây, số
+lượng miền cấp cao đã được mở rộng, một phần để đáp ứng nhu cầu cao về
+tên miền ``.com``. Các miền cấp cao mới bao gồm ``.biz``, ``.coop``,
+và ``.info``. Hiện nay đã có hơn 1200 miền cấp cao.
 
-Name Servers
-~~~~~~~~~~~~
+Máy chủ tên (Name Servers)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The complete domain name hierarchy exists only in the abstract. We now
-turn our attention to the question of how this hierarchy is actually
-implemented. The first step is to partition the hierarchy into
-subtrees called *zones*. :numref:`Figure %s <fig-zones>` shows how the
-hierarchy given in :numref:`Figure %s <fig-domains>` might be divided
-into zones. Each zone can be thought of as corresponding to some
-administrative authority that is responsible for that portion of the
-hierarchy. For example, the top level of the hierarchy forms a zone
-that is managed by the Internet Corporation for Assigned Names and
-Numbers (ICANN). Below this is a zone that corresponds to Princeton
-University. Within this zone, some departments do not want the
-responsibility of managing the hierarchy (and so they remain in the
-university-level zone), while others, like the Department of Computer
-Science, manage their own department-level zone.
+Toàn bộ phân cấp tên miền chỉ tồn tại ở dạng trừu tượng. Bây giờ chúng
+ta chuyển sang câu hỏi về cách phân cấp này thực sự được hiện thực.
+Bước đầu tiên là chia phân cấp thành các cây con gọi là *vùng* (zones).
+:numref:`Hình %s <fig-zones>` cho thấy cách phân cấp trong
+:numref:`Hình %s <fig-domains>` có thể được chia thành các vùng. Mỗi
+vùng có thể được coi là tương ứng với một cơ quan quản trị chịu trách
+nhiệm cho phần đó của phân cấp. Ví dụ, cấp cao nhất của phân cấp tạo
+thành một vùng do Tổ chức Internet Corporation for Assigned Names and
+Numbers (ICANN) quản lý. Bên dưới là một vùng tương ứng với Đại học
+Princeton. Trong vùng này, một số khoa không muốn chịu trách nhiệm quản
+lý phân cấp (và do đó vẫn nằm trong vùng cấp đại học), trong khi các
+khoa khác, như Khoa Khoa học Máy tính, tự quản lý vùng cấp khoa của
+mình.
 
 .. _fig-zones:
 .. figure:: figures/f09-16-9780123850591.png
    :width: 700px
    :align: center
 
-   Domain hierarchy partitioned into zones.
+   Phân cấp miền được chia thành các vùng.
 
-The relevance of a zone is that it corresponds to the fundamental unit
-of implementation in DNS—the name server. Specifically, the information
-contained in each zone is implemented in two or more name servers. Each
-name server, in turn, is a program that can be accessed over the
-Internet. Clients send queries to name servers, and name servers respond
-with the requested information. Sometimes the response contains the
-final answer that the client wants, and sometimes the response contains
-a pointer to another server that the client should query next. Thus,
-from an implementation perspective, it is more accurate to think of DNS
-as being represented by a hierarchy of name servers rather than by a
-hierarchy of domains, as illustrated in :numref:`Figure %s <fig-servers>`.
+Ý nghĩa của một vùng là nó tương ứng với đơn vị hiện thực cơ bản trong
+DNS—máy chủ tên. Cụ thể, thông tin chứa trong mỗi vùng được hiện thực
+trên hai hoặc nhiều máy chủ tên. Mỗi máy chủ tên, đến lượt nó, là một
+chương trình có thể truy cập qua Internet. Client gửi truy vấn đến máy
+chủ tên, và máy chủ tên trả lời với thông tin được yêu cầu. Đôi khi câu
+trả lời chứa đáp án cuối cùng mà client muốn, đôi khi câu trả lời chứa
+một con trỏ đến máy chủ khác mà client nên truy vấn tiếp theo. Do đó,
+từ góc độ hiện thực, chính xác hơn là nghĩ về DNS như được hiện thực
+bởi một phân cấp các máy chủ tên thay vì một phân cấp các miền, như
+minh họa ở :numref:`Hình %s <fig-servers>`.
 
 .. _fig-servers:
 .. figure:: figures/f09-17-9780123850591.png
    :width: 500px
    :align: center
 
-   Hierarchy of name servers.
+   Phân cấp các máy chủ tên.
 
-Note that each zone is implemented in two or more name servers for the
-sake of redundancy; that is, the information is still available even if
-one name server fails. On the flip side, a given name server is free to
-implement more than one zone.
+Lưu ý rằng mỗi vùng được hiện thực trên hai hoặc nhiều máy chủ tên để
+đảm bảo dự phòng; tức là, thông tin vẫn có sẵn ngay cả khi một máy chủ
+tên bị lỗi. Ngược lại, một máy chủ tên có thể tự do hiện thực nhiều
+hơn một vùng.
 
-Each name server implements the zone information as a collection of
-*resource records*. In essence, a resource record is a name-to-value
-binding or, more specifically, a 5-tuple that contains the following
-fields:
+Mỗi máy chủ tên hiện thực thông tin vùng dưới dạng một tập hợp các
+*bản ghi tài nguyên* (resource records). Về bản chất, một bản ghi tài
+nguyên là một ràng buộc tên-giá trị hoặc, cụ thể hơn, là một bộ 5 phần
+tử chứa các trường sau:
 
 ::
 
    (Name, Value, Type, Class, TTL)
 
-The ``Name`` and ``Value`` fields are exactly what you would expect,
-while the ``Type`` field specifies how the ``Value`` should be
-interpreted. For example, ``Type=A`` indicates that the ``Value`` is
-an IP address.  Thus, ``A`` records implement the name-to-address
-mapping we have been assuming. Other record types include:
+Trường ``Name`` và ``Value`` đúng như bạn mong đợi, trong khi trường
+``Type`` chỉ định cách diễn giải ``Value``. Ví dụ, ``Type=A`` chỉ ra
+rằng ``Value`` là một địa chỉ IP. Như vậy, bản ghi ``A`` hiện thực ánh
+xạ tên-thành-địa-chỉ mà chúng ta đã giả định. Các loại bản ghi khác bao
+gồm:
 
--  ``NS``—The ``Value`` field gives the domain name for a host that is
-   running a name server that knows how to resolve names within the
-   specified domain.
+-  ``NS``—Trường ``Value`` cung cấp tên miền cho một máy chủ đang chạy
+   máy chủ tên biết cách phân giải tên trong miền được chỉ định.
 
--  ``CNAME``—The ``Value`` field gives the canonical name for a
-   particular host; it is used to define aliases.
+-  ``CNAME``—Trường ``Value`` cung cấp tên chuẩn cho một máy chủ cụ
+   thể; nó được dùng để định nghĩa bí danh.
 
--  ``MX``—The ``Value`` field gives the domain name for a host that is
-   running a mail server that accepts messages for the specified domain.
+-  ``MX``—Trường ``Value`` cung cấp tên miền cho một máy chủ đang chạy
+   máy chủ thư chấp nhận thông điệp cho miền được chỉ định.
 
-The ``Class`` field was included to allow entities other than the NIC to
-define useful record types. To date, the only widely used ``Class`` is
-the one used by the Internet; it is denoted ``IN``. Finally, the
-time-to-live (``TTL``) field shows how long this resource record is
-valid. It is used by servers that cache resource records from other
-servers; when the ``TTL`` expires, the server must evict the record from
-its cache.
+Trường ``Class`` được đưa vào để cho phép các thực thể ngoài NIC định
+nghĩa các loại bản ghi hữu ích. Cho đến nay, ``Class`` được sử dụng
+rộng rãi duy nhất là của Internet; nó được ký hiệu là ``IN``. Cuối
+cùng, trường thời gian sống (``TTL``) cho biết bản ghi tài nguyên này
+có hiệu lực trong bao lâu. Nó được dùng bởi các máy chủ cache bản ghi
+tài nguyên từ các máy chủ khác; khi ``TTL`` hết hạn, máy chủ phải loại
+bỏ bản ghi khỏi cache.
 
-To better understand how resource records represent the information in
-the domain hierarchy, consider the following examples drawn from the
-domain hierarchy given in :numref:`Figure %s <fig-domains>`. To
-simplify the example, we ignore the ``TTL`` field and we give the
-relevant information for only one of the name servers that implement
-each zone.
+Để hiểu rõ hơn cách các bản ghi tài nguyên đại diện cho thông tin trong
+phân cấp miền, hãy xem các ví dụ sau được lấy từ phân cấp miền trong
+:numref:`Hình %s <fig-domains>`. Để đơn giản hóa ví dụ, chúng ta bỏ qua
+trường ``TTL`` và chỉ đưa ra thông tin liên quan cho một trong các máy
+chủ tên hiện thực mỗi vùng.
 
-First, a root name server contains an ``NS`` record for each top-level
-domain (TLD) name server. This identifies a server that can resolve
-queries for this part of the DNS hierarchy (``.edu`` and ``.com``\ in
-this example). It also has ``A`` records that translates these names
-into the corresponding IP addresses. Taken together, these two records
-effectively implement a pointer from the root name server to one of the
-TLD servers.
+Đầu tiên, một máy chủ tên gốc chứa một bản ghi ``NS`` cho mỗi máy chủ
+tên miền cấp cao (TLD). Điều này xác định một máy chủ có thể phân giải
+truy vấn cho phần này của phân cấp DNS (``.edu`` và ``.com``\ trong ví
+dụ này). Nó cũng có các bản ghi ``A`` chuyển đổi các tên này thành địa
+chỉ IP tương ứng. Hai bản ghi này kết hợp lại hiện thực hiệu quả một
+con trỏ từ máy chủ tên gốc đến một trong các máy chủ TLD.
 
 ::
 
@@ -252,8 +245,8 @@ TLD servers.
    (a.gtld-servers.net, 192.5.6.30, A, IN)
    ...
 
-Moving our way down the hierarchy by one level, the server has records
-for domains like this:
+Đi xuống một cấp trong phân cấp, máy chủ có các bản ghi cho các miền
+như sau:
 
 ::
 
@@ -261,12 +254,12 @@ for domains like this:
    (dns.princeton.edu, 128.112.129.15, A, IN)
    ...
 
-In this case, we get an ``NS`` record and an ``A`` record for the name
-server that is responsible for the ``princeton.edu`` part of the
-hierarchy. That server might be able to directly resolve some queries
-(e.g., for\ ``email.princeton.edu``) while it would redirect others to a
-server at yet another layer in the hierarchy (e.g., for a query about
-``penguins.cs.princeton.edu``).
+Trong trường hợp này, chúng ta có một bản ghi ``NS`` và một bản ghi
+``A`` cho máy chủ tên chịu trách nhiệm cho phần ``princeton.edu`` của
+phân cấp. Máy chủ đó có thể trực tiếp phân giải một số truy vấn (ví
+dụ, cho\ ``email.princeton.edu``) trong khi sẽ chuyển hướng các truy
+vấn khác đến một máy chủ ở một lớp khác trong phân cấp (ví dụ, cho
+truy vấn về ``penguins.cs.princeton.edu``).
 
 ::
 
@@ -275,19 +268,19 @@ server at yet another layer in the hierarchy (e.g., for a query about
    (dns1.cs.princeton.edu, 128.112.136.10, A, IN)
    ...
 
-Finally, a third-level name server, such as the one managed by domain
-``cs.princeton.edu``, contains ``A`` records for all of its hosts. It
-might also define a set of aliases (``CNAME`` records) for each of those
-hosts. Aliases are sometimes just convenient (e.g., shorter) names for
-machines, but they can also be used to provide a level of indirection.
-For example,\ ``www.cs.princeton.edu`` is an alias for the host named
-``coreweb.cs.princeton.edu``.This allows the site’s web server to move
-to another machine without affecting remote users; they simply continue
-to use the alias without regard for what machine currently runs the
-domain’s web server. The mail exchange (``MX``) records serve the same
-purpose for the email application—they allow an administrator to change
-which host receives mail on behalf of the domain without having to
-change everyone’s email address.
+Cuối cùng, một máy chủ tên cấp ba, chẳng hạn như máy chủ do miền
+``cs.princeton.edu`` quản lý, chứa các bản ghi ``A`` cho tất cả các máy
+chủ của nó. Nó cũng có thể định nghĩa một tập hợp các bí danh (bản ghi
+``CNAME``) cho từng máy chủ đó. Bí danh đôi khi chỉ là các tên thuận
+tiện (ví dụ, ngắn hơn) cho máy, nhưng cũng có thể được dùng để cung cấp
+một mức độ gián tiếp. Ví dụ,\ ``www.cs.princeton.edu`` là bí danh cho
+máy chủ có tên ``coreweb.cs.princeton.edu``. Điều này cho phép máy chủ
+web của site chuyển sang máy khác mà không ảnh hưởng đến người dùng từ
+xa; họ chỉ cần tiếp tục sử dụng bí danh mà không quan tâm máy nào hiện
+đang chạy máy chủ web của miền. Các bản ghi mail exchange (``MX``) phục
+vụ mục đích tương tự cho ứng dụng email—chúng cho phép quản trị viên
+thay đổi máy chủ nhận thư thay mặt cho miền mà không phải thay đổi địa
+chỉ email của mọi người.
 
 ::
 
@@ -298,371 +291,347 @@ change everyone’s email address.
    (mail.cs.princeton.edu, 128.112.136.72, A, IN)
    ...
 
-Note that, although resource records can be defined for virtually any
-type of object, DNS is typically used to name hosts (including servers)
-and sites. It is not used to name individual people or other objects
-like files or directories; other naming systems are typically used to
-identify such objects. For example, X.500 is an ISO naming system
-designed to make it easier to identify people. It allows you to name a
-person by giving a set of attributes: name, title, phone number, postal
-address, and so on. X.500 proved too cumbersome—and, in some sense, was
-usurped by powerful search engines now available on the Web—but it did
-eventually evolve into the Lightweight Directory Access Protocol (LDAP).
-LDAP is a subset of X.500 originally designed as a PC front end to
-X.500. Today, widely used, mostly at the enterprise level, as a system
-for learning information about users.
+Lưu ý rằng, mặc dù các bản ghi tài nguyên có thể được định nghĩa cho hầu
+như bất kỳ loại đối tượng nào, DNS thường được dùng để đặt tên cho máy
+chủ (bao gồm cả server) và site. Nó không dùng để đặt tên cho từng cá
+nhân hoặc các đối tượng khác như file hoặc thư mục; các hệ thống đặt
+tên khác thường được dùng để xác định các đối tượng như vậy. Ví dụ,
+X.500 là một hệ thống đặt tên của ISO được thiết kế để giúp xác định
+người dễ dàng hơn. Nó cho phép bạn đặt tên cho một người bằng cách cung
+cấp một tập thuộc tính: tên, chức danh, số điện thoại, địa chỉ bưu
+điện, v.v. X.500 tỏ ra quá cồng kềnh—và, ở một mức độ nào đó, bị thay
+thế bởi các công cụ tìm kiếm mạnh mẽ hiện có trên Web—nhưng cuối cùng
+nó đã phát triển thành Lightweight Directory Access Protocol (LDAP).
+LDAP là một tập con của X.500 ban đầu được thiết kế làm giao diện PC
+cho X.500. Ngày nay, LDAP được sử dụng rộng rãi, chủ yếu ở cấp doanh
+nghiệp, như một hệ thống để tra cứu thông tin về người dùng.
 
-Name Resolution
-~~~~~~~~~~~~~~~
+Phân giải tên (Name Resolution)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Given a hierarchy of name servers, we now consider the issue of how a
-client engages these servers to resolve a domain name. To illustrate the
-basic idea, suppose the client wants to resolve the name
-``penguins.cs.princeton.edu`` relative to the set of servers given in
-the previous subsection. The client could first send a query containing
-this name to one of the root servers (as we’ll see below, this rarely
-happens in practice but will suffice to illustrate the basic operation
-for now). The root server, unable to match the entire name, returns the
-best match it has—the ``NS`` record for ``edu`` which points to the TLD
-server ``a3.nstld.com``. The server also returns all records that are
-related to this record, in this case, the ``A`` record for
-``a3.nstld.com``. The client, having not received the answer it was
-after, next sends the same query to the name server at IP host
-``192.5.6.32``. This server also cannot match the whole name and so
-returns the ``NS`` and corresponding ``A`` records for the
-``princeton.edu`` domain. Once again, the client sends the same query as
-before to the server at IP host ``128.112.129.15``, and this time gets
-back the ``NS`` record and corresponding ``A`` record for the
-``cs.princeton.edu`` domain. This time, the server that can fully
-resolve the query has been reached. A final query to the server at
-``128.112.136.10`` yields the ``A`` record for
-``penguins.cs.princeton.edu``, and the client learns that the
-corresponding IP address is ``128.112.155.166``.
+Với một phân cấp các máy chủ tên, bây giờ chúng ta xem xét vấn đề làm
+thế nào một client sử dụng các máy chủ này để phân giải một tên miền.
+Để minh họa ý tưởng cơ bản, giả sử client muốn phân giải tên
+``penguins.cs.princeton.edu`` so với tập các máy chủ đã nêu ở phần
+trước. Client có thể đầu tiên gửi một truy vấn chứa tên này đến một
+trong các máy chủ gốc (như chúng ta sẽ thấy bên dưới, điều này hiếm khi
+xảy ra trong thực tế nhưng đủ để minh họa hoạt động cơ bản lúc này).
+Máy chủ gốc, không thể khớp toàn bộ tên, trả về kết quả khớp tốt nhất
+nó có—bản ghi ``NS`` cho ``edu`` trỏ đến máy chủ TLD ``a3.nstld.com``.
+Máy chủ cũng trả về tất cả các bản ghi liên quan đến bản ghi này, trong
+trường hợp này là bản ghi ``A`` cho ``a3.nstld.com``. Client, chưa nhận
+được câu trả lời mong muốn, tiếp tục gửi cùng truy vấn đó đến máy chủ
+tên tại IP ``192.5.6.32``. Máy chủ này cũng không thể khớp toàn bộ tên
+và do đó trả về các bản ghi ``NS`` và ``A`` tương ứng cho miền
+``princeton.edu``. Một lần nữa, client gửi cùng truy vấn như trước đến
+máy chủ tại IP ``128.112.129.15``, và lần này nhận lại bản ghi ``NS``
+và bản ghi ``A`` tương ứng cho miền ``cs.princeton.edu``. Lần này, máy
+chủ có thể phân giải hoàn toàn truy vấn đã được tiếp cận. Một truy vấn
+cuối cùng đến máy chủ tại ``128.112.136.10`` trả về bản ghi ``A`` cho
+``penguins.cs.princeton.edu``, và client biết rằng địa chỉ IP tương ứng
+là ``128.112.155.166``.
 
-This example still leaves a couple of questions about the resolution
-process unanswered. The first question is how did the client locate the
-root server in the first place, or, put another way, how do you resolve
-the name of the server that knows how to resolve names? This is a
-fundamental problem in any naming system, and the answer is that the
-system has to be bootstrapped in some way. In this case, the
-name-to-address mapping for one or more root servers is well known; that
-is, it is published through some means outside the naming system itself.
+Ví dụ này vẫn còn để lại một vài câu hỏi về quá trình phân giải chưa
+được trả lời. Câu hỏi đầu tiên là làm thế nào client xác định được máy
+chủ gốc ngay từ đầu, hay nói cách khác, làm thế nào để phân giải tên
+của máy chủ biết cách phân giải tên? Đây là một vấn đề cơ bản trong bất
+kỳ hệ thống đặt tên nào, và câu trả lời là hệ thống phải được khởi tạo
+bằng một cách nào đó. Trong trường hợp này, ánh xạ tên-địa chỉ cho một
+hoặc nhiều máy chủ gốc là đã biết; tức là, nó được công bố thông qua
+một phương tiện nào đó bên ngoài hệ thống đặt tên.
 
-In practice, however, not all clients know about the root servers.
-Instead, the client program running on each Internet host is initialized
-with the address of a *local* name server. For example, all the hosts in
-the Department of Computer Science at Princeton know about the server on
-``dns1.cs.princeton.edu``. This local name server, in turn, has resource
-records for one or more of the root servers, for example:
+Tuy nhiên, trong thực tế, không phải tất cả client đều biết về các máy
+chủ gốc. Thay vào đó, chương trình client chạy trên mỗi máy chủ Internet
+được khởi tạo với địa chỉ của một máy chủ tên *cục bộ*. Ví dụ, tất cả
+các máy chủ trong Khoa Khoa học Máy tính tại Princeton đều biết về máy
+chủ tại ``dns1.cs.princeton.edu``. Máy chủ tên cục bộ này, đến lượt nó,
+có các bản ghi tài nguyên cho một hoặc nhiều máy chủ gốc, ví dụ:
 
 ::
 
    ('root', a.root-servers.net, NS, IN)
    (a.root-servers.net, 198.41.0.4, A, IN)
 
-Thus, resolving a name actually involves a client querying the local
-server, which in turn acts as a client that queries the remote servers
-on the original client’s behalf. This results in the client/server
-interactions illustrated in :numref:`Figure %s <fig-resolution>`. One
-advantage of this model is that all the hosts in the Internet do not
-have to be kept up-to-date on where the current root servers are
-located; only the servers have to know about the root. A second
-advantage is that the local server gets to see the answers that come
-back from queries that are posted by all the local clients. The local
-server *caches* these responses and is sometimes able to resolve
-future queries without having to go out over the network. The ``TTL``
-field in the resource records returned by remote servers indicates how
-long each record can be safely cached. This caching mechanism can be
-used further up the hierarchy as well, reducing the load on the root
-and TLD servers.
+Như vậy, việc phân giải một tên thực sự liên quan đến việc client truy
+vấn máy chủ cục bộ, máy chủ này lại đóng vai trò client truy vấn các
+máy chủ từ xa thay mặt cho client gốc. Điều này dẫn đến các tương tác
+client/server được minh họa ở :numref:`Hình %s <fig-resolution>`. Một
+lợi thế của mô hình này là tất cả các máy chủ trên Internet không cần
+phải được cập nhật về vị trí các máy chủ gốc hiện tại; chỉ các máy chủ
+tên mới cần biết về máy chủ gốc. Lợi thế thứ hai là máy chủ cục bộ có
+thể thấy các câu trả lời trả về từ các truy vấn do tất cả các client
+cục bộ gửi đi. Máy chủ cục bộ *cache* các phản hồi này và đôi khi có
+thể phân giải các truy vấn trong tương lai mà không cần phải ra ngoài
+mạng. Trường ``TTL`` trong các bản ghi tài nguyên trả về từ máy chủ từ
+xa cho biết mỗi bản ghi có thể được cache an toàn trong bao lâu. Cơ chế
+cache này cũng có thể được sử dụng ở các cấp cao hơn trong phân cấp,
+giảm tải cho các máy chủ gốc và TLD.
 
-The second question is how the system works when a user submits a
-partial name (e.g., ``penguins``) rather than a complete domain name
-(e.g., ``penguins.cs.princeton.edu``). The answer is that the client
-program is configured with the local domain in which the host resides
-(e.g., ``cs.princeton.edu``), and it appends this string to any simple
-names before sending out a query.
+Câu hỏi thứ hai là hệ thống hoạt động như thế nào khi người dùng gửi
+một tên không đầy đủ (ví dụ, ``penguins``) thay vì một tên miền đầy đủ
+(ví dụ, ``penguins.cs.princeton.edu``). Câu trả lời là chương trình
+client được cấu hình với miền cục bộ nơi máy chủ cư trú (ví dụ,
+``cs.princeton.edu``), và nó nối thêm chuỗi này vào bất kỳ tên đơn giản
+nào trước khi gửi truy vấn.
 
 .. _fig-resolution:
 .. figure:: figures/f09-18-9780123850591.png
    :width: 600px
    :align: center
 
-   Name resolution in practice, where the numbers 1 to 10 show the sequence
-   of steps in the process.
+   Phân giải tên trong thực tế, các số từ 1 đến 10 cho thấy trình tự
+   các bước trong quá trình.
 
 .. _key-naming:
-.. admonition:: Key Takeaway
+.. admonition:: Ý chính
 
-   Just to make sure we are clear, we have now seen three different
-   levels of identifiers—domain names, IP addresses, and physical
-   network addresses—and the mapping of identifiers at one level into
-   identifiers at another level happens at different points in the
-   network architecture. First, users specify domain names when
-   interacting with the application. Second, the application engages DNS
-   to translate this name into an IP address; it is the IP address that
-   is placed in each datagram, not the domain name. (As an aside, this
-   translation process involves IP datagrams being sent over the
-   Internet, but these datagrams are addressed to a host that runs a
-   name server, not to the ultimate destination.) Third, IP does
-   forwarding at each router, which often means that it maps one IP
-   address into another; that is, it maps the ultimate destination’s
-   address into the address for the next hop router. Finally, IP engages
-   the Address Resolution Protocol (ARP) to translate the next hop IP
-   address into the physical address for that machine; the next hop
-   might be the ultimate destination or it might be an intermediate
-   router. Frames sent over the physical network have these physical
-   addresses in their headers. :ref:`[Next] <key-virtualization>`
+   Để đảm bảo rõ ràng, chúng ta đã thấy ba cấp độ định danh khác nhau—
+   tên miền, địa chỉ IP, và địa chỉ vật lý mạng—và việc ánh xạ các định
+   danh ở một cấp sang định danh ở cấp khác diễn ra tại các điểm khác
+   nhau trong kiến trúc mạng. Đầu tiên, người dùng chỉ định tên miền khi
+   tương tác với ứng dụng. Thứ hai, ứng dụng sử dụng DNS để chuyển đổi
+   tên này thành địa chỉ IP; chính địa chỉ IP được đặt vào mỗi datagram,
+   không phải tên miền. (Ngoài lề, quá trình chuyển đổi này liên quan
+   đến việc gửi các datagram IP qua Internet, nhưng các datagram này
+   được gửi đến một máy chủ chạy máy chủ tên, không phải đích cuối cùng.)
+   Thứ ba, IP thực hiện chuyển tiếp tại mỗi router, thường có nghĩa là
+   nó ánh xạ một địa chỉ IP thành một địa chỉ IP khác; tức là, nó ánh
+   xạ địa chỉ đích cuối cùng thành địa chỉ cho router hop tiếp theo.
+   Cuối cùng, IP sử dụng Giao thức phân giải địa chỉ (ARP) để chuyển
+   đổi địa chỉ IP hop tiếp theo thành địa chỉ vật lý cho máy đó; hop
+   tiếp theo có thể là đích cuối cùng hoặc một router trung gian. Các
+   frame gửi qua mạng vật lý có các địa chỉ vật lý này trong header.
+   :ref:`[Next] <key-virtualization>`
 
-9.3.2 Network Management (SNMP, OpenConfig)
+9.3.2 Quản lý mạng (SNMP, OpenConfig)
 -------------------------------------------
 
-A network is a complex system, both in terms of the number of nodes that
-are involved and in terms of the suite of protocols that can be running
-on any one node. Even if you restrict yourself to worrying about the
-nodes within a single administrative domain, such as a campus, there
-might be dozens of routers and hundreds—or even thousands—of hosts to
-keep track of. If you think about all the state that is maintained and
-manipulated on any one of those nodes—address translation tables,
-routing tables, TCP connection state, and so on—then it is easy to
-become overwhelmed by the prospect of having to manage all of this
-information.
+Một mạng là một hệ thống phức tạp, cả về số lượng nút tham gia và về
+tập hợp các giao thức có thể chạy trên bất kỳ nút nào. Ngay cả khi bạn
+chỉ giới hạn mình trong việc quan tâm đến các nút trong một miền quản
+trị duy nhất, chẳng hạn như một campus, có thể có hàng chục router và
+hàng trăm—thậm chí hàng nghìn—máy chủ cần theo dõi. Nếu bạn nghĩ về tất
+cả trạng thái được duy trì và thao tác trên bất kỳ nút nào trong số đó—
+bảng chuyển đổi địa chỉ, bảng định tuyến, trạng thái kết nối TCP, v.v.—
+thì thật dễ bị choáng ngợp trước viễn cảnh phải quản lý tất cả thông
+tin này.
 
-It is easy to imagine wanting to know about the state of various
-protocols on different nodes. For example, you might want to monitor the
-number of IP datagram reassemblies that have been aborted, so as to
-determine if the timeout that garbage collects partially assembled
-datagrams needs to be adjusted. As another example, you might want to
-keep track of the load on various nodes (i.e., the number of packets
-sent or received) so as to determine if new routers or links need to be
-added to the network. Of course, you also have to be on the watch for
-evidence of faulty hardware and misbehaving software.
+Thật dễ hình dung mong muốn biết về trạng thái của các giao thức khác
+nhau trên các nút khác nhau. Ví dụ, bạn có thể muốn giám sát số lượng
+datagram IP bị hủy lắp ráp lại, để xác định xem timeout thu gom rác các
+datagram lắp ráp dở có cần điều chỉnh không. Một ví dụ khác, bạn có thể
+muốn theo dõi tải trên các nút khác nhau (tức là số lượng gói tin gửi
+hoặc nhận) để xác định xem có cần thêm router hoặc liên kết mới vào
+mạng không. Tất nhiên, bạn cũng phải cảnh giác với dấu hiệu phần cứng
+lỗi và phần mềm hoạt động sai.
 
-What we have just described is the problem of network management, an
-issue that pervades the entire network architecture. Since the nodes we
-want to keep track of are distributed, our only real option is to use
-the network to manage the network. This means we need a protocol that
-allows us to read and write various pieces of state information on
-different network nodes. The following describes two approaches.
+Những gì chúng ta vừa mô tả là vấn đề quản lý mạng, một vấn đề xuyên
+suốt toàn bộ kiến trúc mạng. Vì các nút mà chúng ta muốn theo dõi là
+phân tán, lựa chọn thực sự duy nhất là sử dụng mạng để quản lý mạng.
+Điều này có nghĩa là chúng ta cần một giao thức cho phép đọc và ghi
+các phần thông tin trạng thái khác nhau trên các nút mạng khác nhau.
+Sau đây là hai cách tiếp cận.
 
 SNMP
 ~~~~
 
-A widely used protocol for network management is SNMP (*Simple Network
-Management Protocol*). SNMP is essentially a specialized request/reply
-protocol that supports two kinds of request messages: ``GET`` and
-``SET``. The former is used to retrieve a piece of state from some node,
-and the latter is used to store a new piece of state in some node. (SNMP
-also supports a third operation, ``GET-NEXT``, which we explain below.)
-The following discussion focuses on the ``GET`` operation, since it is
-the one most frequently used.
+Một giao thức được sử dụng rộng rãi cho quản lý mạng là SNMP (*Simple
+Network Management Protocol*). SNMP về cơ bản là một giao thức
+request/reply chuyên biệt hỗ trợ hai loại thông điệp yêu cầu: ``GET``
+và ``SET``. Loại đầu dùng để lấy một phần trạng thái từ một nút nào đó,
+loại sau dùng để lưu một trạng thái mới vào một nút nào đó. (SNMP cũng
+hỗ trợ một thao tác thứ ba, ``GET-NEXT``, sẽ giải thích bên dưới.) Phần
+thảo luận sau tập trung vào thao tác ``GET``, vì đây là thao tác được
+sử dụng thường xuyên nhất.
 
-SNMP is used in the obvious way. An operator interacts with a client
-program that displays information about the network. This client program
-usually has a graphical interface. You can think of this interface as
-playing the same role as a web browser. Whenever the operator selects a
-certain piece of information that he or she wants to see, the client
-program uses SNMP to request that information from the node in question.
-(SNMP runs on top of UDP.) An SNMP server running on that node receives
-the request, locates the appropriate piece of information, and returns
-it to the client program, which then displays it to the user.
+SNMP được sử dụng theo cách hiển nhiên. Người vận hành tương tác với
+một chương trình client hiển thị thông tin về mạng. Chương trình client
+này thường có giao diện đồ họa. Bạn có thể coi giao diện này đóng vai
+trò tương tự như trình duyệt web. Bất cứ khi nào người vận hành chọn
+một thông tin nào đó muốn xem, chương trình client sử dụng SNMP để yêu
+cầu thông tin đó từ nút liên quan. (SNMP chạy trên UDP.) Một máy chủ
+SNMP chạy trên nút đó nhận yêu cầu, xác định thông tin phù hợp, và trả
+về cho chương trình client, chương trình này sau đó hiển thị cho người
+dùng.
 
-There is only one complication to this otherwise simple scenario:
-Exactly how does the client indicate which piece of information it wants
-to retrieve, and, likewise, how does the server know which variable in
-memory to read to satisfy the request? The answer is that SNMP depends
-on a companion specification called the *management information base*
-(MIB). The MIB defines the specific pieces of information—the MIB
-*variables*—that you can retrieve from a network node.
+Chỉ có một điểm phức tạp trong kịch bản đơn giản này: Chính xác thì
+client chỉ ra phần thông tin nào muốn lấy như thế nào, và tương tự, máy
+chủ biết biến nào trong bộ nhớ cần đọc để đáp ứng yêu cầu như thế nào?
+Câu trả lời là SNMP phụ thuộc vào một đặc tả đi kèm gọi là *cơ sở thông
+tin quản lý* (MIB—management information base). MIB định nghĩa các phần
+thông tin cụ thể—các biến MIB—mà bạn có thể lấy từ một nút mạng.
 
-The current version of MIB, called MIB-II, organizes variables into
-different *groups*. You will recognize that most of the groups
-correspond to one of the protocols described in this book, and nearly
-all of the variables defined for each group should look familiar. For
-example:
+Phiên bản hiện tại của MIB, gọi là MIB-II, tổ chức các biến thành các
+*nhóm* khác nhau. Bạn sẽ nhận ra hầu hết các nhóm tương ứng với một
+trong các giao thức được mô tả trong cuốn sách này, và gần như tất cả
+các biến được định nghĩa cho mỗi nhóm đều quen thuộc. Ví dụ:
 
--  System—General parameters of the system (node) as a whole, including
-   where the node is located, how long it has been up, and the system’s
-   name
+-  System—Các tham số chung của hệ thống (nút) nói chung, bao gồm vị
+   trí nút, thời gian hoạt động, và tên hệ thống
 
--  Interfaces—Information about all the network interfaces (adaptors)
-   attached to this node, such as the physical address of each interface
-   and how many packets have been sent and received on each interface
+-  Interfaces—Thông tin về tất cả các giao diện mạng (bộ chuyển đổi)
+   gắn với nút này, như địa chỉ vật lý của mỗi giao diện và số gói tin
+   đã gửi và nhận trên mỗi giao diện
 
--  Address translation—Information about the Address Resolution
-   Protocol, and in particular, the contents of its address translation
-   table
+-  Address translation—Thông tin về Giao thức phân giải địa chỉ (ARP),
+   đặc biệt là nội dung bảng chuyển đổi địa chỉ của nó
 
--  IP—Variables related to IP, including its routing table, how many
-   datagrams it has successfully forwarded, and statistics about
-   datagram reassembly; includes counts of how many times IP drops a
-   datagram for one reason or another
+-  IP—Các biến liên quan đến IP, bao gồm bảng định tuyến, số lượng
+   datagram đã chuyển tiếp thành công, và thống kê về lắp ráp lại
+   datagram; bao gồm số lần IP loại bỏ một datagram vì lý do nào đó
 
--  TCP—Information about TCP connections, such as the number of passive
-   and active opens, the number of resets, the number of timeouts,
-   default timeout settings, and so on; per-connection information
-   persists only as long as the connection exists
+-  TCP—Thông tin về các kết nối TCP, như số lần mở bị động và chủ động,
+   số lần reset, số lần timeout, các thiết lập timeout mặc định, v.v.;
+   thông tin theo kết nối chỉ tồn tại khi kết nối còn tồn tại
 
--  UDP—Information about UDP traffic, including the total number of UDP
-   datagrams that have been sent and received.
+-  UDP—Thông tin về lưu lượng UDP, bao gồm tổng số datagram UDP đã gửi
+   và nhận.
 
-There are also groups for Internet Control Message Protocol (ICMP) and
-SNMP itself.
+Cũng có các nhóm cho Internet Control Message Protocol (ICMP) và chính
+SNMP.
 
-Returning to the issue of the client stating exactly what information it
-wants to retrieve from a node, having a list of MIB variables is only
-half the battle. Two problems remain. First, we need a precise syntax
-for the client to use to state which of the MIB variables it wants to
-fetch. Second, we need a precise representation for the values returned
-by the server. Both problems are addressed using Abstract Syntax
-Notation One (ASN.1).
+Quay lại vấn đề client chỉ ra chính xác thông tin nào muốn lấy từ một
+nút, có một danh sách các biến MIB mới chỉ là một nửa vấn đề. Còn hai
+vấn đề nữa. Thứ nhất, chúng ta cần một cú pháp chính xác để client sử
+dụng khi chỉ ra biến MIB nào muốn lấy. Thứ hai, chúng ta cần một biểu
+diễn chính xác cho các giá trị trả về từ máy chủ. Cả hai vấn đề đều
+được giải quyết bằng Abstract Syntax Notation One (ASN.1).
 
-Consider the second problem first. As we already saw in a previous
-chapter, ASN.1/Basic Encoding Rules (BER) defines a representation for
-different data types, such as integers. The MIB defines the type of each
-variable, and then it uses ASN.1/BER to encode the value contained in
-this variable as it is transmitted over the network. As far as the first
-problem is concerned, ASN.1 also defines an object identification
-scheme. The MIB uses this identification system to assign a globally
-unique identifier to each MIB variable. These identifiers are given in a
-“dot” notation, not unlike domain names. For example, 1.3.6.1.2.1.4.3 is
-the unique ASN.1 identifier for the IP-related MIB variable
-``ipInReceives``; this variable counts the number of IP datagrams that
-have been received by this node. In this example, the 1.3.6.1.2.1 prefix
-identifies the MIB database (remember, ASN.1 object IDs are for all
-possible objects in the world), the 4 corresponds to the IP group, and
-the final 3 denotes the third variable in this group.
+Xét vấn đề thứ hai trước. Như đã thấy ở chương trước, ASN.1/Basic
+Encoding Rules (BER) định nghĩa một biểu diễn cho các kiểu dữ liệu khác
+nhau, như số nguyên. MIB định nghĩa kiểu của mỗi biến, sau đó sử dụng
+ASN.1/BER để mã hóa giá trị chứa trong biến này khi truyền qua mạng.
+Về vấn đề đầu tiên, ASN.1 cũng định nghĩa một hệ thống nhận dạng đối
+tượng. MIB sử dụng hệ thống nhận dạng này để gán một định danh toàn
+cầu duy nhất cho mỗi biến MIB. Các định danh này được viết theo dạng
+“dấu chấm”, không khác gì tên miền. Ví dụ, 1.3.6.1.2.1.4.3 là định danh
+ASN.1 duy nhất cho biến MIB liên quan đến IP ``ipInReceives``; biến này
+đếm số datagram IP đã được nút này nhận. Trong ví dụ này, tiền tố
+1.3.6.1.2.1 xác định cơ sở dữ liệu MIB (nhớ rằng, định danh đối tượng
+ASN.1 dành cho mọi đối tượng có thể có trên thế giới), số 4 tương ứng
+với nhóm IP, và số 3 cuối cùng chỉ biến thứ ba trong nhóm này.
 
-Thus, network management works as follows. The SNMP client puts the
-ASN.1 identifier for the MIB variable it wants to get into the request
-message, and it sends this message to the server. The server then maps
-this identifier into a local variable (i.e., into a memory location
-where the value for this variable is stored), retrieves the current
-value held in this variable, and uses ASN.1/BER to encode the value it
-sends back to the client.
+Như vậy, quản lý mạng hoạt động như sau. Client SNMP đặt định danh ASN.1
+cho biến MIB muốn lấy vào thông điệp yêu cầu, và gửi thông điệp này đến
+máy chủ. Máy chủ sau đó ánh xạ định danh này thành một biến cục bộ (tức
+là một vị trí bộ nhớ nơi lưu giá trị của biến này), lấy giá trị hiện tại
+đang lưu trong biến này, và sử dụng ASN.1/BER để mã hóa giá trị gửi lại
+cho client.
 
-There is one final detail. Many of the MIB variables are either tables
-or structures. Such compound variables explain the reason for the SNMP
-``GET-NEXT`` operation. This operation, when applied to a particular
-variable ID, returns the value of that variable plus the ID of the next
-variable, for example, the next item in the table or the next field in
-the structure. This aids the client in “walking through” the elements of
-a table or structure.
+Có một chi tiết cuối cùng. Nhiều biến MIB là bảng hoặc cấu trúc. Các
+biến phức hợp như vậy giải thích lý do cho thao tác ``GET-NEXT`` của
+SNMP. Thao tác này, khi áp dụng cho một ID biến cụ thể, trả về giá trị
+của biến đó cộng với ID của biến tiếp theo, ví dụ, mục tiếp theo trong
+bảng hoặc trường tiếp theo trong cấu trúc. Điều này giúp client “đi
+qua” các phần tử của một bảng hoặc cấu trúc.
 
 OpenConfig
 ~~~~~~~~~~
 
-SNMP is still widely used and has historically been “the” management
-protocol for switches and routers, but there has recently been growing
-attention paid to more flexible and powerful ways to manage networks.
-There isn’t yet complete agreement on an industry-wide standard, but a
-consensus about the general approach is starting to emerge. We describe
-one example, called *OpenConfig*, that is both getting a lot of traction
-and illustrates many of the key ideas that are being pursued.
+SNMP vẫn được sử dụng rộng rãi và lịch sử là giao thức quản lý “chuẩn”
+cho switch và router, nhưng gần đây ngày càng có nhiều sự chú ý đến các
+cách linh hoạt và mạnh mẽ hơn để quản lý mạng. Hiện chưa có sự đồng
+thuận hoàn toàn về một tiêu chuẩn toàn ngành, nhưng một đồng thuận về
+cách tiếp cận chung đang bắt đầu hình thành. Chúng tôi mô tả một ví dụ,
+gọi là *OpenConfig*, đang nhận được nhiều sự quan tâm và minh họa nhiều
+ý tưởng then chốt đang được theo đuổi.
 
-The general strategy is to automate network management as much as
-possible, with the goal of getting the error-prone human out of the
-loop. This is sometimes called *zero-touch* management, and it implies
-two things have to happen. First, whereas historically operators used
-tools like SNMP to *monitor* the network, but had to log into any
-misbehaving network device and use a command line interface (CLI) to fix
-the problem, zero-touch management implies that we also need to
-*configure* the network programmatically. In other words, network
-management is equal parts reading status information and writing
-configuration information. The goal is to build a closed control loop,
-although there will always be scenarios where the operator has to be
-alerted that manual intervention is required.
+Chiến lược chung là tự động hóa quản lý mạng càng nhiều càng tốt, với
+mục tiêu loại bỏ con người dễ mắc lỗi khỏi vòng lặp. Điều này đôi khi
+được gọi là quản lý *zero-touch*, và nó ngụ ý hai điều phải xảy ra.
+Thứ nhất, trong khi trước đây các nhà vận hành dùng các công cụ như
+SNMP để *giám sát* mạng, nhưng phải đăng nhập vào bất kỳ thiết bị mạng
+nào hoạt động sai và sử dụng giao diện dòng lệnh (CLI) để sửa lỗi, thì
+quản lý zero-touch ngụ ý rằng chúng ta cũng cần phải *cấu hình* mạng
+một cách lập trình. Nói cách khác, quản lý mạng bao gồm cả đọc thông
+tin trạng thái và ghi thông tin cấu hình. Mục tiêu là xây dựng một vòng
+lặp điều khiển khép kín, mặc dù sẽ luôn có những tình huống cần cảnh báo
+người vận hành để can thiệp thủ công.
 
-Second, whereas historically the operator had to configure each network
-device individually, all the devices have to be configured in a
-consistent way if they are going to function correctly as a network. As
-a consequence, zero-touch also implies that the operator should be able
-to declare their network-wide *intent*, with the management tool being
-smart enough to issue the necessary per-device configuration directives
-in a globally consistent way.
+Thứ hai, trong khi trước đây người vận hành phải cấu hình từng thiết bị
+mạng riêng lẻ, thì tất cả các thiết bị phải được cấu hình nhất quán nếu
+muốn hoạt động đúng như một mạng. Do đó, zero-touch cũng ngụ ý rằng
+người vận hành nên có thể khai báo *ý định* toàn mạng của mình, với công
+cụ quản lý đủ thông minh để phát sinh các chỉ thị cấu hình cho từng thiết
+bị một cách nhất quán toàn cục.
 
 .. _fig-mgmt:
 .. figure:: figures/apps/Slide1.png
    :width: 400px
    :align: center
 
-   Operator manages a network through a configuration and management tool,
-   which in turn programmatically interacts with the underlying network
-   devices (e.g., using gNMI as the transport protocol and YANG to specify
-   the schema for the data being exchanged).
+   Người vận hành quản lý mạng thông qua một công cụ cấu hình và quản lý,
+   công cụ này tương tác lập trình với các thiết bị mạng bên dưới (ví dụ,
+   sử dụng gNMI làm giao thức vận chuyển và YANG để xác định schema cho
+   dữ liệu được trao đổi).
 
-:numref:`Figure %s <fig-mgmt>` gives a high-level depiction of this
-idealized approach to network management. We say “idealized” because
-achieving true zero-touch management is still more aspirational than
-reality. But progress is being made. For example, new management tools
-are starting to leverage standard protocols like HTTP to monitor and
-configure network devices. This is a positive step because it gets us
-out of the business of creating yet another request/reply protocol and
-lets us focus on creating smarter management tools, perhaps by taking
-advantage of Machine Learning algorithms to determine if something is
-amiss.
+:numref:`Hình %s <fig-mgmt>` đưa ra một mô tả cấp cao về cách tiếp cận
+lý tưởng hóa cho quản lý mạng này. Chúng tôi nói “lý tưởng hóa” vì đạt
+được quản lý zero-touch thực sự vẫn còn là mục tiêu hơn là thực tế. Tuy
+nhiên, tiến bộ đang được thực hiện. Ví dụ, các công cụ quản lý mới bắt
+đầu tận dụng các giao thức chuẩn như HTTP để giám sát và cấu hình thiết
+bị mạng. Đây là một bước tiến tích cực vì nó giúp chúng ta không phải
+tạo thêm một giao thức request/reply mới và cho phép tập trung vào việc
+tạo ra các công cụ quản lý thông minh hơn, có thể tận dụng các thuật
+toán Machine Learning để xác định xem có điều gì bất thường không.
 
-In the same way HTTP is starting to replace SNMP as the protocol for
-talking to network devices, there is a parallel effort to replace the
-MIB with a new standard for what status information various types of
-devices can report, *plus* what configuration information those same
-devices are able to respond to. Agreeing to a single standard for
-configuration is inherently challenging because every vendor claims
-their device is special, unlike any of the devices their competitors
-sell. (That is to say, the challenge is not entirely technical.)
+Cũng giống như HTTP bắt đầu thay thế SNMP làm giao thức giao tiếp với
+thiết bị mạng, có một nỗ lực song song để thay thế MIB bằng một tiêu
+chuẩn mới cho thông tin trạng thái mà các loại thiết bị khác nhau có
+thể báo cáo, *cộng với* thông tin cấu hình mà các thiết bị đó có thể
+phản hồi. Đồng thuận về một tiêu chuẩn duy nhất cho cấu hình vốn dĩ là
+thách thức vì mỗi nhà sản xuất đều cho rằng thiết bị của mình là đặc
+biệt, không giống bất kỳ thiết bị nào của đối thủ. (Tức là, thách thức
+không hoàn toàn là kỹ thuật.)
 
-The general approach is to allow each device manufacturer to publish a
-*data model* that specifies the configuration knobs (and available
-monitoring data) for its product, and limit standardization to the
-modeling language. The leading candidate is YANG, which stands for *Yet
-Another Next Generation*, a name chosen to poke fun at how often a
-do-over proves necessary. YANG can be viewed as a restricted version of
-XSD, which you may recall is a language for defining a schema (model)
-for XML. That is, YANG defines the structure of the data. But unlike
-XSD, YANG is not XML-specific. It can instead be used in conjunction
-with different over-the-wire message formats, including XML, but also
-Protobufs and JSON.
+Cách tiếp cận chung là cho phép mỗi nhà sản xuất thiết bị công bố một
+*mô hình dữ liệu* xác định các nút cấu hình (và dữ liệu giám sát sẵn
+có) cho sản phẩm của mình, và chỉ tiêu chuẩn hóa ngôn ngữ mô hình hóa.
+Ứng viên hàng đầu là YANG, viết tắt của *Yet Another Next Generation*,
+một cái tên nhằm đùa vui về việc phải làm lại quá nhiều lần. YANG có
+thể được coi là một phiên bản rút gọn của XSD, bạn có thể nhớ là một
+ngôn ngữ để định nghĩa schema (mô hình) cho XML. Tức là, YANG xác định
+cấu trúc của dữ liệu. Nhưng không giống XSD, YANG không chỉ dành riêng
+cho XML. Nó có thể được dùng cùng với các định dạng thông điệp truyền
+trên dây khác nhau, bao gồm XML, nhưng cũng có Protobufs và JSON.
 
-What’s important about this approach is that the data model
-defines the semantics of the variables that are available to be
-read and written in a programmatic form (i.e., it’s not just text in a
-standards specification). It’s not a free-for-all with each vendor
-defining a unique model since the network operators that buy network
-hardware have a strong incentive to drive the models for similar
-devices towards convergence. YANG makes the process of creating,
-using, and modifying models more programmable, and hence, adaptable to
-this process.
+Điều quan trọng của cách tiếp cận này là mô hình dữ liệu xác định ngữ
+nghĩa của các biến có thể đọc và ghi dưới dạng lập trình (tức là, không
+chỉ là văn bản trong đặc tả tiêu chuẩn). Không phải ai muốn làm gì thì
+làm với mỗi nhà sản xuất định nghĩa một mô hình riêng, vì các nhà vận
+hành mạng mua thiết bị mạng có động lực mạnh để thúc đẩy các mô hình
+cho các thiết bị tương tự hội tụ lại. YANG giúp quá trình tạo, sử dụng
+và sửa đổi mô hình trở nên lập trình hơn, và do đó, thích nghi hơn với
+quá trình này.
 
-This is where OpenConfig comes in. It uses YANG as its modeling
-language, but has also established a process for driving the industry
-towards common models. OpenConfig is officially agnostic as to the RPC
-mechanism used to communicate with network devices, but one approach it
-is actively pursuing is called gNMI (*gRPC Network Management
-Interface*). As you might guess from its name, gNMI uses gRPC, which you
-may recall, runs on top of HTTP. This means gNMI also adopts Protobufs
-as the way it specifies the data actually communicated over the HTTP
-connection. Thus, as depicted in :numref:`Figure %s <fig-mgmt>`, gNMI
-is intended as a standard management interface for network devices.
-What’s not standardized is the richness of the management tool’s ability to
-automate, or the exact form of the operator-facing interface. Like any
-application that is trying to serve a need and support more features
-than the alternatives, there is still much room for innovation in tools
-for network management.
+Đây là nơi OpenConfig xuất hiện. Nó sử dụng YANG làm ngôn ngữ mô hình
+hóa, nhưng cũng đã thiết lập một quy trình để thúc đẩy ngành công nghiệp
+hướng tới các mô hình chung. OpenConfig chính thức không phụ thuộc vào
+cơ chế RPC dùng để giao tiếp với thiết bị mạng, nhưng một cách tiếp cận
+đang được theo đuổi tích cực là gNMI (*gRPC Network Management
+Interface*). Như bạn có thể đoán từ tên gọi, gNMI sử dụng gRPC, bạn có
+thể nhớ, chạy trên HTTP. Điều này có nghĩa là gNMI cũng sử dụng Protobufs
+làm cách xác định dữ liệu thực sự được truyền qua kết nối HTTP. Như vậy,
+như minh họa ở :numref:`Hình %s <fig-mgmt>`, gNMI được định hướng là giao
+diện quản lý chuẩn cho thiết bị mạng. Điều chưa được chuẩn hóa là mức độ
+phong phú của khả năng tự động hóa của công cụ quản lý, hoặc hình thức
+giao diện hướng tới người vận hành. Giống như bất kỳ ứng dụng nào cố gắng
+phục vụ nhu cầu và hỗ trợ nhiều tính năng hơn các lựa chọn thay thế, vẫn
+còn nhiều không gian cho đổi mới trong các công cụ quản lý mạng.
 
-For completeness, we note that NETCONF is another of the post-SNMP
-protocols for communicating configuration information to network
-devices. OpenConfig works with NETCONF, but our reading of the tea
-leaves points to gNMI as the future.
+Để đầy đủ, chúng tôi lưu ý rằng NETCONF là một trong các giao thức hậu
+SNMP để truyền thông tin cấu hình đến thiết bị mạng. OpenConfig làm việc
+với NETCONF, nhưng theo quan sát của chúng tôi, gNMI là tương lai.
 
-We conclude by emphasizing that a sea change is underway. While listing
-SNMP and OpenConfig in the title to this section suggests they are
-equivalent, it is more accurate to say that each is “what we call” these
-two approaches, but the approaches are quite different. On the one hand,
-SNMP is really just a transport protocol, analogous to gNMI in the
-OpenConfig world. It historically enabled monitoring devices, but had
-virtually nothing to say about configuring devices. (The latter has
-historically required manual intervention.) On the other hand,
-OpenConfig is primarily an effort to define a common set of data models
-for network devices, roughly similar to the role MIB plays in the SNMP
-world, except OpenConfig is (1) model-based, using YANG, and (2) equally
-focused on monitoring and configuration.
+Chúng tôi kết luận bằng cách nhấn mạnh rằng một sự thay đổi lớn đang
+diễn ra. Việc liệt kê SNMP và OpenConfig trong tiêu đề phần này có thể
+gợi ý chúng tương đương, nhưng chính xác hơn là mỗi cái là “cách gọi”
+cho hai cách tiếp cận này, nhưng các cách tiếp cận rất khác nhau. Một
+mặt, SNMP thực chất chỉ là một giao thức vận chuyển, tương tự như gNMI
+trong thế giới OpenConfig. Lịch sử, nó cho phép giám sát thiết bị, nhưng
+hầu như không đề cập gì đến cấu hình thiết bị. (Việc cấu hình này lịch
+sử đòi hỏi can thiệp thủ công.) Mặt khác, OpenConfig chủ yếu là một nỗ
+lực định nghĩa một tập hợp chung các mô hình dữ liệu cho thiết bị mạng,
+gần giống vai trò của MIB trong thế giới SNMP, ngoại trừ OpenConfig (1)
+dựa trên mô hình, dùng YANG, và (2) tập trung đồng đều vào giám sát và
+cấu hình.

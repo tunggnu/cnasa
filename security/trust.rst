@@ -1,5 +1,5 @@
 8.1 Niềm tin và các mối đe dọa
-=============================
+==============================
 
 Trước khi chúng ta bàn về cách thức và lý do xây dựng các mạng an toàn, điều quan trọng là phải xác lập một sự thật đơn giản: Chúng ta chắc chắn sẽ thất bại. Điều này là bởi vì bảo mật cuối cùng là một bài toán về việc đưa ra các giả định về niềm tin, đánh giá các mối đe dọa và giảm thiểu rủi ro. Không có cái gọi là bảo mật tuyệt đối.
 

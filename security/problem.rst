@@ -1,5 +1,5 @@
 Vấn đề: Các cuộc tấn công bảo mật
--------------------------
+---------------------------------
 
 Mạng máy tính thường là một tài nguyên dùng chung được sử dụng bởi nhiều ứng dụng đại diện cho các lợi ích khác nhau. Internet đặc biệt được chia sẻ rộng rãi, được sử dụng bởi các doanh nghiệp cạnh tranh, các chính phủ đối địch lẫn nhau và các tội phạm cơ hội. Trừ khi các biện pháp bảo mật được thực hiện, một cuộc trò chuyện mạng hoặc một ứng dụng phân tán có thể bị xâm phạm bởi một kẻ tấn công.
 

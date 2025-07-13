@@ -1,5 +1,5 @@
 6.4 Kiểm Soát Tắc Nghẽn Nâng Cao
-===============================
+================================
 
 Phần này đi sâu hơn vào kiểm soát tắc nghẽn. Khi làm như vậy, điều quan trọng là phải hiểu rằng chiến lược tiêu chuẩn của TCP là kiểm soát tắc nghẽn sau khi nó xảy ra, thay vì cố gắng tránh tắc nghẽn ngay từ đầu. Thực tế, TCP liên tục tăng tải mà nó áp đặt lên mạng nhằm tìm ra điểm mà tại đó tắc nghẽn xảy ra, rồi sau đó nó lùi lại khỏi điểm này. Nói cách khác, TCP *cần* tạo ra mất mát để tìm ra băng thông khả dụng của kết nối. Một giải pháp thay thế hấp dẫn là dự đoán khi nào tắc nghẽn sắp xảy ra và sau đó giảm tốc độ gửi dữ liệu của các máy chủ ngay trước khi các gói bắt đầu bị loại bỏ. Chúng tôi gọi chiến lược này là *tránh tắc nghẽn* để phân biệt với *kiểm soát tắc nghẽn*, nhưng có lẽ chính xác nhất là coi “tránh” như một tập con của “kiểm soát”.
 

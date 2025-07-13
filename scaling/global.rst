@@ -173,7 +173,7 @@ Một điều cần lưu ý về hình này là cách nó đưa lại một số
    Quay lại câu hỏi thực sự: Tất cả điều này giúp chúng ta xây dựng mạng khả mở như thế nào? Đầu tiên, số lượng nút tham gia BGP vào cỡ số lượng hệ tự trị, nhỏ hơn nhiều so với số lượng mạng. Thứ hai, việc tìm một tuyến liên miền tốt chỉ là vấn đề tìm đường đến router biên phù hợp, mà mỗi AS chỉ có vài router như vậy. Như vậy, chúng ta đã chia nhỏ bài toán định tuyến thành các phần có thể quản lý, một lần nữa sử dụng một mức phân cấp mới để tăng khả năng mở rộng. Độ phức tạp của định tuyến liên miền giờ vào cỡ số lượng hệ tự trị, còn độ phức tạp của định tuyến nội miền vào cỡ số lượng mạng trong một AS. :ref:`[Tiếp theo] <key-e2e>`
 
 Tích hợp định tuyến liên miền và nội miền
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Trong khi phần thảo luận trước minh họa cách một BGP speaker học thông tin định tuyến liên miền, câu hỏi vẫn còn là làm thế nào các router khác trong một miền nhận được thông tin này. Có một số cách để giải quyết vấn đề này.
 
